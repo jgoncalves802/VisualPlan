@@ -4,6 +4,8 @@
 
 import React, { useState } from 'react';
 import { AtividadeMock } from '../../../types/cronograma';
+import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { formatarData } from '../../../utils/dateFormatter';
 
 interface TaskListProps {
   atividades: AtividadeMock[];
@@ -15,6 +17,7 @@ type SortField = 'nome' | 'data_inicio' | 'data_fim' | 'progresso' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete }) => {
+  const { configuracoes } = useCronogramaStore();
   const [sortField, setSortField] = useState<SortField>('data_inicio');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
@@ -199,12 +202,12 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
               </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-700">
-                  {new Date(atividade.data_inicio).toLocaleDateString('pt-BR')}
+                  {formatarData(atividade.data_inicio, configuracoes.formato_data_tabela)}
                 </div>
               </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-700">
-                  {new Date(atividade.data_fim).toLocaleDateString('pt-BR')}
+                  {formatarData(atividade.data_fim, configuracoes.formato_data_tabela)}
                 </div>
               </td>
               <td className="px-4 py-4 whitespace-nowrap">

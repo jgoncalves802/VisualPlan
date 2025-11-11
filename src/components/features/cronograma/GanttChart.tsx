@@ -7,6 +7,8 @@ import React from 'react';
 import { Gantt, ViewMode } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
 import { TaskGantt } from '../../../types/cronograma';
+import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { formatarData } from '../../../utils/dateFormatter';
 
 interface GanttChartProps {
   tasks: TaskGantt[];
@@ -23,6 +25,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   onTaskDelete,
   onTaskDoubleClick,
 }) => {
+  const { configuracoes } = useCronogramaStore();
+
   if (tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-50">
@@ -82,11 +86,11 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             <div className="text-xs space-y-1">
               <div className="flex justify-between gap-4">
                 <span className="text-gray-300">Início:</span>
-                <span>{task.start.toLocaleDateString('pt-BR')}</span>
+                <span>{formatarData(task.start, configuracoes.formato_data_tooltip)}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-gray-300">Fim:</span>
-                <span>{task.end.toLocaleDateString('pt-BR')}</span>
+                <span>{formatarData(task.end, configuracoes.formato_data_tooltip)}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-gray-300">Progresso:</span>
