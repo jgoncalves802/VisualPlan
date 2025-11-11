@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import Gantt from 'frappe-gantt';
+import 'frappe-gantt/dist/frappe-gantt.css';
 import { VPGanttTask, VPGanttConfig } from './types';
 import { useCronogramaStore } from '../../stores/cronogramaStore';
 import { formatarData } from '../../utils/dateFormatter';
@@ -21,7 +22,13 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
   const { configuracoes } = useCronogramaStore();
 
   useEffect(() => {
-    if (!svgRef.current || tasks.length === 0) return;
+    if (!svgRef.current || tasks.length === 0) {
+      console.log('VPGantt: Não pode renderizar', { 
+        hasContainer: !!svgRef.current, 
+        tasksCount: tasks.length 
+      });
+      return;
+    }
 
     // Limpa Gantt anterior se existir
     if (ganttRef.current) {
@@ -29,7 +36,7 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
     }
 
     // Prepara tasks para o Frappe Gantt
-    const frappeTask = tasks.map((task) => ({
+    const frappeTasks = tasks.map((task) => ({
       id: task.id,
       name: task.name,
       start: formatDateForFrappe(task.start),
@@ -39,9 +46,16 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
       custom_class: task.custom_class || '',
     }));
 
+    console.log('VPGantt: Preparando renderização', {
+      tasksCount: frappeTasks.length,
+      firstTask: frappeTasks[0],
+      container: svgRef.current,
+      viewMode: config.view_mode || 'Day'
+    });
+
     try {
       // Cria instância do Frappe Gantt
-      ganttRef.current = new Gantt(svgRef.current, frappeTask, {
+      ganttRef.current = new Gantt(svgRef.current, frappeTasks, {
         view_mode: mapViewMode(config.view_mode || 'Day'),
         language: config.language || 'pt',
         
@@ -138,8 +152,15 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
 
       // Aplica estilos customizados baseados nas configurações
       applyCustomStyles(configuracoes);
+      
+      console.log('VPGantt: Renderizado com sucesso!', {
+        ganttInstance: ganttRef.current,
+        container: svgRef.current
+      });
     } catch (error) {
-      console.error('Erro ao criar Gantt:', error);
+      console.error('VPGantt: Erro ao criar Gantt:', error);
+      console.error('VPGantt: Tasks que tentou renderizar:', frappeTasks);
+      console.error('VPGantt: Config:', config);
     }
 
     // Cleanup
