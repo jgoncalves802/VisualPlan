@@ -73,7 +73,9 @@ function App() {
           path="/cronograma/:projetoId"
           element={
             <ProtectedRoute>
-              <CronogramaPage />
+              <Layout>
+                <CronogramaPage />
+              </Layout>
             </ProtectedRoute>
           }
         />

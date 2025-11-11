@@ -4,7 +4,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { MainLayout } from '../components/layout/MainLayout';
 import { useCronograma } from '../hooks/useCronograma';
 import { VisualizacaoCronograma } from '../types/cronograma';
 
@@ -78,14 +77,12 @@ export const CronogramaPage: React.FC = () => {
 
   if (isLoading && atividades.length === 0) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Carregando cronograma...</p>
-          </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando cronograma...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -95,35 +92,33 @@ export const CronogramaPage: React.FC = () => {
 
   if (erro) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-            <div className="flex items-center mb-4">
-              <svg
-                className="w-6 h-6 text-red-500 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h3 className="text-lg font-semibold text-red-800">Erro ao carregar</h3>
-            </div>
-            <p className="text-red-700">{erro}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <div className="flex items-center mb-4">
+            <svg
+              className="w-6 h-6 text-red-500 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Tentar Novamente
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-red-800">Erro ao carregar</h3>
           </div>
+          <p className="text-red-700">{erro}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+          >
+            Tentar Novamente
+          </button>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -132,8 +127,7 @@ export const CronogramaPage: React.FC = () => {
   // ========================================================================
 
   return (
-    <MainLayout>
-      <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -261,7 +255,6 @@ export const CronogramaPage: React.FC = () => {
           }}
         />
       </div>
-    </MainLayout>
   );
 };
 
