@@ -5,7 +5,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import Gantt from 'frappe-gantt';
-import 'frappe-gantt/dist/frappe-gantt.css';
 import { VPGanttTask, VPGanttConfig } from './types';
 import { useCronogramaStore } from '../../stores/cronogramaStore';
 import { formatarData } from '../../utils/dateFormatter';
