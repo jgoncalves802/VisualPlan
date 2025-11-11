@@ -214,7 +214,7 @@
 .vp-gantt-loading {
   display: flex;
   align-items: center;
-  justify-center;
+  justify-content: center;
   height: 600px;
   background: #f9fafb;
   border-radius: 8px;
