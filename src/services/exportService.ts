@@ -130,20 +130,21 @@ export const exportarPDF = async (
     pdf.setFontSize(9);
     pdf.setTextColor(107, 114, 128); // gray-500
     const dataExportacao = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  pdf.text(`Exportado em: ${dataExportacao}`, margin, currentY);
-  currentY += 10;
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    pdf.text(`Exportado em: ${dataExportacao}`, margin, currentY);
+    currentY += 10;
 
-  // Linha divisória
-  pdf.setDrawColor(229, 231, 235); // gray-200
-  pdf.setLineWidth(0.5);
-  pdf.line(margin, currentY, pageWidth - margin, currentY);
-  currentY += 8;
+    // Linha divisória
+    pdf.setDrawColor(229, 231, 235); // gray-200
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 8;
+  }
 
   // ========================================================================
   // ESTATÍSTICAS
