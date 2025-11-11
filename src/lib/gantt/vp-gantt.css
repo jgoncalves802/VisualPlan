@@ -1,384 +1,324 @@
 /**
- * VisionPlan Gantt - Estilos Customizados
- * Inclui estilos base do Frappe Gantt + customizações VisionPlan
+ * VisionPlan Gantt - Estilos para DHTMLX Gantt
+ * Customizações profissionais para o DHTMLX Gantt
  */
 
 /* ============================================================================
-   FRAPPE GANTT - ESTILOS BASE
+   VISIONPLAN - CONTAINER
    ============================================================================ */
 
-.gantt-container {
-  overflow: auto;
-  position: relative;
-  font-size: 12px;
-}
-
-.gantt .grid-background {
-  fill: none;
-}
-
-.gantt .grid-header {
-  fill: #f9fafb;
-  stroke: #e0e0e0;
-  stroke-width: 1.4;
-}
-
-.gantt .grid-row {
-  fill: #fff;
-}
-
-.gantt .grid-row:nth-child(even) {
-  fill: #f5f5f5;
-}
-
-.gantt .row-line {
-  stroke: #e0e0e0;
-}
-
-.gantt .tick {
-  stroke: #e0e0e0;
-  stroke-width: 0.2;
-}
-
-.gantt .tick.thick {
-  stroke-width: 0.4;
-}
-
-.gantt .today-highlight {
-  fill: #fcf8e3;
-  opacity: 0.5;
-}
-
-.gantt .arrow {
-  fill: none;
-  stroke: #666;
-  stroke-width: 1.4;
-}
-
-.gantt .bar {
-  fill: #b8c2cc;
-  stroke: #8D99A6;
-  stroke-width: 0;
-  transition: stroke-width 0.3s ease;
-  user-select: none;
-}
-
-.gantt .bar-progress {
-  fill: #a3a3ff;
-}
-
-.gantt .bar-invalid {
-  fill: transparent;
-  stroke: #8D99A6;
-  stroke-width: 1;
-  stroke-dasharray: 5;
-}
-
-.gantt .bar-label {
-  fill: #fff;
-  dominant-baseline: central;
-  text-anchor: middle;
-  font-size: 12px;
-  font-weight: lighter;
-  user-select: none;
-}
-
-.gantt .bar-label.big {
-  fill: #555;
-  text-anchor: start;
-}
-
-.gantt .handle {
-  fill: #ddd;
-  cursor: ew-resize;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
-}
-
-.gantt .bar-wrapper {
-  cursor: pointer;
-  outline: none;
-}
-
-.gantt .bar-wrapper:hover .bar {
-  fill: #a9b5c1;
-}
-
-.gantt .bar-wrapper:hover .bar-progress {
-  fill: #8a8aff;
-}
-
-.gantt .bar-wrapper:hover .handle {
-  visibility: visible;
-  opacity: 1;
-}
-
-.gantt .bar-wrapper.active .bar {
-  fill: #a9b5c1;
-}
-
-.gantt .bar-wrapper.active .bar-progress {
-  fill: #8a8aff;
-}
-
-.gantt .lower-text,
-.gantt .upper-text {
-  font-size: 12px;
-  text-anchor: middle;
-  fill: #555;
-}
-
-.gantt .upper-text {
-  font-weight: 600;
-}
-
-.gantt .hide {
-  display: none;
-}
-
-.gantt-container .popup-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 0;
-  color: #fff;
-  border-radius: 3px;
-  z-index: 9999;
-}
-
-.gantt-container .popup-wrapper .title {
-  border-bottom: 3px solid #a3a3ff;
-  padding: 10px;
-}
-
-.gantt-container .popup-wrapper .subtitle {
-  padding: 10px;
-  color: #ddd;
-}
-
-.gantt-container .popup-wrapper .pointer {
-  position: absolute;
-  height: 5px;
-  margin: 0 0 0 -5px;
-  border: 5px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.8);
-}
-
-/* ============================================================================
-   VISIONPLAN - CUSTOMIZAÇÕES
-   ============================================================================ */
-
-/* Container principal */
 .vp-gantt-container {
   width: 100%;
   height: 600px;
-  overflow: auto;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
-.vp-gantt-svg {
-  width: 100%;
-  min-height: 100%;
+.vp-gantt-chart {
+  font-family: 'Inter', 'system-ui', sans-serif !important;
 }
 
-/* Customização do Frappe Gantt */
-.vp-gantt-container .gantt-container {
-  font-family: 'Inter', 'system-ui', sans-serif;
+/* ============================================================================
+   DHTMLX GANTT - CUSTOMIZAÇÕES
+   ============================================================================ */
+
+/* Grid (tabela lateral) */
+.gantt_grid_scale {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
 }
 
-/* Grid */
-.vp-gantt-container .grid-header {
-  fill: #f9fafb;
-  stroke: #e5e7eb;
+.gantt_grid {
+  border-right: 1px solid #e5e7eb;
 }
 
-.vp-gantt-container .grid-row {
-  fill: #fff;
+.gantt_grid_data .gantt_row {
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.vp-gantt-container .grid-row:nth-child(even) {
-  fill: #f9fafb;
+.gantt_grid_data .gantt_row:hover {
+  background: #f9fafb;
 }
 
-/* Header (Timeline) */
-.vp-gantt-container .upper-text,
-.vp-gantt-container .lower-text {
-  fill: #374151;
-  font-weight: 500;
+.gantt_grid_data .gantt_row.odd {
+  background: #fff;
+}
+
+.gantt_grid_data .gantt_row.gantt_selected {
+  background: #eff6ff !important;
+}
+
+.gantt_cell {
+  color: #374151;
   font-size: 13px;
 }
 
-/* Barras de tarefa */
-.vp-gantt-container .bar {
-  rx: 4;
-  ry: 4;
-  stroke: none;
+/* Timeline header */
+.gantt_task_scale {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.gantt_scale_line {
+  border-top: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gantt_scale_cell {
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Timeline */
+.gantt_task_bg {
+  background: #fff;
+}
+
+.gantt_task_row {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.gantt_task_row:hover {
+  background: #f9fafb;
+}
+
+/* Barras de tarefas */
+.gantt_task_line {
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.gantt_task_line:hover {
   opacity: 0.9;
-  transition: opacity 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.vp-gantt-container .bar:hover {
-  opacity: 1;
+.gantt_task_line.gantt_selected {
+  box-shadow: 0 0 0 2px #3b82f6;
 }
 
-/* Label das barras */
-.vp-gantt-container .bar-label {
-  fill: #fff;
+/* Barra de progresso */
+.gantt_task_progress {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+/* Texto nas barras */
+.gantt_task_content {
+  color: #fff;
   font-size: 12px;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Barra de progresso */
-.vp-gantt-container .bar-progress {
-  rx: 4;
-  ry: 4;
+/* Links/Dependências */
+.gantt_link_arrow {
+  background-color: #6b7280;
 }
 
-/* Hoje (today line) */
-.vp-gantt-container .today-highlight {
-  fill: rgba(59, 130, 246, 0.1);
+.gantt_line_wrapper div {
+  background-color: #6b7280;
 }
 
-/* Links de dependência */
-.vp-gantt-container .arrow {
-  stroke: #6b7280;
-  stroke-width: 1.5;
-  fill: none;
+.gantt_link_arrow_right,
+.gantt_link_arrow_left {
+  border-color: #6b7280;
 }
 
-/* Handles para resize */
-.vp-gantt-container .handle {
-  fill: #fff;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  opacity: 0;
-  transition: opacity 0.2s;
+/* Crítico (Critical Path) */
+.gantt_critical_task {
+  border-width: 2px !important;
 }
 
-.vp-gantt-container .bar-wrapper:hover .handle {
+.gantt_critical_link .gantt_line_wrapper div {
+  background-color: #ef4444;
+}
+
+.gantt_critical_link .gantt_link_arrow {
+  border-color: #ef4444;
+}
+
+/* Marcos (Milestones) */
+.gantt_task_line.gantt_milestone {
+  border-radius: 0;
+  transform: rotate(45deg);
+  margin-top: -6px;
+}
+
+.gantt_task_line.gantt_milestone .gantt_task_content {
+  visibility: hidden;
+}
+
+/* Fases/Projetos */
+.gantt_task_line.gantt_project {
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
+.gantt_task_line.gantt_project .gantt_task_progress {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Hoje (Today line) */
+.gantt_marker {
+  background: rgba(59, 130, 246, 0.2);
+  border-left: 2px solid #3b82f6;
+}
+
+/* Handles para redimensionar */
+.gantt_task_drag {
+  cursor: ew-resize;
+}
+
+.gantt_task_drag:hover {
   opacity: 1;
 }
 
-/* Popup/Tooltip Customizado */
-.vp-gantt-popup {
+/* Scrollbars */
+.gantt_layout_cell::-webkit-scrollbar,
+.gantt_task::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gantt_layout_cell::-webkit-scrollbar-track,
+.gantt_task::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.gantt_layout_cell::-webkit-scrollbar-thumb,
+.gantt_task::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.gantt_layout_cell::-webkit-scrollbar-thumb:hover,
+.gantt_task::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ============================================================================
+   TOOLTIPS CUSTOMIZADOS
+   ============================================================================ */
+
+.vp-dhx-tooltip {
   background: #1f2937;
   color: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  min-width: 280px;
-  max-width: 400px;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  min-width: 250px;
+  max-width: 350px;
   font-family: 'Inter', 'system-ui', sans-serif;
 }
 
-.vp-gantt-popup-title {
-  font-size: 15px;
+.vp-dhx-tooltip-title {
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.vp-gantt-popup-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.vp-dhx-tooltip-body {
+  font-size: 12px;
+  line-height: 1.6;
 }
 
-.vp-gantt-popup-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 13px;
+.vp-dhx-tooltip-body div {
+  margin: 4px 0;
 }
 
-.vp-gantt-popup-label {
+.vp-dhx-tooltip-body strong {
   color: #9ca3af;
   font-weight: 500;
+  margin-right: 8px;
 }
 
-.vp-gantt-popup-value {
-  color: #f9fafb;
-  text-align: right;
+.vp-critical-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  border-radius: 4px;
+  color: #fca5a5;
+  font-weight: 600;
+  font-size: 11px;
 }
 
-.vp-critical-label {
-  color: #fca5a5 !important;
+/* ============================================================================
+   LIGHTBOX (MODAL DE EDIÇÃO)
+   ============================================================================ */
+
+.gantt_cal_light {
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.gantt_cal_lheader {
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 8px 8px 0 0;
   font-weight: 600;
 }
 
-/* Estilos para diferentes tipos de tarefas */
-.vp-gantt-container .bar.vp-critical {
-  stroke: #991b1b;
-  stroke-width: 2;
+.gantt_cal_lsection {
+  font-family: 'Inter', 'system-ui', sans-serif;
 }
 
-.vp-gantt-container .bar.vp-completed {
-  opacity: 0.7;
+.gantt_btn_set {
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
-.vp-gantt-container .bar.vp-milestone {
-  rx: 0;
-  ry: 0;
-  transform: rotate(45deg);
-  transform-origin: center;
+.gantt_btn_set:hover {
+  background: #2563eb;
 }
 
-.vp-gantt-container .bar.vp-phase {
-  height: 20px;
-  opacity: 0.6;
+.gantt_cancel_btn {
+  background: #6b7280;
+  color: #fff;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
-/* Responsivo */
+.gantt_cancel_btn:hover {
+  background: #4b5563;
+}
+
+/* ============================================================================
+   RESPONSIVO
+   ============================================================================ */
+
 @media (max-width: 768px) {
   .vp-gantt-container {
-    height: 400px;
+    height: 500px;
   }
   
-  .vp-gantt-popup {
-    min-width: 240px;
-    padding: 12px;
+  .gantt_grid {
+    width: 200px !important;
   }
   
-  .vp-gantt-popup-title {
-    font-size: 14px;
-  }
-  
-  .vp-gantt-popup-row {
-    font-size: 12px;
+  .gantt_scale_cell,
+  .gantt_cell {
+    font-size: 11px;
   }
 }
 
-/* Dark mode (opcional) */
-@media (prefers-color-scheme: dark) {
-  .vp-gantt-container {
-    background: #1f2937;
-  }
-  
-  .vp-gantt-container .grid-header {
-    fill: #374151;
-  }
-  
-  .vp-gantt-container .grid-row {
-    fill: #1f2937;
-  }
-  
-  .vp-gantt-container .grid-row:nth-child(even) {
-    fill: #111827;
-  }
-  
-  .vp-gantt-container .upper-text,
-  .vp-gantt-container .lower-text {
-    fill: #f9fafb;
-  }
-}
+/* ============================================================================
+   LOADING STATE
+   ============================================================================ */
 
-/* Loading state */
 .vp-gantt-loading {
   display: flex;
   align-items: center;
@@ -403,3 +343,35 @@
   }
 }
 
+/* ============================================================================
+   DARK MODE (OPCIONAL)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .vp-gantt-container {
+    background: #1f2937;
+  }
+  
+  .gantt_grid_scale,
+  .gantt_task_scale {
+    background: #374151;
+  }
+  
+  .gantt_scale_line,
+  .gantt_cell {
+    color: #f9fafb;
+  }
+  
+  .gantt_grid_data .gantt_row {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .gantt_grid_data .gantt_row:hover {
+    background: #374151;
+  }
+  
+  .gantt_task_bg {
+    background: #111827;
+  }
+}
