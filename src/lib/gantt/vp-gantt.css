@@ -1,0 +1,237 @@
+/**
+ * VisionPlan Gantt - Estilos Customizados
+ */
+
+/* Container principal */
+.vp-gantt-container {
+  width: 100%;
+  height: 600px;
+  overflow: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.vp-gantt-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Customização do Frappe Gantt */
+.vp-gantt-container .gantt-container {
+  font-family: 'Inter', 'system-ui', sans-serif;
+}
+
+/* Grid */
+.vp-gantt-container .grid-header {
+  fill: #f9fafb;
+  stroke: #e5e7eb;
+}
+
+.vp-gantt-container .grid-row {
+  fill: #fff;
+}
+
+.vp-gantt-container .grid-row:nth-child(even) {
+  fill: #f9fafb;
+}
+
+/* Header (Timeline) */
+.vp-gantt-container .upper-text,
+.vp-gantt-container .lower-text {
+  fill: #374151;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Barras de tarefa */
+.vp-gantt-container .bar {
+  rx: 4;
+  ry: 4;
+  stroke: none;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.vp-gantt-container .bar:hover {
+  opacity: 1;
+}
+
+/* Label das barras */
+.vp-gantt-container .bar-label {
+  fill: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Barra de progresso */
+.vp-gantt-container .bar-progress {
+  rx: 4;
+  ry: 4;
+}
+
+/* Hoje (today line) */
+.vp-gantt-container .today-highlight {
+  fill: rgba(59, 130, 246, 0.1);
+}
+
+/* Links de dependência */
+.vp-gantt-container .arrow {
+  stroke: #6b7280;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+/* Handles para resize */
+.vp-gantt-container .handle {
+  fill: #fff;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.vp-gantt-container .bar-wrapper:hover .handle {
+  opacity: 1;
+}
+
+/* Popup/Tooltip Customizado */
+.vp-gantt-popup {
+  background: #1f2937;
+  color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  min-width: 280px;
+  max-width: 400px;
+  font-family: 'Inter', 'system-ui', sans-serif;
+}
+
+.vp-gantt-popup-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vp-gantt-popup-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vp-gantt-popup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.vp-gantt-popup-label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.vp-gantt-popup-value {
+  color: #f9fafb;
+  text-align: right;
+}
+
+.vp-critical-label {
+  color: #fca5a5 !important;
+  font-weight: 600;
+}
+
+/* Estilos para diferentes tipos de tarefas */
+.vp-gantt-container .bar.vp-critical {
+  stroke: #991b1b;
+  stroke-width: 2;
+}
+
+.vp-gantt-container .bar.vp-completed {
+  opacity: 0.7;
+}
+
+.vp-gantt-container .bar.vp-milestone {
+  rx: 0;
+  ry: 0;
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+
+.vp-gantt-container .bar.vp-phase {
+  height: 20px;
+  opacity: 0.6;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .vp-gantt-container {
+    height: 400px;
+  }
+  
+  .vp-gantt-popup {
+    min-width: 240px;
+    padding: 12px;
+  }
+  
+  .vp-gantt-popup-title {
+    font-size: 14px;
+  }
+  
+  .vp-gantt-popup-row {
+    font-size: 12px;
+  }
+}
+
+/* Dark mode (opcional) */
+@media (prefers-color-scheme: dark) {
+  .vp-gantt-container {
+    background: #1f2937;
+  }
+  
+  .vp-gantt-container .grid-header {
+    fill: #374151;
+  }
+  
+  .vp-gantt-container .grid-row {
+    fill: #1f2937;
+  }
+  
+  .vp-gantt-container .grid-row:nth-child(even) {
+    fill: #111827;
+  }
+  
+  .vp-gantt-container .upper-text,
+  .vp-gantt-container .lower-text {
+    fill: #f9fafb;
+  }
+}
+
+/* Loading state */
+.vp-gantt-loading {
+  display: flex;
+  align-items: center;
+  justify-center;
+  height: 600px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.vp-gantt-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: vp-gantt-spin 0.8s linear infinite;
+}
+
+@keyframes vp-gantt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
