@@ -39,7 +39,21 @@ export const CronogramaFilters: React.FC = () => {
     buscaLocal ||
     (filtros.status && filtros.status.length > 0) ||
     filtros.apenas_criticas ||
-    filtros.apenas_atrasadas;
+    filtros.apenas_atrasadas ||
+    filtros.data_inicio ||
+    filtros.data_fim;
+
+  // Formata data para input date (YYYY-MM-DD)
+  const formatarDataParaInput = (data?: Date) => {
+    if (!data) return '';
+    const d = new Date(data);
+    return d.toISOString().split('T')[0];
+  };
+
+  // Converte string do input para Date
+  const parseDataDoInput = (valor: string) => {
+    return valor ? new Date(valor + 'T00:00:00') : undefined;
+  };
 
   return (
     <div className="space-y-4">
@@ -194,6 +208,51 @@ export const CronogramaFilters: React.FC = () => {
             </button>
           );
         })}
+      </div>
+
+      {/* Linha 3: Filtros de Data */}
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="text-sm font-medium text-gray-700">Período:</span>
+        
+        {/* Data Início */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">De:</label>
+          <input
+            type="date"
+            value={formatarDataParaInput(filtros.data_inicio)}
+            onChange={(e) => setFiltros({ data_inicio: parseDataDoInput(e.target.value) })}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Data Fim */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Até:</label>
+          <input
+            type="date"
+            value={formatarDataParaInput(filtros.data_fim)}
+            onChange={(e) => setFiltros({ data_fim: parseDataDoInput(e.target.value) })}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Limpar Datas */}
+        {(filtros.data_inicio || filtros.data_fim) && (
+          <button
+            onClick={() => setFiltros({ data_inicio: undefined, data_fim: undefined })}
+            className="text-sm text-gray-500 hover:text-gray-700"
+            title="Limpar filtro de datas"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );

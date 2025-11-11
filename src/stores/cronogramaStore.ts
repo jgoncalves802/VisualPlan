@@ -11,6 +11,7 @@ import {
   FiltrosCronograma,
   AtividadeMock,
   DependenciaAtividade,
+  UnidadeTempo,
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
 
@@ -35,6 +36,7 @@ export const useCronogramaStore = create<CronogramaState>()(
       visualizacao: VisualizacaoCronograma.GANTT,
       escala: EscalaTempo.DIA,
       filtros: initialFilters,
+      unidadeTempoPadrao: UnidadeTempo.DIAS,
       isLoading: false,
       isCalculandoCPM: false,
       erro: null,
@@ -243,6 +245,13 @@ export const useCronogramaStore = create<CronogramaState>()(
         set({ filtros: initialFilters });
       },
 
+      /**
+       * Define a unidade de tempo padrão (DIAS ou HORAS)
+       */
+      setUnidadeTempoPadrao: (unidade: UnidadeTempo) => {
+        set({ unidadeTempoPadrao: unidade });
+      },
+
       // ========================================================================
       // ACTIONS - RESET
       // ========================================================================
@@ -258,6 +267,7 @@ export const useCronogramaStore = create<CronogramaState>()(
           visualizacao: VisualizacaoCronograma.GANTT,
           escala: EscalaTempo.DIA,
           filtros: initialFilters,
+          unidadeTempoPadrao: UnidadeTempo.DIAS,
           isLoading: false,
           isCalculandoCPM: false,
           erro: null,
@@ -271,6 +281,7 @@ export const useCronogramaStore = create<CronogramaState>()(
         visualizacao: state.visualizacao,
         escala: state.escala,
         filtros: state.filtros,
+        unidadeTempoPadrao: state.unidadeTempoPadrao,
       }),
     }
   )

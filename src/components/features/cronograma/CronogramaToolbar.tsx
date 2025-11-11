@@ -4,8 +4,9 @@
 
 import React, { useState } from 'react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
-import { VisualizacaoCronograma, EscalaTempo } from '../../../types/cronograma';
+import { VisualizacaoCronograma, EscalaTempo, UnidadeTempo, CabecalhoImpressao } from '../../../types/cronograma';
 import { exportarPDF, exportarExcel } from '../../../services/exportService';
+import { PrintConfigModal } from './PrintConfigModal';
 
 interface CronogramaToolbarProps {
   onNovaAtividade: () => void;
@@ -26,16 +27,27 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
   presentationMode = false,
   onTogglePresentationMode,
 }) => {
-  const { visualizacao, escala, setVisualizacao, setEscala, atividades, dependencias, caminhoCritico } =
-    useCronogramaStore();
+  const { 
+    visualizacao, 
+    escala, 
+    unidadeTempoPadrao,
+    setVisualizacao, 
+    setEscala, 
+    setUnidadeTempoPadrao,
+    atividades, 
+    dependencias, 
+    caminhoCritico 
+  } = useCronogramaStore();
   
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showPrintConfigModal, setShowPrintConfigModal] = useState(false);
+  const [exportType, setExportType] = useState<'pdf' | 'excel' | null>(null);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (cabecalho?: CabecalhoImpressao) => {
     setIsExporting(true);
     try {
-      await exportarPDF(projetoNome, atividades, dependencias, caminhoCritico);
+      await exportarPDF(projetoNome, atividades, dependencias, caminhoCritico, true, cabecalho);
       alert('PDF exportado com sucesso!');
     } catch (error) {
       console.error('Erro ao exportar PDF:', error);
@@ -43,6 +55,7 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
     } finally {
       setIsExporting(false);
       setShowExportMenu(false);
+      setShowPrintConfigModal(false);
     }
   };
 
@@ -57,6 +70,23 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
     } finally {
       setIsExporting(false);
       setShowExportMenu(false);
+    }
+  };
+
+  // Abre modal de configuração para PDF
+  const handleOpenPrintConfig = (type: 'pdf' | 'excel') => {
+    setExportType(type);
+    setShowPrintConfigModal(true);
+    setShowExportMenu(false);
+  };
+
+  // Confirma impressão com configuração
+  const handleConfirmPrint = (cabecalho: CabecalhoImpressao) => {
+    if (exportType === 'pdf') {
+      handleExportPDF(cabecalho);
+    } else if (exportType === 'excel') {
+      // Por enquanto Excel não usa cabeçalho personalizado no mesmo formato
+      handleExportExcel();
     }
   };
 
@@ -139,6 +169,20 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
         </button>
       </div>
 
+      {/* Unidade de Tempo */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Unidade:</span>
+        <select
+          value={unidadeTempoPadrao}
+          onChange={(e) => setUnidadeTempoPadrao(e.target.value as UnidadeTempo)}
+          className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Unidade de duração das atividades"
+        >
+          <option value={UnidadeTempo.DIAS}>Dias</option>
+          <option value={UnidadeTempo.HORAS}>Horas</option>
+        </select>
+      </div>
+
       {/* Escala de Tempo */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Escala:</span>
@@ -147,6 +191,7 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
           onChange={(e) => setEscala(e.target.value as EscalaTempo)}
           className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
+          <option value={EscalaTempo.HORA}>Hora</option>
           <option value={EscalaTempo.DIA}>Dia</option>
           <option value={EscalaTempo.SEMANA}>Semana</option>
           <option value={EscalaTempo.MES}>Mês</option>
@@ -223,10 +268,27 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
 
         {/* Dropdown Menu */}
         {showExportMenu && !isExporting && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
             <button
-              onClick={handleExportPDF}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition rounded-t-lg"
+              onClick={() => handleOpenPrintConfig('pdf')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition rounded-t-lg border-b border-gray-100"
+            >
+              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              <div>
+                <div className="font-medium">Imprimir PDF</div>
+                <div className="text-xs text-gray-500">Com cabeçalho personalizado</div>
+              </div>
+            </button>
+            <button
+              onClick={() => handleExportPDF()}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition border-b border-gray-100"
             >
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -238,7 +300,7 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
               </svg>
               <div>
                 <div className="font-medium">Exportar PDF</div>
-                <div className="text-xs text-gray-500">Documento completo</div>
+                <div className="text-xs text-gray-500">Simples (sem logos)</div>
               </div>
             </button>
             <button
@@ -324,6 +386,14 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
         </svg>
         <span>Atualizar</span>
       </button>
+
+      {/* Modal de Configuração de Impressão */}
+      <PrintConfigModal
+        open={showPrintConfigModal}
+        onClose={() => setShowPrintConfigModal(false)}
+        onConfirm={handleConfirmPrint}
+        projetoNome={projetoNome}
+      />
     </div>
   );
 };

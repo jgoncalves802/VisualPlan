@@ -34,10 +34,19 @@ export enum VisualizacaoCronograma {
  * Escalas de tempo para o Gantt
  */
 export enum EscalaTempo {
+  HORA = 'HOUR',
   DIA = 'DAY',
   SEMANA = 'WEEK',
   MES = 'MONTH',
   ANO = 'YEAR',
+}
+
+/**
+ * Unidade de duração das atividades
+ */
+export enum UnidadeTempo {
+  HORAS = 'HORAS',
+  DIAS = 'DIAS',
 }
 
 /**
@@ -142,6 +151,8 @@ export interface AtividadeMock {
   data_inicio: string;
   data_fim: string;
   duracao_dias: number;
+  duracao_horas?: number; // Duração em horas (para cronogramas de curto prazo)
+  unidade_tempo?: UnidadeTempo; // HORAS ou DIAS
   progresso: number;
   status: string;
   responsavel_id?: string;
@@ -167,6 +178,7 @@ export interface CronogramaState {
   visualizacao: VisualizacaoCronograma;
   escala: EscalaTempo;
   filtros: FiltrosCronograma;
+  unidadeTempoPadrao: UnidadeTempo; // Unidade padrão do projeto (DIAS ou HORAS)
   
   // Loading states
   isLoading: boolean;
@@ -192,6 +204,7 @@ export interface CronogramaState {
   setEscala: (escala: EscalaTempo) => void;
   setFiltros: (filtros: Partial<FiltrosCronograma>) => void;
   limparFiltros: () => void;
+  setUnidadeTempoPadrao: (unidade: UnidadeTempo) => void;
 
   // Actions - Reset
   reset: () => void;
@@ -209,6 +222,19 @@ export interface DadosExportacao {
 }
 
 /**
+ * Configuração de cabeçalho para impressão
+ */
+export interface CabecalhoImpressao {
+  nome_projeto: string;
+  logo_contratada?: string; // URL ou base64
+  logo_contratante?: string; // URL ou base64
+  logo_fiscalizacao?: string; // URL ou base64
+  numero_contrato?: string;
+  data_impressao?: Date;
+  responsavel_impressao?: string;
+}
+
+/**
  * Opções de exportação PDF
  */
 export interface OpcoesPDF {
@@ -217,6 +243,7 @@ export interface OpcoesPDF {
   incluir_dependencias: boolean;
   incluir_caminho_critico: boolean;
   orientacao: 'portrait' | 'landscape';
+  cabecalho?: CabecalhoImpressao;
 }
 
 /**
@@ -226,5 +253,6 @@ export interface OpcoesExcel {
   incluir_dependencias: boolean;
   incluir_folgas: boolean;
   incluir_formulas: boolean;
+  cabecalho?: CabecalhoImpressao;
 }
 

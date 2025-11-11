@@ -5,7 +5,7 @@
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
-import { AtividadeMock, DependenciaAtividade, CaminhoCritico } from '../types/cronograma';
+import { AtividadeMock, DependenciaAtividade, CaminhoCritico, CabecalhoImpressao } from '../types/cronograma';
 
 // ============================================================================
 // EXPORTAÇÃO PDF
@@ -19,7 +19,8 @@ export const exportarPDF = async (
   atividades: AtividadeMock[],
   dependencias: DependenciaAtividade[],
   caminhoCritico?: CaminhoCritico | null,
-  incluirGantt: boolean = true
+  incluirGantt: boolean = true,
+  cabecalho?: CabecalhoImpressao
 ): Promise<void> => {
   const pdf = new jsPDF('landscape', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -29,25 +30,106 @@ export const exportarPDF = async (
   let currentY = margin;
 
   // ========================================================================
-  // CABEÇALHO
+  // CABEÇALHO PERSONALIZADO (se fornecido)
   // ========================================================================
 
-  // Título
-  pdf.setFontSize(18);
-  pdf.setTextColor(31, 41, 55); // gray-800
-  pdf.text('Cronograma do Projeto', margin, currentY);
-  currentY += 10;
+  if (cabecalho) {
+    const logoHeight = 12;
+    const logoY = currentY;
+    let logoX = margin;
+    const logoSpacing = usableWidth / 4;
 
-  // Nome do Projeto
-  pdf.setFontSize(14);
-  pdf.setTextColor(59, 130, 246); // blue-600
-  pdf.text(projetoNome, margin, currentY);
-  currentY += 8;
+    // Logo Contratada
+    if (cabecalho.logo_contratada) {
+      try {
+        pdf.addImage(cabecalho.logo_contratada, 'PNG', logoX, logoY, logoHeight * 2, logoHeight);
+      } catch (e) {
+        console.warn('Erro ao adicionar logo contratada:', e);
+      }
+    }
 
-  // Data da exportação
-  pdf.setFontSize(9);
-  pdf.setTextColor(107, 114, 128); // gray-500
-  const dataExportacao = new Date().toLocaleDateString('pt-BR', {
+    // Logo Contratante (centro-esquerda)
+    if (cabecalho.logo_contratante) {
+      try {
+        logoX = margin + logoSpacing;
+        pdf.addImage(cabecalho.logo_contratante, 'PNG', logoX, logoY, logoHeight * 2, logoHeight);
+      } catch (e) {
+        console.warn('Erro ao adicionar logo contratante:', e);
+      }
+    }
+
+    // Logo Fiscalização (centro-direita)
+    if (cabecalho.logo_fiscalizacao) {
+      try {
+        logoX = margin + logoSpacing * 2;
+        pdf.addImage(cabecalho.logo_fiscalizacao, 'PNG', logoX, logoY, logoHeight * 2, logoHeight);
+      } catch (e) {
+        console.warn('Erro ao adicionar logo fiscalização:', e);
+      }
+    }
+
+    currentY += logoHeight + 8;
+
+    // Nome do Projeto (centralizado)
+    pdf.setFontSize(16);
+    pdf.setTextColor(31, 41, 55); // gray-800
+    const textoProjetoWidth = pdf.getTextWidth(cabecalho.nome_projeto);
+    pdf.text(cabecalho.nome_projeto, (pageWidth - textoProjetoWidth) / 2, currentY);
+    currentY += 7;
+
+    // Número do Contrato
+    if (cabecalho.numero_contrato) {
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128); // gray-500
+      const textoContratoWidth = pdf.getTextWidth(`Contrato: ${cabecalho.numero_contrato}`);
+      pdf.text(`Contrato: ${cabecalho.numero_contrato}`, (pageWidth - textoContratoWidth) / 2, currentY);
+      currentY += 5;
+    }
+
+    // Título "Programação de Atividades"
+    pdf.setFontSize(12);
+    pdf.setTextColor(59, 130, 246); // blue-600
+    const textoProgramacao = 'Programação de Atividades - Cronograma Gantt';
+    const textoProgramacaoWidth = pdf.getTextWidth(textoProgramacao);
+    pdf.text(textoProgramacao, (pageWidth - textoProgramacaoWidth) / 2, currentY);
+    currentY += 8;
+
+    // Data e Responsável
+    pdf.setFontSize(8);
+    pdf.setTextColor(107, 114, 128); // gray-500
+    const dataFormatada = new Date(cabecalho.data_impressao || new Date()).toLocaleDateString('pt-BR');
+    let infoRodape = `Data: ${dataFormatada}`;
+    if (cabecalho.responsavel_impressao) {
+      infoRodape += ` | Responsável: ${cabecalho.responsavel_impressao}`;
+    }
+    const infoRodapeWidth = pdf.getTextWidth(infoRodape);
+    pdf.text(infoRodape, (pageWidth - infoRodapeWidth) / 2, currentY);
+    currentY += 10;
+
+    // Linha separadora
+    pdf.setDrawColor(229, 231, 235); // gray-200
+    pdf.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 5;
+  } else {
+    // Cabeçalho simples (legado)
+    // Título
+    pdf.setFontSize(18);
+    pdf.setTextColor(31, 41, 55); // gray-800
+    pdf.text('Cronograma do Projeto', margin, currentY);
+    currentY += 10;
+
+    // Nome do Projeto
+    pdf.setFontSize(14);
+    pdf.setTextColor(59, 130, 246); // blue-600
+    pdf.text(projetoNome, margin, currentY);
+    currentY += 8;
+  }
+
+  // Data da exportação (se não houver cabeçalho personalizado)
+  if (!cabecalho) {
+    pdf.setFontSize(9);
+    pdf.setTextColor(107, 114, 128); // gray-500
+    const dataExportacao = new Date().toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
