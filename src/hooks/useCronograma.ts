@@ -132,10 +132,19 @@ export const useCronograma = (projetoId: string) => {
       const tipo = mapTipoToGantt(atividade.tipo);
       const styles = getTaskStyles(atividade);
 
-      // Busca dependências
+      // Busca dependências baseadas em relacionamentos
       const deps = dependencias
         .filter((d) => d.atividade_destino_id === atividade.id)
         .map((d) => d.atividade_origem_id);
+
+      // Adiciona parent_id como dependência se existir (para hierarquia)
+      if (atividade.parent_id) {
+        // Verifica se o parent existe nas atividades filtradas
+        const parentExists = atividadesFiltradas.some((a) => a.id === atividade.parent_id);
+        if (parentExists && !deps.includes(atividade.parent_id)) {
+          deps.push(atividade.parent_id);
+        }
+      }
 
       return {
         id: atividade.id,
@@ -145,6 +154,7 @@ export const useCronograma = (projetoId: string) => {
         end: new Date(atividade.data_fim),
         progress: atividade.progresso,
         dependencies: deps.length > 0 ? deps : undefined,
+        project: atividade.parent_id, // Define o parent para hierarquia visual
         styles,
         // Campos customizados
         status: atividade.status,
@@ -198,6 +208,8 @@ export const useCronograma = (projetoId: string) => {
    */
   const viewMode: ViewMode = useMemo(() => {
     switch (escala) {
+      case EscalaTempo.HORA:
+        return ViewMode.Hour;
       case EscalaTempo.DIA:
         return ViewMode.Day;
       case EscalaTempo.SEMANA:

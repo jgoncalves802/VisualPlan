@@ -53,7 +53,22 @@ export const useCronogramaStore = create<CronogramaState>()(
 
         try {
           const atividades = await cronogramaService.getAtividades(projetoId);
-          set({ atividades, isLoading: false });
+          
+          // Detecta automaticamente se deve usar HORAS
+          const atividadesComHoras = atividades.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
+          const usarHoras = atividadesComHoras.length > atividades.length / 2; // Mais de 50% em horas
+          
+          // Ajusta escala e unidade automaticamente
+          if (usarHoras) {
+            set({ 
+              atividades, 
+              isLoading: false,
+              escala: EscalaTempo.HORA,
+              unidadeTempoPadrao: UnidadeTempo.HORAS,
+            });
+          } else {
+            set({ atividades, isLoading: false });
+          }
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao carregar atividades';
           set({ erro: mensagem, isLoading: false });

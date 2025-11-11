@@ -261,18 +261,43 @@ export const atividadesMock: AtividadeMock[] = [
     updated_at: '2024-10-01T10:00:00Z',
   },
   // ========================================================================
-  // PROJETO 2: Manutenção Emergencial (HORAS)
+  // PROJETO 2: Manutenção Emergencial (HORAS) - COM HIERARQUIA
   // ========================================================================
+  
+  // FASE MÃE 1: Diagnóstico
+  {
+    id: 'ativ-h-fase1',
+    projeto_id: 'proj-2',
+    codigo: 'FASE-01',
+    nome: 'Fase 1: Diagnóstico e Preparação',
+    descricao: 'Análise do problema e preparação do ambiente',
+    tipo: 'Fase',
+    data_inicio: '2024-11-20T08:00:00',
+    data_fim: '2024-11-20T14:00:00',
+    duracao_dias: 0.25,
+    duracao_horas: 6,
+    unidade_tempo: UnidadeTempo.HORAS,
+    progresso: 100,
+    status: 'Concluída',
+    responsavel_id: 'user-6',
+    responsavel_nome: 'Roberto Tech',
+    e_critica: true,
+    folga_total: 0,
+    created_at: '2024-11-20T07:00:00Z',
+    updated_at: '2024-11-20T14:00:00Z',
+  },
+  
   {
     id: 'ativ-h1',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase1', // Filho da Fase 1
     codigo: 'ME-001',
     nome: 'Análise do Problema',
     descricao: 'Diagnóstico inicial da falha',
     tipo: 'Tarefa',
     data_inicio: '2024-11-20T08:00:00',
     data_fim: '2024-11-20T12:00:00',
-    duracao_dias: 0.17, // 4 horas (aproximadamente)
+    duracao_dias: 0.17,
     duracao_horas: 4,
     unidade_tempo: UnidadeTempo.HORAS,
     progresso: 100,
@@ -287,6 +312,7 @@ export const atividadesMock: AtividadeMock[] = [
   {
     id: 'ativ-h2',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase1', // Filho da Fase 1
     codigo: 'ME-002',
     nome: 'Preparação do Ambiente',
     descricao: 'Setup de ferramentas e backups',
@@ -305,9 +331,34 @@ export const atividadesMock: AtividadeMock[] = [
     created_at: '2024-11-20T07:00:00Z',
     updated_at: '2024-11-20T14:00:00Z',
   },
+  
+  // FASE MÃE 2: Correção e Testes
+  {
+    id: 'ativ-h-fase2',
+    projeto_id: 'proj-2',
+    codigo: 'FASE-02',
+    nome: 'Fase 2: Correção e Validação',
+    descricao: 'Implementação da correção e testes',
+    tipo: 'Fase',
+    data_inicio: '2024-11-20T14:00:00',
+    data_fim: '2024-11-21T00:00:00',
+    duracao_dias: 0.42,
+    duracao_horas: 10,
+    unidade_tempo: UnidadeTempo.HORAS,
+    progresso: 50,
+    status: 'Em Andamento',
+    responsavel_id: 'user-6',
+    responsavel_nome: 'Roberto Tech',
+    e_critica: true,
+    folga_total: 0,
+    created_at: '2024-11-20T07:00:00Z',
+    updated_at: '2024-11-20T19:00:00Z',
+  },
+  
   {
     id: 'ativ-h3',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase2', // Filho da Fase 2
     codigo: 'ME-003',
     nome: 'Correção do Bug Crítico',
     descricao: 'Implementação da correção',
@@ -329,6 +380,7 @@ export const atividadesMock: AtividadeMock[] = [
   {
     id: 'ativ-h4',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase2', // Filho da Fase 2
     codigo: 'ME-004',
     nome: 'Testes de Regressão',
     descricao: 'Validação da correção',
@@ -347,9 +399,34 @@ export const atividadesMock: AtividadeMock[] = [
     created_at: '2024-11-20T07:00:00Z',
     updated_at: '2024-11-20T07:00:00Z',
   },
+  
+  // FASE MÃE 3: Deploy e Monitoramento
+  {
+    id: 'ativ-h-fase3',
+    projeto_id: 'proj-2',
+    codigo: 'FASE-03',
+    nome: 'Fase 3: Deploy e Acompanhamento',
+    descricao: 'Implantação e monitoramento',
+    tipo: 'Fase',
+    data_inicio: '2024-11-21T00:00:00',
+    data_fim: '2024-11-21T11:00:00',
+    duracao_dias: 0.46,
+    duracao_horas: 11,
+    unidade_tempo: UnidadeTempo.HORAS,
+    progresso: 0,
+    status: 'Não Iniciada',
+    responsavel_id: 'user-7',
+    responsavel_nome: 'Fernanda Ops',
+    e_critica: true,
+    folga_total: 0,
+    created_at: '2024-11-20T07:00:00Z',
+    updated_at: '2024-11-20T07:00:00Z',
+  },
+  
   {
     id: 'ativ-h5',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase3', // Filho da Fase 3
     codigo: 'ME-005',
     nome: 'Deploy em Produção',
     descricao: 'Implantação da correção',
@@ -371,6 +448,7 @@ export const atividadesMock: AtividadeMock[] = [
   {
     id: 'ativ-h6',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase3', // Filho da Fase 3
     codigo: 'ME-006',
     nome: 'Monitoramento Pós-Deploy',
     descricao: 'Acompanhamento de métricas',
@@ -392,6 +470,7 @@ export const atividadesMock: AtividadeMock[] = [
   {
     id: 'ativ-h7',
     projeto_id: 'proj-2',
+    parent_id: 'ativ-h-fase3', // Filho da Fase 3
     codigo: 'ME-007',
     nome: 'Relatório Final',
     descricao: 'Documentação da correção',

@@ -148,6 +148,7 @@ export interface AtividadeMock {
   nome: string;
   descricao?: string;
   tipo: 'Tarefa' | 'Marco' | 'Fase';
+  parent_id?: string; // ID da atividade mãe (para hierarquia)
   data_inicio: string;
   data_fim: string;
   duracao_dias: number;
