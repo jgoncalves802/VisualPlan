@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
+import { CronogramaPage } from './pages/CronogramaPage';
 import './styles/global.css';
 
 // Protected Route Component
@@ -69,17 +70,18 @@ function App() {
         />
         
         <Route
-          path="/gantt"
+          path="/cronograma/:projetoId"
           element={
             <ProtectedRoute>
-              <Layout>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold theme-text mb-4">Gantt / Cronograma</h2>
-                  <p className="theme-text-secondary">Módulo em desenvolvimento...</p>
-                </div>
-              </Layout>
+              <CronogramaPage />
             </ProtectedRoute>
           }
+        />
+        
+        {/* Redirect /gantt para /cronograma/proj-1 */}
+        <Route
+          path="/gantt"
+          element={<Navigate to="/cronograma/proj-1" replace />}
         />
         
         <Route
