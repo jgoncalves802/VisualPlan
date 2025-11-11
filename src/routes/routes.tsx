@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/common/MainLayout';
 import { LoginPage } from './pages/Login';
 import { DashboardPage } from './pages/Dashboard';
+import { CronogramaPage } from './pages/CronogramaPage';
 import { useAuthStore } from './store';
 
 // Protected Route Component
@@ -58,6 +59,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="projetos" element={<PlaceholderPage title="Projetos" />} />
           <Route path="planejamento" element={<PlaceholderPage title="Planejamento" />} />
+          <Route path="cronograma/:projetoId" element={<CronogramaPage />} />
           <Route path="lps" element={<PlaceholderPage title="Last Planner System" />} />
           <Route path="restricoes" element={<PlaceholderPage title="Gestão de Restrições" />} />
           <Route path="kanban" element={<PlaceholderPage title="Minhas Tarefas" />} />
