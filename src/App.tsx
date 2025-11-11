@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
 import { CronogramaPage } from './pages/CronogramaPage';
+import { WBSPage } from './pages/WBSPage';
 import './styles/global.css';
 
 // Protected Route Component
@@ -75,6 +76,17 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <CronogramaPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/wbs"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <WBSPage />
               </Layout>
             </ProtectedRoute>
           }

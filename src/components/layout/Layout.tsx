@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Bell,
-  User
+  User,
+  Network
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -32,6 +33,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: LayoutDashboard, 
       label: 'Dashboard', 
       path: '/dashboard',
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO']
+    },
+    { 
+      icon: Network, 
+      label: 'WBS - Todos Projetos', 
+      path: '/wbs',
       roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO']
     },
     { 
