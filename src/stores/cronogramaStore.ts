@@ -12,6 +12,8 @@ import {
   AtividadeMock,
   DependenciaAtividade,
   UnidadeTempo,
+  ConfiguracoesProjeto,
+  FormatoData,
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
 
@@ -22,6 +24,29 @@ const initialFilters: FiltrosCronograma = {
   setor_id: undefined,
   apenas_criticas: false,
   apenas_atrasadas: false,
+};
+
+const initialConfiguracoes: ConfiguracoesProjeto = {
+  // Formatos de Data (padrões semelhantes ao MS Project)
+  formato_data_tabela: FormatoData.SEMANA_DIA_MES_ANO,      // qua 28/01/09
+  formato_data_gantt: FormatoData.DIA_MES,                   // 28/01
+  formato_data_tooltip: FormatoData.SEMANA_DIA_MES_EXTENSO,  // qua, 28 de janeiro
+  
+  // Configurações de Exibição
+  mostrar_codigo_atividade: true,
+  mostrar_progresso_percentual: true,
+  destacar_caminho_critico: true,
+  
+  // Configurações de Comportamento
+  permitir_edicao_drag: true,
+  auto_calcular_progresso: false,
+  
+  // Configurações de Cores
+  cor_tarefa_normal: '#3b82f6',    // blue-500
+  cor_tarefa_critica: '#dc2626',   // red-600
+  cor_tarefa_concluida: '#10b981', // green-500
+  cor_marco: '#8b5cf6',            // violet-500
+  cor_fase: '#f59e0b',             // amber-500
 };
 
 export const useCronogramaStore = create<CronogramaState>()(
@@ -37,6 +62,7 @@ export const useCronogramaStore = create<CronogramaState>()(
       escala: EscalaTempo.DIA,
       filtros: initialFilters,
       unidadeTempoPadrao: UnidadeTempo.DIAS,
+      configuracoes: initialConfiguracoes,
       isLoading: false,
       isCalculandoCPM: false,
       erro: null,
@@ -267,6 +293,15 @@ export const useCronogramaStore = create<CronogramaState>()(
         set({ unidadeTempoPadrao: unidade });
       },
 
+      /**
+       * Atualiza configurações do projeto (merge com configurações existentes)
+       */
+      setConfiguracoes: (configuracoes: Partial<ConfiguracoesProjeto>) => {
+        set((state) => ({
+          configuracoes: { ...state.configuracoes, ...configuracoes },
+        }));
+      },
+
       // ========================================================================
       // ACTIONS - RESET
       // ========================================================================
@@ -283,6 +318,7 @@ export const useCronogramaStore = create<CronogramaState>()(
           escala: EscalaTempo.DIA,
           filtros: initialFilters,
           unidadeTempoPadrao: UnidadeTempo.DIAS,
+          configuracoes: initialConfiguracoes,
           isLoading: false,
           isCalculandoCPM: false,
           erro: null,
@@ -297,6 +333,7 @@ export const useCronogramaStore = create<CronogramaState>()(
         escala: state.escala,
         filtros: state.filtros,
         unidadeTempoPadrao: state.unidadeTempoPadrao,
+        configuracoes: state.configuracoes, // Persiste configurações do usuário
       }),
     }
   )

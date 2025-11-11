@@ -50,6 +50,39 @@ export enum UnidadeTempo {
 }
 
 /**
+ * Formatos de Data (baseado no MS Project)
+ */
+export enum FormatoData {
+  // Formatos Completos
+  DIA_MES_ANO_HORA = 'DD/MM/YYYY HH:mm',           // 28/01/2009 12:33
+  DIA_MES_ANO = 'DD/MM/YYYY',                      // 28/01/2009
+  DIA_MES_ANO_CURTO = 'DD/MM/YY',                  // 28/01/09
+  
+  // Formatos com Nome do Mês
+  DIA_MES_EXTENSO_ANO = 'DD MMMM YYYY',            // 28 Janeiro 2009
+  DIA_MES_EXTENSO_ANO_HORA = 'DD MMMM YYYY HH:mm', // 28 Janeiro 2009 12:33
+  DIA_MES_ABREV_ANO = 'DD/MMM/YY',                 // 28/Jan/09
+  DIA_MES_ABREV_HORA = 'DD/MMM HH:mm',             // 28/Jan 12:33
+  
+  // Formatos com Dia da Semana
+  SEMANA_DIA_MES_ANO_HORA = 'ddd DD/MM/YY HH:mm',  // Qua 28/01/09 12:33
+  SEMANA_DIA_MES_ANO = 'ddd DD/MM/YY',             // Qua 28/01/09
+  SEMANA_HORA = 'ddd HH:mm',                        // Qua 12:33
+  SEMANA_DIA_MES = 'ddd DD/MM',                     // Qua 28/01
+  SEMANA_DIA = 'ddd/DD',                            // Qua/28
+  
+  // Formatos Compactos
+  DIA_MES = 'DD/MM',                                // 28/01
+  DIA = 'DD',                                       // 28
+  HORA = 'HH:mm',                                   // 12:33
+  
+  // Formatos Personalizados Brasil
+  SEMANA_DIA_MES_EXTENSO = 'ddd, DD [de] MMMM',    // qua, 28 de janeiro
+  DIA_MES_EXTENSO = 'DD [de] MMMM [de] YYYY',      // 28 de janeiro de 2009
+  SEMANA_COMPLETA_DATA = 'dddd, DD [de] MMMM [de] YYYY', // quarta-feira, 28 de janeiro de 2009
+}
+
+/**
  * Tipo de tarefa no Gantt
  */
 export enum TipoTarefa {
@@ -167,6 +200,32 @@ export interface AtividadeMock {
 }
 
 /**
+ * Configurações globais do projeto
+ */
+export interface ConfiguracoesProjeto {
+  // Formatos de Data
+  formato_data_tabela: FormatoData;          // Formato usado na tabela de atividades
+  formato_data_gantt: FormatoData;           // Formato usado no Gantt (timeline)
+  formato_data_tooltip: FormatoData;         // Formato usado em tooltips
+  
+  // Configurações de Exibição
+  mostrar_codigo_atividade: boolean;         // Mostrar código junto com nome
+  mostrar_progresso_percentual: boolean;     // Mostrar % nas barras
+  destacar_caminho_critico: boolean;         // Destacar visualmente
+  
+  // Configurações de Comportamento
+  permitir_edicao_drag: boolean;             // Permitir arrastar para editar datas
+  auto_calcular_progresso: boolean;          // Calcular progresso automaticamente
+  
+  // Configurações de Cores (tema do cronograma)
+  cor_tarefa_normal: string;
+  cor_tarefa_critica: string;
+  cor_tarefa_concluida: string;
+  cor_marco: string;
+  cor_fase: string;
+}
+
+/**
  * Estado do Cronograma Store
  */
 export interface CronogramaState {
@@ -180,6 +239,7 @@ export interface CronogramaState {
   escala: EscalaTempo;
   filtros: FiltrosCronograma;
   unidadeTempoPadrao: UnidadeTempo; // Unidade padrão do projeto (DIAS ou HORAS)
+  configuracoes: ConfiguracoesProjeto; // Configurações globais do projeto
   
   // Loading states
   isLoading: boolean;
@@ -206,6 +266,7 @@ export interface CronogramaState {
   setFiltros: (filtros: Partial<FiltrosCronograma>) => void;
   limparFiltros: () => void;
   setUnidadeTempoPadrao: (unidade: UnidadeTempo) => void;
+  setConfiguracoes: (configuracoes: Partial<ConfiguracoesProjeto>) => void;
 
   // Actions - Reset
   reset: () => void;
