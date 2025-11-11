@@ -28,6 +28,11 @@ export interface VPGanttTask {
 }
 
 /**
+ * View modes disponíveis no Gantt
+ */
+export type VPGanttViewMode = 'Hour' | 'Quarter Day' | 'Half Day' | 'Day' | 'Week' | 'Month' | 'Year';
+
+/**
  * Configurações do VisionPlan Gantt
  */
 export interface VPGanttConfig {
@@ -43,7 +48,7 @@ export interface VPGanttConfig {
   cor_fase?: string;
   
   // Comportamento
-  view_mode?: 'Hour' | 'Quarter Day' | 'Half Day' | 'Day' | 'Week' | 'Month' | 'Year';
+  view_mode?: VPGanttViewMode;
   language?: string;
   readonly?: boolean;
   

@@ -8,5 +8,5 @@
 
 export { VPGanttChart } from './VPGanttChart';
 export { createGanttAdapter, FrappeGanttAdapter } from './adapter';
-export type { VPGanttTask, VPGanttConfig, VPGanttAdapter } from './types';
+export type { VPGanttTask, VPGanttConfig, VPGanttAdapter, VPGanttViewMode } from './types';
 

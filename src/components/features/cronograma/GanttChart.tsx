@@ -7,9 +7,8 @@ import React, { useMemo } from 'react';
 import { ViewMode } from 'gantt-task-react';
 import { TaskGantt } from '../../../types/cronograma';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
-import { VPGanttChart } from '../../../lib/gantt';
-import { createGanttAdapter } from '../../../lib/gantt/adapter';
-import type { VPGanttTask, VPGanttConfig } from '../../../lib/gantt/types';
+import { VPGanttChart, createGanttAdapter } from '../../../lib/gantt';
+import type { VPGanttTask, VPGanttConfig, VPGanttViewMode } from '../../../lib/gantt/types';
 
 interface GanttChartProps {
   tasks: TaskGantt[];
@@ -23,11 +22,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   tasks,
   viewMode,
   onTaskChange,
-  onTaskDelete,
   onTaskDoubleClick,
 }) => {
-  const { configuracoes, atividades } = useCronogramaStore();
-  const adapter = useMemo(() => createGanttAdapter(), []);
+  const { atividades } = useCronogramaStore();
 
   // Converte tasks do formato antigo para VPGanttTask
   const vpTasks: VPGanttTask[] = useMemo(() => {
@@ -55,8 +52,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     });
   }, [tasks, atividades]);
 
-  // Mapeia ViewMode para string
-  const getViewModeString = (mode: ViewMode): string => {
+  // Mapeia ViewMode para VPGanttViewMode
+  const getViewModeString = (mode: ViewMode): VPGanttViewMode => {
     switch (mode) {
       case ViewMode.Hour:
         return 'Hour';
