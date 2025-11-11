@@ -13,6 +13,8 @@ interface CronogramaToolbarProps {
   onToggleFilters: () => void;
   showFilters: boolean;
   projetoNome?: string;
+  presentationMode?: boolean;
+  onTogglePresentationMode?: () => void;
 }
 
 export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
@@ -21,6 +23,8 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
   onToggleFilters,
   showFilters,
   projetoNome = 'Projeto',
+  presentationMode = false,
+  onTogglePresentationMode,
 }) => {
   const { visualizacao, escala, setVisualizacao, setEscala, atividades, dependencias, caminhoCritico } =
     useCronogramaStore();
@@ -265,6 +269,45 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
           />
         )}
       </div>
+
+      {/* Botão Modo Apresentação */}
+      {onTogglePresentationMode && (
+        <button
+          onClick={onTogglePresentationMode}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium ${
+            presentationMode
+              ? 'bg-purple-600 text-white hover:bg-purple-700'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          title={presentationMode ? 'Sair do Modo Apresentação' : 'Ativar Modo Apresentação'}
+        >
+          {presentationMode ? (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              <span>Sair</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                />
+              </svg>
+              <span>Apresentação</span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* Botão Atualizar */}
       <button

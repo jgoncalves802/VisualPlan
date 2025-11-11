@@ -45,6 +45,7 @@ export const CronogramaPage: React.FC = () => {
   const [modalDependencyOpen, setModalDependencyOpen] = useState(false);
   const [atividadeSelecionada, setAtividadeSelecionada] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
 
   // Calcula caminho crítico automaticamente ao carregar
   useEffect(() => {
@@ -69,6 +70,15 @@ export const CronogramaPage: React.FC = () => {
 
   const handleNovaDependencia = () => {
     setModalDependencyOpen(true);
+  };
+
+  const togglePresentationMode = () => {
+    setPresentationMode(!presentationMode);
+    if (!presentationMode) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
   };
 
   // ========================================================================
@@ -126,6 +136,133 @@ export const CronogramaPage: React.FC = () => {
   // RENDER
   // ========================================================================
 
+  // Conteúdo do cronograma
+  const CronogramaContent = () => (
+    <>
+      {/* Conteúdo Principal */}
+      <div className="flex-1 overflow-auto p-6">
+        {atividades.length === 0 ? (
+          // Empty State
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-md">
+              <svg
+                className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Nenhuma atividade encontrada
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Comece adicionando atividades ao seu cronograma.
+              </p>
+              <button
+                onClick={handleNovaAtividade}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              >
+                Adicionar Primeira Atividade
+              </button>
+            </div>
+          </div>
+        ) : (
+          // Visualizações
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {visualizacao === VisualizacaoCronograma.GANTT ? (
+              <GanttChart
+                tasks={tasks}
+                viewMode={viewMode}
+                onTaskChange={handleTaskChange}
+                onTaskDelete={handleTaskDelete}
+                onTaskDoubleClick={(task) => handleEditarAtividade(task.id)}
+              />
+            ) : (
+              <TaskList
+                atividades={atividades}
+                onEdit={handleEditarAtividade}
+                onDelete={async (id) => {
+                  if (window.confirm('Deseja realmente excluir esta atividade?')) {
+                    await excluirAtividade(id);
+                  }
+                }}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Modais */}
+      <TaskModal
+        open={modalTaskOpen}
+        onClose={() => {
+          setModalTaskOpen(false);
+          setAtividadeSelecionada(null);
+        }}
+        atividadeId={atividadeSelecionada}
+        projetoId={projetoId || 'proj-1'}
+        onSave={async (dados) => {
+          if (atividadeSelecionada) {
+            await atualizarAtividade(atividadeSelecionada, dados);
+          } else {
+            await adicionarAtividade({
+              ...dados,
+              projeto_id: projetoId || 'proj-1',
+            });
+          }
+          setModalTaskOpen(false);
+          setAtividadeSelecionada(null);
+        }}
+      />
+
+      <DependencyModal
+        open={modalDependencyOpen}
+        onClose={() => setModalDependencyOpen(false)}
+        atividades={todasAtividades}
+        onSave={async (dependencia) => {
+          await adicionarDependencia(dependencia);
+          setModalDependencyOpen(false);
+        }}
+      />
+    </>
+  );
+
+  // Modo Apresentação
+  if (presentationMode) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col">
+        {/* Toolbar compacta */}
+        <div className="bg-white border-b border-gray-200 px-6 py-3">
+          <CronogramaToolbar
+            onNovaAtividade={handleNovaAtividade}
+            onNovaDependencia={handleNovaDependencia}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            showFilters={showFilters}
+            projetoNome="Projeto VisionPlan"
+            presentationMode={presentationMode}
+            onTogglePresentationMode={togglePresentationMode}
+          />
+        </div>
+
+        {/* Filtros (se abertos) */}
+        {showFilters && (
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+            <CronogramaFilters />
+          </div>
+        )}
+
+        <CronogramaContent />
+      </div>
+    );
+  }
+
+  // Modo Normal
   return (
     <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
@@ -153,6 +290,8 @@ export const CronogramaPage: React.FC = () => {
             onToggleFilters={() => setShowFilters(!showFilters)}
             showFilters={showFilters}
             projetoNome="Projeto VisionPlan"
+            presentationMode={presentationMode}
+            onTogglePresentationMode={togglePresentationMode}
           />
         </div>
 
@@ -163,97 +302,7 @@ export const CronogramaPage: React.FC = () => {
           </div>
         )}
 
-        {/* Conteúdo Principal */}
-        <div className="flex-1 overflow-auto p-6">
-          {atividades.length === 0 ? (
-            // Empty State
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md">
-                <svg
-                  className="mx-auto h-16 w-16 text-gray-400 mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 2 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Nenhuma atividade encontrada
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  Comece adicionando atividades ao seu cronograma.
-                </p>
-                <button
-                  onClick={handleNovaAtividade}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-                >
-                  Adicionar Primeira Atividade
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Visualizações
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              {visualizacao === VisualizacaoCronograma.GANTT ? (
-                <GanttChart
-                  tasks={tasks}
-                  viewMode={viewMode}
-                  onTaskChange={handleTaskChange}
-                  onTaskDelete={handleTaskDelete}
-                  onTaskDoubleClick={(task) => handleEditarAtividade(task.id)}
-                />
-              ) : (
-                <TaskList
-                  atividades={atividades}
-                  onEdit={handleEditarAtividade}
-                  onDelete={async (id) => {
-                    if (window.confirm('Deseja realmente excluir esta atividade?')) {
-                      await excluirAtividade(id);
-                    }
-                  }}
-                />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Modais */}
-        <TaskModal
-          open={modalTaskOpen}
-          onClose={() => {
-            setModalTaskOpen(false);
-            setAtividadeSelecionada(null);
-          }}
-          atividadeId={atividadeSelecionada}
-          projetoId={projetoId || 'proj-1'}
-          onSave={async (dados) => {
-            if (atividadeSelecionada) {
-              await atualizarAtividade(atividadeSelecionada, dados);
-            } else {
-              await adicionarAtividade({
-                ...dados,
-                projeto_id: projetoId || 'proj-1',
-              });
-            }
-            setModalTaskOpen(false);
-            setAtividadeSelecionada(null);
-          }}
-        />
-
-        <DependencyModal
-          open={modalDependencyOpen}
-          onClose={() => setModalDependencyOpen(false)}
-          atividades={todasAtividades}
-          onSave={async (dependencia) => {
-            await adicionarDependencia(dependencia);
-            setModalDependencyOpen(false);
-          }}
-        />
+        <CronogramaContent />
       </div>
   );
 };
