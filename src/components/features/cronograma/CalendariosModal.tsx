@@ -1,15 +1,30 @@
 /**
  * Modal para gerenciar calendários do projeto
+ * Baseado no MS Project - Alteração de Período de Trabalho
  */
 
 import React, { useState } from 'react';
-import { X, Calendar, Clock, Plus, Trash2, Check } from 'lucide-react';
+import { X, Calendar, Clock, Plus, Trash2, Check, Copy, AlertCircle } from 'lucide-react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
 import { CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
 
 interface CalendariosModalProps {
   open: boolean;
   onClose: () => void;
+}
+
+// Tipo para períodos de trabalho de um dia específico
+interface PeriodoTrabalho {
+  inicio: string;
+  fim: string;
+}
+
+// Estado para definir períodos por dia da semana
+interface PeriodosDiaSemana {
+  [key: string]: {
+    trabalhando: boolean;
+    periodos: PeriodoTrabalho[];
+  };
 }
 
 export const CalendariosModal: React.FC<CalendariosModalProps> = ({
@@ -25,365 +40,696 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
     setCalendarioPadrao,
   } = useCronogramaStore();
 
-  const [selectedCalendarioId, setSelectedCalendarioId] = useState<string | null>(null);
-  const [modoEdicao, setModoEdicao] = useState<'lista' | 'criar' | 'editar'>('lista');
-  const [formData, setFormData] = useState<Partial<CalendarioProjeto>>({});
+  const [calendarioSelecionadoId, setCalendarioSelecionadoId] = useState<string | null>(
+    calendario_padrao || (calendarios.length > 0 ? calendarios[0].id : null)
+  );
+  const [modoEdicao, setModoEdicao] = useState<'visualizar' | 'editar'>('visualizar');
+  const [nomeCalendario, setNomeCalendario] = useState('');
+  const [baseadoEm, setBaseadoEm] = useState<string>('');
+  
+  // Estado para períodos de trabalho por dia da semana
+  const [periodosSemana, setPeriodosSemana] = useState<PeriodosDiaSemana>({
+    [DiaTrabalho.DOMINGO]: { trabalhando: false, periodos: [] },
+    [DiaTrabalho.SEGUNDA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+    [DiaTrabalho.TERCA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+    [DiaTrabalho.QUARTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+    [DiaTrabalho.QUINTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+    [DiaTrabalho.SEXTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+    [DiaTrabalho.SABADO]: { trabalhando: false, periodos: [] },
+  });
+
+  // Exceções (feriados e dias especiais)
+  const [excecoes, setExcecoes] = useState<Array<{ data: string; nome: string; trabalhando: boolean; periodos: PeriodoTrabalho[] }>>([]);
+  const [novaExcecaoData, setNovaExcecaoData] = useState('');
+  const [novaExcecaoNome, setNovaExcecaoNome] = useState('');
 
   if (!open) return null;
 
-  const calendarioSelecionado = selectedCalendarioId
-    ? calendarios.find((c) => c.id === selectedCalendarioId)
+  const calendarioSelecionado = calendarioSelecionadoId
+    ? calendarios.find((c) => c.id === calendarioSelecionadoId)
     : null;
 
   const diasSemana = [
-    { value: DiaTrabalho.DOMINGO, label: 'Domingo' },
-    { value: DiaTrabalho.SEGUNDA, label: 'Segunda' },
-    { value: DiaTrabalho.TERCA, label: 'Terça' },
-    { value: DiaTrabalho.QUARTA, label: 'Quarta' },
-    { value: DiaTrabalho.QUINTA, label: 'Quinta' },
-    { value: DiaTrabalho.SEXTA, label: 'Sexta' },
-    { value: DiaTrabalho.SABADO, label: 'Sábado' },
+    { value: DiaTrabalho.DOMINGO, label: 'Domingo', abrev: 'D' },
+    { value: DiaTrabalho.SEGUNDA, label: 'Segunda-feira', abrev: 'S' },
+    { value: DiaTrabalho.TERCA, label: 'Terça-feira', abrev: 'T' },
+    { value: DiaTrabalho.QUARTA, label: 'Quarta-feira', abrev: 'Q' },
+    { value: DiaTrabalho.QUINTA, label: 'Quinta-feira', abrev: 'Q' },
+    { value: DiaTrabalho.SEXTA, label: 'Sexta-feira', abrev: 'S' },
+    { value: DiaTrabalho.SABADO, label: 'Sábado', abrev: 'S' },
   ];
 
   const handleNovoCalendario = () => {
-    setFormData({
-      nome: '',
-      descricao: '',
-      dias_trabalho: [
-        DiaTrabalho.SEGUNDA,
-        DiaTrabalho.TERCA,
-        DiaTrabalho.QUARTA,
-        DiaTrabalho.QUINTA,
-        DiaTrabalho.SEXTA,
-      ],
-      horas_por_dia: 8,
-      horario_inicio: '08:00',
-      horario_almoco_inicio: '12:00',
-      horario_almoco_fim: '13:00',
-      horario_fim: '17:00',
-      feriados: [],
-      is_padrao: false,
+    setModoEdicao('editar');
+    setNomeCalendario('');
+    setBaseadoEm('');
+    setCalendarioSelecionadoId(null);
+    
+    // Reset períodos para padrão 5x8
+    setPeriodosSemana({
+      [DiaTrabalho.DOMINGO]: { trabalhando: false, periodos: [] },
+      [DiaTrabalho.SEGUNDA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+      [DiaTrabalho.TERCA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+      [DiaTrabalho.QUARTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+      [DiaTrabalho.QUINTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+      [DiaTrabalho.SEXTA]: { trabalhando: true, periodos: [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }] },
+      [DiaTrabalho.SABADO]: { trabalhando: false, periodos: [] },
     });
-    setModoEdicao('criar');
+    setExcecoes([]);
   };
 
-  const handleEditarCalendario = (calendario: CalendarioProjeto) => {
-    setFormData(calendario);
-    setSelectedCalendarioId(calendario.id);
+  const handleEditarCalendario = () => {
+    if (!calendarioSelecionado) return;
+    
     setModoEdicao('editar');
+    setNomeCalendario(calendarioSelecionado.nome);
+    
+    // Carregar períodos do calendário selecionado
+    const novosPeriodos: PeriodosDiaSemana = {};
+    diasSemana.forEach(dia => {
+      const trabalhando = calendarioSelecionado.dias_trabalho.includes(dia.value);
+      novosPeriodos[dia.value] = {
+        trabalhando,
+        periodos: trabalhando ? [
+          { inicio: calendarioSelecionado.horario_inicio, fim: calendarioSelecionado.horario_almoco_inicio || calendarioSelecionado.horario_fim },
+          ...(calendarioSelecionado.horario_almoco_fim ? [{ inicio: calendarioSelecionado.horario_almoco_fim, fim: calendarioSelecionado.horario_fim }] : [])
+        ] : []
+      };
+    });
+    setPeriodosSemana(novosPeriodos);
+    
+    // Carregar exceções (feriados)
+    const excecoesCarregadas = (calendarioSelecionado.feriados || []).map(data => ({
+      data,
+      nome: 'Feriado',
+      trabalhando: false,
+      periodos: []
+    }));
+    setExcecoes(excecoesCarregadas);
+  };
+
+  const handleCopiarCalendario = () => {
+    if (!calendarioSelecionado) return;
+    
+    setModoEdicao('editar');
+    setNomeCalendario(`Cópia de ${calendarioSelecionado.nome}`);
+    setBaseadoEm(calendarioSelecionado.id);
+    setCalendarioSelecionadoId(null);
+    
+    // Copiar todos os períodos e exceções
+    const novosPeriodos: PeriodosDiaSemana = {};
+    diasSemana.forEach(dia => {
+      const trabalhando = calendarioSelecionado.dias_trabalho.includes(dia.value);
+      novosPeriodos[dia.value] = {
+        trabalhando,
+        periodos: trabalhando ? [
+          { inicio: calendarioSelecionado.horario_inicio, fim: calendarioSelecionado.horario_almoco_inicio || calendarioSelecionado.horario_fim },
+          ...(calendarioSelecionado.horario_almoco_fim ? [{ inicio: calendarioSelecionado.horario_almoco_fim, fim: calendarioSelecionado.horario_fim }] : [])
+        ] : []
+      };
+    });
+    setPeriodosSemana(novosPeriodos);
+    
+    const excecoesCopiadas = (calendarioSelecionado.feriados || []).map(data => ({
+      data,
+      nome: 'Feriado',
+      trabalhando: false,
+      periodos: []
+    }));
+    setExcecoes(excecoesCopiadas);
   };
 
   const handleSalvar = () => {
-    if (!formData.nome || !formData.dias_trabalho || formData.dias_trabalho.length === 0) {
-      alert('Preencha todos os campos obrigatórios');
+    if (!nomeCalendario.trim()) {
+      alert('Digite um nome para o calendário');
       return;
     }
 
-    if (modoEdicao === 'criar') {
-      adicionarCalendario(formData as Omit<CalendarioProjeto, 'id'>);
-    } else if (modoEdicao === 'editar' && selectedCalendarioId) {
-      atualizarCalendario(selectedCalendarioId, formData);
+    // Calcular dias de trabalho
+    const diasTrabalho = Object.entries(periodosSemana)
+      .filter(([_, config]) => config.trabalhando)
+      .map(([dia, _]) => dia as DiaTrabalho);
+
+    if (diasTrabalho.length === 0) {
+      alert('Selecione ao menos um dia de trabalho');
+      return;
     }
 
-    setModoEdicao('lista');
-    setFormData({});
-    setSelectedCalendarioId(null);
+    // Calcular horários (pegar primeiro período do primeiro dia útil)
+    const primeiroDiaUtil = diasTrabalho[0];
+    const periodoPrimeiro = periodosSemana[primeiroDiaUtil].periodos[0];
+    
+    // Calcular total de horas
+    let totalHoras = 0;
+    periodosSemana[primeiroDiaUtil].periodos.forEach(periodo => {
+      const [hi, mi] = periodo.inicio.split(':').map(Number);
+      const [hf, mf] = periodo.fim.split(':').map(Number);
+      const inicio = hi * 60 + mi;
+      const fim = hf * 60 + mf;
+      totalHoras += (fim - inicio) / 60;
+    });
+
+    const novoCalendario: Omit<CalendarioProjeto, 'id'> = {
+      nome: nomeCalendario,
+      descricao: baseadoEm ? `Baseado em ${calendarios.find(c => c.id === baseadoEm)?.nome}` : 'Calendário personalizado',
+      dias_trabalho: diasTrabalho,
+      horas_por_dia: Math.round(totalHoras),
+      horario_inicio: periodoPrimeiro.inicio,
+      horario_almoco_inicio: periodosSemana[primeiroDiaUtil].periodos.length > 1 ? periodosSemana[primeiroDiaUtil].periodos[0].fim : undefined,
+      horario_almoco_fim: periodosSemana[primeiroDiaUtil].periodos.length > 1 ? periodosSemana[primeiroDiaUtil].periodos[1].inicio : undefined,
+      horario_fim: periodosSemana[primeiroDiaUtil].periodos[periodosSemana[primeiroDiaUtil].periodos.length - 1].fim,
+      feriados: excecoes.filter(e => !e.trabalhando).map(e => e.data),
+      is_padrao: false,
+    };
+
+    if (calendarioSelecionadoId && modoEdicao === 'editar') {
+      atualizarCalendario(calendarioSelecionadoId, novoCalendario);
+    } else {
+      adicionarCalendario(novoCalendario);
+    }
+
+    setModoEdicao('visualizar');
   };
 
-  const handleRemover = (id: string) => {
-    if (confirm('Deseja realmente remover este calendário?')) {
+  const handleRemover = () => {
+    if (!calendarioSelecionadoId) return;
+    
+    if (confirm(`Deseja realmente excluir o calendário "${calendarioSelecionado?.nome}"?`)) {
       try {
-        removerCalendario(id);
+        removerCalendario(calendarioSelecionadoId);
+        setCalendarioSelecionadoId(calendarios[0]?.id || null);
       } catch (error) {
         alert(error instanceof Error ? error.message : 'Erro ao remover calendário');
       }
     }
   };
 
-  const handleToggleDia = (dia: DiaTrabalho) => {
-    const diasAtuais = formData.dias_trabalho || [];
-    const jaExiste = diasAtuais.includes(dia);
-
-    setFormData({
-      ...formData,
-      dias_trabalho: jaExiste
-        ? diasAtuais.filter((d) => d !== dia)
-        : [...diasAtuais, dia],
+  const handleToggleDiaTrabalhando = (dia: DiaTrabalho) => {
+    const config = periodosSemana[dia];
+    setPeriodosSemana({
+      ...periodosSemana,
+      [dia]: {
+        trabalhando: !config.trabalhando,
+        periodos: !config.trabalhando && config.periodos.length === 0 
+          ? [{ inicio: '08:00', fim: '12:00' }, { inicio: '13:00', fim: '17:00' }]
+          : config.periodos
+      }
     });
+  };
+
+  const handleAdicionarPeriodo = (dia: DiaTrabalho) => {
+    const config = periodosSemana[dia];
+    const ultimoPeriodo = config.periodos[config.periodos.length - 1];
+    const novoInicio = ultimoPeriodo ? ultimoPeriodo.fim : '08:00';
+    
+    setPeriodosSemana({
+      ...periodosSemana,
+      [dia]: {
+        ...config,
+        periodos: [...config.periodos, { inicio: novoInicio, fim: '18:00' }]
+      }
+    });
+  };
+
+  const handleRemoverPeriodo = (dia: DiaTrabalho, index: number) => {
+    const config = periodosSemana[dia];
+    setPeriodosSemana({
+      ...periodosSemana,
+      [dia]: {
+        ...config,
+        periodos: config.periodos.filter((_, i) => i !== index)
+      }
+    });
+  };
+
+  const handleAtualizarPeriodo = (dia: DiaTrabalho, index: number, campo: 'inicio' | 'fim', valor: string) => {
+    const config = periodosSemana[dia];
+    const novosPeriodos = [...config.periodos];
+    novosPeriodos[index] = { ...novosPeriodos[index], [campo]: valor };
+    
+    setPeriodosSemana({
+      ...periodosSemana,
+      [dia]: {
+        ...config,
+        periodos: novosPeriodos
+      }
+    });
+  };
+
+  const handleAdicionarExcecao = () => {
+    if (!novaExcecaoData) {
+      alert('Selecione uma data');
+      return;
+    }
+
+    setExcecoes([
+      ...excecoes,
+      {
+        data: novaExcecaoData,
+        nome: novaExcecaoNome || 'Exceção',
+        trabalhando: false,
+        periodos: []
+      }
+    ]);
+    setNovaExcecaoData('');
+    setNovaExcecaoNome('');
+  };
+
+  const handleRemoverExcecao = (index: number) => {
+    setExcecoes(excecoes.filter((_, i) => i !== index));
+  };
+
+  const calcularHorasPorDia = (dia: DiaTrabalho): string => {
+    const config = periodosSemana[dia];
+    if (!config.trabalhando) return '0h';
+    
+    let totalMinutos = 0;
+    config.periodos.forEach(periodo => {
+      const [hi, mi] = periodo.inicio.split(':').map(Number);
+      const [hf, mf] = periodo.fim.split(':').map(Number);
+      const inicio = hi * 60 + mi;
+      const fim = hf * 60 + mf;
+      totalMinutos += (fim - inicio);
+    });
+    
+    const horas = Math.floor(totalMinutos / 60);
+    const minutos = totalMinutos % 60;
+    return minutos > 0 ? `${horas}h${minutos}min` : `${horas}h`;
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="flex items-center gap-3">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Calendários do Projeto</h2>
+            <Calendar className="w-6 h-6 text-white" />
+            <h2 className="text-2xl font-bold text-white">Alterar Período de Trabalho</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-white hover:bg-blue-800 rounded-lg p-2 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {modoEdicao === 'lista' ? (
-            <div className="space-y-4">
-              {/* Botão Novo Calendário */}
-              <button
-                onClick={handleNovoCalendario}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar - Lista de Calendários */}
+          <div className="w-80 border-r border-gray-200 bg-gray-50 flex flex-col">
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Para: (Calendário do projeto)
+              </label>
+              <select
+                value={calendarioSelecionadoId || ''}
+                onChange={(e) => {
+                  setCalendarioSelecionadoId(e.target.value);
+                  setModoEdicao('visualizar');
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                disabled={modoEdicao === 'editar'}
               >
-                <Plus className="w-5 h-5" />
-                Novo Calendário
-              </button>
+                {calendarios.map(cal => (
+                  <option key={cal.id} value={cal.id}>
+                    {cal.nome}
+                    {cal.is_padrao ? ' (Sistema)' : ''}
+                    {calendario_padrao === cal.id ? ' ★' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Lista de Calendários */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {calendarios.map((calendario) => (
-                  <div
-                    key={calendario.id}
-                    className={`p-4 border-2 rounded-lg ${
-                      calendario_padrao === calendario.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-white'
-                    } hover:shadow-md transition-shadow`}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {calendarios.map(cal => (
+                  <button
+                    key={cal.id}
+                    onClick={() => {
+                      setCalendarioSelecionadoId(cal.id);
+                      setModoEdicao('visualizar');
+                    }}
+                    className={`w-full text-left p-3 rounded-lg transition-all ${
+                      calendarioSelecionadoId === cal.id
+                        ? 'bg-blue-100 border-2 border-blue-500 shadow-sm'
+                        : 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow'
+                    }`}
+                    disabled={modoEdicao === 'editar' && calendarioSelecionadoId !== cal.id}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          {calendario.nome}
-                          {calendario.is_padrao && (
-                            <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                              Sistema
-                            </span>
-                          )}
-                          {calendario_padrao === calendario.id && (
-                            <span className="ml-2 text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-                              Padrão
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-600">{calendario.descricao}</p>
-                      </div>
-                      {!calendario.is_padrao && (
-                        <button
-                          onClick={() => handleRemover(calendario.id)}
-                          className="text-red-500 hover:text-red-700 transition-colors p-1"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <div className="flex items-start justify-between mb-1">
+                      <span className="font-semibold text-gray-900 text-sm">
+                        {cal.nome}
+                      </span>
+                      {calendario_padrao === cal.id && (
+                        <span className="text-yellow-500 text-lg leading-none">★</span>
                       )}
                     </div>
-
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span>
-                          {calendario.horas_por_dia}h/dia ({calendario.horario_inicio} - {calendario.horario_fim})
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {diasSemana.map((dia) => (
-                          <span
-                            key={dia.value}
-                            className={`px-2 py-1 rounded text-xs ${
-                              calendario.dias_trabalho.includes(dia.value)
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-400'
-                            }`}
-                          >
-                            {dia.label.substring(0, 3)}
-                          </span>
-                        ))}
-                      </div>
+                    <p className="text-xs text-gray-600 mb-2">{cal.descricao}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      <span>{cal.horas_por_dia}h/dia</span>
                     </div>
-
-                    <div className="mt-3 flex gap-2">
-                      {calendario_padrao !== calendario.id && (
-                        <button
-                          onClick={() => setCalendarioPadrao(calendario.id)}
-                          className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm"
-                        >
-                          Definir como Padrão
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleEditarCalendario(calendario)}
-                        className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm"
-                      >
-                        Editar
-                      </button>
-                    </div>
-                  </div>
+                    {cal.is_padrao && (
+                      <span className="inline-block mt-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                        Sistema
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
-          ) : (
-            // Formulário de Criar/Editar
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome do Calendário *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nome || ''}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Padrão 5x8"
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrição
-                </label>
-                <textarea
-                  value={formData.descricao || ''}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Descreva o calendário..."
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dias de Trabalho *
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {diasSemana.map((dia) => (
-                    <button
-                      key={dia.value}
-                      onClick={() => handleToggleDia(dia.value)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
-                        formData.dias_trabalho?.includes(dia.value)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {dia.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Horas por Dia *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.horas_por_dia || 8}
-                    onChange={(e) =>
-                      setFormData({ ...formData, horas_por_dia: parseInt(e.target.value) })
-                    }
-                    min="1"
-                    max="24"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Horário de Início *
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.horario_inicio || '08:00'}
-                    onChange={(e) =>
-                      setFormData({ ...formData, horario_inicio: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Início do Almoço
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.horario_almoco_inicio || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, horario_almoco_inicio: e.target.value || undefined })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fim do Almoço
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.horario_almoco_fim || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, horario_almoco_fim: e.target.value || undefined })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Horário de Fim *
-                </label>
-                <input
-                  type="time"
-                  value={formData.horario_fim || '17:00'}
-                  onChange={(e) =>
-                    setFormData({ ...formData, horario_fim: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => {
-                    setModoEdicao('lista');
-                    setFormData({});
-                    setSelectedCalendarioId(null);
-                  }}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSalvar}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  Salvar
-                </button>
-              </div>
+            <div className="p-4 border-t border-gray-200 bg-white space-y-2">
+              <button
+                onClick={handleNovoCalendario}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                disabled={modoEdicao === 'editar'}
+              >
+                <Plus className="w-4 h-4" />
+                Novo...
+              </button>
+              <button
+                onClick={handleCopiarCalendario}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                disabled={!calendarioSelecionado || modoEdicao === 'editar'}
+              >
+                <Copy className="w-4 h-4" />
+                Copiar...
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* Main Content - Configuração do Calendário */}
+          <div className="flex-1 overflow-y-auto">
+            {modoEdicao === 'visualizar' && calendarioSelecionado ? (
+              // Modo Visualização
+              <div className="p-6 space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-blue-900 mb-2">{calendarioSelecionado.nome}</h3>
+                  <p className="text-sm text-blue-700 mb-3">{calendarioSelecionado.descricao}</p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-semibold text-gray-700">Horas por dia:</span>
+                      <span className="ml-2 text-gray-900">{calendarioSelecionado.horas_por_dia}h</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-700">Dias úteis:</span>
+                      <span className="ml-2 text-gray-900">{calendarioSelecionado.dias_trabalho.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    Horários de Trabalho
+                  </h4>
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="text-left px-4 py-3 font-semibold text-gray-700">Dia</th>
+                          <th className="text-left px-4 py-3 font-semibold text-gray-700">Horário</th>
+                          <th className="text-right px-4 py-3 font-semibold text-gray-700">Horas</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {diasSemana.map(dia => {
+                          const trabalhando = calendarioSelecionado.dias_trabalho.includes(dia.value);
+                          return (
+                            <tr key={dia.value} className={trabalhando ? 'bg-white' : 'bg-gray-50'}>
+                              <td className="px-4 py-3 font-medium text-gray-900">{dia.label}</td>
+                              <td className="px-4 py-3 text-gray-700">
+                                {trabalhando ? (
+                                  <>
+                                    {calendarioSelecionado.horario_inicio} - {calendarioSelecionado.horario_almoco_inicio || calendarioSelecionado.horario_fim}
+                                    {calendarioSelecionado.horario_almoco_fim && (
+                                      <>, {calendarioSelecionado.horario_almoco_fim} - {calendarioSelecionado.horario_fim}</>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-gray-400 italic">Não trabalhando</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right text-gray-900 font-medium">
+                                {trabalhando ? `${calendarioSelecionado.horas_por_dia}h` : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {calendarioSelecionado.feriados && calendarioSelecionado.feriados.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                      Exceções (Feriados)
+                    </h4>
+                    <div className="space-y-2">
+                      {calendarioSelecionado.feriados.map((feriado, index) => (
+                        <div key={index} className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 flex items-center justify-between">
+                          <span className="text-sm text-red-900">{new Date(feriado + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                          <span className="text-xs text-red-700">Não trabalhando</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  {!calendarioSelecionado.is_padrao && (
+                    <button
+                      onClick={handleRemover}
+                      className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Excluir
+                    </button>
+                  )}
+                  {calendario_padrao !== calendarioSelecionado.id && (
+                    <button
+                      onClick={() => setCalendarioPadrao(calendarioSelecionado.id)}
+                      className="px-4 py-2.5 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
+                    >
+                      Definir como Padrão
+                    </button>
+                  )}
+                  <button
+                    onClick={handleEditarCalendario}
+                    className="ml-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Editar...
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Modo Edição
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nome: *
+                  </label>
+                  <input
+                    type="text"
+                    value={nomeCalendario}
+                    onChange={(e) => setNomeCalendario(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ex: Padrão 5x8, Intensivo 6x10, etc."
+                  />
+                </div>
+
+                {!calendarioSelecionadoId && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Baseado em: (opcional)
+                    </label>
+                    <select
+                      value={baseadoEm}
+                      onChange={(e) => setBaseadoEm(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Nenhum</option>
+                      {calendarios.map(cal => (
+                        <option key={cal.id} value={cal.id}>{cal.nome}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <h4 className="font-semibold text-gray-900">Definir dias úteis e horários de trabalho</h4>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Configure os períodos de trabalho para cada dia da semana
+                    </p>
+                  </div>
+
+                  <div className="divide-y divide-gray-200">
+                    {diasSemana.map(dia => {
+                      const config = periodosSemana[dia.value];
+                      return (
+                        <div key={dia.value} className={`p-4 ${config.trabalhando ? 'bg-white' : 'bg-gray-50'}`}>
+                          <div className="flex items-start gap-4">
+                            <div className="flex items-center h-10">
+                              <input
+                                type="checkbox"
+                                checked={config.trabalhando}
+                                onChange={() => handleToggleDiaTrabalhando(dia.value)}
+                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-900">{dia.label}</span>
+                                <span className="text-sm text-gray-600">
+                                  {calcularHorasPorDia(dia.value)}
+                                </span>
+                              </div>
+
+                              {config.trabalhando && (
+                                <div className="space-y-2">
+                                  {config.periodos.map((periodo, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                      <span className="text-sm text-gray-600 w-16">De:</span>
+                                      <input
+                                        type="time"
+                                        value={periodo.inicio}
+                                        onChange={(e) => handleAtualizarPeriodo(dia.value, index, 'inicio', e.target.value)}
+                                        className="px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                      />
+                                      <span className="text-sm text-gray-600">Até:</span>
+                                      <input
+                                        type="time"
+                                        value={periodo.fim}
+                                        onChange={(e) => handleAtualizarPeriodo(dia.value, index, 'fim', e.target.value)}
+                                        className="px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                      />
+                                      {config.periodos.length > 1 && (
+                                        <button
+                                          onClick={() => handleRemoverPeriodo(dia.value, index)}
+                                          className="text-red-600 hover:text-red-800 p-1"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <button
+                                    onClick={() => handleAdicionarPeriodo(dia.value)}
+                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                  >
+                                    + Adicionar período
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Exceções */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <h4 className="font-semibold text-gray-900">Exceções (Feriados e Dias Especiais)</h4>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Defina dias que não seguem o padrão semanal
+                    </p>
+                  </div>
+
+                  <div className="p-4 space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={novaExcecaoData}
+                        onChange={(e) => setNovaExcecaoData(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={novaExcecaoNome}
+                        onChange={(e) => setNovaExcecaoNome(e.target.value)}
+                        placeholder="Nome (ex: Natal)"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                      <button
+                        onClick={handleAdicionarExcecao}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {excecoes.length > 0 && (
+                      <div className="space-y-2">
+                        {excecoes.map((excecao, index) => (
+                          <div key={index} className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <div>
+                              <span className="text-sm font-medium text-red-900">
+                                {new Date(excecao.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                              </span>
+                              <span className="text-sm text-red-700 ml-2">- {excecao.nome}</span>
+                            </div>
+                            <button
+                              onClick={() => handleRemoverExcecao(index)}
+                              className="text-red-600 hover:text-red-800 p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      setModoEdicao('visualizar');
+                      if (!calendarioSelecionadoId) {
+                        setCalendarioSelecionadoId(calendarios[0]?.id || null);
+                      }
+                    }}
+                    className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSalvar}
+                    className="ml-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    OK
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Footer com informações */}
-        <div className="p-4 bg-gray-50 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            <strong>Calendário Padrão:</strong>{' '}
-            {calendarios.find((c) => c.id === calendario_padrao)?.nome || 'Nenhum'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            O calendário padrão será aplicado automaticamente a novas atividades.
-          </p>
+        {/* Footer */}
+        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            <span className="font-semibold">Calendário Padrão:</span>{' '}
+            <span className="text-yellow-600">★</span>{' '}
+            {calendarios.find(c => c.id === calendario_padrao)?.nome || 'Nenhum'}
+          </div>
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+          >
+            Fechar
+          </button>
         </div>
       </div>
     </div>
   );
 };
-
