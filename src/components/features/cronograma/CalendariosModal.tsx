@@ -6,7 +6,8 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, Plus, Trash2, Check, Copy, AlertCircle } from 'lucide-react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
-import { CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
+import { CalendarioProjeto, DiaTrabalho, ExcecaoCalendario } from '../../../types/cronograma';
+import { ExcecoesModal } from './ExcecoesModal';
 
 interface CalendariosModalProps {
   open: boolean;
@@ -58,10 +59,9 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
     [DiaTrabalho.SABADO]: { trabalhando: false, periodos: [] },
   });
 
-  // Exceções (feriados e dias especiais)
-  const [excecoes, setExcecoes] = useState<Array<{ data: string; nome: string; trabalhando: boolean; periodos: PeriodoTrabalho[] }>>([]);
-  const [novaExcecaoData, setNovaExcecaoData] = useState('');
-  const [novaExcecaoNome, setNovaExcecaoNome] = useState('');
+  // Exceções (feriados e dias especiais) - agora usa o ExcecoesModal
+  const [excecoes, setExcecoes] = useState<ExcecaoCalendario[]>([]);
+  const [showExcecoesModal, setShowExcecoesModal] = useState(false);
 
   if (!open) return null;
 
@@ -118,14 +118,8 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
     });
     setPeriodosSemana(novosPeriodos);
     
-    // Carregar exceções (feriados)
-    const excecoesCarregadas = (calendarioSelecionado.feriados || []).map(data => ({
-      data,
-      nome: 'Feriado',
-      trabalhando: false,
-      periodos: []
-    }));
-    setExcecoes(excecoesCarregadas);
+    // Carregar exceções
+    setExcecoes(calendarioSelecionado.excecoes || []);
   };
 
   const handleCopiarCalendario = () => {
@@ -150,13 +144,8 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
     });
     setPeriodosSemana(novosPeriodos);
     
-    const excecoesCopiadas = (calendarioSelecionado.feriados || []).map(data => ({
-      data,
-      nome: 'Feriado',
-      trabalhando: false,
-      periodos: []
-    }));
-    setExcecoes(excecoesCopiadas);
+    // Copiar exceções
+    setExcecoes(calendarioSelecionado.excecoes || []);
   };
 
   const handleSalvar = () => {
@@ -198,7 +187,7 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
       horario_almoco_inicio: periodosSemana[primeiroDiaUtil].periodos.length > 1 ? periodosSemana[primeiroDiaUtil].periodos[0].fim : undefined,
       horario_almoco_fim: periodosSemana[primeiroDiaUtil].periodos.length > 1 ? periodosSemana[primeiroDiaUtil].periodos[1].inicio : undefined,
       horario_fim: periodosSemana[primeiroDiaUtil].periodos[periodosSemana[primeiroDiaUtil].periodos.length - 1].fim,
-      feriados: excecoes.filter(e => !e.trabalhando).map(e => e.data),
+      excecoes: excecoes,
       is_padrao: false,
     };
 
@@ -276,27 +265,12 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
     });
   };
 
-  const handleAdicionarExcecao = () => {
-    if (!novaExcecaoData) {
-      alert('Selecione uma data');
-      return;
-    }
-
-    setExcecoes([
-      ...excecoes,
-      {
-        data: novaExcecaoData,
-        nome: novaExcecaoNome || 'Exceção',
-        trabalhando: false,
-        periodos: []
-      }
-    ]);
-    setNovaExcecaoData('');
-    setNovaExcecaoNome('');
+  const handleAbrirExcecoes = () => {
+    setShowExcecoesModal(true);
   };
 
-  const handleRemoverExcecao = (index: number) => {
-    setExcecoes(excecoes.filter((_, i) => i !== index));
+  const handleSalvarExcecoes = (novasExcecoes: ExcecaoCalendario[]) => {
+    setExcecoes(novasExcecoes);
   };
 
   const calcularHorasPorDia = (dia: DiaTrabalho): string => {
@@ -483,19 +457,31 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
                   </div>
                 </div>
 
-                {calendarioSelecionado.feriados && calendarioSelecionado.feriados.length > 0 && (
+                {calendarioSelecionado.excecoes && calendarioSelecionado.excecoes.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-red-600" />
-                      Exceções (Feriados)
+                      <AlertCircle className="w-5 h-5 text-purple-600" />
+                      Exceções (Feriados e Dias Especiais)
                     </h4>
                     <div className="space-y-2">
-                      {calendarioSelecionado.feriados.map((feriado, index) => (
-                        <div key={index} className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 flex items-center justify-between">
-                          <span className="text-sm text-red-900">{new Date(feriado + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
-                          <span className="text-xs text-red-700">Não trabalhando</span>
+                      {calendarioSelecionado.excecoes.slice(0, 5).map((excecao) => (
+                        <div key={excecao.id} className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-2 flex items-center justify-between">
+                          <div>
+                            <span className="text-sm font-medium text-purple-900">{excecao.nome}</span>
+                            <span className="text-xs text-purple-700 ml-2">
+                              - {new Date(excecao.data_inicio + 'T00:00:00').toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          <span className="text-xs text-purple-700">
+                            {excecao.trabalhando ? '✓ Trabalhando' : '✗ Folga'}
+                          </span>
                         </div>
                       ))}
+                      {calendarioSelecionado.excecoes.length > 5 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          + {calendarioSelecionado.excecoes.length - 5} exceções
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -636,55 +622,49 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
                 </div>
 
                 {/* Exceções */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-                    <h4 className="font-semibold text-gray-900">Exceções (Feriados e Dias Especiais)</h4>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Defina dias que não seguem o padrão semanal
-                    </p>
+                <div className="border border-purple-200 rounded-lg overflow-hidden bg-purple-50">
+                  <div className="bg-purple-100 px-4 py-3 border-b border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-purple-900 flex items-center gap-2">
+                          <AlertCircle className="w-5 h-5" />
+                          Exceções (Feriados e Dias Especiais)
+                        </h4>
+                        <p className="text-xs text-purple-700 mt-1">
+                          Feriados, folgas, horas extras e trabalho personalizado
+                        </p>
+                      </div>
+                      <div className="text-2xl font-bold text-purple-700">
+                        {excecoes.length}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-4 space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="date"
-                        value={novaExcecaoData}
-                        onChange={(e) => setNovaExcecaoData(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={novaExcecaoNome}
-                        onChange={(e) => setNovaExcecaoNome(e.target.value)}
-                        placeholder="Nome (ex: Natal)"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                      />
-                      <button
-                        onClick={handleAdicionarExcecao}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
+                  <div className="p-4">
+                    <button
+                      onClick={handleAbrirExcecoes}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                    >
+                      <Calendar className="w-5 h-5" />
+                      Gerenciar Exceções
+                    </button>
 
                     {excecoes.length > 0 && (
-                      <div className="space-y-2">
-                        {excecoes.map((excecao, index) => (
-                          <div key={index} className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                            <div>
-                              <span className="text-sm font-medium text-red-900">
-                                {new Date(excecao.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                              </span>
-                              <span className="text-sm text-red-700 ml-2">- {excecao.nome}</span>
-                            </div>
-                            <button
-                              onClick={() => handleRemoverExcecao(index)}
-                              className="text-red-600 hover:text-red-800 p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-medium text-purple-900 mb-2">Últimas exceções:</p>
+                        {excecoes.slice(0, 3).map((excecao) => (
+                          <div key={excecao.id} className="flex items-center justify-between bg-white border border-purple-200 rounded px-3 py-2">
+                            <span className="text-xs text-purple-900 font-medium">{excecao.nome}</span>
+                            <span className="text-xs text-purple-600">
+                              {new Date(excecao.data_inicio + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                            </span>
                           </div>
                         ))}
+                        {excecoes.length > 3 && (
+                          <p className="text-xs text-purple-600 text-center">
+                            + {excecoes.length - 3} exceções
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -730,6 +710,15 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Modal de Exceções */}
+      <ExcecoesModal
+        open={showExcecoesModal}
+        onClose={() => setShowExcecoesModal(false)}
+        excecoes={excecoes}
+        onSalvar={handleSalvarExcecoes}
+        calendarioNome={nomeCalendario || calendarioSelecionado?.nome || 'Calendário'}
+      />
     </div>
   );
 };

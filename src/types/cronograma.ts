@@ -223,6 +223,58 @@ export interface ConfiguracaoColunaGantt {
 }
 
 /**
+ * Tipo de exceção no calendário
+ */
+export enum TipoExcecao {
+  FERIADO = 'FERIADO',                    // Não trabalhando
+  DIA_NAO_UTIL = 'DIA_NAO_UTIL',          // Não trabalhando (folga)
+  TRABALHO_PERSONALIZADO = 'TRABALHO_PERSONALIZADO', // Trabalhando com horários diferentes
+  HORA_EXTRA = 'HORA_EXTRA',              // Trabalhando mais horas
+}
+
+/**
+ * Padrão de recorrência para exceções
+ */
+export enum PadraoRecorrencia {
+  UNICO = 'UNICO',                        // Ocorre apenas uma vez
+  DIARIAMENTE = 'DIARIAMENTE',            // Todo dia
+  SEMANALMENTE = 'SEMANALMENTE',          // Toda semana (ex: toda segunda)
+  MENSALMENTE = 'MENSALMENTE',            // Todo mês (ex: dia 15)
+  ANUALMENTE = 'ANUALMENTE',              // Todo ano (ex: Natal)
+}
+
+/**
+ * Período de trabalho (horário de início e fim)
+ */
+export interface PeriodoTrabalho {
+  inicio: string; // HH:mm
+  fim: string;    // HH:mm
+}
+
+/**
+ * Exceção de calendário (feriados, dias especiais, horas extras)
+ */
+export interface ExcecaoCalendario {
+  id: string;
+  nome: string;                           // Ex: "Natal", "Hora Extra - Concretagem"
+  tipo: TipoExcecao;
+  data_inicio: string;                    // ISO date string (YYYY-MM-DD)
+  data_fim?: string;                      // ISO date string (para exceções de múltiplos dias)
+  
+  // Padrão de recorrência
+  recorrencia: PadraoRecorrencia;
+  intervalo_recorrencia?: number;         // Ex: a cada 2 semanas
+  termina_apos?: string;                  // Data fim da recorrência (ISO)
+  
+  // Configuração de trabalho (se for dia trabalhando)
+  trabalhando: boolean;                   // true = trabalhando, false = folga
+  periodos?: PeriodoTrabalho[];           // Períodos de trabalho (se trabalhando)
+  
+  // Observações
+  observacoes?: string;
+}
+
+/**
  * Calendário de trabalho do projeto
  */
 export interface CalendarioProjeto {
@@ -235,7 +287,10 @@ export interface CalendarioProjeto {
   horario_almoco_inicio?: string; // HH:mm
   horario_almoco_fim?: string; // HH:mm
   horario_fim: string; // HH:mm
-  feriados: string[]; // ISO date strings
+  
+  // Exceções (substituindo apenas 'feriados')
+  excecoes: ExcecaoCalendario[];
+  
   is_padrao?: boolean;
 }
 

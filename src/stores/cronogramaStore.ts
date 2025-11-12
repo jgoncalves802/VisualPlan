@@ -47,7 +47,7 @@ const calendarioPadrao5x8: CalendarioProjeto = {
   horario_almoco_inicio: '12:00',
   horario_almoco_fim: '13:00',
   horario_fim: '17:00',
-  feriados: [],
+  excecoes: [],
   is_padrao: true,
 };
 
@@ -68,7 +68,7 @@ const calendarioIntensivo6x8: CalendarioProjeto = {
   horario_almoco_inicio: '12:00',
   horario_almoco_fim: '13:00',
   horario_fim: '17:00',
-  feriados: [],
+  excecoes: [],
   is_padrao: false,
 };
 
@@ -90,7 +90,7 @@ const calendario24x7: CalendarioProjeto = {
   horario_almoco_inicio: undefined,
   horario_almoco_fim: undefined,
   horario_fim: '23:59',
-  feriados: [],
+  excecoes: [],
   is_padrao: false,
 };
 
