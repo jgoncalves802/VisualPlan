@@ -8,12 +8,12 @@ import { useCronogramaStore } from '../../../stores/cronogramaStore';
 import { CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
 
 interface CalendariosModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
 }
 
 export const CalendariosModal: React.FC<CalendariosModalProps> = ({
-  isOpen,
+  open,
   onClose,
 }) => {
   const {
@@ -29,7 +29,7 @@ export const CalendariosModal: React.FC<CalendariosModalProps> = ({
   const [modoEdicao, setModoEdicao] = useState<'lista' | 'criar' | 'editar'>('lista');
   const [formData, setFormData] = useState<Partial<CalendarioProjeto>>({});
 
-  if (!isOpen) return null;
+  if (!open) return null;
 
   const calendarioSelecionado = selectedCalendarioId
     ? calendarios.find((c) => c.id === selectedCalendarioId)
