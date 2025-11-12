@@ -66,6 +66,36 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
     gantt.config.show_today = configuracoes.mostrar_linha_hoje;
     gantt.config.duration_unit = configuracoes.escala_topo === 'hour' ? 'hour' : 'day';
 
+    // ========================================================================
+    // WBS CODES - Função para calcular códigos EDT automaticamente
+    // ========================================================================
+    const calculateWBSCode = (task: any): string => {
+      if (!task) return '';
+      
+      // Se já tem EDT definido, use-o
+      if (task.edt) return task.edt;
+      
+      try {
+        // Se não tem pai, é raiz
+        if (!task.parent || task.parent === 0 || task.parent === '0') {
+          const rootIndex = gantt.getGlobalTaskIndex(task.id) + 1;
+          return `${rootIndex}`;
+        }
+        
+        // Tem pai, calcular baseado no pai
+        const parent = gantt.getTask(task.parent);
+        const parentWBS = calculateWBSCode(parent);
+        
+        // Encontrar índice entre irmãos
+        const siblings = gantt.getChildren(task.parent);
+        const siblingIndex = siblings.indexOf(task.id) + 1;
+        
+        return `${parentWBS}.${siblingIndex}`;
+      } catch (e) {
+        return '';
+      }
+    };
+
     // Colunas
     // Configuração de colunas baseada em configuracoes.colunas
     const templateMap: Record<string, (task: any) => string> = {
@@ -74,7 +104,15 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
         const codigo = configuracoes.mostrar_codigo_atividade && task.codigo ? `${task.codigo} - ` : '';
         return `<span style="font-weight:${task.tipo === 'Fase' ? '600' : '400'}">${icon} ${codigo}${task.text}</span>`;
       },
-      edt: (task: any) => task.edt || '',
+      edt: (task: any) => {
+        // Tenta usar o EDT definido, senão calcula automaticamente
+        if (task.edt) return task.edt;
+        try {
+          return calculateWBSCode(task);
+        } catch (e) {
+          return '';
+        }
+      },
       start_date: (task: any) => formatarData(task.start_date, configuracoes.formato_data_tabela),
       end_date: (task: any) => formatarData(task.end_date, configuracoes.formato_data_tabela),
       duration: (task: any) => {
@@ -200,11 +238,10 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
     // Inicializa TODAS as extensões do DHTMLX Gantt
     initializeAllExtensions(configuracoes);
     
-    // WBS Codes - Códigos de Estrutura de Decomposição do Trabalho
+    // ========================================================================
+    // WBS CODES - Configuração adicional
+    // ========================================================================
     gantt.config.wbs_code_separator = '.';
-    
-    // Template para gerar WBS Code automaticamente
-    gantt.templates.task_date = (date) => gantt.date.date_to_str('%d/%m/%Y')(date);
 
     gantt.config.layout = {
       css: 'vp-gantt-layout',
@@ -236,6 +273,13 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
     const ganttData = convertToGanttData(tasks);
     gantt.clearAll();
     gantt.parse(ganttData);
+
+    // Atualizar WBS Codes automaticamente após carregar dados
+    gantt.eachTask((task: any) => {
+      if (!task.edt) {
+        task.edt = calculateWBSCode(task);
+      }
+    });
 
     let detachColumnInteractions: () => void = () => {};
     let gridResizerHandle: GridResizerHandle | null = null;

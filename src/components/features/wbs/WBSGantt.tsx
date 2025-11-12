@@ -9,6 +9,7 @@ import 'dhtmlx-gantt/codebase/dhtmlxgantt.css';
 import './wbs-gantt.css';
 import { attachColumnDragAndResize } from '../../../lib/gantt/columnInteractions';
 import { attachGridResizer, GridResizerHandle } from '../../../lib/gantt/gridResizer';
+import { initializeAllExtensions } from '../../../lib/gantt/extensions';
 
 export interface WBSProject {
   id: string;
@@ -44,6 +45,9 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({ projetos, escala, onProjetoC
 
     configurarEscala(escala);
     configurarLocale();
+    
+    // Inicializar todas as extensões do DHTMLX Gantt
+    initializeAllExtensions();
 
     gantt.config.readonly = true;
     gantt.config.show_grid = true;
