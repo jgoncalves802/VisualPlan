@@ -5,15 +5,18 @@
 
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gantt, Task, ViewMode } from 'gantt-task-react';
-import 'gantt-task-react/dist/index.css';
-import { projetosMock, ProjetoMock } from '../mocks/projetosMocks';
+import { getProjetosComDuracaoReal } from '../mocks/projetosMocks';
+import { WBSGantt, WBSProject } from '../components/features/wbs/WBSGantt';
 
 export const WBSPage: React.FC = () => {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
+  type WBSViewMode = 'Day' | 'Week' | 'Month' | 'Year';
+  const [viewMode, setViewMode] = useState<WBSViewMode>('Month');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [buscaNome, setBuscaNome] = useState('');
+
+  // Obter projetos com duração real calculada baseada nas atividades
+  const projetosMock = useMemo(() => getProjetosComDuracaoReal(), []);
 
   // Filtrar projetos
   const projetosFiltrados = useMemo(() => {
@@ -40,35 +43,25 @@ export const WBSPage: React.FC = () => {
     return projetos;
   }, [filtroStatus, buscaNome]);
 
-  // Converter projetos para tasks do Gantt
-  const tasks: Task[] = useMemo(() => {
-    return projetosFiltrados.map((projeto) => {
-      const dataInicio = new Date(projeto.data_inicio);
-      const dataFim = new Date(projeto.data_fim);
-
-      return {
-        id: projeto.id,
-        name: projeto.nome,
-        start: dataInicio,
-        end: dataFim,
-        progress: projeto.progresso,
-        type: 'project' as const,
-        isDisabled: false,
-        styles: {
-          backgroundColor: projeto.cor,
-          backgroundSelectedColor: projeto.cor,
-          progressColor: projeto.cor,
-          progressSelectedColor: projeto.cor,
-        },
-      };
-    });
+  const wbsProjetos: WBSProject[] = useMemo(() => {
+    return projetosFiltrados.map((projeto) => ({
+      id: projeto.id,
+      nome: projeto.nome,
+      codigo: projeto.codigo,
+      gerente: projeto.gerente,
+      data_inicio: projeto.data_inicio,
+      data_fim: projeto.data_fim,
+      status: projeto.status,
+      progresso: projeto.progresso,
+      cor: projeto.cor,
+      categoria: projeto.tags?.[0],
+      cliente: projeto.cliente,
+    }));
   }, [projetosFiltrados]);
 
-  // Handler para clicar em um projeto
-  const handleTaskClick = (task: Task) => {
-    const projeto = projetosMock.find((p) => p.id === task.id);
+  const handleProjetoClick = (projetoId: string) => {
+    const projeto = projetosMock.find((p) => p.id === projetoId);
     if (projeto) {
-      // Navegar para o cronograma específico do projeto
       navigate(`/cronograma/${projeto.id}`);
     }
   };
@@ -82,7 +75,7 @@ export const WBSPage: React.FC = () => {
       atrasados: projetosMock.filter((p) => p.status === 'Atrasado').length,
       naoIniciados: projetosMock.filter((p) => p.status === 'Não Iniciado').length,
     };
-  }, []);
+  }, [projetosMock]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -225,13 +218,13 @@ export const WBSPage: React.FC = () => {
             <span className="text-sm font-medium text-gray-700">Escala:</span>
             <select
               value={viewMode}
-              onChange={(e) => setViewMode(e.target.value as ViewMode)}
+              onChange={(e) => setViewMode(e.target.value as WBSViewMode)}
               className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value={ViewMode.Day}>Dia</option>
-              <option value={ViewMode.Week}>Semana</option>
-              <option value={ViewMode.Month}>Mês</option>
-              <option value={ViewMode.Year}>Ano</option>
+              <option value="Day">Dia</option>
+              <option value="Week">Semana</option>
+              <option value="Month">Mês</option>
+              <option value="Year">Ano</option>
             </select>
           </div>
         </div>
@@ -239,7 +232,7 @@ export const WBSPage: React.FC = () => {
 
       {/* Timeline Gantt */}
       <div className="flex-1 overflow-auto p-6">
-        {tasks.length === 0 ? (
+        {wbsProjetos.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <svg
@@ -260,16 +253,8 @@ export const WBSPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <Gantt
-              tasks={tasks}
-              viewMode={viewMode}
-              locale="pt-BR"
-              listCellWidth=""
-              columnWidth={viewMode === ViewMode.Month ? 60 : viewMode === ViewMode.Week ? 80 : 45}
-              onClick={handleTaskClick}
-              onDoubleClick={handleTaskClick}
-            />
+          <div className="bg-transparent">
+            <WBSGantt projetos={wbsProjetos} escala={viewMode} onProjetoClick={handleProjetoClick} />
           </div>
         )}
       </div>

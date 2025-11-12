@@ -3,7 +3,7 @@
  * Tipos próprios do VisionPlan Gantt
  */
 
-import { AtividadeMock, DependenciaAtividade, FormatoData } from '../../types/cronograma';
+import { AtividadeMock, FormatoData } from '../../types/cronograma';
 
 /**
  * Task do VisionPlan Gantt
@@ -25,6 +25,8 @@ export interface VPGanttTask {
   e_critica?: boolean;
   duracao_horas?: number;
   codigo?: string;
+  edt?: string;
+  calendario_id?: string;
 }
 
 /**

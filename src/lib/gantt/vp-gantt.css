@@ -18,6 +18,8 @@
 
 .vp-gantt-chart {
   font-family: 'Inter', 'system-ui', sans-serif !important;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* ============================================================================
@@ -30,6 +32,8 @@
   border-bottom: 2px solid #e5e7eb;
   font-weight: 600;
   color: #374151;
+  padding: 8px 12px !important;
+  height: 48px !important;
 }
 
 .gantt_grid {
@@ -38,10 +42,57 @@
 
 .gantt_grid_data .gantt_row {
   border-bottom: 1px solid #f3f4f6;
+  min-height: 40px !important;
 }
 
 .gantt_grid_data .gantt_row:hover {
   background: #f9fafb;
+}
+
+.gantt_cell {
+  padding: 8px 12px !important;
+  vertical-align: middle !important;
+}
+
+.gantt_grid_head_cell {
+  position: relative;
+}
+
+.vp-column-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  background: transparent;
+}
+
+.vp-column-resizer:hover,
+.vp-column-resizer.dragging {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.vp-grid-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 5;
+}
+
+.vp-grid-resizer:hover,
+.vp-grid-resizer.dragging {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.vp-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer {
+  width: 6px !important;
+  background: rgba(59, 130, 246, 0.15);
+  cursor: col-resize;
 }
 
 .gantt_grid_data .gantt_row.odd {
@@ -89,24 +140,29 @@
 
 /* Barras de tarefas */
 .gantt_task_line {
-  border-radius: 4px;
+  border-radius: 6px;
   border-width: 1px;
   border-style: solid;
+  min-height: 28px !important;
+  height: 28px !important;
 }
 
 .gantt_task_line:hover {
   opacity: 0.9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
 }
 
 .gantt_task_line.gantt_selected {
-  box-shadow: 0 0 0 2px #3b82f6;
+  box-shadow: 0 0 0 3px #3b82f6;
 }
 
 /* Barra de progresso */
 .gantt_task_progress {
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
+  border-radius: 5px;
+  height: 100% !important;
 }
 
 /* Texto nas barras */

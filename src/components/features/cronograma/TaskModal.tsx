@@ -18,14 +18,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   open,
   onClose,
   atividadeId,
-  projetoId,
+  projetoId: _projetoId,
   onSave,
 }) => {
-  const { todasAtividades } = useCronogramaStore();
-  const atividade = atividadeId ? todasAtividades.find((a) => a.id === atividadeId) : null;
+  const atividades = useCronogramaStore((state) => state.atividades);
+  const calendarios = useCronogramaStore((state) => state.calendarios);
+  const calendario_padrao = useCronogramaStore((state) => state.calendario_padrao);
+  const atividade = atividadeId ? atividades.find((a) => a.id === atividadeId) : null;
 
   const [formData, setFormData] = useState({
     codigo: '',
+    edt: '',
     nome: '',
     descricao: '',
     tipo: 'Tarefa' as 'Tarefa' | 'Marco' | 'Fase',
@@ -36,6 +39,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     status: 'Não Iniciada',
     responsavel_nome: '',
     prioridade: 'Média',
+    parent_id: '',
+    calendario_id: calendario_padrao || 'cal-padrao-5x8',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +51,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     if (atividade) {
       setFormData({
         codigo: atividade.codigo || '',
+        edt: atividade.edt || '',
         nome: atividade.nome,
         descricao: atividade.descricao || '',
         tipo: atividade.tipo as any,
@@ -56,6 +62,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         status: atividade.status,
         responsavel_nome: atividade.responsavel_nome || '',
         prioridade: atividade.prioridade || 'Média',
+        parent_id: atividade.parent_id || '',
+        calendario_id: atividade.calendario_id || calendario_padrao || 'cal-padrao-5x8',
       });
     } else {
       // Reset para nova atividade
@@ -64,6 +72,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       amanha.setDate(amanha.getDate() + 1);
       setFormData({
         codigo: '',
+        edt: '',
         nome: '',
         descricao: '',
         tipo: 'Tarefa',
@@ -74,10 +83,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         status: 'Não Iniciada',
         responsavel_nome: '',
         prioridade: 'Média',
+        parent_id: '',
+        calendario_id: calendario_padrao || 'cal-padrao-5x8',
       });
     }
     setErrors({});
-  }, [atividade, open]);
+  }, [atividade, open, calendario_padrao]);
 
   // Calcula duração automaticamente ao mudar datas
   useEffect(() => {
@@ -129,7 +140,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onSave(formData);
+      await onSave({
+        ...formData,
+        parent_id: formData.parent_id || undefined,
+      });
       onClose();
     } catch (error) {
       console.error('Erro ao salvar:', error);
@@ -166,8 +180,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Código e Tipo */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Código, EDT e Tipo */}
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Código
@@ -178,6 +192,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="A001"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                EDT / WBS
+              </label>
+              <input
+                type="text"
+                value={formData.edt}
+                onChange={(e) => setFormData({ ...formData, edt: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="1.2.3"
+                title="Estrutura de Decomposição do Trabalho"
               />
             </div>
 
@@ -226,6 +254,52 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Descrição detalhada da atividade"
             />
+          </div>
+
+          {/* Hierarquia e Calendário */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Atividade Mãe (Hierarquia)
+              </label>
+              <select
+                value={formData.parent_id}
+                onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Sem atividade mãe (nível raiz)</option>
+                {atividades
+                  .filter((a) => a.id !== atividadeId)
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {(a.codigo ? `${a.codigo} - ` : '') + a.nome}
+                    </option>
+                  ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Defina a hierarquia do cronograma
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Calendário do Trabalho
+              </label>
+              <select
+                value={formData.calendario_id}
+                onChange={(e) => setFormData({ ...formData, calendario_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {calendarios.map((cal) => (
+                  <option key={cal.id} value={cal.id}>
+                    {cal.nome}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Define dias e horários de trabalho
+              </p>
+            </div>
           </div>
 
           {/* Datas */}

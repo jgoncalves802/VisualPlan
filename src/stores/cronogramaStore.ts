@@ -14,6 +14,8 @@ import {
   UnidadeTempo,
   ConfiguracoesProjeto,
   FormatoData,
+  CalendarioProjeto,
+  DiaTrabalho,
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
 
@@ -26,20 +28,136 @@ const initialFilters: FiltrosCronograma = {
   apenas_atrasadas: false,
 };
 
+/**
+ * Calendários padrão do sistema
+ */
+const calendarioPadrao5x8: CalendarioProjeto = {
+  id: 'cal-padrao-5x8',
+  nome: 'Padrão 5x8 (Seg-Sex, 8h/dia)',
+  descricao: 'Calendário padrão brasileiro: segunda a sexta, 8h às 12h e 13h às 17h',
+  dias_trabalho: [
+    DiaTrabalho.SEGUNDA,
+    DiaTrabalho.TERCA,
+    DiaTrabalho.QUARTA,
+    DiaTrabalho.QUINTA,
+    DiaTrabalho.SEXTA,
+  ],
+  horas_por_dia: 8,
+  horario_inicio: '08:00',
+  horario_almoco_inicio: '12:00',
+  horario_almoco_fim: '13:00',
+  horario_fim: '17:00',
+  feriados: [],
+  is_padrao: true,
+};
+
+const calendarioIntensivo6x8: CalendarioProjeto = {
+  id: 'cal-intensivo-6x8',
+  nome: 'Intensivo 6x8 (Seg-Sáb, 8h/dia)',
+  descricao: 'Calendário intensivo: segunda a sábado, 8h às 12h e 13h às 17h',
+  dias_trabalho: [
+    DiaTrabalho.SEGUNDA,
+    DiaTrabalho.TERCA,
+    DiaTrabalho.QUARTA,
+    DiaTrabalho.QUINTA,
+    DiaTrabalho.SEXTA,
+    DiaTrabalho.SABADO,
+  ],
+  horas_por_dia: 8,
+  horario_inicio: '08:00',
+  horario_almoco_inicio: '12:00',
+  horario_almoco_fim: '13:00',
+  horario_fim: '17:00',
+  feriados: [],
+  is_padrao: false,
+};
+
+const calendario24x7: CalendarioProjeto = {
+  id: 'cal-continuo-24x7',
+  nome: 'Contínuo 24x7 (7 dias, 24h/dia)',
+  descricao: 'Calendário contínuo: todos os dias da semana, 24 horas',
+  dias_trabalho: [
+    DiaTrabalho.DOMINGO,
+    DiaTrabalho.SEGUNDA,
+    DiaTrabalho.TERCA,
+    DiaTrabalho.QUARTA,
+    DiaTrabalho.QUINTA,
+    DiaTrabalho.SEXTA,
+    DiaTrabalho.SABADO,
+  ],
+  horas_por_dia: 24,
+  horario_inicio: '00:00',
+  horario_almoco_inicio: undefined,
+  horario_almoco_fim: undefined,
+  horario_fim: '23:59',
+  feriados: [],
+  is_padrao: false,
+};
+
+const initialCalendarios: CalendarioProjeto[] = [
+  calendarioPadrao5x8,
+  calendarioIntensivo6x8,
+  calendario24x7,
+];
+
 const initialConfiguracoes: ConfiguracoesProjeto = {
   // Formatos de Data (padrões semelhantes ao MS Project)
   formato_data_tabela: FormatoData.SEMANA_DIA_MES_ANO,      // qua 28/01/09
   formato_data_gantt: FormatoData.DIA_MES,                   // 28/01
   formato_data_tooltip: FormatoData.SEMANA_DIA_MES_EXTENSO,  // qua, 28 de janeiro
+  escala_topo: 'week',
+  escala_sub: 'day',
   
   // Configurações de Exibição
   mostrar_codigo_atividade: true,
   mostrar_progresso_percentual: true,
   destacar_caminho_critico: true,
+  mostrar_grid: true,
+  mostrar_linha_hoje: true,
+  mostrar_links: true,
+  mostrar_rotulo_barras: true,
+  mostrar_coluna_predecessores: true,
+  mostrar_coluna_sucessores: true,
+  expandir_grupos: true,
+  largura_grid: 360,
+  altura_linha: 32,
+  colunas: [
+    { field: 'text', label: 'Nome', width: 200, align: 'left', tree: true },
+    { field: 'edt', label: 'EDT', width: 80, align: 'left', tree: false },
+    { field: 'start_date', label: 'Início', width: 100, align: 'center', tree: false },
+    { field: 'end_date', label: 'Fim', width: 100, align: 'center', tree: false },
+    { field: 'duration', label: 'Duração', width: 80, align: 'center', tree: false },
+    { field: 'progress', label: 'Progresso', width: 80, align: 'center', tree: false },
+  ],
   
   // Configurações de Comportamento
   permitir_edicao_drag: true,
   auto_calcular_progresso: false,
+  habilitar_auto_scheduling: true,
+  
+  // ========================================================================
+  // EXTENSÕES DHTMLX GANTT (Novos Recursos)
+  // ========================================================================
+  
+  // Extensões Principais
+  habilitar_quick_info: true,             // Quick Info ao clicar em tarefa
+  habilitar_tooltip: true,                // Tooltip ao passar mouse
+  habilitar_critical_path: true,          // Destaque do caminho crítico
+  habilitar_keyboard_navigation: true,    // Navegação por teclado
+  habilitar_undo_redo: true,              // Desfazer/Refazer ações
+  habilitar_multiselect: true,            // Seleção múltipla de tarefas
+  
+  // Funcionalidades Avançadas
+  habilitar_inline_editing: true,         // Edição inline na grid
+  habilitar_drag_timeline: false,         // Arrastar timeline com Ctrl (desabilitado por padrão)
+  habilitar_markers: true,                // Marcadores verticais (hoje, etc)
+  habilitar_baselines: false,             // Linhas de base (requer campo planned_start/end)
+  habilitar_deadlines: false,             // Marcadores de deadline (requer campo deadline)
+  habilitar_split_tasks: false,           // Tarefas divididas
+  habilitar_grouping: true,               // Agrupamento de tarefas
+  habilitar_resources: true,              // Gerenciamento de recursos
+  habilitar_constraints: true,            // Restrições (ASAP, ALAP, etc)
+  habilitar_wbs_codes: true,              // Códigos WBS automáticos
   
   // Configurações de Cores
   cor_tarefa_normal: '#3b82f6',    // blue-500
@@ -63,6 +181,8 @@ export const useCronogramaStore = create<CronogramaState>()(
       filtros: initialFilters,
       unidadeTempoPadrao: UnidadeTempo.DIAS,
       configuracoes: initialConfiguracoes,
+      calendarios: initialCalendarios,
+      calendario_padrao: 'cal-padrao-5x8',
       isLoading: false,
       isCalculandoCPM: false,
       erro: null,
@@ -303,6 +423,65 @@ export const useCronogramaStore = create<CronogramaState>()(
       },
 
       // ========================================================================
+      // ACTIONS - CALENDÁRIOS
+      // ========================================================================
+
+      /**
+       * Adiciona um novo calendário
+       */
+      adicionarCalendario: (calendario: Omit<CalendarioProjeto, 'id'>) => {
+        const novoCalendario: CalendarioProjeto = {
+          ...calendario,
+          id: `cal-${Date.now()}`,
+        };
+        set((state) => ({
+          calendarios: [...state.calendarios, novoCalendario],
+        }));
+      },
+
+      /**
+       * Atualiza um calendário existente
+       */
+      atualizarCalendario: (id: string, dados: Partial<CalendarioProjeto>) => {
+        set((state) => ({
+          calendarios: state.calendarios.map((c) =>
+            c.id === id ? { ...c, ...dados } : c
+          ),
+        }));
+      },
+
+      /**
+       * Remove um calendário
+       */
+      removerCalendario: (id: string) => {
+        set((state) => {
+          // Não permite remover o calendário padrão
+          const calendario = state.calendarios.find((c) => c.id === id);
+          if (calendario?.is_padrao) {
+            throw new Error('Não é possível remover o calendário padrão');
+          }
+
+          // Se o calendário removido era o padrão do projeto, define outro como padrão
+          const novoCalendarioPadrao =
+            state.calendario_padrao === id
+              ? state.calendarios.find((c) => c.id !== id)?.id
+              : state.calendario_padrao;
+
+          return {
+            calendarios: state.calendarios.filter((c) => c.id !== id),
+            calendario_padrao: novoCalendarioPadrao,
+          };
+        });
+      },
+
+      /**
+       * Define o calendário padrão do projeto
+       */
+      setCalendarioPadrao: (calendarioId: string) => {
+        set({ calendario_padrao: calendarioId });
+      },
+
+      // ========================================================================
       // ACTIONS - RESET
       // ========================================================================
 
@@ -319,6 +498,8 @@ export const useCronogramaStore = create<CronogramaState>()(
           filtros: initialFilters,
           unidadeTempoPadrao: UnidadeTempo.DIAS,
           configuracoes: initialConfiguracoes,
+          calendarios: initialCalendarios,
+          calendario_padrao: 'cal-padrao-5x8',
           isLoading: false,
           isCalculandoCPM: false,
           erro: null,
@@ -334,6 +515,8 @@ export const useCronogramaStore = create<CronogramaState>()(
         filtros: state.filtros,
         unidadeTempoPadrao: state.unidadeTempoPadrao,
         configuracoes: state.configuracoes, // Persiste configurações do usuário
+        calendarios: state.calendarios, // Persiste calendários customizados
+        calendario_padrao: state.calendario_padrao, // Persiste calendário padrão do projeto
       }),
     }
   )

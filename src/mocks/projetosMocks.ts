@@ -2,6 +2,8 @@
  * Dados mocados para Projetos (WBS)
  */
 
+import { atividadesMock } from './cronogramaMocks';
+
 export interface ProjetoMock {
   id: string;
   nome: string;
@@ -219,5 +221,57 @@ export const getProjetosConcluidos = (): ProjetoMock[] => {
  */
 export const getProjetosAtrasados = (): ProjetoMock[] => {
   return projetosMock.filter((p) => p.status === 'Atrasado');
+};
+
+/**
+ * Calcula a duração real de um projeto com base em suas atividades
+ */
+export const calcularDuracaoRealProjeto = (projetoId: string): { data_inicio: string; data_fim: string; duracao_dias: number } | null => {
+  const atividades = atividadesMock.filter((a) => a.projeto_id === projetoId);
+  
+  if (atividades.length === 0) {
+    return null;
+  }
+
+  // Encontra a data de início mais cedo e a data de fim mais tarde
+  const datasInicio = atividades.map((a) => new Date(a.data_inicio));
+  const datasFim = atividades.map((a) => new Date(a.data_fim));
+
+  const dataInicio = new Date(Math.min(...datasInicio.map((d) => d.getTime())));
+  const dataFim = new Date(Math.max(...datasFim.map((d) => d.getTime())));
+
+  // Calcula a duração em dias
+  const diffTime = Math.abs(dataFim.getTime() - dataInicio.getTime());
+  const duracaoDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return {
+    data_inicio: dataInicio.toISOString().split('T')[0],
+    data_fim: dataFim.toISOString().split('T')[0],
+    duracao_dias: duracaoDias,
+  };
+};
+
+/**
+ * Atualiza um projeto com as datas reais baseadas em suas atividades
+ */
+export const getProjetoComDuracaoReal = (projeto: ProjetoMock): ProjetoMock => {
+  const duracaoReal = calcularDuracaoRealProjeto(projeto.id);
+  
+  if (!duracaoReal) {
+    return projeto;
+  }
+
+  return {
+    ...projeto,
+    data_inicio: duracaoReal.data_inicio,
+    data_fim: duracaoReal.data_fim,
+  };
+};
+
+/**
+ * Retorna todos os projetos com suas durações reais calculadas
+ */
+export const getProjetosComDuracaoReal = (): ProjetoMock[] => {
+  return projetosMock.map(getProjetoComDuracaoReal);
 };
 

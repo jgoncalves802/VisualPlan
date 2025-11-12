@@ -36,11 +36,23 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
         formato_data_tabela: FormatoData.SEMANA_DIA_MES_ANO,
         formato_data_gantt: FormatoData.DIA_MES,
         formato_data_tooltip: FormatoData.SEMANA_DIA_MES_EXTENSO,
+        escala_topo: 'week',
+        escala_sub: 'day',
         mostrar_codigo_atividade: true,
         mostrar_progresso_percentual: true,
         destacar_caminho_critico: true,
+        mostrar_grid: true,
+        mostrar_linha_hoje: true,
+        mostrar_links: true,
+        mostrar_rotulo_barras: true,
+        mostrar_coluna_predecessores: true,
+        mostrar_coluna_sucessores: true,
+        expandir_grupos: true,
+        largura_grid: 360,
+        altura_linha: 32,
         permitir_edicao_drag: true,
         auto_calcular_progresso: false,
+        habilitar_auto_scheduling: true,
         cor_tarefa_normal: '#3b82f6',
         cor_tarefa_critica: '#dc2626',
         cor_tarefa_concluida: '#10b981',
@@ -240,8 +252,93 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
           {abaAtiva === 'exibicao' && (
             <div className="space-y-4">
               <p className="text-sm text-gray-600 mb-6">
-                Configure quais elementos serão exibidos no cronograma.
+                Configure os elementos visuais da timeline e da grid do cronograma.
               </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Escala do Gráfico</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Escala Principal
+                      </label>
+                      <select
+                        value={configuracoes.escala_topo}
+                        onChange={(e) =>
+                          setConfiguracoes({ escala_topo: e.target.value as typeof configuracoes.escala_topo })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="hour">Horas</option>
+                        <option value="day">Dias</option>
+                        <option value="week">Semanas</option>
+                        <option value="month">Meses</option>
+                        <option value="year">Anos</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Subdivisão
+                      </label>
+                      <select
+                        value={configuracoes.escala_sub}
+                        onChange={(e) =>
+                          setConfiguracoes({ escala_sub: e.target.value as typeof configuracoes.escala_sub })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="none">Sem subdivisão</option>
+                        <option value="minute">Minutos</option>
+                        <option value="hour">Horas</option>
+                        <option value="day">Dias</option>
+                        <option value="week">Semanas</option>
+                        <option value="month">Meses</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Layout da Grid</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Largura da Grid (px)
+                      </label>
+                      <input
+                        type="range"
+                        min={240}
+                        max={520}
+                        step={10}
+                        value={configuracoes.largura_grid}
+                        onChange={(e) => setConfiguracoes({ largura_grid: Number(e.target.value) })}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Atual: <span className="font-semibold">{configuracoes.largura_grid}px</span>
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Altura das Linhas (px)
+                      </label>
+                      <input
+                        type="range"
+                        min={24}
+                        max={48}
+                        step={2}
+                        value={configuracoes.altura_linha}
+                        onChange={(e) => setConfiguracoes({ altura_linha: Number(e.target.value) })}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Atual: <span className="font-semibold">{configuracoes.altura_linha}px</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                 <input
@@ -263,6 +360,57 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
               <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                 <input
                   type="checkbox"
+                  checked={configuracoes.mostrar_grid}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_grid: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Exibir grid lateral</p>
+                  <p className="text-sm text-gray-600">
+                    Mostra a tabela com colunas e hierarquia das atividades.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.mostrar_linha_hoje}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_linha_hoje: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Destacar data de hoje</p>
+                  <p className="text-sm text-gray-600">
+                    Exibe uma linha vertical indicando o dia atual na timeline.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.mostrar_links}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_links: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Mostrar setas de dependência</p>
+                  <p className="text-sm text-gray-600">
+                    Exibe visualmente as relações entre as atividades (predecessoras e sucessoras).
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
                   checked={configuracoes.mostrar_progresso_percentual}
                   onChange={(e) =>
                     setConfiguracoes({ mostrar_progresso_percentual: e.target.checked })
@@ -272,7 +420,24 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">Mostrar progresso percentual</p>
                   <p className="text-sm text-gray-600">
-                    Exibe o percentual de conclusão nas barras do Gantt
+                    Exibe o percentual de conclusão nas barras do Gantt.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.mostrar_rotulo_barras}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_rotulo_barras: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Exibir rótulo nas barras</p>
+                  <p className="text-sm text-gray-600">
+                    Mostra o nome ou percentual diretamente dentro das barras do Gantt.
                   </p>
                 </div>
               </label>
@@ -289,7 +454,58 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">Destacar caminho crítico</p>
                   <p className="text-sm text-gray-600">
-                    Aplica cor diferenciada para atividades no caminho crítico
+                    Aplica cor diferenciada para atividades no caminho crítico.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.mostrar_coluna_predecessores}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_coluna_predecessores: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Coluna de predecessoras</p>
+                  <p className="text-sm text-gray-600">
+                    Exibe as atividades que antecedem diretamente cada linha.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.mostrar_coluna_sucessores}
+                  onChange={(e) =>
+                    setConfiguracoes({ mostrar_coluna_sucessores: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Coluna de sucessoras</p>
+                  <p className="text-sm text-gray-600">
+                    Exibe as atividades que dependem diretamente da atividade atual.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.expandir_grupos}
+                  onChange={(e) =>
+                    setConfiguracoes({ expandir_grupos: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Expandir hierarquia ao carregar</p>
+                  <p className="text-sm text-gray-600">
+                    Mantém fases e subgrupos abertos automaticamente na inicialização.
                   </p>
                 </div>
               </label>
@@ -447,6 +663,23 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
                   <p className="font-medium text-gray-900">Auto-calcular progresso</p>
                   <p className="text-sm text-gray-600">
                     Calcula automaticamente o progresso baseado nas atividades filhas (hierarquia)
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={configuracoes.habilitar_auto_scheduling}
+                  onChange={(e) =>
+                    setConfiguracoes({ habilitar_auto_scheduling: e.target.checked })
+                  }
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Auto-ajustar dependências</p>
+                  <p className="text-sm text-gray-600">
+                    Recalcula datas automaticamente quando dependências são alteradas (Auto Scheduling)
                   </p>
                 </div>
               </label>

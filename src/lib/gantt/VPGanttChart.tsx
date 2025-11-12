@@ -1,16 +1,19 @@
 /**
  * VisionPlan Gantt Chart
- * Componente React wrapper para DHTMLX Gantt
+ * Wrapper React profissional para DHTMLX Gantt
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import gantt from 'dhtmlx-gantt';
 import 'dhtmlx-gantt/codebase/dhtmlxgantt.css';
 import { VPGanttTask, VPGanttConfig } from './types';
 import { useCronogramaStore } from '../../stores/cronogramaStore';
 import { formatarData } from '../../utils/dateFormatter';
-import { FormatoData } from '../../types/cronograma';
+import { ConfiguracoesProjeto, FormatoData } from '../../types/cronograma';
 import './vp-gantt.css';
+import { attachColumnDragAndResize } from './columnInteractions';
+import { attachGridResizer, GridResizerHandle } from './gridResizer';
+import { initializeAllExtensions } from './extensions';
 
 interface VPGanttChartProps {
   tasks: VPGanttTask[];
@@ -20,199 +23,333 @@ interface VPGanttChartProps {
 export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
-  const { configuracoes } = useCronogramaStore();
+  const { configuracoes, setConfiguracoes } = useCronogramaStore();
+
+  const taskLookup = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        codigo?: string;
+        nome: string;
+      }
+    >();
+
+    tasks.forEach((task) => {
+      map.set(task.id, {
+        codigo: task.codigo,
+        nome: task.name,
+      });
+    });
+
+    return map;
+  }, [tasks]);
 
   useEffect(() => {
     if (!containerRef.current) {
-      console.log('VPGantt: Container não disponível');
+      console.warn('VPGantt: container não encontrado');
       return;
     }
 
-    console.log('VPGantt: Inicializando DHTMLX Gantt', {
-      tasksCount: tasks.length,
-      viewMode: config.view_mode || 'Day',
-      container: containerRef.current
-    });
-
-    // ========================================================================
-    // CONFIGURAÇÃO DO DHTMLX GANTT
-    // ========================================================================
-
-    // Configurações básicas
+    // Configuração base
     gantt.config.date_format = '%Y-%m-%d %H:%i:%s';
     gantt.config.xml_date = '%Y-%m-%d %H:%i:%s';
-    
-    // Escala de tempo
+
     const viewMode = config.view_mode || 'Day';
-    configureScale(viewMode);
-    
-    // Layout e grid
-    gantt.config.show_grid = true;
+    configureScale(viewMode, configuracoes);
+
+    // Layout
+    gantt.config.show_grid = configuracoes.mostrar_grid;
     gantt.config.show_chart = true;
-    gantt.config.grid_width = 350;
-    gantt.config.row_height = 32;
-    gantt.config.scale_height = 50;
-    
-    // Colunas da grid
-    gantt.config.columns = [
-      {
-        name: 'text',
-        label: 'Atividade',
-        width: 200,
-        tree: true,
-        template: (task: any) => {
-          const icon = task.tipo === 'Fase' ? '📁' : task.tipo === 'Marco' ? '📍' : '📋';
-          return `<span style="font-weight: ${task.tipo === 'Fase' ? '600' : '400'}">${icon} ${task.text}</span>`;
+    gantt.config.grid_width = configuracoes.largura_grid;
+    gantt.config.row_height = configuracoes.altura_linha;
+    gantt.config.scale_height = configuracoes.escala_sub === 'none' ? 42 : 60;
+    gantt.config.show_today = configuracoes.mostrar_linha_hoje;
+    gantt.config.duration_unit = configuracoes.escala_topo === 'hour' ? 'hour' : 'day';
+
+    // Colunas
+    // Configuração de colunas baseada em configuracoes.colunas
+    const templateMap: Record<string, (task: any) => string> = {
+      text: (task: any) => {
+        const icon = task.tipo === 'Fase' ? '📁' : task.tipo === 'Marco' ? '📍' : '📋';
+        const codigo = configuracoes.mostrar_codigo_atividade && task.codigo ? `${task.codigo} - ` : '';
+        return `<span style="font-weight:${task.tipo === 'Fase' ? '600' : '400'}">${icon} ${codigo}${task.text}</span>`;
+      },
+      edt: (task: any) => task.edt || '',
+      start_date: (task: any) => formatarData(task.start_date, configuracoes.formato_data_tabela),
+      end_date: (task: any) => formatarData(task.end_date, configuracoes.formato_data_tabela),
+      duration: (task: any) => {
+        if (task.duracao_horas !== undefined && task.duracao_horas !== null) {
+          return `${task.duracao_horas} h`;
         }
+        return `${task.duration} d`;
       },
-      {
-        name: 'start_date',
-        label: 'Início',
-        align: 'center',
-        width: 80,
-        template: (task: any) => formatarData(task.start_date, configuracoes.formato_data_tabela)
+      progress: (task: any) => {
+        if (configuracoes.mostrar_progresso_percentual) {
+          return `${Math.round(task.progress * 100)}%`;
+        }
+        return '';
       },
-      {
-        name: 'duration',
-        label: 'Duração',
-        align: 'center',
-        width: 70
-      }
+    };
+
+    // Colunas padrão caso não estejam definidas
+    const colunasConfig = configuracoes.colunas || [
+      { field: 'text', label: 'Nome', width: 200, align: 'left', tree: true },
+      { field: 'edt', label: 'EDT', width: 80, align: 'left', tree: false },
+      { field: 'start_date', label: 'Início', width: 100, align: 'center', tree: false },
+      { field: 'end_date', label: 'Fim', width: 100, align: 'center', tree: false },
+      { field: 'duration', label: 'Duração', width: 80, align: 'center', tree: false },
+      { field: 'progress', label: 'Progresso', width: 80, align: 'center', tree: false },
     ];
-    
+
+    const columns: any[] = colunasConfig.map((col) => ({
+      name: col.field,
+      label: col.label,
+      width: col.width,
+      align: col.align || 'left',
+      tree: col.tree || false,
+      template: templateMap[col.field] || ((task: any) => task[col.field] || ''),
+    }));
+
+    // Adiciona colunas de predecessores e sucessores se configurado
+    if (configuracoes.mostrar_coluna_predecessores) {
+      const existePredecessor = columns.some((c) => c.name === 'predecessores');
+      if (!existePredecessor) {
+        columns.push({
+          name: 'predecessores',
+          label: 'Predecessoras',
+          width: 160,
+          template: (task: any) => getRelacoesTexto(task, 'predecessor', taskLookup),
+        });
+      }
+    }
+
+    if (configuracoes.mostrar_coluna_sucessores) {
+      const existeSucessor = columns.some((c) => c.name === 'sucessores');
+      if (!existeSucessor) {
+        columns.push({
+          name: 'sucessores',
+          label: 'Sucessoras',
+          width: 160,
+          template: (task: any) => getRelacoesTexto(task, 'sucessor', taskLookup),
+        });
+      }
+    }
+
+    gantt.config.columns = columns;
+
     // Comportamento
-    gantt.config.readonly = config.readonly || false;
-    gantt.config.drag_move = !config.readonly;
-    gantt.config.drag_resize = !config.readonly;
-    gantt.config.drag_progress = !config.readonly;
-    gantt.config.drag_links = !config.readonly;
+    const readonly = config.readonly ?? !configuracoes.permitir_edicao_drag;
+    const dragEnabled = !readonly && configuracoes.permitir_edicao_drag;
+
+    gantt.config.readonly = readonly;
+    gantt.config.drag_move = dragEnabled;
+    gantt.config.drag_resize = dragEnabled;
+    gantt.config.drag_progress = dragEnabled;
+    gantt.config.drag_links = dragEnabled && configuracoes.mostrar_links;
     gantt.config.details_on_dblclick = true;
     gantt.config.details_on_create = true;
-    
-    // Auto-scheduling
-    gantt.config.auto_scheduling = true;
-    gantt.config.auto_scheduling_strict = false;
-    
-    // Links/Dependencies
-    gantt.config.show_links = true;
-    gantt.config.highlight_critical_path = true;
-    
-    // Tooltip
-    gantt.templates.tooltip_text = (start, end, task) => {
-      return `
-        <div class="vp-dhx-tooltip">
-          <div class="vp-dhx-tooltip-title">${task.text}</div>
-          <div class="vp-dhx-tooltip-body">
-            <div><strong>Início:</strong> ${formatarData(start, configuracoes.formato_data_tooltip)}</div>
-            <div><strong>Fim:</strong> ${formatarData(end, configuracoes.formato_data_tooltip)}</div>
-            <div><strong>Progresso:</strong> ${Math.round(task.progress * 100)}%</div>
-            ${task.responsavel ? `<div><strong>Responsável:</strong> ${task.responsavel}</div>` : ''}
-            ${task.status ? `<div><strong>Status:</strong> ${task.status}</div>` : ''}
-            ${task.e_critica ? '<div class="vp-critical-badge">⚠️ Atividade Crítica</div>' : ''}
-          </div>
+
+    gantt.config.auto_scheduling = configuracoes.habilitar_auto_scheduling;
+    gantt.config.auto_scheduling_strict = configuracoes.habilitar_auto_scheduling;
+    gantt.config.show_links = configuracoes.mostrar_links;
+    gantt.config.highlight_critical_path = configuracoes.destacar_caminho_critico;
+
+    // Tooltips
+    gantt.templates.tooltip_text = (start, end, task) => `
+      <div class="vp-dhx-tooltip">
+        <div class="vp-dhx-tooltip-title">${task.text}</div>
+        <div class="vp-dhx-tooltip-body">
+          <div><strong>Início:</strong> ${formatarData(start, configuracoes.formato_data_tooltip)}</div>
+          <div><strong>Fim:</strong> ${formatarData(end, configuracoes.formato_data_tooltip)}</div>
+          ${configuracoes.mostrar_progresso_percentual ? `<div><strong>Progresso:</strong> ${Math.round(task.progress * 100)}%</div>` : ''}
+          ${task.responsavel ? `<div><strong>Responsável:</strong> ${task.responsavel}</div>` : ''}
+          ${task.status ? `<div><strong>Status:</strong> ${task.status}</div>` : ''}
+          ${task.e_critica ? '<div class="vp-critical-badge">⚠️ Atividade Crítica</div>' : ''}
         </div>
-      `;
-    };
-    
-    // Classes CSS customizadas
-    gantt.templates.task_class = (start, end, task) => {
+      </div>
+    `;
+
+    // Templates
+    gantt.templates.task_class = (_start: Date, _end: Date, task: any) => {
       const classes = ['vp-gantt-task'];
-      
       if (task.e_critica) classes.push('vp-critical');
       if (task.progress === 1) classes.push('vp-completed');
       if (task.status === 'Atrasada') classes.push('vp-delayed');
       if (task.tipo === 'Fase') classes.push('vp-phase');
       if (task.tipo === 'Marco') classes.push('vp-milestone');
-      
       return classes.join(' ');
     };
-    
-    // Texto nas barras
-    gantt.templates.task_text = (start, end, task) => {
-      if (task.tipo === 'Marco') return '◆';
-      return task.text;
-    };
-    
-    // Locale pt-BR
+
+    gantt.templates.task_text = configuracoes.mostrar_rotulo_barras
+      ? (_start: Date, _end: Date, task: any) => {
+          if (task.tipo === 'Marco') return '◆';
+          const codigo = configuracoes.mostrar_codigo_atividade && task.codigo ? `${task.codigo} - ` : '';
+          const base = `${codigo}${task.text}`;
+          return configuracoes.mostrar_progresso_percentual ? `${base} (${Math.round(task.progress * 100)}%)` : base;
+        }
+      : () => '';
+
+    gantt.templates.progress_text = configuracoes.mostrar_progresso_percentual
+      ? (_start: Date, _end: Date, task: any) => `${Math.round(task.progress * 100)}%`
+      : () => '';
+
+    // Locale
     configurePtBrLocale();
-    
-    // Aplicar cores customizadas
     applyCustomColors(configuracoes);
     
-    // ========================================================================
-    // INICIALIZAÇÃO
-    // ========================================================================
+    // Inicializa TODAS as extensões do DHTMLX Gantt
+    initializeAllExtensions(configuracoes);
     
+    // WBS Codes - Códigos de Estrutura de Decomposição do Trabalho
+    gantt.config.wbs_code_separator = '.';
+    
+    // Template para gerar WBS Code automaticamente
+    gantt.templates.task_date = (date) => gantt.date.date_to_str('%d/%m/%Y')(date);
+
+    gantt.config.layout = {
+      css: 'vp-gantt-layout',
+      cols: [
+        {
+          width: configuracoes.largura_grid,
+          min_width: 240,
+          rows: [
+            { view: 'grid', scrollX: 'gridScroll', scrollY: 'scrollVer' },
+            { view: 'scrollbar', id: 'gridScroll', group: 'horizontal' },
+          ],
+        },
+        { view: 'resizer', width: 6 },
+        {
+          rows: [
+            { view: 'timeline', scrollX: 'scrollHor', scrollY: 'scrollVer' },
+            { view: 'scrollbar', id: 'scrollHor', group: 'horizontal' },
+          ],
+        },
+        { view: 'scrollbar', id: 'scrollVer' },
+      ],
+    };
+
     if (!isInitialized.current) {
       gantt.init(containerRef.current);
       isInitialized.current = true;
-      console.log('VPGantt: DHTMLX Gantt inicializado');
     }
-    
-    // ========================================================================
-    // CARREGAR DADOS
-    // ========================================================================
-    
+
     const ganttData = convertToGanttData(tasks);
-    
-    console.log('VPGantt: Carregando dados', {
-      tasksCount: ganttData.data.length,
-      linksCount: ganttData.links.length,
-      sample: ganttData.data[0]
-    });
-    
     gantt.clearAll();
     gantt.parse(ganttData);
-    
-    // ========================================================================
-    // EVENT HANDLERS
-    // ========================================================================
-    
+
+    let detachColumnInteractions: () => void = () => {};
+    let gridResizerHandle: GridResizerHandle | null = null;
+
+    const refreshColumns = () => {
+      gantt.config.columns = columns;
+      gantt.render();
+      requestAnimationFrame(() => {
+        detachColumnInteractions();
+        detachColumnInteractions = attachColumnDragAndResize({
+          container: containerRef.current,
+          columns,
+          onChange: refreshColumns,
+          resizerClass: 'vp-column-resizer',
+        });
+        gridResizerHandle?.update();
+      });
+    };
+
+    detachColumnInteractions = attachColumnDragAndResize({
+      container: containerRef.current,
+      columns,
+      onChange: refreshColumns,
+      resizerClass: 'vp-column-resizer',
+    });
+
+    gridResizerHandle = attachGridResizer({
+      container: containerRef.current,
+      minWidth: 260,
+      getWidth: () => gantt.config.grid_width,
+      setWidth: (width) => {
+        const normalized = Math.round(width);
+        if (Math.abs(normalized - gantt.config.grid_width) < 1) return;
+        gantt.config.grid_width = normalized;
+        refreshColumns();
+        setConfiguracoes({ largura_grid: normalized });
+        updateGridWidthFromDom();
+      },
+      resizerClass: 'vp-grid-resizer',
+    });
+
+    if (configuracoes.auto_calcular_progresso) {
+      recalcularProgressoProjetos();
+    }
+
+    if (configuracoes.expandir_grupos) {
+      gantt.eachTask((task: any) => gantt.open(task.id));
+    } else {
+      gantt.eachTask((task: any) => {
+        if (gantt.hasChild(task.id)) {
+          gantt.close(task.id);
+        }
+      });
+    }
+
     const onTaskClick = gantt.attachEvent('onTaskClick', (id: string) => {
-      const task = gantt.getTask(id);
-      console.log('VPGantt: Task clicked', task);
-      
-      // Encontra a task original
-      const vpTask = tasks.find(t => t.id === id);
+      const vpTask = tasks.find((t) => t.id === id);
       if (vpTask && config.on_click) {
         config.on_click(vpTask);
       }
-      
       return true;
     });
-    
+
     const onAfterTaskDrag = gantt.attachEvent('onAfterTaskDrag', (id: string) => {
       const task = gantt.getTask(id);
-      const vpTask = tasks.find(t => t.id === id);
-      
+      const vpTask = tasks.find((t) => t.id === id);
       if (vpTask && config.on_date_change) {
         config.on_date_change(vpTask, task.start_date, task.end_date);
       }
+      if (configuracoes.auto_calcular_progresso) {
+        recalcularProgressoProjetos();
+      }
     });
-    
+
     const onAfterTaskUpdate = gantt.attachEvent('onAfterTaskUpdate', (id: string) => {
       const task = gantt.getTask(id);
-      const vpTask = tasks.find(t => t.id === id);
-      
+      const vpTask = tasks.find((t) => t.id === id);
       if (vpTask && config.on_progress_change) {
         config.on_progress_change(vpTask, task.progress * 100);
       }
+      if (configuracoes.auto_calcular_progresso) {
+        recalcularProgressoProjetos();
+      }
     });
-    
-    console.log('VPGantt: Renderizado com sucesso!');
-    
-    // ========================================================================
-    // CLEANUP
-    // ========================================================================
-    
+
+    const updateGridWidthFromDom = () => {
+      const gridEl = containerRef.current?.querySelector<HTMLElement>('.gantt_grid');
+      if (!gridEl) return;
+      const width = Math.round(gridEl.clientWidth);
+      if (width && Math.abs(width - configuracoes.largura_grid) > 2) {
+        setConfiguracoes({ largura_grid: width });
+      }
+    };
+
+    const gridResizeEvent = gantt.attachEvent('onGridResize', () => {
+      updateGridWidthFromDom();
+    });
+
+    const layoutResizeEvent = gantt.attachEvent('onLayoutResize', () => {
+      updateGridWidthFromDom();
+    });
+
     return () => {
       gantt.detachEvent(onTaskClick);
       gantt.detachEvent(onAfterTaskDrag);
       gantt.detachEvent(onAfterTaskUpdate);
+      gantt.detachEvent(gridResizeEvent);
+      gantt.detachEvent(layoutResizeEvent);
+      detachColumnInteractions();
+      gridResizerHandle?.dispose();
+      gantt.clearAll();
     };
-  }, [tasks, config, configuracoes]);
+  }, [tasks, config, configuracoes, taskLookup]);
 
-  // Se não há tasks, mostra mensagem
   if (tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg">
@@ -245,78 +382,54 @@ export const VPGanttChart: React.FC<VPGanttChartProps> = ({ tasks, config = {} }
 };
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================================
 
-/**
- * Configura a escala de tempo baseada no view mode
- */
-function configureScale(viewMode: string) {
-  switch (viewMode) {
-    case 'Hour':
-      gantt.config.scale_unit = 'day';
-      gantt.config.date_scale = '%d %M';
-      gantt.config.step = 1;
-      gantt.config.subscales = [
-        { unit: 'hour', step: 1, date: '%H:%i' }
-      ];
-      break;
-    
-    case 'Day':
-      gantt.config.scale_unit = 'week';
-      gantt.config.date_scale = 'Semana %W';
-      gantt.config.step = 1;
-      gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%d %M' }
-      ];
-      break;
-    
-    case 'Week':
-      gantt.config.scale_unit = 'month';
-      gantt.config.date_scale = '%F %Y';
-      gantt.config.step = 1;
-      gantt.config.subscales = [
-        { unit: 'week', step: 1, date: 'S%W' }
-      ];
-      break;
-    
-    case 'Month':
-      gantt.config.scale_unit = 'year';
-      gantt.config.date_scale = '%Y';
-      gantt.config.step = 1;
-      gantt.config.subscales = [
-        { unit: 'month', step: 1, date: '%M' }
-      ];
-      break;
-    
-    case 'Year':
-      gantt.config.scale_unit = 'year';
-      gantt.config.date_scale = '%Y';
-      gantt.config.step = 1;
-      break;
-    
-    default:
-      gantt.config.scale_unit = 'week';
-      gantt.config.date_scale = 'Semana %W';
-      gantt.config.step = 1;
-      gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%d %M' }
-      ];
+function configureScale(viewMode: string, configuracoes: ConfiguracoesProjeto) {
+  const unit = configuracoes.escala_topo || mapViewModeToUnit(viewMode);
+  const sub = configuracoes.escala_sub;
+
+  gantt.config.scale_unit = unit;
+  gantt.config.date_scale = mapFormatoDataToDhtmlx(configuracoes.formato_data_gantt) || getDefaultScaleFormat(unit);
+  gantt.config.step = 1;
+
+  if (sub && sub !== 'none') {
+    gantt.config.subscales = [
+      {
+        unit: sub,
+        step: 1,
+        date: getDefaultSubScaleFormat(sub),
+      },
+    ];
+  } else {
+    gantt.config.subscales = [];
   }
 }
 
-/**
- * Configura locale pt-BR
- */
+function mapViewModeToUnit(viewMode: string): 'hour' | 'day' | 'week' | 'month' | 'year' {
+  switch (viewMode) {
+    case 'Hour':
+      return 'day';
+    case 'Day':
+      return 'week';
+    case 'Week':
+      return 'month';
+    case 'Month':
+      return 'year';
+    case 'Year':
+      return 'year';
+    default:
+      return 'week';
+  }
+}
+
 function configurePtBrLocale() {
   gantt.locale = {
     date: {
-      month_full: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
-      month_short: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
-                    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+      month_full: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+      month_short: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
       day_full: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
-      day_short: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      day_short: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
     },
     labels: {
       new_task: 'Nova Tarefa',
@@ -335,11 +448,11 @@ function configurePtBrLocale() {
       section_description: 'Descrição',
       section_time: 'Período',
       section_type: 'Tipo',
-      column_text: 'Nome da Tarefa',
+      column_text: 'Nome da tarefa',
       column_start_date: 'Início',
       column_duration: 'Duração',
       column_add: '',
-      link: 'Link',
+      link: 'Ligação',
       confirm_link_deleting: 'será deletado',
       link_start: '(início)',
       link_end: '(fim)',
@@ -351,57 +464,49 @@ function configurePtBrLocale() {
       days: 'Dias',
       weeks: 'Semanas',
       months: 'Meses',
-      years: 'Anos'
-    }
+      years: 'Anos',
+    },
   };
 }
 
-/**
- * Converte tasks do VisionPlan para formato DHTMLX Gantt
- */
 function convertToGanttData(tasks: VPGanttTask[]) {
-  const data = tasks.map(task => ({
+  const data = tasks.map((task) => ({
     id: task.id,
     text: task.name,
+    edt: task.edt,
     start_date: formatDateForDHTMLX(task.start),
     end_date: formatDateForDHTMLX(task.end),
-    duration: calculateDuration(task.start, task.end),
-    progress: task.progress / 100, // DHTMLX usa 0-1, não 0-100
+    duration: calculateDuration(task),
+    progress: task.progress / 100,
     parent: task.parent || 0,
     type: task.tipo === 'Marco' ? 'milestone' : task.tipo === 'Fase' ? 'project' : 'task',
-    
-    // Dados customizados
     tipo: task.tipo,
     status: task.status,
     responsavel: task.responsavel,
     e_critica: task.e_critica,
     codigo: task.codigo,
-    duracao_horas: task.duracao_horas
+    duracao_horas: task.duracao_horas,
   }));
-  
-  // Extrai links/dependências
+
   const links: any[] = [];
   let linkId = 1;
-  
-  tasks.forEach(task => {
-    if (task.dependencies && task.dependencies.length > 0) {
-      task.dependencies.forEach(depId => {
+
+  tasks.forEach((task) => {
+    if (task.dependencies?.length) {
+      task.dependencies.forEach((depId) => {
         links.push({
           id: linkId++,
           source: depId,
           target: task.id,
-          type: '0' // Finish-to-Start
+          type: '0',
         });
       });
     }
   });
-  
+
   return { data, links };
 }
 
-/**
- * Formata data para o formato que DHTMLX espera
- */
 function formatDateForDHTMLX(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -409,62 +514,151 @@ function formatDateForDHTMLX(date: Date): string {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
-  
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-/**
- * Calcula duração em dias
- */
-function calculateDuration(start: Date, end: Date): number {
-  const diffTime = Math.abs(end.getTime() - start.getTime());
+function calculateDuration(task: VPGanttTask): number {
+  if (task.duracao_horas !== undefined && task.duracao_horas !== null) {
+    return Math.max(Math.round((task.duracao_horas / 24) * 100) / 100, 0.1);
+  }
+
+  const diffTime = Math.abs(task.end.getTime() - task.start.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+  return Math.max(diffDays, 1);
 }
 
-/**
- * Aplica cores customizadas
- */
-function applyCustomColors(configuracoes: any) {
-  // Cria ou atualiza style tag
+function applyCustomColors(configuracoes: ConfiguracoesProjeto) {
   let styleEl = document.getElementById('vp-dhx-custom-styles');
   if (!styleEl) {
     styleEl = document.createElement('style');
     styleEl.id = 'vp-dhx-custom-styles';
     document.head.appendChild(styleEl);
   }
-  
+
   styleEl.textContent = `
-    /* Tarefa normal */
     .gantt_task_line.vp-gantt-task {
       background-color: ${configuracoes.cor_tarefa_normal};
       border-color: ${configuracoes.cor_tarefa_normal};
     }
-    
-    /* Tarefa crítica */
     .gantt_task_line.vp-critical {
       background-color: ${configuracoes.cor_tarefa_critica};
       border-color: ${configuracoes.cor_tarefa_critica};
       border-width: 2px;
     }
-    
-    /* Tarefa concluída */
     .gantt_task_line.vp-completed {
       background-color: ${configuracoes.cor_tarefa_concluida};
       border-color: ${configuracoes.cor_tarefa_concluida};
-      opacity: 0.8;
+      opacity: 0.85;
     }
-    
-    /* Marco */
     .gantt_task_line.vp-milestone {
       background-color: ${configuracoes.cor_marco};
       border-color: ${configuracoes.cor_marco};
     }
-    
-    /* Fase/Projeto */
     .gantt_task_line.vp-phase {
       background-color: ${configuracoes.cor_fase};
       border-color: ${configuracoes.cor_fase};
     }
   `;
 }
+
+function getRelacoesTexto(task: any, tipo: 'predecessor' | 'sucessor', lookup: Map<string, { codigo?: string; nome: string }>) {
+  try {
+    const linksIds = tipo === 'predecessor' ? task.$target : task.$source;
+    if (!linksIds || !linksIds.length) {
+      return '-';
+    }
+
+    const nomes = linksIds
+      .map((linkId: string) => gantt.getLink(linkId))
+      .map((link: any) => {
+        const relacaoTaskId = tipo === 'predecessor' ? link.source : link.target;
+        const info = lookup.get(relacaoTaskId);
+        if (info) {
+          return info.codigo || info.nome;
+        }
+        const relacaoTask = gantt.isTaskExists(relacaoTaskId) ? gantt.getTask(relacaoTaskId) : null;
+        return relacaoTask ? relacaoTask.text : relacaoTaskId;
+      })
+      .filter(Boolean);
+
+    return nomes.length ? nomes.join(', ') : '-';
+  } catch (error) {
+    console.error('VPGantt: erro ao obter relações', error);
+    return '-';
+  }
+}
+
+function recalcularProgressoProjetos() {
+  gantt.batchUpdate(() => {
+    const ids: string[] = [];
+    gantt.eachTask((task) => ids.push(task.id));
+    ids.reverse().forEach((id) => {
+      const task = gantt.getTask(id);
+      if (task.type !== 'project') return;
+
+      const children = gantt.getChildren(id);
+      if (!children.length) return;
+
+      const total = children.reduce((acc, childId) => {
+        const child = gantt.getTask(childId);
+        return acc + (child.progress || 0);
+      }, 0);
+
+      task.progress = total / children.length;
+      gantt.updateTask(id);
+    });
+  });
+}
+
+function mapFormatoDataToDhtmlx(formato: FormatoData): string | null {
+  const raw = formato
+    .replace(/\[|\]/g, '')
+    .replace(/dddd/g, '%l')
+    .replace(/ddd/g, '%D')
+    .replace(/DD/g, '%d')
+    .replace(/MMMM/g, '%F')
+    .replace(/MMM/g, '%M')
+    .replace(/MM/g, '%m')
+    .replace(/YYYY/g, '%Y')
+    .replace(/YY/g, '%y')
+    .replace(/HH/g, '%H')
+    .replace(/hh/g, '%H')
+    .replace(/mm/g, '%i');
+
+  return raw.includes('%') ? raw : null;
+}
+
+function getDefaultScaleFormat(unit: string): string {
+  switch (unit) {
+    case 'hour':
+      return '%d %M';
+    case 'day':
+      return '%d %M';
+    case 'week':
+      return 'Semana %W';
+    case 'month':
+      return '%F %Y';
+    case 'year':
+      return '%Y';
+    default:
+      return '%d %M';
+  }
+}
+
+function getDefaultSubScaleFormat(unit: string): string {
+  switch (unit) {
+    case 'minute':
+      return '%H:%i';
+    case 'hour':
+      return '%H:%i';
+    case 'day':
+      return '%d %M';
+    case 'week':
+      return 'S%W';
+    case 'month':
+      return '%M %Y';
+    default:
+      return '%d %M';
+  }
+}
+

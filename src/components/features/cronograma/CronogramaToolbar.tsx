@@ -8,6 +8,7 @@ import { VisualizacaoCronograma, EscalaTempo, UnidadeTempo, CabecalhoImpressao }
 import { exportarPDF, exportarExcel } from '../../../services/exportService';
 import { PrintConfigModal } from './PrintConfigModal';
 import { ConfiguracoesModal } from './ConfiguracoesModal';
+import { CalendariosModal } from './CalendariosModal';
 
 interface CronogramaToolbarProps {
   onNovaAtividade: () => void;
@@ -44,6 +45,7 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [showPrintConfigModal, setShowPrintConfigModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showCalendariosModal, setShowCalendariosModal] = useState(false);
   const [exportType, setExportType] = useState<'pdf' | 'excel' | null>(null);
 
   const handleExportPDF = async (cabecalho?: CabecalhoImpressao) => {
@@ -231,6 +233,23 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
 
       {/* Espaçador */}
       <div className="flex-1"></div>
+
+      {/* Botão Calendários */}
+      <button
+        onClick={() => setShowCalendariosModal(true)}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+        title="Gerenciar Calendários"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        <span>Calendários</span>
+      </button>
 
       {/* Botão Configurações */}
       <button
@@ -424,6 +443,12 @@ export const CronogramaToolbar: React.FC<CronogramaToolbarProps> = ({
       <ConfiguracoesModal
         isOpen={showConfigModal}
         onClose={() => setShowConfigModal(false)}
+      />
+
+      {/* Modal de Calendários */}
+      <CalendariosModal
+        isOpen={showCalendariosModal}
+        onClose={() => setShowCalendariosModal(false)}
       />
     </div>
   );

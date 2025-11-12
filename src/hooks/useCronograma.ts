@@ -155,12 +155,18 @@ export const useCronograma = (projetoId: string) => {
         progress: atividade.progresso,
         dependencies: deps.length > 0 ? deps : undefined,
         project: atividade.parent_id, // Define o parent para hierarquia visual
+        parent: atividade.parent_id,
         styles,
         // Campos customizados
+        tipo: atividade.tipo as 'Tarefa' | 'Marco' | 'Fase',
         status: atividade.status,
         responsavel: atividade.responsavel_nome,
         e_critica: atividade.e_critica,
         folga_total: atividade.folga_total,
+        codigo: atividade.codigo,
+        edt: atividade.edt,
+        duracao_horas: atividade.duracao_horas,
+        calendario_id: atividade.calendario_id,
       };
     });
   }, [atividadesFiltradas, dependencias]);

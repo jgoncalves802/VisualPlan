@@ -9,6 +9,7 @@ import { VisualizacaoCronograma } from '../types/cronograma';
 
 // Componentes (serão criados)
 import { CronogramaToolbar } from '../components/features/cronograma/CronogramaToolbar';
+import { GanttExtensionsToolbar } from '../components/features/cronograma/GanttExtensionsToolbar';
 import { CronogramaFilters } from '../components/features/cronograma/CronogramaFilters';
 import { GanttChart } from '../components/features/cronograma/GanttChart';
 import { TaskList } from '../components/features/cronograma/TaskList';
@@ -24,6 +25,7 @@ export const CronogramaPage: React.FC = () => {
   const {
     atividades,
     todasAtividades,
+    dependencias,
     tasks,
     visualizacao,
     viewMode,
@@ -34,7 +36,6 @@ export const CronogramaPage: React.FC = () => {
     atualizarAtividade,
     excluirAtividade,
     adicionarDependencia,
-    excluirDependencia,
     calcularCaminhoCritico,
     handleTaskChange,
     handleTaskDelete,
@@ -139,6 +140,9 @@ export const CronogramaPage: React.FC = () => {
   // Conteúdo do cronograma
   const CronogramaContent = () => (
     <>
+      {/* Toolbar de Extensões Avançadas do DHTMLX Gantt */}
+      <GanttExtensionsToolbar />
+
       {/* Conteúdo Principal */}
       <div className="flex-1 overflow-auto p-6">
         {atividades.length === 0 ? (
@@ -186,6 +190,8 @@ export const CronogramaPage: React.FC = () => {
             ) : (
               <TaskList
                 atividades={atividades}
+                todasAtividades={todasAtividades}
+                dependencias={dependencias}
                 onEdit={handleEditarAtividade}
                 onDelete={async (id) => {
                   if (window.confirm('Deseja realmente excluir esta atividade?')) {
@@ -214,7 +220,7 @@ export const CronogramaPage: React.FC = () => {
             await adicionarAtividade({
               ...dados,
               projeto_id: projetoId || 'proj-1',
-            });
+            } as any);
           }
           setModalTaskOpen(false);
           setAtividadeSelecionada(null);
@@ -265,45 +271,45 @@ export const CronogramaPage: React.FC = () => {
   // Modo Normal
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Gerencie o cronograma do projeto com visualização Gantt
-              </p>
-            </div>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Gerencie o cronograma do projeto com visualização Gantt
+            </p>
           </div>
         </div>
-
-        {/* Estatísticas */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <CronogramaStats stats={estatisticas} />
-        </div>
-
-        {/* Toolbar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <CronogramaToolbar
-            onNovaAtividade={handleNovaAtividade}
-            onNovaDependencia={handleNovaDependencia}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            showFilters={showFilters}
-            projetoNome="Projeto VisionPlan"
-            presentationMode={presentationMode}
-            onTogglePresentationMode={togglePresentationMode}
-          />
-        </div>
-
-        {/* Filtros (colapsável) */}
-        {showFilters && (
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-            <CronogramaFilters />
-          </div>
-        )}
-
-        <CronogramaContent />
       </div>
+
+      {/* Estatísticas */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <CronogramaStats stats={estatisticas} />
+      </div>
+
+      {/* Toolbar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <CronogramaToolbar
+          onNovaAtividade={handleNovaAtividade}
+          onNovaDependencia={handleNovaDependencia}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          showFilters={showFilters}
+          projetoNome="Projeto VisionPlan"
+          presentationMode={presentationMode}
+          onTogglePresentationMode={togglePresentationMode}
+        />
+      </div>
+
+      {/* Filtros (colapsável) */}
+      {showFilters && (
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+          <CronogramaFilters />
+        </div>
+      )}
+
+      <CronogramaContent />
+    </div>
   );
 };
 

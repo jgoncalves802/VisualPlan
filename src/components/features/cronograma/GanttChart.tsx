@@ -1,13 +1,13 @@
 /**
  * Componente Gantt Chart
- * Wrapper para VisionPlan Gantt (baseado em Frappe Gantt)
+ * Wrapper para VisionPlan Gantt (DHTMLX)
  */
 
 import React, { useMemo } from 'react';
 import { ViewMode } from 'gantt-task-react';
 import { TaskGantt } from '../../../types/cronograma';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
-import { VPGanttChart, createGanttAdapter } from '../../../lib/gantt';
+import { VPGanttChart } from '../../../lib/gantt';
 import type { VPGanttTask, VPGanttConfig, VPGanttViewMode } from '../../../lib/gantt/types';
 
 interface GanttChartProps {

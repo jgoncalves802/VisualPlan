@@ -2,13 +2,15 @@
  * Lista de Tarefas (visualização alternativa)
  */
 
-import React, { useState } from 'react';
-import { AtividadeMock } from '../../../types/cronograma';
+import React, { useMemo, useState } from 'react';
+import { AtividadeMock, DependenciaAtividade } from '../../../types/cronograma';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
 import { formatarData } from '../../../utils/dateFormatter';
 
 interface TaskListProps {
   atividades: AtividadeMock[];
+  todasAtividades: AtividadeMock[];
+  dependencias: DependenciaAtividade[];
   onEdit: (atividadeId: string) => void;
   onDelete: (atividadeId: string) => void;
 }
@@ -16,10 +18,40 @@ interface TaskListProps {
 type SortField = 'nome' | 'data_inicio' | 'data_fim' | 'progresso' | 'status';
 type SortOrder = 'asc' | 'desc';
 
-export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete }) => {
+export const TaskList: React.FC<TaskListProps> = ({ atividades, todasAtividades, dependencias, onEdit, onDelete }) => {
   const { configuracoes } = useCronogramaStore();
   const [sortField, setSortField] = useState<SortField>('data_inicio');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  const atividadesMap = useMemo(() => {
+    const map = new Map<string, AtividadeMock>();
+    todasAtividades.forEach((atividade) => map.set(atividade.id, atividade));
+    return map;
+  }, [todasAtividades]);
+
+  const predecessorasMap = useMemo(() => {
+    const map = new Map<string, AtividadeMock[]>();
+    dependencias.forEach((dep) => {
+      const origem = atividadesMap.get(dep.atividade_origem_id);
+      if (!origem) return;
+      const lista = map.get(dep.atividade_destino_id) || [];
+      lista.push(origem);
+      map.set(dep.atividade_destino_id, lista);
+    });
+    return map;
+  }, [dependencias, atividadesMap]);
+
+  const sucessorasMap = useMemo(() => {
+    const map = new Map<string, AtividadeMock[]>();
+    dependencias.forEach((dep) => {
+      const destino = atividadesMap.get(dep.atividade_destino_id);
+      if (!destino) return;
+      const lista = map.get(dep.atividade_origem_id) || [];
+      lista.push(destino);
+      map.set(dep.atividade_origem_id, lista);
+    });
+    return map;
+  }, [dependencias, atividadesMap]);
 
   // Ordenação
   const atividadesOrdenadas = [...atividades].sort((a, b) => {
@@ -118,6 +150,9 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Tipo
             </th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Atividade Mãe
+            </th>
             <th
               scope="col"
               className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -161,6 +196,12 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Responsável
             </th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Predecessoras
+            </th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Sucessoras
+            </th>
             <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Ações
             </th>
@@ -202,6 +243,17 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
               </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-700">
+                  {atividade.parent_id
+                    ? (() => {
+                        const parent = atividadesMap.get(atividade.parent_id);
+                        if (!parent) return '-';
+                        return parent.codigo ? `${parent.codigo} - ${parent.nome}` : parent.nome;
+                      })()
+                    : '-'}
+                </div>
+              </td>
+              <td className="px-4 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-700">
                   {formatarData(atividade.data_inicio, configuracoes.formato_data_tabela)}
                 </div>
               </td>
@@ -228,6 +280,16 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
               </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-700">{atividade.responsavel_nome || '-'}</div>
+              </td>
+              <td className="px-4 py-4 whitespace-nowrap max-w-[200px]">
+                <div className="text-sm text-gray-700 truncate" title={formatRelacoes(predecessorasMap.get(atividade.id))}>
+                  {formatRelacoes(predecessorasMap.get(atividade.id))}
+                </div>
+              </td>
+              <td className="px-4 py-4 whitespace-nowrap max-w-[200px]">
+                <div className="text-sm text-gray-700 truncate" title={formatRelacoes(sucessorasMap.get(atividade.id))}>
+                  {formatRelacoes(sucessorasMap.get(atividade.id))}
+                </div>
               </td>
               <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
@@ -268,4 +330,13 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, onEdit, onDelete
     </div>
   );
 };
+
+function formatRelacoes(lista?: AtividadeMock[]): string {
+  if (!lista || lista.length === 0) {
+    return '-';
+  }
+  return lista
+    .map((atividade) => (atividade.codigo ? `${atividade.codigo}` : atividade.nome))
+    .join(', ');
+}
 

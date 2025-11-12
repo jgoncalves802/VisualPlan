@@ -50,6 +50,19 @@ export enum UnidadeTempo {
 }
 
 /**
+ * Dias da semana para calendário
+ */
+export enum DiaTrabalho {
+  DOMINGO = 'DOMINGO',
+  SEGUNDA = 'SEGUNDA',
+  TERCA = 'TERCA',
+  QUARTA = 'QUARTA',
+  QUINTA = 'QUINTA',
+  SEXTA = 'SEXTA',
+  SABADO = 'SABADO',
+}
+
+/**
  * Formatos de Data (baseado no MS Project)
  */
 export enum FormatoData {
@@ -178,6 +191,7 @@ export interface AtividadeMock {
   id: string;
   projeto_id: string;
   codigo?: string;
+  edt?: string;
   nome: string;
   descricao?: string;
   tipo: 'Tarefa' | 'Marco' | 'Fase';
@@ -195,8 +209,34 @@ export interface AtividadeMock {
   prioridade?: string;
   e_critica?: boolean;
   folga_total?: number;
+  calendario_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ConfiguracaoColunaGantt {
+  id: string;
+  titulo: string;
+  largura: number;
+  alinhar?: 'left' | 'center' | 'right';
+  habilitada: boolean;
+}
+
+/**
+ * Calendário de trabalho do projeto
+ */
+export interface CalendarioProjeto {
+  id: string;
+  nome: string;
+  descricao?: string;
+  dias_trabalho: DiaTrabalho[];
+  horas_por_dia: number;
+  horario_inicio: string; // HH:mm
+  horario_almoco_inicio?: string; // HH:mm
+  horario_almoco_fim?: string; // HH:mm
+  horario_fim: string; // HH:mm
+  feriados: string[]; // ISO date strings
+  is_padrao?: boolean;
 }
 
 /**
@@ -207,15 +247,52 @@ export interface ConfiguracoesProjeto {
   formato_data_tabela: FormatoData;          // Formato usado na tabela de atividades
   formato_data_gantt: FormatoData;           // Formato usado no Gantt (timeline)
   formato_data_tooltip: FormatoData;         // Formato usado em tooltips
+  escala_topo: 'hour' | 'day' | 'week' | 'month' | 'year'; // Unidade principal da timeline
+  escala_sub: 'none' | 'minute' | 'hour' | 'day' | 'week' | 'month'; // Subdivisão da timeline
   
   // Configurações de Exibição
   mostrar_codigo_atividade: boolean;         // Mostrar código junto com nome
   mostrar_progresso_percentual: boolean;     // Mostrar % nas barras
   destacar_caminho_critico: boolean;         // Destacar visualmente
+  mostrar_grid: boolean;                     // Exibir grid lateral
+  mostrar_linha_hoje: boolean;               // Exibir linha vertical de hoje
+  mostrar_links: boolean;                    // Exibir setas de dependência
+  mostrar_rotulo_barras: boolean;            // Exibir rótulo de progresso dentro das barras
+  mostrar_coluna_predecessores: boolean;     // Exibir coluna de predecessores na grid
+  mostrar_coluna_sucessores: boolean;        // Exibir coluna de sucessores na grid
+  expandir_grupos: boolean;                  // Expandir hierarquia ao carregar
+  largura_grid: number;                      // Largura da grid lateral
+  altura_linha: number;                      // Altura de cada linha do Gantt
+  colunas: ConfiguracaoColunaGantt[];        // Configuração das colunas exibidas
   
   // Configurações de Comportamento
   permitir_edicao_drag: boolean;             // Permitir arrastar para editar datas
   auto_calcular_progresso: boolean;          // Calcular progresso automaticamente
+  habilitar_auto_scheduling: boolean;        // Recalcular datas baseado em dependências
+  
+  // ========================================================================
+  // EXTENSÕES DHTMLX GANTT
+  // ========================================================================
+  
+  // Extensões Principais
+  habilitar_quick_info: boolean;             // Quick Info ao clicar em tarefa
+  habilitar_tooltip: boolean;                // Tooltip ao passar mouse
+  habilitar_critical_path: boolean;          // Destaque do caminho crítico
+  habilitar_keyboard_navigation: boolean;    // Navegação por teclado
+  habilitar_undo_redo: boolean;              // Desfazer/Refazer ações
+  habilitar_multiselect: boolean;            // Seleção múltipla de tarefas
+  
+  // Funcionalidades Avançadas
+  habilitar_inline_editing: boolean;         // Edição inline na grid
+  habilitar_drag_timeline: boolean;          // Arrastar timeline com Ctrl
+  habilitar_markers: boolean;                // Marcadores verticais (hoje, etc)
+  habilitar_baselines: boolean;              // Linhas de base
+  habilitar_deadlines: boolean;              // Marcadores de deadline
+  habilitar_split_tasks: boolean;            // Tarefas divididas
+  habilitar_grouping: boolean;               // Agrupamento de tarefas
+  habilitar_resources: boolean;              // Gerenciamento de recursos
+  habilitar_constraints: boolean;            // Restrições (ASAP, ALAP, etc)
+  habilitar_wbs_codes: boolean;              // Códigos WBS automáticos
   
   // Configurações de Cores (tema do cronograma)
   cor_tarefa_normal: string;
@@ -240,6 +317,8 @@ export interface CronogramaState {
   filtros: FiltrosCronograma;
   unidadeTempoPadrao: UnidadeTempo; // Unidade padrão do projeto (DIAS ou HORAS)
   configuracoes: ConfiguracoesProjeto; // Configurações globais do projeto
+  calendarios: CalendarioProjeto[];     // Calendários disponíveis
+  calendario_padrao?: string;
   
   // Loading states
   isLoading: boolean;
