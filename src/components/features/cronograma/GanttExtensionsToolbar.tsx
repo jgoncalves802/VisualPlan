@@ -4,15 +4,19 @@
  */
 
 import React, { useState } from 'react';
+import gantt from 'dhtmlx-gantt';
 import {
   enterFullscreen,
   undo,
   redo,
   toggleCriticalPath,
   toggleAutoScheduling,
-  zoomIn,
-  zoomOut,
-  zoomToFit,
+  addCustomMarker,
+  updateTodayMarker,
+  addBaselineLayer,
+  addDeadlineLayer,
+  removeTaskLayer,
+  calculateSlackTime,
   sortTasks,
   groupBy,
   removeGrouping,
@@ -22,20 +26,22 @@ import {
   exportToMSProject,
   exportToPrimaveraP6,
   exportToICal,
-  addCustomMarker,
-  updateTodayMarker,
-  addBaselineLayer,
-  addDeadlineLayer,
-  removeTaskLayer,
-  calculateSlackTime,
 } from '../../../lib/gantt/extensions';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { BaselineModal } from './BaselineModal';
+import { CalendariosModal } from './CalendariosModal';
+import { RecursosModal } from './RecursosModal';
+import { useParams } from 'react-router-dom';
 
 export const GanttExtensionsToolbar: React.FC = () => {
+  const { projetoId } = useParams<{ projetoId: string }>();
   const { configuracoes, setConfiguracoes } = useCronogramaStore();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showBaselineModal, setShowBaselineModal] = useState(false);
+  const [showCalendariosModal, setShowCalendariosModal] = useState(false);
+  const [showRecursosModal, setShowRecursosModal] = useState(false);
   const [baselineLayerId, setBaselineLayerId] = useState<string | null>(null);
   const [deadlineLayerId, setDeadlineLayerId] = useState<string | null>(null);
 
@@ -68,15 +74,53 @@ export const GanttExtensionsToolbar: React.FC = () => {
   };
 
   const handleZoomIn = () => {
-    zoomIn();
+    // Zoom direto usando DHTMLX Gantt API
+    const currentUnit = gantt.config.scale_unit;
+    const zoomLevels = ['hour', 'day', 'week', 'month', 'quarter', 'year'];
+    const currentIndex = zoomLevels.indexOf(currentUnit);
+    
+    if (currentIndex > 0) {
+      const newUnit = zoomLevels[currentIndex - 1];
+      gantt.config.scale_unit = newUnit;
+      gantt.config.step = 1;
+      gantt.config.date_scale = getDateScale(newUnit);
+      gantt.render();
+    }
   };
 
   const handleZoomOut = () => {
-    zoomOut();
+    // Zoom direto usando DHTMLX Gantt API
+    const currentUnit = gantt.config.scale_unit;
+    const zoomLevels = ['hour', 'day', 'week', 'month', 'quarter', 'year'];
+    const currentIndex = zoomLevels.indexOf(currentUnit);
+    
+    if (currentIndex < zoomLevels.length - 1) {
+      const newUnit = zoomLevels[currentIndex + 1];
+      gantt.config.scale_unit = newUnit;
+      gantt.config.step = 1;
+      gantt.config.date_scale = getDateScale(newUnit);
+      gantt.render();
+    }
   };
 
   const handleZoomToFit = () => {
-    zoomToFit();
+    // Ajustar zoom para caber todas as tarefas na tela
+    gantt.config.scale_unit = 'day';
+    gantt.config.step = 1;
+    gantt.config.date_scale = '%d %M';
+    gantt.render();
+  };
+  
+  const getDateScale = (unit: string): string => {
+    const scales: Record<string, string> = {
+      hour: '%H:%i',
+      day: '%d %M',
+      week: 'Sem %W',
+      month: '%M %Y',
+      quarter: 'Q%q %Y',
+      year: '%Y',
+    };
+    return scales[unit] || '%d %M';
   };
 
   const handleSort = (field: string, desc: boolean = false) => {
@@ -297,6 +341,19 @@ export const GanttExtensionsToolbar: React.FC = () => {
                 </button>
 
                 <div className="border-t my-2"></div>
+
+                <button
+                  onClick={() => {
+                    setShowBaselineModal(true);
+                    setShowViewMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-50 transition text-gray-700 bg-blue-50"
+                >
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                  <span className="text-sm font-semibold text-blue-700">Gerenciar Linhas de Base</span>
+                </button>
 
                 <button
                   onClick={() => {
@@ -536,7 +593,35 @@ export const GanttExtensionsToolbar: React.FC = () => {
         </div>
 
         {/* ===================================================================
-            SEÇÃO 7: FULLSCREEN
+            SEÇÃO 7: CALENDÁRIOS
+            =================================================================== */}
+        <button
+          onClick={() => setShowCalendariosModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg shadow-sm hover:bg-purple-600 transition"
+          title="Gerenciar Calendários do Projeto"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span className="text-sm font-medium">Calendários</span>
+        </button>
+
+        {/* ===================================================================
+            SEÇÃO 8: RECURSOS
+            =================================================================== */}
+        <button
+          onClick={() => setShowRecursosModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg shadow-sm hover:bg-teal-600 transition"
+          title="Gerenciar Recursos (Humanos, Materiais, Equipamentos)"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span className="text-sm font-medium">Recursos</span>
+        </button>
+
+        {/* ===================================================================
+            SEÇÃO 9: FULLSCREEN
             =================================================================== */}
         <button
           onClick={handleFullscreen}
@@ -559,6 +644,25 @@ export const GanttExtensionsToolbar: React.FC = () => {
         <span>- = Zoom Out</span>
         <span>F11 = Tela Cheia</span>
       </div>
+
+      {/* Modal de Baseline */}
+      <BaselineModal
+        open={showBaselineModal}
+        onClose={() => setShowBaselineModal(false)}
+        projetoId={projetoId || 'proj-1'}
+      />
+
+      {/* Modal de Calendários */}
+      <CalendariosModal
+        open={showCalendariosModal}
+        onClose={() => setShowCalendariosModal(false)}
+      />
+
+      {/* Modal de Recursos */}
+      <RecursosModal
+        open={showRecursosModal}
+        onClose={() => setShowRecursosModal(false)}
+      />
     </div>
   );
 };
