@@ -1,0 +1,109 @@
+/**
+ * Resource Load Diagram - Estilos
+ */
+
+.resource-load-diagram-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 400px;
+  background: #fff;
+  padding: 0px !important;
+  margin: 0px !important;
+  overflow: hidden !important;
+  position: relative;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif;
+}
+
+/* Container principal do Gantt de recursos - Material Theme */
+.resource-load-diagram-container .gantt_container,
+.resource-load-diagram-container .resource_gantt_container {
+  width: 100% !important;
+  height: 100% !important;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+  position: relative;
+  background: #fff;
+}
+
+/* Grid de recursos */
+.resource-load-diagram-container .gantt_grid_scale {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 12px !important;
+  height: 48px !important;
+}
+
+.resource-load-diagram-container .gantt_grid_data .gantt_row {
+  border-bottom: 1px solid #f3f4f6;
+  min-height: 40px !important;
+}
+
+.resource-load-diagram-container .gantt_grid_data .gantt_row:hover {
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+/* Tarefas de recursos */
+.resource-load-diagram-container .gantt_task_line.resource-task {
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  background-color: #3b82f6;
+  border-color: #2563eb;
+}
+
+.resource-load-diagram-container .gantt_task_line.resource-overloaded {
+  background-color: #ef4444;
+  border-color: #dc2626;
+}
+
+.resource-load-diagram-container .gantt_task_progress {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Resizer do layout */
+.resource-load-diagram-container .gantt_layout_cell.gantt_layout_cell_resizer {
+  width: 6px !important;
+  background: #e5e7eb;
+  cursor: col-resize;
+  transition: background 0.2s ease;
+}
+
+.resource-load-diagram-container .gantt_layout_cell.gantt_layout_cell_resizer:hover {
+  background: #3b82f6;
+}
+
+/* Scrollbars */
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.6);
+  border-radius: 6px;
+}
+
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 6px;
+}
+
+/* Linhas do grid */
+.resource-grid-row {
+  font-size: 13px;
+}
+
+/* Task text */
+.resource-load-diagram-container .gantt_task_text {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  padding: 0 6px;
+}
+

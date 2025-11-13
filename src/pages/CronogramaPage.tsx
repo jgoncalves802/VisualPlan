@@ -16,6 +16,11 @@ import { TaskList } from '../components/features/cronograma/TaskList';
 import { TaskModal } from '../components/features/cronograma/TaskModal';
 import { DependencyModal } from '../components/features/cronograma/DependencyModal';
 import { CronogramaStats } from '../components/features/cronograma/CronogramaStats';
+import { AtividadeActionsModal } from '../components/features/cronograma/AtividadeActionsModal';
+import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
+import { useLPSStore } from '../stores/lpsStore';
+import { useAuthStore } from '../stores/authStore';
+import { RestricaoLPS } from '../types/lps';
 
 /**
  * Página do Cronograma
@@ -47,6 +52,16 @@ export const CronogramaPage: React.FC = () => {
   const [atividadeSelecionada, setAtividadeSelecionada] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
+  const [activityActionsModalOpen, setActivityActionsModalOpen] = useState(false);
+  const [atividadeParaAcoes, setAtividadeParaAcoes] = useState<any | null>(null);
+  const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
+  const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+
+  // Store LPS para criar restrições
+  const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
+  
+  // Auth store
+  const { usuario } = useAuthStore();
 
   // Calcula caminho crítico automaticamente ao carregar
   useEffect(() => {
@@ -67,6 +82,36 @@ export const CronogramaPage: React.FC = () => {
   const handleEditarAtividade = (atividadeId: string) => {
     setAtividadeSelecionada(atividadeId);
     setModalTaskOpen(true);
+  };
+
+  const handleAtividadeClick = (atividadeId: string) => {
+    const atividade = todasAtividades.find((a) => a.id === atividadeId);
+    if (atividade) {
+      setAtividadeParaAcoes(atividade);
+      setActivityActionsModalOpen(true);
+    }
+  };
+
+  const handleAddRestricaoFromAtividade = (atividadeId: string) => {
+    setRestricaoModalAtividadeId(atividadeId);
+    setRestricaoModalOpen(true);
+    setActivityActionsModalOpen(false);
+  };
+
+  const handleSaveRestricao = (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
+    // Se tem id, é edição (não deve acontecer aqui, mas por segurança)
+    if ('id' in restricao && restricao.id) {
+      // Edição não é suportada aqui
+      return;
+    } else {
+      // Nova restrição vinculada à atividade do cronograma
+      addRestricao({
+        ...restricao,
+        atividade_id: restricaoModalAtividadeId, // ID da atividade do cronograma
+      } as Omit<RestricaoLPS, 'id'>);
+    }
+    setRestricaoModalOpen(false);
+    setRestricaoModalAtividadeId(undefined);
   };
 
   const handleNovaDependencia = () => {
@@ -144,7 +189,7 @@ export const CronogramaPage: React.FC = () => {
       <GanttExtensionsToolbar />
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-hidden p-6">
         {atividades.length === 0 ? (
           // Empty State
           <div className="flex items-center justify-center h-full">
@@ -178,21 +223,23 @@ export const CronogramaPage: React.FC = () => {
           </div>
         ) : (
           // Visualizações
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
             {visualizacao === VisualizacaoCronograma.GANTT ? (
-              <GanttChart
-                tasks={tasks}
-                viewMode={viewMode}
-                onTaskChange={handleTaskChange}
-                onTaskDelete={handleTaskDelete}
-                onTaskDoubleClick={(task) => handleEditarAtividade(task.id)}
-              />
+              <div className="flex-1 min-h-[600px]">
+                <GanttChart
+                  tasks={tasks}
+                  viewMode={viewMode}
+                  onTaskChange={handleTaskChange}
+                  onTaskDelete={handleTaskDelete}
+                  onTaskDoubleClick={(task) => handleAtividadeClick(task.id)}
+                />
+              </div>
             ) : (
               <TaskList
                 atividades={atividades}
                 todasAtividades={todasAtividades}
                 dependencias={dependencias}
-                onEdit={handleEditarAtividade}
+                onEdit={(id) => handleAtividadeClick(id)}
                 onDelete={async (id) => {
                   if (window.confirm('Deseja realmente excluir esta atividade?')) {
                     await excluirAtividade(id);
@@ -264,6 +311,57 @@ export const CronogramaPage: React.FC = () => {
         )}
 
         <CronogramaContent />
+
+        {/* Modal de Ações da Atividade */}
+        <AtividadeActionsModal
+          atividade={atividadeParaAcoes}
+          isOpen={activityActionsModalOpen}
+          onClose={() => {
+            setActivityActionsModalOpen(false);
+            setAtividadeParaAcoes(null);
+          }}
+          onAddRestricao={handleAddRestricaoFromAtividade}
+          onEditAtividade={handleEditarAtividade}
+          onViewDetails={(atividadeId) => {
+            console.log('Ver detalhes da atividade:', atividadeId);
+            // TODO: Implementar visualização de detalhes
+          }}
+        />
+
+        {/* Modal de Restrição */}
+        <RestricaoModal
+          restricao={null}
+          isOpen={restricaoModalOpen}
+          onClose={() => {
+            setRestricaoModalOpen(false);
+            setRestricaoModalAtividadeId(undefined);
+          }}
+          onSave={handleSaveRestricao}
+          atividadeId={restricaoModalAtividadeId}
+          onAddEvidencia={(restricaoId, arquivo) => {
+            // Criar URL temporária para o arquivo (em produção, fazer upload real)
+            const url = URL.createObjectURL(arquivo);
+            const tipoArquivo = arquivo.type.startsWith('image/') ? 'IMAGEM' : arquivo.type === 'application/pdf' ? 'PDF' : 'OUTRO';
+            addEvidencia(restricaoId, {
+              nome_arquivo: arquivo.name,
+              tipo_arquivo: tipoArquivo,
+              url_arquivo: url,
+              tamanho: arquivo.size,
+              data_upload: new Date(),
+              upload_por: usuario?.id,
+            });
+          }}
+          onDeleteEvidencia={(restricaoId, evidenciaId) => {
+            deleteEvidencia(restricaoId, evidenciaId);
+          }}
+          onAddAndamento={(restricaoId, descricao) => {
+            addAndamento(restricaoId, {
+              descricao,
+              data: new Date(),
+              responsavel: usuario?.id,
+            });
+          }}
+        />
       </div>
     );
   }
@@ -309,6 +407,57 @@ export const CronogramaPage: React.FC = () => {
       )}
 
       <CronogramaContent />
+
+      {/* Modal de Ações da Atividade */}
+      <AtividadeActionsModal
+        atividade={atividadeParaAcoes}
+        isOpen={activityActionsModalOpen}
+        onClose={() => {
+          setActivityActionsModalOpen(false);
+          setAtividadeParaAcoes(null);
+        }}
+        onAddRestricao={handleAddRestricaoFromAtividade}
+        onEditAtividade={handleEditarAtividade}
+        onViewDetails={(atividadeId) => {
+          console.log('Ver detalhes da atividade:', atividadeId);
+          // TODO: Implementar visualização de detalhes
+        }}
+      />
+
+      {/* Modal de Restrição */}
+      <RestricaoModal
+        restricao={null}
+        isOpen={restricaoModalOpen}
+        onClose={() => {
+          setRestricaoModalOpen(false);
+          setRestricaoModalAtividadeId(undefined);
+        }}
+        onSave={handleSaveRestricao}
+        atividadeId={restricaoModalAtividadeId}
+        onAddEvidencia={(restricaoId, arquivo) => {
+          // Criar URL temporária para o arquivo (em produção, fazer upload real)
+          const url = URL.createObjectURL(arquivo);
+          const tipoArquivo = arquivo.type.startsWith('image/') ? 'IMAGEM' : arquivo.type === 'application/pdf' ? 'PDF' : 'OUTRO';
+          addEvidencia(restricaoId, {
+            nome_arquivo: arquivo.name,
+            tipo_arquivo: tipoArquivo,
+            url_arquivo: url,
+            tamanho: arquivo.size,
+            data_upload: new Date(),
+            upload_por: usuario?.id,
+          });
+        }}
+        onDeleteEvidencia={(restricaoId, evidenciaId) => {
+          deleteEvidencia(restricaoId, evidenciaId);
+        }}
+        onAddAndamento={(restricaoId, descricao) => {
+          addAndamento(restricaoId, {
+            descricao,
+            data: new Date(),
+            responsavel: usuario?.id,
+          });
+        }}
+      />
     </div>
   );
 };

@@ -27,6 +27,16 @@ export interface VPGanttTask {
   codigo?: string;
   edt?: string;
   calendario_id?: string;
+  
+  // Custos e Valores
+  custo_planejado?: number;
+  custo_real?: number;
+  valor_planejado?: number;
+  valor_real?: number;
+  custo_unitario?: number;
+  quantidade_planejada?: number;
+  quantidade_real?: number;
+  unidade_medida?: string;
 }
 
 /**

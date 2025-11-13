@@ -1,11 +1,80 @@
 .wbs-gantt-container {
-  width: 100%;
-  height: 520px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 35px -15px rgba(15, 23, 42, 0.25);
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 520px;
+  background: #fff;
+  padding: 0px !important;
+  margin: 0px !important;
+  overflow: hidden !important;
+  position: relative;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif;
+}
+
+/* ============================================================================
+   LAYOUT BÁSICO DO DHTMLX GANTT (Material Theme)
+   ============================================================================ */
+
+/* Container principal do Gantt (classe padrão do DHTMLX) - Material Theme */
+.wbs-gantt-container .gantt_container {
+  width: 100% !important;
+  height: 100% !important;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+  position: relative;
+  background: #fff;
+}
+
+/* Resizer do layout (divisor entre grid e timeline) */
+.wbs-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer {
+  width: 6px !important;
+  min-width: 6px !important;
+  max-width: 6px !important;
+  background: rgba(59, 130, 246, 0.15);
+  cursor: col-resize !important;
+  transition: background 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.wbs-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Resizer de colunas no grid */
+.wbs-gantt-container .gantt_grid_head_cell_resizer {
+  width: 6px !important;
+  cursor: col-resize !important;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.wbs-gantt-container .gantt_grid_head_cell_resizer:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* Cabeçalho das colunas (habilitar resize) */
+.wbs-gantt-container .gantt_grid_head_cell {
+  position: relative;
+  user-select: none;
+}
+
+.wbs-gantt-container .gantt_grid_head_cell:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 4;
+}
+
+.wbs-gantt-container .gantt_grid_head_cell:not(:last-child):hover::after {
+  background: rgba(59, 130, 246, 0.15);
 }
 
 .wbs-gantt-container .gantt_grid_scale,

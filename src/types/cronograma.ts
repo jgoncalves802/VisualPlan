@@ -210,6 +210,17 @@ export interface AtividadeMock {
   e_critica?: boolean;
   folga_total?: number;
   calendario_id?: string;
+  
+  // Custos e Valores
+  custo_planejado?: number;        // Custo planejado (R$)
+  custo_real?: number;             // Custo real (R$)
+  valor_planejado?: number;        // Valor planejado (R$)
+  valor_real?: number;             // Valor real (R$)
+  custo_unitario?: number;         // Custo por unidade
+  quantidade_planejada?: number;   // Quantidade planejada
+  quantidade_real?: number;         // Quantidade real
+  unidade_medida?: string;         // Unidade de medida (m², m³, un, etc.)
+  
   created_at: string;
   updated_at: string;
 }
@@ -338,7 +349,8 @@ export interface ConfiguracoesProjeto {
   habilitar_multiselect: boolean;            // Seleção múltipla de tarefas
   
   // Funcionalidades Avançadas
-  habilitar_inline_editing: boolean;         // Edição inline na grid
+  habilitar_edicao_inline: boolean;          // Edição inline na grid (corrigido de habilitar_inline_editing)
+  mostrar_colunas_custo_valor: boolean;      // Mostrar colunas de custo e valores à direita
   habilitar_drag_timeline: boolean;          // Arrastar timeline com Ctrl
   habilitar_markers: boolean;                // Marcadores verticais (hoje, etc)
   habilitar_baselines: boolean;              // Linhas de base

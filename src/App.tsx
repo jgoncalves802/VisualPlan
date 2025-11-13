@@ -9,6 +9,8 @@ import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
+import { LPSPage } from './pages/LPSPage';
+import { RestricoesPage } from './pages/RestricoesPage';
 import './styles/global.css';
 
 // Protected Route Component
@@ -103,10 +105,40 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold theme-text mb-4">LPS / Restrições</h2>
-                  <p className="theme-text-secondary">Módulo em desenvolvimento...</p>
-                </div>
+                <LPSPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/lps/:projetoId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <LPSPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/restricoes"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RestricoesPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/restricoes/:projetoId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RestricoesPage />
               </Layout>
             </ProtectedRoute>
           }

@@ -167,6 +167,15 @@ export const useCronograma = (projetoId: string) => {
         edt: atividade.edt,
         duracao_horas: atividade.duracao_horas,
         calendario_id: atividade.calendario_id,
+        // Custos e Valores
+        custo_planejado: atividade.custo_planejado,
+        custo_real: atividade.custo_real,
+        valor_planejado: atividade.valor_planejado,
+        valor_real: atividade.valor_real,
+        custo_unitario: atividade.custo_unitario,
+        quantidade_planejada: atividade.quantidade_planejada,
+        quantidade_real: atividade.quantidade_real,
+        unidade_medida: atividade.unidade_medida,
       };
     });
   }, [atividadesFiltradas, dependencias]);

@@ -1,0 +1,247 @@
+/**
+ * Estilos Globais para Material Theme do DHTMLX Gantt
+ * Garante formatação consistente em TODOS os componentes Gantt
+ */
+
+/* ============================================================================
+   CONTAINERS GLOBAIS - MATERIAL THEME
+   ============================================================================ */
+
+/* Todos os containers Gantt devem ter o mesmo estilo base */
+.vp-gantt-container,
+.wbs-gantt-container,
+.resource-load-diagram-container,
+#gantt_here {
+  width: 100% !important;
+  height: 100% !important;
+  background: #fff !important;
+  padding: 0px !important;
+  margin: 0px !important;
+  overflow: hidden !important;
+  position: relative;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+/* Container principal do Gantt (classe padrão do DHTMLX) - Material Theme */
+.vp-gantt-container .gantt_container,
+.wbs-gantt-container .gantt_container,
+.resource-load-diagram-container .gantt_container,
+.resource-load-diagram-container .resource_gantt_container,
+#gantt_here .gantt_container,
+.gantt_container {
+  width: 100% !important;
+  height: 100% !important;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+  position: relative;
+  background: #fff;
+}
+
+/* ============================================================================
+   RESIZER DO LAYOUT - MATERIAL THEME
+   ============================================================================ */
+
+/* Resizer do layout (divisor entre grid e timeline) - Consistente em todos */
+.vp-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer,
+.wbs-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer,
+.resource-load-diagram-container .gantt_layout_cell.gantt_layout_cell_resizer,
+.gantt_layout_cell.gantt_layout_cell_resizer {
+  width: 6px !important;
+  min-width: 6px !important;
+  max-width: 6px !important;
+  background: #e5e7eb !important;
+  cursor: col-resize !important;
+  transition: background 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.vp-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer:hover,
+.wbs-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer:hover,
+.resource-load-diagram-container .gantt_layout_cell.gantt_layout_cell_resizer:hover,
+.gantt_layout_cell.gantt_layout_cell_resizer:hover {
+  background: #3b82f6 !important;
+}
+
+/* ============================================================================
+   RESIZE DE COLUNAS - MATERIAL THEME
+   ============================================================================ */
+
+/* Resizer de colunas no grid - Consistente em todos */
+.vp-gantt-container .gantt_grid_head_cell_resizer,
+.wbs-gantt-container .gantt_grid_head_cell_resizer,
+.resource-load-diagram-container .gantt_grid_head_cell_resizer,
+.gantt_grid_head_cell_resizer {
+  width: 6px !important;
+  cursor: col-resize !important;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.vp-gantt-container .gantt_grid_head_cell_resizer:hover,
+.wbs-gantt-container .gantt_grid_head_cell_resizer:hover,
+.resource-load-diagram-container .gantt_grid_head_cell_resizer:hover,
+.gantt_grid_head_cell_resizer:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Cabeçalho das colunas - Consistente em todos */
+.vp-gantt-container .gantt_grid_head_cell,
+.wbs-gantt-container .gantt_grid_head_cell,
+.resource-load-diagram-container .gantt_grid_head_cell,
+.gantt_grid_head_cell {
+  position: relative;
+  user-select: none;
+}
+
+/* ============================================================================
+   SCALES (ESCALAS DE TEMPO) - MATERIAL THEME
+   ============================================================================ */
+
+/* Cabeçalho das escalas - Consistente em todos */
+.vp-gantt-container .gantt_task_scale,
+.wbs-gantt-container .gantt_task_scale,
+.resource-load-diagram-container .gantt_task_scale,
+.gantt_task_scale {
+  background: #f9fafb !important;
+  border-bottom: 2px solid #e5e7eb !important;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+.vp-gantt-container .gantt_scale_line,
+.wbs-gantt-container .gantt_scale_line,
+.resource-load-diagram-container .gantt_scale_line,
+.gantt_scale_line {
+  border-top: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 13px;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+.vp-gantt-container .gantt_scale_cell,
+.wbs-gantt-container .gantt_scale_cell,
+.resource-load-diagram-container .gantt_scale_cell,
+.gantt_scale_cell {
+  border-right: 1px solid #e5e7eb;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+/* ============================================================================
+   GRID (TABELA) - MATERIAL THEME
+   ============================================================================ */
+
+/* Cabeçalho do grid - Consistente em todos */
+.vp-gantt-container .gantt_grid_scale,
+.wbs-gantt-container .gantt_grid_scale,
+.resource-load-diagram-container .gantt_grid_scale,
+.gantt_grid_scale {
+  background: #f9fafb !important;
+  border-bottom: 2px solid #e5e7eb !important;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+/* Linhas do grid - Consistente em todos */
+.vp-gantt-container .gantt_grid_data .gantt_row,
+.wbs-gantt-container .gantt_grid_data .gantt_row,
+.resource-load-diagram-container .gantt_grid_data .gantt_row,
+.gantt_grid_data .gantt_row {
+  border-bottom: 1px solid #f3f4f6;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+.vp-gantt-container .gantt_grid_data .gantt_row:hover,
+.wbs-gantt-container .gantt_grid_data .gantt_row:hover,
+.resource-load-diagram-container .gantt_grid_data .gantt_row:hover,
+.gantt_grid_data .gantt_row:hover {
+  background: #f9fafb;
+}
+
+/* Células do grid - Consistente em todos */
+.vp-gantt-container .gantt_cell,
+.wbs-gantt-container .gantt_cell,
+.resource-load-diagram-container .gantt_cell,
+.gantt_cell {
+  color: #374151;
+  font-size: 13px;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+/* ============================================================================
+   TASKS (BARRAS DE TAREFAS) - MATERIAL THEME
+   ============================================================================ */
+
+/* Barras de tarefas - Consistente em todos */
+.vp-gantt-container .gantt_task_line,
+.wbs-gantt-container .gantt_task_line,
+.resource-load-diagram-container .gantt_task_line,
+.gantt_task_line {
+  border-radius: 6px;
+  border-width: 1px;
+  border-style: solid;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+.vp-gantt-container .gantt_task_line:hover,
+.wbs-gantt-container .gantt_task_line:hover,
+.resource-load-diagram-container .gantt_task_line:hover,
+.gantt_task_line:hover {
+  opacity: 0.9;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Texto nas barras - Consistente em todos */
+.vp-gantt-container .gantt_task_content,
+.wbs-gantt-container .gantt_task_content,
+.resource-load-diagram-container .gantt_task_content,
+.gantt_task_content {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+}
+
+/* ============================================================================
+   SCROLLBARS - MATERIAL THEME
+   ============================================================================ */
+
+/* Scrollbars - Consistente em todos */
+.vp-gantt-container .gantt_layout_cell::-webkit-scrollbar,
+.wbs-gantt-container .gantt_layout_cell::-webkit-scrollbar,
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar,
+.gantt_layout_cell::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.vp-gantt-container .gantt_layout_cell::-webkit-scrollbar-thumb,
+.wbs-gantt-container .gantt_layout_cell::-webkit-scrollbar-thumb,
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-thumb,
+.gantt_layout_cell::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.6);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.vp-gantt-container .gantt_layout_cell::-webkit-scrollbar-thumb:hover,
+.wbs-gantt-container .gantt_layout_cell::-webkit-scrollbar-thumb:hover,
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-thumb:hover,
+.gantt_layout_cell::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+.vp-gantt-container .gantt_layout_cell::-webkit-scrollbar-track,
+.wbs-gantt-container .gantt_layout_cell::-webkit-scrollbar-track,
+.resource-load-diagram-container .gantt_layout_cell::-webkit-scrollbar-track,
+.gantt_layout_cell::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 6px;
+}
+

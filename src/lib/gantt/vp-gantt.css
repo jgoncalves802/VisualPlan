@@ -4,22 +4,125 @@
  */
 
 /* ============================================================================
-   VISIONPLAN - CONTAINER
+   VISIONPLAN - CONTAINER (Material Theme)
    ============================================================================ */
 
-.vp-gantt-container {
-  width: 100%;
-  height: 600px;
+.vp-gantt-container,
+#gantt_here {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  padding: 0px !important;
+  margin: 0px !important;
+  overflow: hidden !important;
+  position: relative;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif;
 }
 
 .vp-gantt-chart {
   font-family: 'Inter', 'system-ui', sans-serif !important;
   font-size: 14px;
   line-height: 1.5;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================================
+   LAYOUT BÁSICO DO DHTMLX GANTT (conforme documentação oficial)
+   ============================================================================ */
+
+/* Container principal do Gantt (classe padrão do DHTMLX) - Material Theme */
+.vp-gantt-container .gantt_container,
+#gantt_here .gantt_container,
+.gantt_container {
+  width: 100% !important;
+  height: 100% !important;
+  font-family: 'Roboto', 'Open Sans', arial, sans-serif !important;
+  position: relative;
+  background: #fff;
+}
+
+/* Resizer do layout (divisor entre grid e timeline) */
+.vp-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer,
+.gantt_layout_cell.gantt_layout_cell_resizer {
+  width: 6px !important;
+  min-width: 6px !important;
+  max-width: 6px !important;
+  background: #e5e7eb;
+  cursor: col-resize !important;
+  transition: background 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.vp-gantt-container .gantt_layout_cell.gantt_layout_cell_resizer:hover,
+.gantt_layout_cell.gantt_layout_cell_resizer:hover {
+  background: #3b82f6;
+}
+
+/* Resizer de colunas no grid */
+.vp-gantt-container .gantt_grid_head_cell_resizer,
+.gantt_grid_head_cell_resizer {
+  width: 6px !important;
+  cursor: col-resize !important;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.vp-gantt-container .gantt_grid_head_cell_resizer:hover,
+.gantt_grid_head_cell_resizer:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* Cabeçalho das colunas (habilitar resize) */
+.vp-gantt-container .gantt_grid_head_cell,
+.gantt_grid_head_cell {
+  position: relative;
+  user-select: none;
+}
+
+.vp-gantt-container .gantt_grid_head_cell:not(:last-child)::after,
+.gantt_grid_head_cell:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 4;
+}
+
+.vp-gantt-container .gantt_grid_head_cell:not(:last-child):hover::after,
+.gantt_grid_head_cell:not(:last-child):hover::after {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* Scrollbars do layout */
+.gantt_layout_cell::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.gantt_layout_cell::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.6);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.gantt_layout_cell::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+.gantt_layout_cell::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 6px;
 }
 
 /* ============================================================================
@@ -430,4 +533,113 @@
   .gantt_task_bg {
     background: #111827;
   }
+}
+
+/* ============================================================================
+   INLINE EDITING
+   ============================================================================ */
+
+.vp-inline-editor {
+  width: 100%;
+  padding: 4px 8px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.vp-inline-editor:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.vp-currency-editor {
+  text-align: right;
+  font-weight: 500;
+}
+
+.vp-select-editor {
+  width: 100%;
+  padding: 4px 8px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   RIGHTSIDE COLUMNS (Colunas à Direita)
+   ============================================================================ */
+
+.vp-gantt-layout .gantt_grid[data-rightside="true"] {
+  border-left: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.vp-gantt-layout .gantt_grid[data-rightside="true"] .gantt_grid_scale {
+  background: #f3f4f6;
+  border-bottom: 2px solid #d1d5db;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.vp-gantt-layout .gantt_grid[data-rightside="true"] .gantt_cell {
+  text-align: right;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* ============================================================================
+   DRAG TOOLTIP
+   ============================================================================ */
+
+.vp-drag-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 10000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.vp-drag-tooltip strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.vp-drag-tooltip div {
+  margin: 2px 0;
+  opacity: 0.9;
+}
+
+/* ============================================================================
+   COLUNAS DE CUSTO/VALORES
+   ============================================================================ */
+
+.gantt_cell[data-column="custo_planejado"],
+.gantt_cell[data-column="custo_real"],
+.gantt_cell[data-column="valor_planejado"],
+.gantt_cell[data-column="valor_real"],
+.gantt_cell[data-column="custo_unitario"] {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  color: #059669;
+}
+
+.gantt_cell[data-column="quantidade_planejada"],
+.gantt_cell[data-column="quantidade_real"] {
+  text-align: right;
+  font-weight: 500;
+  color: #1f2937;
 }

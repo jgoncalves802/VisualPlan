@@ -148,7 +148,8 @@ const initialConfiguracoes: ConfiguracoesProjeto = {
   habilitar_multiselect: true,            // Seleção múltipla de tarefas
   
   // Funcionalidades Avançadas
-  habilitar_inline_editing: true,         // Edição inline na grid
+  habilitar_edicao_inline: true,          // Edição inline na grid
+  mostrar_colunas_custo_valor: true,      // Mostrar colunas de custo e valores à direita
   habilitar_drag_timeline: false,         // Arrastar timeline com Ctrl (desabilitado por padrão)
   habilitar_markers: true,                // Marcadores verticais (hoje, etc)
   habilitar_baselines: false,             // Linhas de base (requer campo planned_start/end)

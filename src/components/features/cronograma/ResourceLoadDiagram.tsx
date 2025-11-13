@@ -1,63 +1,70 @@
 /**
- * Componente Gantt da visão WBS
- * Seguindo exatamente o padrão do exemplo oficial do DHTMLX Gantt Material Theme
+ * Resource Load Diagram - Gráfico de Recursos
+ * Seguindo exatamente o padrão do exemplo oficial do DHTMLX Gantt Resource Load Diagram
  */
 
 import React, { useEffect, useMemo, useRef } from 'react';
 import gantt from 'dhtmlx-gantt';
 import 'dhtmlx-gantt/codebase/dhtmlxgantt.css';
 import '../../../lib/gantt/material-gantt-global.css';
-import './wbs-gantt.css';
+import './resource-load-diagram.css';
 
-export interface WBSProject {
+export interface Resource {
   id: string;
-  nome: string;
-  codigo: string;
-  status: string;
-  gerente?: string;
-  data_inicio: Date;
-  data_fim: Date;
-  progresso: number;
+  text: string;
+  type?: 'work' | 'material';
+  unit?: string;
+  availability?: number;
+  color?: string;
 }
 
-interface WBSGanttProps {
-  projetos: WBSProject[];
-  escala?: 'Day' | 'Week' | 'Month' | 'Year';
-  onProjetoClick?: (projetoId: string) => void;
+export interface ResourceAssignment {
+  id: string;
+  task_id: string;
+  resource_id: string;
+  value: number;
+  units?: number;
 }
 
-export const WBSGantt: React.FC<WBSGanttProps> = ({
-  projetos,
-  escala = 'Month',
-  onProjetoClick,
+export interface ResourceLoadTask {
+  id: string;
+  text: string;
+  start_date: Date;
+  end_date: Date;
+  progress?: number;
+  resource_id?: string;
+  value?: number;
+}
+
+interface ResourceLoadDiagramProps {
+  resources: Resource[];
+  tasks: ResourceLoadTask[];
+  assignments: ResourceAssignment[];
+  scale?: 'day' | 'week' | 'month';
+  onResourceClick?: (resourceId: string) => void;
+  onTaskClick?: (taskId: string) => void;
+}
+
+export const ResourceLoadDiagram: React.FC<ResourceLoadDiagramProps> = ({
+  resources,
+  tasks,
+  assignments,
+  scale = 'week',
+  onResourceClick,
+  onTaskClick,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const eventIdsRef = useRef<number[]>([]);
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const gridWidthRef = useRef(420);
 
-  const dados = useMemo(() => converterProjetos(projetos), [projetos]);
+  // Converter dados para formato do Gantt
+  const ganttData = useMemo(() => convertToGanttData(resources, tasks, assignments), [resources, tasks, assignments]);
 
   // Configuração e inicialização do Gantt - SEGUINDO EXATAMENTE O EXEMPLO OFICIAL
   useEffect(() => {
-    if (!containerRef.current) {
-      console.warn('WBSGantt: Container não encontrado');
+    if (!containerRef.current || resources.length === 0) {
       return;
     }
-
-    // Verificar se há dados
-    if (projetos.length === 0) {
-      console.warn('WBSGantt: Nenhum projeto para exibir');
-      // Limpar instância anterior se existir
-      try {
-        gantt.clearAll();
-      } catch (e) {
-        // Ignorar erros
-      }
-      return;
-    }
-
-    console.log('WBSGantt: Inicializando com', projetos.length, 'projetos');
 
     // Limpar timeout anterior se existir
     if (initTimeoutRef.current) {
@@ -88,28 +95,20 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
     // ========================================================================
     // PASSO 4: CONFIGURAR ESCALAS (como no exemplo Material)
     // ========================================================================
-    if (escala === 'Year') {
-      gantt.config.scales = [
-        { unit: "year", step: 1, format: "%Y" },
-        { unit: "quarter", step: 1, format: "T%q" },
-      ];
-      gantt.config.scale_height = 36 * 2;
-    } else {
-      gantt.config.scales = [
-        { unit: "month", step: 1, format: "%F" },
-        {
-          unit: "week",
-          step: 1,
-          format: function (date: Date) {
-            const dateToStr = gantt.date.date_to_str("%d %M");
-            const endDate = gantt.date.add(date, 6 - date.getDay(), "day");
-            return dateToStr(date) + " - " + dateToStr(endDate);
-          },
+    gantt.config.scales = [
+      { unit: "month", step: 1, format: "%F" },
+      {
+        unit: "week",
+        step: 1,
+        format: function (date: Date) {
+          const dateToStr = gantt.date.date_to_str("%d %M");
+          const endDate = gantt.date.add(date, 6 - date.getDay(), "day");
+          return dateToStr(date) + " - " + dateToStr(endDate);
         },
-        { unit: "day", step: 1, format: "%D" },
-      ];
-      gantt.config.scale_height = 36 * 3;
-    }
+      },
+      { unit: "day", step: 1, format: "%D" },
+    ];
+    gantt.config.scale_height = 36 * 3;
 
     // ========================================================================
     // PASSO 5: CONFIGURAR COLUNAS (como no exemplo Material)
@@ -117,37 +116,28 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
     gantt.config.columns = [
       {
         name: 'text',
-        label: 'Projeto',
-        width: 220,
+        label: 'Recurso',
+        width: 200,
         tree: true,
         resize: true,
         min_width: 10,
-        template: (task: any) => {
-          return `<span class="wbs-col-nome">${task.text}</span><span class="wbs-col-codigo">${task.codigo}</span>`;
+        template: (resource: any) => {
+          const typeIcon = resource.resource_type === 'material' ? '📦' : '👤';
+          return `<span>${typeIcon} ${resource.text}</span>`;
         },
       },
       {
-        name: 'status',
-        label: 'Status',
+        name: 'availability',
+        label: 'Disponibilidade',
         align: 'center',
-        width: 110,
+        width: 100,
         resize: true,
-        template: (task: any) => `<span class="wbs-status wbs-status-${statusToSlug(task.status)}">${task.status}</span>`,
-      },
-      {
-        name: 'gerente',
-        label: 'Gerente',
-        width: 120,
-        resize: true,
-        template: (task: any) => `<span class="wbs-col-gerente">${task.gerente || '-'}</span>`,
-      },
-      {
-        name: 'progress',
-        label: 'Conclusão',
-        align: 'center',
-        width: 110,
-        resize: true,
-        template: (task: any) => `${Math.round(task.progress * 100)}%`,
+        template: (resource: any) => {
+          if (resource.availability !== undefined) {
+            return `${resource.availability}%`;
+          }
+          return '-';
+        },
       },
       {
         name: 'add',
@@ -162,9 +152,9 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
       css: 'gantt_container',
       cols: [
         {
-          width: gridWidthRef.current,
-          min_width: 260,
-          max_width: 800,
+          width: 300,
+          min_width: 200,
+          max_width: 500,
           rows: [
             { view: 'grid', scrollX: 'gridScroll', scrollY: 'scrollVer' },
             { view: 'scrollbar', id: 'gridScroll', group: 'horizontal' },
@@ -187,8 +177,8 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
     gantt.config.readonly = true;
     gantt.config.show_grid = true;
     gantt.config.show_links = false;
-    gantt.config.row_height = 34;
-    gantt.config.grid_width = gridWidthRef.current;
+    gantt.config.row_height = 40;
+    gantt.config.grid_width = 300;
     gantt.config.show_progress = true;
     gantt.config.grid_resize = true; // Habilitar resize de colunas
 
@@ -196,16 +186,21 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
     // PASSO 8: CONFIGURAR TEMPLATES
     // ========================================================================
     gantt.templates.task_class = (_start, _end, task) => {
-      const classes = ['wbs-gantt-task'];
-      classes.push(`wbs-${statusToSlug(task.status)}`);
+      const classes = ['resource-task'];
+      if (task.value && task.value > 100) {
+        classes.push('resource-overloaded');
+      }
       return classes.join(' ');
     };
 
     gantt.templates.task_text = (_start, _end, task) => {
-      return `${task.text} (${Math.round(task.progress * 100)}%)`;
+      if (task.value) {
+        return `${task.text} (${task.value}%)`;
+      }
+      return task.text;
     };
 
-    gantt.templates.grid_row_class = () => 'wbs-grid-row';
+    gantt.templates.grid_row_class = () => 'resource-grid-row';
 
     // ========================================================================
     // PASSO 9: CONFIGURAR RIGHTSIDE TEXT (como no exemplo Material)
@@ -228,7 +223,7 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
         day_short: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
       },
       labels: {
-        new_task: 'Novo Projeto',
+        new_task: 'Novo Recurso',
         dhx_cal_today_button: 'Hoje',
         day_tab: 'Dia',
         week_tab: 'Semana',
@@ -244,7 +239,7 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
         section_description: 'Descrição',
         section_time: 'Período',
         section_type: 'Tipo',
-        column_text: 'Projeto',
+        column_text: 'Recurso',
         column_start_date: 'Início',
         column_duration: 'Duração',
         column_add: '',
@@ -252,8 +247,8 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
         confirm_link_deleting: 'será deletado',
         link_start: '(início)',
         link_end: '(fim)',
-        type_task: 'Projeto',
-        type_project: 'Programa',
+        type_task: 'Recurso',
+        type_project: 'Grupo',
         type_milestone: 'Marco',
         minutes: 'Minutos',
         hours: 'Horas',
@@ -270,61 +265,32 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
     initTimeoutRef.current = setTimeout(() => {
       try {
         if (!containerRef.current) {
-          console.error('WBSGantt: Container não encontrado para inicializar WBS Gantt');
+          console.warn('Container não encontrado para inicializar Resource Load Diagram');
           return;
         }
 
-        console.log('WBSGantt: Container encontrado:', containerRef.current);
-        console.log('WBSGantt: Container dimensions:', {
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-          clientWidth: containerRef.current.clientWidth,
-          clientHeight: containerRef.current.clientHeight,
-        });
-
         // Limpar dados anteriores se existir
         try {
-          const existingInstance = containerRef.current.querySelector('.gantt_container');
-          if (existingInstance) {
-            console.log('WBSGantt: Instância existente encontrada, limpando...');
-            gantt.clearAll();
-          }
+          gantt.clearAll();
         } catch (e) {
-          console.warn('WBSGantt: Erro ao limpar instância anterior:', e);
+          // Ignorar erros
         }
 
         // Inicializar no container
-        console.log('WBSGantt: Chamando gantt.init()...');
+        console.log('Inicializando Resource Load Diagram...');
         gantt.init(containerRef.current);
-        console.log('WBSGantt: Gantt inicializado com sucesso');
-
-        // Verificar se o container foi preenchido
-        setTimeout(() => {
-          const ganttContainer = containerRef.current?.querySelector('.gantt_container');
-          if (ganttContainer) {
-            console.log('WBSGantt: Container Gantt criado com sucesso:', {
-              width: ganttContainer.clientWidth,
-              height: ganttContainer.clientHeight,
-            });
-          } else {
-            console.error('WBSGantt: Container Gantt NÃO foi criado!');
-          }
-        }, 50);
+        console.log('Resource Load Diagram inicializado com sucesso');
 
         // ========================================================================
         // PASSO 12: CARREGAR DADOS
         // ========================================================================
         try {
-          console.log('WBSGantt: Carregando dados...', {
-            projetosCount: dados.data?.length || 0,
-            linksCount: dados.links?.length || 0,
-            dados,
-          });
-          gantt.parse(dados);
+          console.log('Carregando dados do Resource Load Diagram...', ganttData);
+          gantt.parse(ganttData);
           gantt.render();
-          console.log('WBSGantt: Dados carregados e renderizados com sucesso');
+          console.log('Dados do Resource Load Diagram carregados e renderizados');
         } catch (error) {
-          console.error('WBSGantt: Erro ao carregar dados do WBS Gantt:', error);
+          console.error('Erro ao carregar dados do Resource Load Diagram:', error);
         }
 
         // ========================================================================
@@ -340,23 +306,23 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
         });
         eventIdsRef.current = [];
 
-        const clickId = gantt.attachEvent('onTaskClick', (id: string) => {
-          if (onProjetoClick) {
-            onProjetoClick(id);
+        const onTaskClickEvent = gantt.attachEvent('onTaskClick', (id: string) => {
+          if (onTaskClick) {
+            onTaskClick(id);
           }
           return true;
         });
-        eventIdsRef.current.push(clickId);
+        eventIdsRef.current.push(onTaskClickEvent);
 
-        const onGridResize = gantt.attachEvent('onGridResize', () => {
-          const gridEl = containerRef.current?.querySelector<HTMLElement>('.gantt_grid');
-          if (gridEl) {
-            gridWidthRef.current = Math.round(gridEl.clientWidth);
+        const onRowClickEvent = gantt.attachEvent('onRowClick', (id: string) => {
+          if (onResourceClick) {
+            onResourceClick(id);
           }
+          return true;
         });
-        eventIdsRef.current.push(onGridResize);
+        eventIdsRef.current.push(onRowClickEvent);
       } catch (error) {
-        console.error('Erro ao inicializar WBS Gantt:', error);
+        console.error('Erro ao inicializar Resource Load Diagram:', error);
       }
     }, 100);
 
@@ -387,9 +353,9 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
         // Ignorar erros
       }
     };
-  }, [dados, escala, onProjetoClick, projetos.length]);
+  }, [ganttData, scale, onResourceClick, onTaskClick, resources.length]);
 
-  if (projetos.length === 0) {
+  if (resources.length === 0) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg">
         <div className="text-center text-gray-500">
@@ -403,11 +369,11 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          <p className="text-lg font-medium">Nenhum projeto encontrado</p>
-          <p className="text-sm mt-1">Adicione projetos para visualizar o WBS</p>
+          <p className="text-lg font-medium">Nenhum recurso encontrado</p>
+          <p className="text-sm mt-1">Adicione recursos para visualizar o diagrama de carga</p>
         </div>
       </div>
     );
@@ -416,11 +382,11 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
   return (
     <div
       ref={containerRef}
-      className="wbs-gantt-container"
+      className="resource-load-diagram-container"
       style={{
         width: '100%',
         height: '100%',
-        minHeight: '520px',
+        minHeight: '400px',
         position: 'relative',
         padding: '0px',
         overflow: 'hidden',
@@ -433,54 +399,51 @@ export const WBSGantt: React.FC<WBSGanttProps> = ({
 // FUNÇÕES AUXILIARES
 // ============================================================================
 
-function converterProjetos(projetos: WBSProject[]) {
-  try {
-    const data = projetos.map((projeto) => {
-      // Garantir que as datas sejam válidas antes de converter
-      const dataInicio = parseDate(projeto.data_inicio);
-      const dataFim = parseDate(projeto.data_fim);
-      
-      // Se a data de fim for anterior à data de início, ajustar
-      if (dataFim.getTime() < dataInicio.getTime()) {
-        // Se a data de fim for inválida ou anterior, usar data de início + 1 dia
-        const novaDataFim = new Date(dataInicio);
-        novaDataFim.setDate(novaDataFim.getDate() + 1);
-        return {
-          id: projeto.id,
-          text: projeto.nome,
-          start_date: formatarDataParaDHTMLX(dataInicio),
-          end_date: formatarDataParaDHTMLX(novaDataFim),
-          duration: calcularDuracaoDias(dataInicio, novaDataFim),
-          progress: Math.min(Math.max(projeto.progresso / 100, 0), 1), // Garantir entre 0 e 1
-          parent: 0,
-          type: 'project',
-          status: projeto.status || 'ATIVO',
-          gerente: projeto.gerente || '',
-          codigo: projeto.codigo || '',
-        };
-      }
-      
-      return {
-        id: projeto.id,
-        text: projeto.nome,
-        start_date: formatarDataParaDHTMLX(dataInicio),
-        end_date: formatarDataParaDHTMLX(dataFim),
-        duration: calcularDuracaoDias(dataInicio, dataFim),
-        progress: Math.min(Math.max(projeto.progresso / 100, 0), 1), // Garantir entre 0 e 1
-        parent: 0,
-        type: 'project',
-        status: projeto.status || 'ATIVO',
-        gerente: projeto.gerente || '',
-        codigo: projeto.codigo || '',
-      };
+function convertToGanttData(
+  resources: Resource[],
+  tasks: ResourceLoadTask[],
+  assignments: ResourceAssignment[]
+) {
+  const data: any[] = [];
+  const links: any[] = [];
+
+  // Adicionar recursos como tarefas principais (projetos)
+  resources.forEach((resource) => {
+    data.push({
+      id: resource.id,
+      text: resource.text,
+      type: 'project',
+      open: true,
+      availability: resource.availability,
+      resource_type: resource.type || 'work',
+      color: resource.color || '#3b82f6',
     });
 
-    return { data, links: [] };
-  } catch (error) {
-    console.error('Erro ao converter projetos:', error);
-    // Retornar estrutura vazia em caso de erro
-    return { data: [], links: [] };
-  }
+    // Adicionar tarefas atribuídas a este recurso
+    const resourceAssignments = assignments.filter(
+      (assignment) => assignment.resource_id === resource.id
+    );
+
+    resourceAssignments.forEach((assignment) => {
+      const task = tasks.find((t) => t.id === assignment.task_id);
+      if (task) {
+        data.push({
+          id: `${resource.id}_${task.id}`,
+          text: task.text,
+          start_date: formatDateForDHTMLX(task.start_date),
+          end_date: formatDateForDHTMLX(task.end_date),
+          duration: calculateDuration(task.start_date, task.end_date),
+          progress: task.progress || 0,
+          parent: resource.id,
+          type: 'task',
+          value: assignment.value,
+          units: assignment.units || 100,
+        });
+      }
+    });
+  });
+
+  return { data, links };
 }
 
 // Helper para converter qualquer valor para Date válido
@@ -490,12 +453,7 @@ function parseDate(date: any): Date {
       return new Date();
     }
     if (date instanceof Date) {
-      // Verificar se a Date é válida
-      if (isNaN(date.getTime())) {
-        return new Date();
-      }
-      // Verificar se os métodos existem
-      if (typeof date.getFullYear !== 'function') {
+      if (isNaN(date.getTime()) || typeof date.getFullYear !== 'function') {
         return new Date();
       }
       return date;
@@ -516,19 +474,16 @@ function parseDate(date: any): Date {
     }
     return new Date();
   } catch (error) {
-    // Em caso de qualquer erro, retornar data atual
     return new Date();
   }
 }
 
-function formatarDataParaDHTMLX(data: any): string {
+function formatDateForDHTMLX(date: any): string {
   try {
-    // Converter para Date válido
-    const dateObj = parseDate(data);
+    const dateObj = parseDate(date);
     
     // Verificação final de segurança
     if (!(dateObj instanceof Date) || isNaN(dateObj.getTime()) || typeof dateObj.getFullYear !== 'function') {
-      // Se ainda não for válida, usar data atual
       const fallbackDate = new Date();
       const year = fallbackDate.getFullYear();
       const month = String(fallbackDate.getMonth() + 1).padStart(2, '0');
@@ -547,7 +502,6 @@ function formatarDataParaDHTMLX(data: any): string {
     const seconds = String(dateObj.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch (error) {
-    // Em caso de erro, retornar data atual formatada
     const fallbackDate = new Date();
     const year = fallbackDate.getFullYear();
     const month = String(fallbackDate.getMonth() + 1).padStart(2, '0');
@@ -559,28 +513,19 @@ function formatarDataParaDHTMLX(data: any): string {
   }
 }
 
-function calcularDuracaoDias(inicio: any, fim: any) {
+function calculateDuration(start: any, end: any): number {
   try {
-    const inicioDate = parseDate(inicio);
-    const fimDate = parseDate(fim);
+    const startDate = parseDate(start);
+    const endDate = parseDate(end);
     
-    // Verificar se as datas são válidas
-    if (isNaN(inicioDate.getTime()) || isNaN(fimDate.getTime())) {
-      return 1; // Duração mínima de 1 dia
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return 1;
     }
     
-    const diffTime = Math.abs(fimDate.getTime() - inicioDate.getTime());
-    return Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(diffDays, 1);
   } catch (error) {
-    // Em caso de erro, retornar duração mínima
     return 1;
   }
-}
-
-function statusToSlug(status: string) {
-  return status
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-');
 }

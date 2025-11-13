@@ -231,7 +231,7 @@ export const WBSPage: React.FC = () => {
       </div>
 
       {/* Timeline Gantt */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-hidden p-6">
         {wbsProjetos.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -253,7 +253,7 @@ export const WBSPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-transparent">
+          <div className="bg-transparent h-full min-h-[520px]">
             <WBSGantt projetos={wbsProjetos} escala={viewMode} onProjetoClick={handleProjetoClick} />
           </div>
         )}
