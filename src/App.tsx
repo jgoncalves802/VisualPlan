@@ -10,6 +10,7 @@ import AdminTemasPage from './pages/AdminTemasPage';
 import AdminUsuariosPage from './pages/AdminUsuariosPage';
 import AdminEmpresasPage from './pages/AdminEmpresasPage';
 import AdminPage from './pages/AdminPage';
+import AdminPerfisPage from './pages/AdminPerfisPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
@@ -230,6 +231,17 @@ function App() {
             <AdminRoute>
               <Layout>
                 <AdminTemasPage />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/perfis"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminPerfisPage />
               </Layout>
             </AdminRoute>
           }

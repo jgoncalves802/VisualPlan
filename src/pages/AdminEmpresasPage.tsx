@@ -7,6 +7,7 @@ import {
   Edit, 
   Trash2, 
   Palette,
+  Shield,
   ToggleLeft,
   ToggleRight,
   X,
@@ -307,6 +308,13 @@ const AdminEmpresasPage: React.FC = () => {
                           title="Personalizar tema e logo"
                         >
                           <Palette size={18} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/perfis?empresaId=${empresa.id}`)}
+                          className="p-2 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
+                          title="Perfis de Acesso"
+                        >
+                          <Shield size={18} />
                         </button>
                         <button
                           onClick={() => openEditModal(empresa)}
