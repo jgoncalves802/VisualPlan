@@ -5,11 +5,12 @@ import {
   createGanttDataSync, 
   ganttTaskToAtividade,
   ganttDependencyToDependencia,
-  detectTaskChanges 
+  detectTaskChanges,
+  convertCalendarsToGantt
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
 import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
-import { BarChart3, Calendar, Users, AlertTriangle, Settings } from 'lucide-react';
+import { BarChart3, Calendar, Users, AlertTriangle, Clock } from 'lucide-react';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -49,6 +50,10 @@ export function VisionGanttWrapper({
   const ganttData = useMemo(() => {
     return createGanttDataSync(atividades, dependencias, resources, allocations);
   }, [atividades, dependencias, resources, allocations]);
+
+  const ganttCalendars = useMemo(() => {
+    return convertCalendarsToGantt(calendarios);
+  }, [calendarios]);
 
   const atividadeMap = useMemo(() => {
     return new Map(atividades.map(a => [a.id, a]));
@@ -138,6 +143,15 @@ export function VisionGanttWrapper({
               <Users className="w-5 h-5 text-green-500" />
               <span className="text-sm font-medium text-gray-700">
                 {resources.length} Recursos
+              </span>
+            </div>
+          )}
+          
+          {ganttCalendars.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-purple-500" />
+              <span className="text-sm font-medium text-gray-700">
+                {ganttCalendars.length} {ganttCalendars.length === 1 ? 'Calendário' : 'Calendários'}
               </span>
             </div>
           )}

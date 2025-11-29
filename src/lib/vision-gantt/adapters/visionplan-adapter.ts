@@ -1,5 +1,6 @@
 import type { Task, Dependency, Resource, Assignment, TaskStatus, DependencyType } from '../types';
-import type { AtividadeMock, DependenciaAtividade, TipoDependencia } from '../../../types/cronograma';
+import type { WorkingCalendar, WorkingDay, Holiday, CalendarException } from '../types/advanced-features';
+import type { AtividadeMock, DependenciaAtividade, TipoDependencia, CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
 import type { Resource as VPResource, ResourceAllocation } from '../../../services/resourceService';
 
 const STATUS_MAP_TO_GANTT: Record<string, TaskStatus> = {
@@ -276,4 +277,70 @@ export function createGanttDataSync(
     criticalPathIds,
     conflictTaskIds,
   };
+}
+
+const DAY_OF_WEEK_MAP: Record<DiaTrabalho, 0 | 1 | 2 | 3 | 4 | 5 | 6> = {
+  'DOMINGO': 0,
+  'SEGUNDA': 1,
+  'TERCA': 2,
+  'QUARTA': 3,
+  'QUINTA': 4,
+  'SEXTA': 5,
+  'SABADO': 6,
+};
+
+export function vpCalendarToGanttCalendar(calendar: CalendarioProjeto): WorkingCalendar {
+  const workingDays: WorkingDay[] = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+    dayOfWeek: day as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+    isWorking: calendar.dias_trabalho.some(
+      (d) => DAY_OF_WEEK_MAP[d] === day
+    ),
+    workingHours: calendar.dias_trabalho.some((d) => DAY_OF_WEEK_MAP[d] === day)
+      ? [
+          { startTime: calendar.horario_inicio, endTime: calendar.horario_almoco_inicio || calendar.horario_fim },
+          ...(calendar.horario_almoco_fim
+            ? [{ startTime: calendar.horario_almoco_fim, endTime: calendar.horario_fim }]
+            : []),
+        ]
+      : undefined,
+  }));
+
+  const holidays: Holiday[] = calendar.excecoes
+    .filter((exc) => !exc.trabalhando)
+    .map((exc) => ({
+      id: exc.id,
+      name: exc.nome,
+      date: new Date(exc.data_inicio),
+      recurring: exc.recorrencia === 'ANUALMENTE',
+      type: 'company' as const,
+    }));
+
+  const exceptions: CalendarException[] = calendar.excecoes
+    .filter((exc) => exc.trabalhando)
+    .map((exc) => ({
+      id: exc.id,
+      startDate: new Date(exc.data_inicio),
+      endDate: exc.data_fim ? new Date(exc.data_fim) : new Date(exc.data_inicio),
+      isWorking: true,
+      workingHours: exc.periodos?.map((p) => ({
+        startTime: p.inicio,
+        endTime: p.fim,
+      })),
+      reason: exc.nome,
+    }));
+
+  return {
+    id: calendar.id,
+    name: calendar.nome,
+    description: calendar.descricao,
+    workingDays,
+    holidays,
+    exceptions,
+    defaultStartTime: calendar.horario_inicio,
+    defaultEndTime: calendar.horario_fim,
+  };
+}
+
+export function convertCalendarsToGantt(calendars: CalendarioProjeto[]): WorkingCalendar[] {
+  return calendars.map(vpCalendarToGanttCalendar);
 }
