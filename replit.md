@@ -100,6 +100,25 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Admin Panel Dashboard
+  - Created `AdminPage.tsx` with visual card grid for administrative functions:
+    - Gestão de Usuários (User Management)
+    - Gestão de Empresas (Company Management)
+    - Criar Usuário (Create User shortcut)
+    - Personalização (Theme Customization)
+    - Perfis de Acesso (Access Profiles)
+    - Segurança (Security)
+    - Relatórios (Reports)
+    - Logs de Atividade (Activity Logs)
+    - Chaves de API (API Keys)
+    - Configurações Gerais (General Settings)
+  - Role-based card filtering (shows only cards user has access to)
+  - Updated `routes.tsx` with admin routes and hydration handling
+  - Updated `Layout.tsx` to support nested routes with Outlet
+  - Simplified Sidebar to single "Administração" menu item
+  - Improved active menu highlighting for nested admin routes
+  - Added `hasHydrated` to authStore for proper session restoration
+
 - **2024-11-29**: Multi-Tenant Company System
   - Created `empresas` table with logo_url and tema_config fields
   - Implemented Row Level Security (RLS) policies for tenant isolation
