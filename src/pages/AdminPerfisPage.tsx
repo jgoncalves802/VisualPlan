@@ -209,6 +209,9 @@ export default function AdminPerfisPage() {
   const [profileToDelete, setProfileToDelete] = useState<AccessProfile | null>(null);
   const [showDefaultProfilesModal, setShowDefaultProfilesModal] = useState(false);
   const [creatingDefaultProfiles, setCreatingDefaultProfiles] = useState(false);
+  const [showRemoveAssignmentModal, setShowRemoveAssignmentModal] = useState(false);
+  const [assignmentToRemove, setAssignmentToRemove] = useState<{ usuarioId: string; profileId: string; profileName: string; userName: string } | null>(null);
+  const [removingAssignment, setRemovingAssignment] = useState(false);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -541,6 +544,28 @@ export default function AdminPerfisPage() {
     }
   };
 
+  const handleRemoveAssignment = (usuarioId: string, profileId: string, profileName: string, userName: string) => {
+    setAssignmentToRemove({ usuarioId, profileId, profileName, userName });
+    setShowRemoveAssignmentModal(true);
+  };
+
+  const confirmRemoveAssignment = async () => {
+    if (!assignmentToRemove) return;
+    setRemovingAssignment(true);
+    try {
+      await profileService.removeProfileFromUser(assignmentToRemove.usuarioId, assignmentToRemove.profileId);
+      await loadAssignedProfiles();
+      toast.success(`Perfil "${assignmentToRemove.profileName}" removido com sucesso!`);
+      setShowRemoveAssignmentModal(false);
+      setAssignmentToRemove(null);
+    } catch (error) {
+      console.error('Error removing profile assignment:', error);
+      toast.error('Erro ao remover atribuição de perfil.');
+    } finally {
+      setRemovingAssignment(false);
+    }
+  };
+
   const isLoading = obsLoading || profileLoading;
 
   if (!empresaId) {
@@ -860,14 +885,21 @@ export default function AdminPerfisPage() {
                             assignedProfiles[usuario.id].map((ap, idx) => (
                               <span 
                                 key={idx}
-                                className={`px-2 py-1 rounded text-sm ${
+                                className={`group inline-flex items-center gap-1 px-2 py-1 rounded text-sm ${
                                   ap.isPrimary 
                                     ? 'bg-blue-100 text-blue-700' 
                                     : 'bg-gray-100 text-gray-600'
                                 }`}
                               >
                                 {ap.profileName}
-                                {ap.isPrimary && <span className="ml-1 text-xs">(Principal)</span>}
+                                {ap.isPrimary && <span className="text-xs">(Principal)</span>}
+                                <button
+                                  onClick={() => handleRemoveAssignment(usuario.id, ap.profileId, ap.profileName, usuario.nome)}
+                                  className="ml-1 p-0.5 rounded hover:bg-red-200 text-gray-400 hover:text-red-600 transition-colors"
+                                  title="Remover perfil"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
                               </span>
                             ))
                           ) : (
@@ -1300,6 +1332,25 @@ export default function AdminPerfisPage() {
         cancelText="Cancelar"
         type="info"
         loading={creatingDefaultProfiles}
+      />
+
+      <ConfirmDialog
+        isOpen={showRemoveAssignmentModal}
+        onClose={() => {
+          setShowRemoveAssignmentModal(false);
+          setAssignmentToRemove(null);
+        }}
+        onConfirm={confirmRemoveAssignment}
+        title="Remover Atribuição de Perfil"
+        message={
+          <p>
+            Deseja remover o perfil <strong>"{assignmentToRemove?.profileName}"</strong> do usuário <strong>{assignmentToRemove?.userName}</strong>?
+          </p>
+        }
+        confirmText="Remover"
+        cancelText="Cancelar"
+        type="warning"
+        loading={removingAssignment}
       />
     </div>
   );

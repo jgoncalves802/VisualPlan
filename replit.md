@@ -100,6 +100,19 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Profile Assignment Management Improvements
+  - Added `getAssignedProfilesByEmpresa()` function to profileService
+    - Fetches all profile assignments for users in a company
+    - Returns grouped data by user with profile name and isPrimary flag
+  - Enhanced AdminPerfisPage "Atribuição de Usuários" tab:
+    - Now shows actual assigned profiles from `usuario_perfis` table
+    - Displays profile name with "(Principal)" indicator
+    - Added remove button (X) on each assigned profile badge
+    - Confirmation dialog before removing assignment
+    - Auto-refresh list after assign/remove operations
+    - Shows "Nenhum perfil atribuído" for users without profiles
+  - Multiple profiles per user support with visual distinction
+
 - **2024-11-29**: Reusable UI Component Library
   - Created `src/components/ui/` folder with design system components:
     - **Toast.tsx**: Toast notification system with ToastProvider context
