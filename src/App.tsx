@@ -12,6 +12,7 @@ import AdminUsuariosPage from './pages/AdminUsuariosPage';
 import AdminEmpresasPage from './pages/AdminEmpresasPage';
 import AdminPage from './pages/AdminPage';
 import AdminPerfisPage from './pages/AdminPerfisPage';
+import AdminEPSPage from './pages/AdminEPSPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
@@ -244,6 +245,17 @@ function App() {
             <AdminRoute>
               <Layout>
                 <AdminPerfisPage />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/eps"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminEPSPage />
               </Layout>
             </AdminRoute>
           }
