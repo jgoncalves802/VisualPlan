@@ -26,13 +26,15 @@ import {
   PERFIL_ACESSO_LABELS,
   PERFIS_POR_CAMADA,
 } from '../services/userService';
+import { empresaService, Empresa } from '../services/empresaService';
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: CreateUserDTO | UpdateUserDTO, isEdit: boolean) => Promise<void>;
   user?: Usuario | null;
-  empresaId: string;
+  empresas: Empresa[];
+  defaultEmpresaId: string;
   isLoading: boolean;
 }
 
@@ -41,7 +43,8 @@ const UserModal: React.FC<UserModalProps> = ({
   onClose,
   onSave,
   user,
-  empresaId,
+  empresas,
+  defaultEmpresaId,
   isLoading,
 }) => {
   const [formData, setFormData] = useState({
@@ -49,6 +52,7 @@ const UserModal: React.FC<UserModalProps> = ({
     email: '',
     senha: '',
     confirmarSenha: '',
+    empresaId: defaultEmpresaId,
     camadaGovernanca: CamadaGovernanca.CONTRATADA,
     perfilAcesso: PerfilAcesso.COLABORADOR,
   });
@@ -63,6 +67,7 @@ const UserModal: React.FC<UserModalProps> = ({
         email: user.email,
         senha: '',
         confirmarSenha: '',
+        empresaId: user.empresaId || defaultEmpresaId,
         camadaGovernanca: user.camadaGovernanca,
         perfilAcesso: user.perfilAcesso,
       });
@@ -72,12 +77,13 @@ const UserModal: React.FC<UserModalProps> = ({
         email: '',
         senha: '',
         confirmarSenha: '',
+        empresaId: defaultEmpresaId,
         camadaGovernanca: CamadaGovernanca.CONTRATADA,
         perfilAcesso: PerfilAcesso.COLABORADOR,
       });
     }
     setErrors({});
-  }, [user, isOpen]);
+  }, [user, isOpen, defaultEmpresaId]);
 
   const availablePerfis = useMemo(() => {
     return PERFIS_POR_CAMADA[formData.camadaGovernanca] || [];
@@ -137,7 +143,7 @@ const UserModal: React.FC<UserModalProps> = ({
         nome: formData.nome,
         email: formData.email,
         senha: formData.senha,
-        empresaId,
+        empresaId: formData.empresaId,
         camadaGovernanca: formData.camadaGovernanca,
         perfilAcesso: formData.perfilAcesso,
       };
@@ -251,6 +257,34 @@ const UserModal: React.FC<UserModalProps> = ({
             </>
           )}
 
+          {!isEdit && empresas.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                Empresa *
+              </label>
+              <select
+                value={formData.empresaId}
+                onChange={(e) => setFormData({ ...formData, empresaId: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
+                style={{
+                  borderColor: 'var(--color-secondary-200)',
+                  backgroundColor: 'var(--color-bg-main)',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                <option value="">Selecione uma empresa</option>
+                {empresas.filter(e => e.ativo).map((empresa) => (
+                  <option key={empresa.id} value={empresa.id}>
+                    {empresa.nome}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                O usuário será vinculado a esta empresa.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
@@ -359,6 +393,7 @@ const UserModal: React.FC<UserModalProps> = ({
 const AdminUsuariosPage: React.FC = () => {
   const { usuario: currentUser } = useAuthStore();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -369,6 +404,7 @@ const AdminUsuariosPage: React.FC = () => {
     camadaGovernanca: '' as CamadaGovernanca | '',
     perfilAcesso: '' as PerfilAcesso | '',
     ativo: '' as 'true' | 'false' | '',
+    empresaId: '' as string,
   });
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -377,15 +413,27 @@ const AdminUsuariosPage: React.FC = () => {
     setTimeout(() => setNotification(null), 5000);
   };
 
+  const loadEmpresas = async () => {
+    const { data } = await empresaService.getAll();
+    setEmpresas(data);
+  };
+
   const loadUsuarios = async () => {
     setIsLoading(true);
-    const { data, error } = await userService.getAll({
-      empresaId: currentUser?.empresaId,
+    const filterParams: Record<string, unknown> = {
       camadaGovernanca: filters.camadaGovernanca || undefined,
       perfilAcesso: filters.perfilAcesso || undefined,
       ativo: filters.ativo === '' ? undefined : filters.ativo === 'true',
       search: search || undefined,
-    });
+    };
+    
+    if (filters.empresaId) {
+      filterParams.empresaId = filters.empresaId;
+    } else if (currentUser?.empresaId) {
+      filterParams.empresaId = currentUser.empresaId;
+    }
+
+    const { data, error } = await userService.getAll(filterParams as { empresaId?: string; camadaGovernanca?: CamadaGovernanca; perfilAcesso?: PerfilAcesso; ativo?: boolean; search?: string });
 
     if (error) {
       showNotification('error', 'Erro ao carregar usuários: ' + error.message);
@@ -394,6 +442,10 @@ const AdminUsuariosPage: React.FC = () => {
     }
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    loadEmpresas();
+  }, []);
 
   useEffect(() => {
     loadUsuarios();
@@ -656,9 +708,32 @@ const AdminUsuariosPage: React.FC = () => {
 
         {showFilters && (
           <div
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg mb-6"
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-lg mb-6"
             style={{ backgroundColor: 'var(--color-bg-main)' }}
           >
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                Empresa
+              </label>
+              <select
+                value={filters.empresaId}
+                onChange={(e) => setFilters({ ...filters, empresaId: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
+                style={{
+                  borderColor: 'var(--color-secondary-200)',
+                  backgroundColor: 'var(--color-bg-secondary)',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                <option value="">Todas</option>
+                {empresas.map((empresa) => (
+                  <option key={empresa.id} value={empresa.id}>
+                    {empresa.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
                 Camada de Governança
@@ -752,6 +827,9 @@ const AdminUsuariosPage: React.FC = () => {
                     Usuário
                   </th>
                   <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                    Empresa
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
                     Camada
                   </th>
                   <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
@@ -791,6 +869,14 @@ const AdminUsuariosPage: React.FC = () => {
                             {user.email}
                           </p>
                         </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-1">
+                        <Building2 className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                        <span style={{ color: 'var(--color-text-primary)' }}>
+                          {empresas.find(e => e.id === user.empresaId)?.nome || '-'}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -902,7 +988,8 @@ const AdminUsuariosPage: React.FC = () => {
         }}
         onSave={handleSaveUser}
         user={editingUser}
-        empresaId={currentUser?.empresaId || ''}
+        empresas={empresas}
+        defaultEmpresaId={currentUser?.empresaId || ''}
         isLoading={isSaving}
       />
     </div>
