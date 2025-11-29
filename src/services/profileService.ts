@@ -352,6 +352,48 @@ export const profileService = {
     }));
   },
 
+  async getAssignedProfilesByEmpresa(empresaId: string): Promise<Record<string, { profileId: string; profileName: string; isPrimary: boolean }[]>> {
+    const { data, error } = await supabase
+      .from('usuario_perfis')
+      .select(`
+        usuario_id,
+        profile_id,
+        is_primary,
+        access_profiles!inner(id, nome, empresa_id)
+      `)
+      .eq('access_profiles.empresa_id', empresaId)
+      .eq('ativo', true);
+
+    if (error) {
+      console.error('Error fetching assigned profiles:', error);
+      throw error;
+    }
+
+    const result: Record<string, { profileId: string; profileName: string; isPrimary: boolean }[]> = {};
+    
+    (data || []).forEach((up) => {
+      const usuarioId = up.usuario_id as string;
+      const profileId = up.profile_id as string;
+      const isPrimary = up.is_primary as boolean;
+      const profiles = up.access_profiles as unknown as { id: string; nome: string } | { id: string; nome: string }[];
+      
+      const profileName = Array.isArray(profiles) 
+        ? profiles[0]?.nome || 'Desconhecido'
+        : profiles?.nome || 'Desconhecido';
+      
+      if (!result[usuarioId]) {
+        result[usuarioId] = [];
+      }
+      result[usuarioId].push({
+        profileId,
+        profileName,
+        isPrimary,
+      });
+    });
+
+    return result;
+  },
+
   async assignProfileToUser(data: {
     usuarioId: string;
     profileId: string;

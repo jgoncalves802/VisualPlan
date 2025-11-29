@@ -203,6 +203,7 @@ export default function AdminPerfisPage() {
   const [deleting, setDeleting] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
   const [assigningProfile, setAssigningProfile] = useState<string | null>(null);
+  const [assignedProfiles, setAssignedProfiles] = useState<Record<string, { profileId: string; profileName: string; isPrimary: boolean }[]>>({});
 
   const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<AccessProfile | null>(null);
@@ -226,8 +227,19 @@ export default function AdminPerfisPage() {
       loadProfiles(empresaId);
       loadPermissions();
       loadUsuarios();
+      loadAssignedProfiles();
     }
   }, [empresaId]);
+
+  const loadAssignedProfiles = async () => {
+    if (!empresaId) return;
+    try {
+      const data = await profileService.getAssignedProfilesByEmpresa(empresaId);
+      setAssignedProfiles(data);
+    } catch (error) {
+      console.error('Error loading assigned profiles:', error);
+    }
+  };
 
   const loadEmpresa = async () => {
     if (!empresaId) return;
@@ -519,6 +531,7 @@ export default function AdminPerfisPage() {
         isPrimary: true,
       });
       setSelectedProfiles(prev => ({ ...prev, [usuarioId]: '' }));
+      await loadAssignedProfiles();
       toast.success('Perfil atribuído com sucesso!');
     } catch (error) {
       console.error('Error assigning profile:', error);
@@ -842,9 +855,27 @@ export default function AdminPerfisPage() {
                       </td>
                       <td className="py-3 px-4 text-gray-600">{usuario.email}</td>
                       <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                          {usuario.perfilAcesso}
-                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {assignedProfiles[usuario.id]?.length > 0 ? (
+                            assignedProfiles[usuario.id].map((ap, idx) => (
+                              <span 
+                                key={idx}
+                                className={`px-2 py-1 rounded text-sm ${
+                                  ap.isPrimary 
+                                    ? 'bg-blue-100 text-blue-700' 
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}
+                              >
+                                {ap.profileName}
+                                {ap.isPrimary && <span className="ml-1 text-xs">(Principal)</span>}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-sm italic">
+                              Nenhum perfil atribuído
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <select
