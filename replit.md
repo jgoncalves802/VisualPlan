@@ -100,6 +100,22 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Hierarchy Levels and Organizational Units System
+  - Created migration `006_add_hierarchy_levels_and_units.sql`:
+    - `hierarchy_levels` table: Configurable vertical levels (Diretoria, Gerência, Coordenação, etc.)
+    - `organizational_units` table: Departments/sectors with hierarchy (Comercial, Logística, RH, etc.)
+    - Updates to `obs_nodes` table: Added `hierarchy_level_id` and `organizational_unit_id` references
+    - Secure RLS policies with `belongs_to_company()` and `is_company_admin()` helper functions
+    - Trigger to auto-create default hierarchy levels for new companies
+  - New services created:
+    - `hierarchyService.ts`: CRUD for hierarchy levels with reorder support
+    - `organizationalUnitService.ts`: CRUD for org units with tree structure
+  - Enhanced AdminPerfisPage with 2 new tabs:
+    - **Níveis Hierárquicos**: Manage vertical levels with drag-to-reorder, create defaults
+    - **Unidades/Setores**: Manage organizational areas with hierarchical tree view
+  - Component: `OrgUnitTreeItem` for recursive tree display with expand/collapse
+  - Purpose: Prepare data structure for future org chart (Vertical Staff) visualization
+
 - **2024-11-29**: Profile Assignment Management Improvements
   - Added `getAssignedProfilesByEmpresa()` function to profileService
     - Fetches all profile assignments for users in a company

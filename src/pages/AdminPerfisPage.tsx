@@ -18,6 +18,8 @@ import {
   Building2,
   RefreshCw,
   UserCheck,
+  Layers,
+  GitBranch,
 } from 'lucide-react';
 import { useObsStore } from '../stores/obsStore';
 import { useProfileStore } from '../stores/profileStore';
@@ -25,9 +27,11 @@ import { empresaService } from '../services/empresaService';
 import { userService } from '../services/userService';
 import { obsService, type ObsNode } from '../services/obsService';
 import { profileService, type AccessProfile } from '../services/profileService';
+import { hierarchyService, type HierarchyLevel } from '../services/hierarchyService';
+import { organizationalUnitService, type OrganizationalUnit, UNIT_TYPES } from '../services/organizationalUnitService';
 import { useToast, ConfirmDialog } from '../components/ui';
 
-type TabType = 'obs' | 'perfis' | 'usuarios';
+type TabType = 'obs' | 'perfis' | 'usuarios' | 'hierarquias' | 'unidades';
 
 const CAMADA_OPTIONS = [
   { value: 'PROPONENTE', label: 'Proponente' },
@@ -64,6 +68,92 @@ interface ObsTreeNodeProps {
   onAssignManager?: (node: ObsNode) => void;
   selectedId: string | null;
   showManagerBadge?: boolean;
+}
+
+interface OrgUnitTreeItemProps {
+  unit: OrganizationalUnit;
+  level: number;
+  onEdit: (unit: OrganizationalUnit) => void;
+  onDelete: (unit: OrganizationalUnit) => void;
+  onAddChild: (unit: OrganizationalUnit) => void;
+}
+
+function OrgUnitTreeItem({ unit, level, onEdit, onDelete, onAddChild }: OrgUnitTreeItemProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const hasChildren = unit.children && unit.children.length > 0;
+
+  return (
+    <div>
+      <div
+        className="group flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        style={{ marginLeft: `${level * 24}px` }}
+      >
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="p-1 hover:bg-gray-200 rounded"
+        >
+          {hasChildren ? (
+            isExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />
+          ) : (
+            <div className="w-4 h-4" />
+          )}
+        </button>
+        <div
+          className="w-3 h-10 rounded"
+          style={{ backgroundColor: unit.cor }}
+        />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-900">{unit.nome}</span>
+            {unit.sigla && (
+              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">{unit.sigla}</span>
+            )}
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded capitalize">{unit.tipo}</span>
+          </div>
+          {unit.descricao && (
+            <p className="text-sm text-gray-600 mt-1">{unit.descricao}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onAddChild(unit)}
+            className="p-2 hover:bg-blue-100 rounded text-blue-600"
+            title="Adicionar subunidade"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onEdit(unit)}
+            className="p-2 hover:bg-gray-200 rounded text-gray-600"
+            title="Editar"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDelete(unit)}
+            className="p-2 hover:bg-red-100 rounded text-red-600"
+            title="Excluir"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      {isExpanded && hasChildren && (
+        <div className="mt-2">
+          {unit.children!.map((child) => (
+            <OrgUnitTreeItem
+              key={child.id}
+              unit={child}
+              level={level + 1}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onAddChild={onAddChild}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ObsTreeNode({ node, level, onSelect, onEdit, onDelete, onAddChild, onAssignManager, selectedId, showManagerBadge = true }: ObsTreeNodeProps) {
@@ -213,6 +303,27 @@ export default function AdminPerfisPage() {
   const [assignmentToRemove, setAssignmentToRemove] = useState<{ usuarioId: string; profileId: string; profileName: string; userName: string } | null>(null);
   const [removingAssignment, setRemovingAssignment] = useState(false);
 
+  const [hierarchyLevels, setHierarchyLevels] = useState<HierarchyLevel[]>([]);
+  const [hierarchyLoading, setHierarchyLoading] = useState(false);
+  const [showHierarchyModal, setShowHierarchyModal] = useState(false);
+  const [editingHierarchy, setEditingHierarchy] = useState<HierarchyLevel | null>(null);
+  const [hierarchyForm, setHierarchyForm] = useState({ nome: '', codigo: '', descricao: '', cor: '#3B82F6' });
+  const [showDeleteHierarchyModal, setShowDeleteHierarchyModal] = useState(false);
+  const [hierarchyToDelete, setHierarchyToDelete] = useState<HierarchyLevel | null>(null);
+  const [deletingHierarchy, setDeletingHierarchy] = useState(false);
+  const [creatingDefaultHierarchies, setCreatingDefaultHierarchies] = useState(false);
+
+  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
+  const [orgUnitsLoading, setOrgUnitsLoading] = useState(false);
+  const [showUnitModal, setShowUnitModal] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<OrganizationalUnit | null>(null);
+  const [parentUnit, setParentUnit] = useState<OrganizationalUnit | null>(null);
+  const [unitForm, setUnitForm] = useState({ nome: '', codigo: '', sigla: '', descricao: '', tipo: 'departamento', cor: '#6366F1' });
+  const [showDeleteUnitModal, setShowDeleteUnitModal] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<OrganizationalUnit | null>(null);
+  const [deletingUnit, setDeletingUnit] = useState(false);
+  const [creatingDefaultUnits, setCreatingDefaultUnits] = useState(false);
+
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
     nome: '',
@@ -231,8 +342,36 @@ export default function AdminPerfisPage() {
       loadPermissions();
       loadUsuarios();
       loadAssignedProfiles();
+      loadHierarchyLevels();
+      loadOrgUnits();
     }
   }, [empresaId]);
+
+  const loadHierarchyLevels = async () => {
+    if (!empresaId) return;
+    setHierarchyLoading(true);
+    try {
+      const data = await hierarchyService.getByEmpresa(empresaId);
+      setHierarchyLevels(data);
+    } catch (error) {
+      console.error('Error loading hierarchy levels:', error);
+    } finally {
+      setHierarchyLoading(false);
+    }
+  };
+
+  const loadOrgUnits = async () => {
+    if (!empresaId) return;
+    setOrgUnitsLoading(true);
+    try {
+      const data = await organizationalUnitService.getTree(empresaId);
+      setOrgUnits(data);
+    } catch (error) {
+      console.error('Error loading organizational units:', error);
+    } finally {
+      setOrgUnitsLoading(false);
+    }
+  };
 
   const loadAssignedProfiles = async () => {
     if (!empresaId) return;
@@ -566,6 +705,226 @@ export default function AdminPerfisPage() {
     }
   };
 
+  const openHierarchyAddModal = () => {
+    setEditingHierarchy(null);
+    setHierarchyForm({ nome: '', codigo: '', descricao: '', cor: '#3B82F6' });
+    setShowHierarchyModal(true);
+  };
+
+  const openHierarchyEditModal = (level: HierarchyLevel) => {
+    setEditingHierarchy(level);
+    setHierarchyForm({
+      nome: level.nome,
+      codigo: level.codigo,
+      descricao: level.descricao || '',
+      cor: level.cor,
+    });
+    setShowHierarchyModal(true);
+  };
+
+  const handleCreateHierarchy = async () => {
+    if (!empresaId || !hierarchyForm.nome || !hierarchyForm.codigo) return;
+    try {
+      await hierarchyService.create({
+        empresaId,
+        nome: hierarchyForm.nome,
+        codigo: hierarchyForm.codigo,
+        descricao: hierarchyForm.descricao || undefined,
+        cor: hierarchyForm.cor,
+      });
+      await loadHierarchyLevels();
+      setShowHierarchyModal(false);
+      setHierarchyForm({ nome: '', codigo: '', descricao: '', cor: '#3B82F6' });
+      toast.success('Nível hierárquico criado com sucesso!');
+    } catch (error) {
+      console.error('Error creating hierarchy level:', error);
+      toast.error('Erro ao criar nível hierárquico.');
+    }
+  };
+
+  const handleUpdateHierarchy = async () => {
+    if (!editingHierarchy || !hierarchyForm.nome) return;
+    try {
+      await hierarchyService.update(editingHierarchy.id, {
+        nome: hierarchyForm.nome,
+        codigo: hierarchyForm.codigo,
+        descricao: hierarchyForm.descricao,
+        cor: hierarchyForm.cor,
+      });
+      await loadHierarchyLevels();
+      setShowHierarchyModal(false);
+      setEditingHierarchy(null);
+      setHierarchyForm({ nome: '', codigo: '', descricao: '', cor: '#3B82F6' });
+      toast.success('Nível hierárquico atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating hierarchy level:', error);
+      toast.error('Erro ao atualizar nível hierárquico.');
+    }
+  };
+
+  const handleDeleteHierarchy = (level: HierarchyLevel) => {
+    if (level.isDefault) {
+      toast.warning('Níveis padrão do sistema não podem ser excluídos.');
+      return;
+    }
+    setHierarchyToDelete(level);
+    setShowDeleteHierarchyModal(true);
+  };
+
+  const confirmDeleteHierarchy = async () => {
+    if (!hierarchyToDelete) return;
+    setDeletingHierarchy(true);
+    try {
+      await hierarchyService.delete(hierarchyToDelete.id);
+      await loadHierarchyLevels();
+      toast.success(`Nível "${hierarchyToDelete.nome}" excluído com sucesso!`);
+      setShowDeleteHierarchyModal(false);
+      setHierarchyToDelete(null);
+    } catch (error) {
+      console.error('Error deleting hierarchy level:', error);
+      toast.error('Erro ao excluir nível hierárquico.');
+    } finally {
+      setDeletingHierarchy(false);
+    }
+  };
+
+  const handleCreateDefaultHierarchies = async () => {
+    if (!empresaId) return;
+    setCreatingDefaultHierarchies(true);
+    try {
+      await hierarchyService.createDefaults(empresaId);
+      await loadHierarchyLevels();
+      toast.success('Níveis hierárquicos padrão criados com sucesso!');
+    } catch (error) {
+      console.error('Error creating default hierarchies:', error);
+      toast.error('Erro ao criar níveis padrão. Podem já existir.');
+    } finally {
+      setCreatingDefaultHierarchies(false);
+    }
+  };
+
+  const handleMoveHierarchy = async (index: number, direction: 'up' | 'down') => {
+    if (!empresaId) return;
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= hierarchyLevels.length) return;
+
+    const newOrder = [...hierarchyLevels];
+    const [moved] = newOrder.splice(index, 1);
+    newOrder.splice(newIndex, 0, moved);
+
+    try {
+      await hierarchyService.reorder(empresaId, newOrder.map(h => h.id));
+      setHierarchyLevels(newOrder);
+    } catch (error) {
+      console.error('Error reordering hierarchy levels:', error);
+      toast.error('Erro ao reordenar níveis.');
+    }
+  };
+
+  const openUnitAddModal = (parent?: OrganizationalUnit) => {
+    setEditingUnit(null);
+    setParentUnit(parent || null);
+    setUnitForm({ nome: '', codigo: '', sigla: '', descricao: '', tipo: 'departamento', cor: '#6366F1' });
+    setShowUnitModal(true);
+  };
+
+  const openUnitEditModal = (unit: OrganizationalUnit) => {
+    setEditingUnit(unit);
+    setParentUnit(null);
+    setUnitForm({
+      nome: unit.nome,
+      codigo: unit.codigo || '',
+      sigla: unit.sigla || '',
+      descricao: unit.descricao || '',
+      tipo: unit.tipo,
+      cor: unit.cor,
+    });
+    setShowUnitModal(true);
+  };
+
+  const handleCreateUnit = async () => {
+    if (!empresaId || !unitForm.nome) return;
+    try {
+      await organizationalUnitService.create({
+        empresaId,
+        parentId: parentUnit?.id || null,
+        nome: unitForm.nome,
+        codigo: unitForm.codigo || undefined,
+        sigla: unitForm.sigla || undefined,
+        descricao: unitForm.descricao || undefined,
+        tipo: unitForm.tipo,
+        cor: unitForm.cor,
+      });
+      await loadOrgUnits();
+      setShowUnitModal(false);
+      setUnitForm({ nome: '', codigo: '', sigla: '', descricao: '', tipo: 'departamento', cor: '#6366F1' });
+      setParentUnit(null);
+      toast.success('Unidade/Setor criado com sucesso!');
+    } catch (error) {
+      console.error('Error creating organizational unit:', error);
+      toast.error('Erro ao criar unidade/setor.');
+    }
+  };
+
+  const handleUpdateUnit = async () => {
+    if (!editingUnit || !unitForm.nome) return;
+    try {
+      await organizationalUnitService.update(editingUnit.id, {
+        nome: unitForm.nome,
+        codigo: unitForm.codigo,
+        sigla: unitForm.sigla,
+        descricao: unitForm.descricao,
+        tipo: unitForm.tipo,
+        cor: unitForm.cor,
+      });
+      await loadOrgUnits();
+      setShowUnitModal(false);
+      setEditingUnit(null);
+      setUnitForm({ nome: '', codigo: '', sigla: '', descricao: '', tipo: 'departamento', cor: '#6366F1' });
+      toast.success('Unidade/Setor atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating organizational unit:', error);
+      toast.error('Erro ao atualizar unidade/setor.');
+    }
+  };
+
+  const handleDeleteUnit = (unit: OrganizationalUnit) => {
+    setUnitToDelete(unit);
+    setShowDeleteUnitModal(true);
+  };
+
+  const confirmDeleteUnit = async () => {
+    if (!unitToDelete) return;
+    setDeletingUnit(true);
+    try {
+      await organizationalUnitService.delete(unitToDelete.id);
+      await loadOrgUnits();
+      toast.success(`Unidade "${unitToDelete.nome}" excluída com sucesso!`);
+      setShowDeleteUnitModal(false);
+      setUnitToDelete(null);
+    } catch (error) {
+      console.error('Error deleting organizational unit:', error);
+      toast.error('Erro ao excluir unidade/setor.');
+    } finally {
+      setDeletingUnit(false);
+    }
+  };
+
+  const handleCreateDefaultUnits = async () => {
+    if (!empresaId) return;
+    setCreatingDefaultUnits(true);
+    try {
+      await organizationalUnitService.createDefaults(empresaId);
+      await loadOrgUnits();
+      toast.success('Unidades padrão criadas com sucesso!');
+    } catch (error) {
+      console.error('Error creating default units:', error);
+      toast.error('Erro ao criar unidades padrão. Podem já existir.');
+    } finally {
+      setCreatingDefaultUnits(false);
+    }
+  };
+
   const isLoading = obsLoading || profileLoading;
 
   if (!empresaId) {
@@ -636,6 +995,28 @@ export default function AdminPerfisPage() {
         >
           <Users className="w-5 h-5" />
           <span>Atribuição de Usuários</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('hierarquias')}
+          className={`px-4 py-3 flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'hierarquias'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Layers className="w-5 h-5" />
+          <span>Níveis Hierárquicos</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('unidades')}
+          className={`px-4 py-3 flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'unidades'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <GitBranch className="w-5 h-5" />
+          <span>Unidades/Setores</span>
         </button>
       </div>
 
@@ -939,6 +1320,183 @@ export default function AdminPerfisPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'hierarquias' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Níveis Hierárquicos</h2>
+              <p className="text-sm text-gray-600">
+                Defina os níveis verticais da estrutura organizacional (Diretoria, Gerência, Coordenação, etc.)
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreateDefaultHierarchies}
+                disabled={creatingDefaultHierarchies}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {creatingDefaultHierarchies ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-5 h-5" />
+                )}
+                <span>Criar Padrões</span>
+              </button>
+              <button
+                onClick={openHierarchyAddModal}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Novo Nível</span>
+              </button>
+            </div>
+          </div>
+
+          {hierarchyLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : hierarchyLevels.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+              <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">Nenhum nível hierárquico cadastrado</p>
+              <button
+                onClick={handleCreateDefaultHierarchies}
+                disabled={creatingDefaultHierarchies}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Criar Níveis Padrão
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {hierarchyLevels.map((level, index) => (
+                <div
+                  key={level.id}
+                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+                >
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => handleMoveHierarchy(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Mover para cima"
+                    >
+                      <ChevronRight className="w-4 h-4 -rotate-90 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveHierarchy(index, 'down')}
+                      disabled={index === hierarchyLevels.length - 1}
+                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Mover para baixo"
+                    >
+                      <ChevronRight className="w-4 h-4 rotate-90 text-gray-600" />
+                    </button>
+                  </div>
+                  <div
+                    className="w-4 h-12 rounded"
+                    style={{ backgroundColor: level.cor }}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">{level.nome}</span>
+                      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">{level.codigo}</span>
+                      {level.isDefault && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Padrão</span>
+                      )}
+                    </div>
+                    {level.descricao && (
+                      <p className="text-sm text-gray-600 mt-1">{level.descricao}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openHierarchyEditModal(level)}
+                      className="p-2 hover:bg-gray-200 rounded text-gray-600"
+                      title="Editar"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteHierarchy(level)}
+                      className="p-2 hover:bg-red-100 rounded text-red-600"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'unidades' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Unidades e Setores</h2>
+              <p className="text-sm text-gray-600">
+                Defina as áreas/departamentos da empresa (Comercial, Logística, RH, etc.)
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreateDefaultUnits}
+                disabled={creatingDefaultUnits}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {creatingDefaultUnits ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-5 h-5" />
+                )}
+                <span>Criar Padrões</span>
+              </button>
+              <button
+                onClick={() => openUnitAddModal()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Nova Unidade</span>
+              </button>
+            </div>
+          </div>
+
+          {orgUnitsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : orgUnits.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+              <GitBranch className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">Nenhuma unidade/setor cadastrado</p>
+              <button
+                onClick={handleCreateDefaultUnits}
+                disabled={creatingDefaultUnits}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Criar Unidades Padrão
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {orgUnits.map((unit) => (
+                <OrgUnitTreeItem
+                  key={unit.id}
+                  unit={unit}
+                  level={0}
+                  onEdit={openUnitEditModal}
+                  onDelete={handleDeleteUnit}
+                  onAddChild={(parent) => openUnitAddModal(parent)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -1352,6 +1910,285 @@ export default function AdminPerfisPage() {
         type="warning"
         loading={removingAssignment}
       />
+
+      <ConfirmDialog
+        isOpen={showDeleteHierarchyModal}
+        onClose={() => {
+          setShowDeleteHierarchyModal(false);
+          setHierarchyToDelete(null);
+        }}
+        onConfirm={confirmDeleteHierarchy}
+        title="Excluir Nível Hierárquico"
+        message={
+          <p>
+            Deseja excluir o nível <strong>"{hierarchyToDelete?.nome}"</strong>? 
+            Esta ação não pode ser desfeita.
+          </p>
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+        loading={deletingHierarchy}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteUnitModal}
+        onClose={() => {
+          setShowDeleteUnitModal(false);
+          setUnitToDelete(null);
+        }}
+        onConfirm={confirmDeleteUnit}
+        title="Excluir Unidade/Setor"
+        message={
+          <p>
+            Deseja excluir a unidade <strong>"{unitToDelete?.nome}"</strong>? 
+            Todas as subunidades também serão removidas.
+          </p>
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+        loading={deletingUnit}
+      />
+
+      {showHierarchyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingHierarchy ? 'Editar Nível Hierárquico' : 'Novo Nível Hierárquico'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowHierarchyModal(false);
+                  setEditingHierarchy(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome *
+                </label>
+                <input
+                  type="text"
+                  value={hierarchyForm.nome}
+                  onChange={(e) => setHierarchyForm({ ...hierarchyForm, nome: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: Gerência"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código *
+                </label>
+                <input
+                  type="text"
+                  value={hierarchyForm.codigo}
+                  onChange={(e) => setHierarchyForm({ ...hierarchyForm, codigo: e.target.value.toUpperCase() })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: GER"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cor
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={hierarchyForm.cor}
+                    onChange={(e) => setHierarchyForm({ ...hierarchyForm, cor: e.target.value })}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={hierarchyForm.cor}
+                    onChange={(e) => setHierarchyForm({ ...hierarchyForm, cor: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição
+                </label>
+                <textarea
+                  value={hierarchyForm.descricao}
+                  onChange={(e) => setHierarchyForm({ ...hierarchyForm, descricao: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Descrição do nível hierárquico"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowHierarchyModal(false);
+                  setEditingHierarchy(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={editingHierarchy ? handleUpdateHierarchy : handleCreateHierarchy}
+                disabled={!hierarchyForm.nome || !hierarchyForm.codigo}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Check className="w-5 h-5" />
+                <span>{editingHierarchy ? 'Salvar' : 'Criar'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUnitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingUnit ? 'Editar Unidade/Setor' : parentUnit ? `Nova Subunidade de "${parentUnit.nome}"` : 'Nova Unidade/Setor'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowUnitModal(false);
+                  setEditingUnit(null);
+                  setParentUnit(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome *
+                </label>
+                <input
+                  type="text"
+                  value={unitForm.nome}
+                  onChange={(e) => setUnitForm({ ...unitForm, nome: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: Unidade Comercial"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sigla
+                  </label>
+                  <input
+                    type="text"
+                    value={unitForm.sigla}
+                    onChange={(e) => setUnitForm({ ...unitForm, sigla: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ex: COM"
+                    maxLength={10}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código
+                  </label>
+                  <input
+                    type="text"
+                    value={unitForm.codigo}
+                    onChange={(e) => setUnitForm({ ...unitForm, codigo: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ex: COM-001"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo
+                </label>
+                <select
+                  value={unitForm.tipo}
+                  onChange={(e) => setUnitForm({ ...unitForm, tipo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {UNIT_TYPES.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cor
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={unitForm.cor}
+                    onChange={(e) => setUnitForm({ ...unitForm, cor: e.target.value })}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={unitForm.cor}
+                    onChange={(e) => setUnitForm({ ...unitForm, cor: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição
+                </label>
+                <textarea
+                  value={unitForm.descricao}
+                  onChange={(e) => setUnitForm({ ...unitForm, descricao: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Descrição da unidade/setor"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowUnitModal(false);
+                  setEditingUnit(null);
+                  setParentUnit(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={editingUnit ? handleUpdateUnit : handleCreateUnit}
+                disabled={!unitForm.nome}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Check className="w-5 h-5" />
+                <span>{editingUnit ? 'Salvar' : 'Criar'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
