@@ -76,16 +76,6 @@ export function initializeAllExtensions(config?: ConfiguracoesProjeto): void {
   gantt.plugins({
     marker: true,
   });
-  
-  // Adiciona marcador de "hoje"
-  const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
-  const today = new Date();
-  gantt.addMarker({
-    start_date: today,
-    css: 'today-marker',
-    text: 'Hoje',
-    title: `Hoje: ${dateToStr(today)}`,
-  });
 
   // Templates para marcadores
   gantt.templates.marker_text = function (marker) {
@@ -308,13 +298,10 @@ export function removeMarker(markerId: string): void {
  * Atualiza a linha "Hoje"
  */
 export function updateTodayMarker(): void {
-  // Remove todos os marcadores "today"
-  gantt.eachTask((task) => {
-    const markers = gantt.config.show_markers;
-    if (markers) {
-      // Lógica para remover marcador antigo "today" se existir
-    }
-  });
+  if (typeof gantt.addMarker !== 'function') {
+    console.warn('gantt.addMarker não está disponível. Certifique-se de que o plugin marker está habilitado e o gantt foi inicializado.');
+    return;
+  }
 
   // Adiciona novo marcador "hoje"
   const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
