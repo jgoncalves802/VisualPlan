@@ -17,12 +17,13 @@ import {
   AlertCircle,
   Building2,
   RefreshCw,
+  UserCheck,
 } from 'lucide-react';
 import { useObsStore } from '../stores/obsStore';
 import { useProfileStore } from '../stores/profileStore';
 import { empresaService } from '../services/empresaService';
 import { userService } from '../services/userService';
-import type { ObsNode } from '../services/obsService';
+import { obsService, type ObsNode } from '../services/obsService';
 import type { AccessProfile } from '../services/profileService';
 
 type TabType = 'obs' | 'perfis' | 'usuarios';
@@ -59,17 +60,19 @@ interface ObsTreeNodeProps {
   onEdit: (node: ObsNode) => void;
   onDelete: (node: ObsNode) => void;
   onAddChild: (node: ObsNode) => void;
+  onAssignManager?: (node: ObsNode) => void;
   selectedId: string | null;
+  showManagerBadge?: boolean;
 }
 
-function ObsTreeNode({ node, level, onSelect, onEdit, onDelete, onAddChild, selectedId }: ObsTreeNodeProps) {
+function ObsTreeNode({ node, level, onSelect, onEdit, onDelete, onAddChild, onAssignManager, selectedId, showManagerBadge = true }: ObsTreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = node.children && node.children.length > 0;
 
   return (
     <div>
       <div
-        className={`flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors ${
+        className={`group flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors ${
           selectedId === node.id ? 'bg-blue-100 border border-blue-300' : 'hover:bg-gray-100'
         }`}
         style={{ marginLeft: `${level * 24}px` }}
@@ -89,11 +92,29 @@ function ObsTreeNode({ node, level, onSelect, onEdit, onDelete, onAddChild, sele
           )}
         </button>
         <FolderTree className="w-4 h-4 text-blue-600" />
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
           <span className="font-medium text-gray-900">{node.nome}</span>
-          {node.codigo && <span className="ml-2 text-xs text-gray-500">({node.codigo})</span>}
+          {node.codigo && <span className="text-xs text-gray-500">({node.codigo})</span>}
+          {showManagerBadge && node.responsibleManager && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
+              <UserCheck className="w-3 h-3" />
+              {node.responsibleManager.nome}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onAssignManager && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAssignManager(node);
+              }}
+              className="p-1 hover:bg-green-100 rounded text-green-600"
+              title="Atribuir Responsible Manager"
+            >
+              <UserCheck className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -137,7 +158,9 @@ function ObsTreeNode({ node, level, onSelect, onEdit, onDelete, onAddChild, sele
               onEdit={onEdit}
               onDelete={onDelete}
               onAddChild={onAddChild}
+              onAssignManager={onAssignManager}
               selectedId={selectedId}
+              showManagerBadge={showManagerBadge}
             />
           ))}
         </div>
@@ -165,9 +188,13 @@ export default function AdminPerfisPage() {
 
   const [showObsModal, setShowObsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showManagerModal, setShowManagerModal] = useState(false);
   const [editingObs, setEditingObs] = useState<ObsNode | null>(null);
   const [parentObs, setParentObs] = useState<ObsNode | null>(null);
   const [editingProfile, setEditingProfile] = useState<AccessProfile | null>(null);
+  const [managerNode, setManagerNode] = useState<ObsNode | null>(null);
+  const [selectedManagerId, setSelectedManagerId] = useState<string>('');
+  const [assigningManager, setAssigningManager] = useState(false);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -283,6 +310,31 @@ export default function AdminPerfisPage() {
     setEditingObs(null);
     setObsForm({ nome: '', codigo: '', descricao: '' });
     setShowObsModal(true);
+  };
+
+  const openManagerModal = (node: ObsNode) => {
+    setManagerNode(node);
+    setSelectedManagerId(node.responsibleManagerId || '');
+    setShowManagerModal(true);
+  };
+
+  const handleAssignManager = async () => {
+    if (!managerNode || !empresaId) return;
+    setAssigningManager(true);
+    try {
+      await obsService.assignResponsibleManager(
+        managerNode.id,
+        selectedManagerId || null
+      );
+      await loadTree(empresaId);
+      setShowManagerModal(false);
+      setManagerNode(null);
+      setSelectedManagerId('');
+    } catch (error) {
+      console.error('Error assigning manager:', error);
+    } finally {
+      setAssigningManager(false);
+    }
   };
 
   const handleCreateProfile = async () => {
@@ -525,7 +577,9 @@ export default function AdminPerfisPage() {
                     onEdit={openObsEditModal}
                     onDelete={handleDeleteObs}
                     onAddChild={openObsAddChildModal}
+                    onAssignManager={openManagerModal}
                     selectedId={selectedNode?.id || null}
+                    showManagerBadge={true}
                   />
                 </div>
               ))}
@@ -945,6 +999,88 @@ export default function AdminPerfisPage() {
               >
                 <Check className="w-5 h-5" />
                 <span>{editingProfile ? 'Salvar' : 'Criar'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showManagerModal && managerNode && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Atribuir Responsible Manager
+              </h3>
+              <button
+                onClick={() => {
+                  setShowManagerModal(false);
+                  setManagerNode(null);
+                  setSelectedManagerId('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Nível OBS:</strong> {managerNode.nome}
+                  {managerNode.codigo && <span className="ml-1">({managerNode.codigo})</span>}
+                </p>
+                {managerNode.responsibleManager && (
+                  <p className="text-sm text-blue-700 mt-1">
+                    <strong>Responsável atual:</strong> {managerNode.responsibleManager.nome}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Selecionar Responsible Manager
+                </label>
+                <select
+                  value={selectedManagerId}
+                  onChange={(e) => setSelectedManagerId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Nenhum (remover responsável)</option>
+                  {usuarios.map((usuario) => (
+                    <option key={usuario.id} value={usuario.id}>
+                      {usuario.nome} - {usuario.email}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  O Responsible Manager terá acesso aos projetos vinculados a este nível da OBS.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowManagerModal(false);
+                  setManagerNode(null);
+                  setSelectedManagerId('');
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssignManager}
+                disabled={assigningManager}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {assigningManager ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <UserCheck className="w-5 h-5" />
+                )}
+                <span>Atribuir</span>
               </button>
             </div>
           </div>

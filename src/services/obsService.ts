@@ -14,6 +14,12 @@ export interface ObsNode {
   ativo: boolean;
   createdAt: string;
   updatedAt: string;
+  responsibleManagerId: string | null;
+  responsibleManager?: {
+    id: string;
+    nome: string;
+    email: string;
+  } | null;
   children?: ObsNode[];
 }
 
@@ -31,6 +37,12 @@ interface ObsNodeDB {
   ativo: boolean;
   created_at: string;
   updated_at: string;
+  responsible_manager_id: string | null;
+  usuarios?: {
+    id: string;
+    nome: string;
+    email: string;
+  } | null;
 }
 
 const mapFromDB = (node: ObsNodeDB): ObsNode => ({
@@ -47,13 +59,26 @@ const mapFromDB = (node: ObsNodeDB): ObsNode => ({
   ativo: node.ativo,
   createdAt: node.created_at,
   updatedAt: node.updated_at,
+  responsibleManagerId: node.responsible_manager_id,
+  responsibleManager: node.usuarios ? {
+    id: node.usuarios.id,
+    nome: node.usuarios.nome,
+    email: node.usuarios.email,
+  } : null,
 });
 
 export const obsService = {
   async getByEmpresa(empresaId: string): Promise<ObsNode[]> {
     const { data, error } = await supabase
       .from('obs_nodes')
-      .select('*')
+      .select(`
+        *,
+        usuarios:responsible_manager_id (
+          id,
+          nome,
+          email
+        )
+      `)
       .eq('empresa_id', empresaId)
       .eq('ativo', true)
       .order('nivel', { ascending: true })
@@ -220,7 +245,14 @@ export const obsService = {
   async getNodeWithChildren(nodeId: string): Promise<ObsNode | null> {
     const { data, error } = await supabase
       .from('obs_nodes')
-      .select('*')
+      .select(`
+        *,
+        usuarios:responsible_manager_id (
+          id,
+          nome,
+          email
+        )
+      `)
       .eq('id', nodeId)
       .single();
 
@@ -231,12 +263,66 @@ export const obsService = {
     const node = mapFromDB(data);
     const { data: children } = await supabase
       .from('obs_nodes')
-      .select('*')
+      .select(`
+        *,
+        usuarios:responsible_manager_id (
+          id,
+          nome,
+          email
+        )
+      `)
       .eq('parent_id', nodeId)
       .eq('ativo', true)
       .order('ordem', { ascending: true });
 
     node.children = (children || []).map(mapFromDB);
     return node;
+  },
+
+  async assignResponsibleManager(nodeId: string, userId: string | null): Promise<ObsNode> {
+    const { data, error } = await supabase
+      .from('obs_nodes')
+      .update({ responsible_manager_id: userId })
+      .eq('id', nodeId)
+      .select(`
+        *,
+        usuarios:responsible_manager_id (
+          id,
+          nome,
+          email
+        )
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error assigning responsible manager:', error);
+      throw error;
+    }
+
+    return mapFromDB(data);
+  },
+
+  async getNodesByResponsibleManager(userId: string): Promise<ObsNode[]> {
+    const { data, error } = await supabase
+      .from('obs_nodes')
+      .select(`
+        *,
+        usuarios:responsible_manager_id (
+          id,
+          nome,
+          email
+        )
+      `)
+      .eq('responsible_manager_id', userId)
+      .eq('ativo', true)
+      .order('nivel', { ascending: true })
+      .order('ordem', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching nodes by responsible manager:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapFromDB);
   },
 };
