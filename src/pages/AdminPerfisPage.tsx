@@ -196,6 +196,9 @@ export default function AdminPerfisPage() {
   const [selectedManagerId, setSelectedManagerId] = useState<string>('');
   const [assigningManager, setAssigningManager] = useState(false);
   const [managerError, setManagerError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState<ObsNode | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -280,12 +283,22 @@ export default function AdminPerfisPage() {
     }
   };
 
-  const handleDeleteObs = async (node: ObsNode) => {
-    if (!confirm(`Deseja excluir "${node.nome}"? Esta ação também excluirá todos os itens filhos.`)) return;
+  const handleDeleteObs = (node: ObsNode) => {
+    setNodeToDelete(node);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteObs = async () => {
+    if (!nodeToDelete) return;
+    setDeleting(true);
     try {
-      await deleteNode(node.id);
+      await deleteNode(nodeToDelete.id);
+      setShowDeleteModal(false);
+      setNodeToDelete(null);
     } catch (error) {
       console.error('Error deleting OBS node:', error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1098,6 +1111,70 @@ export default function AdminPerfisPage() {
                   <UserCheck className="w-5 h-5" />
                 )}
                 <span>Atribuir</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && nodeToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Excluir Estrutura
+                </h3>
+                <p className="text-sm text-gray-500">Esta ação não pode ser desfeita</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="font-medium text-gray-900">{nodeToDelete.nome}</p>
+                {nodeToDelete.codigo && (
+                  <p className="text-sm text-gray-600">Código: {nodeToDelete.codigo}</p>
+                )}
+                {nodeToDelete.children && nodeToDelete.children.length > 0 && (
+                  <p className="text-sm text-orange-600 mt-2">
+                    <AlertCircle className="w-4 h-4 inline mr-1" />
+                    {nodeToDelete.children.length} item(ns) filho(s) também serão excluídos
+                  </p>
+                )}
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Atenção:</strong> Ao excluir este nível da estrutura organizacional, 
+                  todos os itens filhos também serão removidos permanentemente.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setNodeToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteObs}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleting ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-5 h-5" />
+                )}
+                <span>Excluir</span>
               </button>
             </div>
           </div>
