@@ -41,10 +41,21 @@ export const useEmpresaStore = create<EmpresaState>()(
 
       updateLogo: async (file: File) => {
         const empresa = get().empresa;
-        if (!empresa) return false;
+        if (!empresa) {
+          console.error('Nenhuma empresa carregada');
+          return false;
+        }
 
+        console.log('Iniciando upload para empresa:', empresa.id);
         const { data: logoUrl, error } = await empresaService.updateLogo(empresa.id, file);
-        if (!error && logoUrl) {
+        
+        if (error) {
+          console.error('Erro no upload da logo:', error.message);
+          return false;
+        }
+        
+        if (logoUrl) {
+          console.log('Logo atualizada com sucesso:', logoUrl);
           set({ empresa: { ...empresa, logoUrl } });
           return true;
         }
