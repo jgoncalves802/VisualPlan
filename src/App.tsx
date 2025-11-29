@@ -9,6 +9,7 @@ import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
 import AdminUsuariosPage from './pages/AdminUsuariosPage';
 import AdminEmpresasPage from './pages/AdminEmpresasPage';
+import AdminPage from './pages/AdminPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
@@ -193,11 +194,11 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <Layout>
-                <AdminTemasPage />
+                <AdminPage />
               </Layout>
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         
