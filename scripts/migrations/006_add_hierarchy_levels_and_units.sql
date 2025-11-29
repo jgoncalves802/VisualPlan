@@ -110,7 +110,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM usuarios u
-        WHERE u.auth_id = auth.uid()
+        WHERE u.id = auth.uid()
         AND u.empresa_id = p_empresa_id
         AND (u."perfilAcesso" = 'ADMIN' OR u."perfilAcesso" = 'DIRETOR')
     );
@@ -123,7 +123,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM usuarios u
-        WHERE u.auth_id = auth.uid()
+        WHERE u.id = auth.uid()
         AND u.empresa_id = p_empresa_id
     );
 END;
