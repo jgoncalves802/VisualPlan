@@ -17,6 +17,7 @@ export interface EpsNode {
   ordem: number;
   cor: string;
   icone: string | null;
+  pesoEstimado: number;
   ativo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -41,6 +42,7 @@ interface EpsNodeDB {
   ordem: number;
   cor: string;
   icone: string | null;
+  peso_estimado: number;
   ativo: boolean;
   created_at: string;
   updated_at: string;
@@ -64,6 +66,7 @@ const mapFromDB = (node: EpsNodeDB): EpsNode => ({
   ordem: node.ordem,
   cor: node.cor || '#3B82F6',
   icone: node.icone,
+  pesoEstimado: node.peso_estimado ?? 1.0,
   ativo: node.ativo,
   createdAt: node.created_at,
   updatedAt: node.updated_at,
@@ -132,6 +135,7 @@ export const epsService = {
     cor?: string;
     icone?: string;
     ordem?: number;
+    pesoEstimado?: number;
   }): Promise<EpsNode> {
     const { data: userData } = await supabase.auth.getUser();
     const maxOrdem = await this.getMaxOrdem(data.empresaId, data.parentId || null);
@@ -150,6 +154,7 @@ export const epsService = {
         ordem: data.ordem ?? maxOrdem + 1,
         cor: data.cor || '#3B82F6',
         icone: data.icone || null,
+        peso_estimado: data.pesoEstimado ?? 1.0,
         created_by: userData?.user?.id || null,
       })
       .select(`
@@ -179,6 +184,7 @@ export const epsService = {
     ordem: number;
     cor: string;
     icone: string | null;
+    pesoEstimado: number;
     ativo: boolean;
   }>): Promise<EpsNode> {
     const updateData: Record<string, unknown> = {};
@@ -190,6 +196,7 @@ export const epsService = {
     if (data.ordem !== undefined) updateData.ordem = data.ordem;
     if (data.cor !== undefined) updateData.cor = data.cor;
     if (data.icone !== undefined) updateData.icone = data.icone;
+    if (data.pesoEstimado !== undefined) updateData.peso_estimado = data.pesoEstimado;
     if (data.ativo !== undefined) updateData.ativo = data.ativo;
 
     const { data: node, error } = await supabase
@@ -337,5 +344,27 @@ export const epsService = {
     }
 
     return data === true;
+  },
+
+  calculateChildrenWeightSum(node: EpsNode): number {
+    if (!node.children || node.children.length === 0) {
+      return 0;
+    }
+    return node.children.reduce((sum, child) => sum + (child.pesoEstimado || 1.0), 0);
+  },
+
+  validateWeights(node: EpsNode): { valid: boolean; sum: number; message: string } {
+    const sum = this.calculateChildrenWeightSum(node);
+    if (!node.children || node.children.length === 0) {
+      return { valid: true, sum: 0, message: 'Nenhum subnó cadastrado' };
+    }
+    const isValid = Math.abs(sum - 1.0) < 0.0001;
+    return {
+      valid: isValid,
+      sum,
+      message: isValid 
+        ? 'Peso total: 100%' 
+        : `Peso total: ${(sum * 100).toFixed(1)}% (deve ser 100%)`
+    };
   },
 };
