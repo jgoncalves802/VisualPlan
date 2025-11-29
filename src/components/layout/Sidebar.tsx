@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Folder,
@@ -13,10 +13,12 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Palette,
+  LogOut,
 } from 'lucide-react';
 import classNames from 'classnames';
-import { useUIStore, useAuthStore } from '../../store';
+import { useUIStore } from '../../stores/uiStore';
+import { useAuthStore } from '../../stores/authStore';
+import { useEmpresaStore } from '../../stores/empresaStore';
 import { PerfilAcesso } from '../../types';
 
 interface MenuItem {
@@ -94,7 +96,20 @@ const menuItems: MenuItem[] = [
 
 export const Sidebar: React.FC = () => {
   const { sidebarOpen, toggleSidebar, presentationMode } = useUIStore();
-  const { usuario } = useAuthStore();
+  const { usuario, logout } = useAuthStore();
+  const { empresa, loadEmpresa } = useEmpresaStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (usuario?.empresaId) {
+      loadEmpresa(usuario.empresaId);
+    }
+  }, [usuario?.empresaId, loadEmpresa]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Filtrar menu items baseado no perfil do usuário
   const filteredMenuItems = menuItems.filter((item) => {
@@ -125,19 +140,35 @@ export const Sidebar: React.FC = () => {
              style={{ borderColor: 'var(--color-secondary-200)' }}>
           {sidebarOpen && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <Box className="w-5 h-5 text-white" />
-              </div>
+              {empresa?.logoUrl ? (
+                <img 
+                  src={empresa.logoUrl} 
+                  alt={empresa.nome} 
+                  className="w-8 h-8 rounded object-contain"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+                  <Box className="w-5 h-5 text-white" />
+                </div>
+              )}
               <span className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>
-                VisionPlan
+                {empresa?.nome || 'VisionPlan'}
               </span>
             </div>
           )}
           {!sidebarOpen && (
             <div className="w-full flex justify-center">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <Box className="w-5 h-5 text-white" />
-              </div>
+              {empresa?.logoUrl ? (
+                <img 
+                  src={empresa.logoUrl} 
+                  alt={empresa.nome} 
+                  className="w-8 h-8 rounded object-contain"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+                  <Box className="w-5 h-5 text-white" />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -203,16 +234,30 @@ export const Sidebar: React.FC = () => {
                   {usuario.nome}
                 </p>
                 <p className="text-xs truncate" style={{ color: 'var(--color-text-secondary)' }}>
-                  {usuario.perfilAcesso.replace('_', ' ')}
+                  {usuario.perfilAcesso.replace(/_/g, ' ')}
                 </p>
               </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5 text-red-500" />
+              </button>
             </div>
           )}
           {!sidebarOpen && usuario && (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
                 {usuario.nome.charAt(0).toUpperCase()}
               </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-4 h-4 text-red-500" />
+              </button>
             </div>
           )}
         </div>

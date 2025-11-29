@@ -1,25 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTemaStore } from '../stores/temaStore';
-import { Palette, RotateCcw, Save, Eye } from 'lucide-react';
+import { useAuthStore } from '../stores/authStore';
+import { useEmpresaStore } from '../stores/empresaStore';
+import { Palette, RotateCcw, Save, Eye, Upload, Trash2, Building2, Image } from 'lucide-react';
 
 const AdminTemasPage: React.FC = () => {
   const { tema, setTema, resetTema } = useTemaStore();
+  const { usuario } = useAuthStore();
+  const { empresa, loadEmpresa, updateTema, updateLogo, removeLogo } = useEmpresaStore();
+  
   const [tempTema, setTempTema] = useState(tema);
   const [showPreview, setShowPreview] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (usuario?.empresaId) {
+      loadEmpresa(usuario.empresaId);
+    }
+  }, [usuario?.empresaId, loadEmpresa]);
+
+  useEffect(() => {
+    if (empresa?.logoUrl) {
+      setLogoPreview(empresa.logoUrl);
+    }
+  }, [empresa?.logoUrl]);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const handleColorChange = (key: keyof typeof tema, value: string) => {
     setTempTema({ ...tempTema, [key]: value });
   };
 
-  const handleSave = () => {
-    setTema(tempTema);
-    alert('Tema salvo com sucesso!');
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      setTema(tempTema);
+      
+      if (empresa) {
+        const temaConfig = {
+          primary: tempTema.primary,
+          secondary: tempTema.secondary,
+          accent: tempTema.accent || tempTema.primary,
+          success: tempTema.success,
+          warning: tempTema.warning,
+          danger: tempTema.danger,
+          bgMain: tempTema.background || '#ffffff',
+          bgSecondary: tempTema.surface || '#f8fafc',
+          textPrimary: tempTema.text || '#1e293b',
+          textSecondary: tempTema.textSecondary || '#64748b',
+          border: tempTema.border || '#e2e8f0',
+        };
+        await updateTema(temaConfig);
+      }
+      
+      if (logoFile) {
+        await updateLogo(logoFile);
+        setLogoFile(null);
+      }
+      
+      showNotification('success', 'Tema salvo com sucesso!');
+    } catch {
+      showNotification('error', 'Erro ao salvar tema');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
     if (confirm('Deseja restaurar o tema padrão?')) {
       resetTema();
       setTempTema(tema);
+      showNotification('success', 'Tema restaurado ao padrão');
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showNotification('error', 'A imagem deve ter no máximo 2MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        showNotification('error', 'Selecione uma imagem válida');
+        return;
+      }
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (confirm('Deseja remover o logo da empresa?')) {
+      await removeLogo();
+      setLogoFile(null);
+      setLogoPreview(null);
+      showNotification('success', 'Logo removido');
     }
   };
 
@@ -40,12 +127,23 @@ const AdminTemasPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+      {notification && (
+        <div
+          className="fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
+          style={{
+            backgroundColor: notification.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
+            color: 'white',
+          }}
+        >
+          <span>{notification.message}</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold theme-text">Personalização de Tema</h1>
+          <h1 className="text-3xl font-bold theme-text">Personalização da Empresa</h1>
           <p className="text-sm theme-text-secondary mt-1">
-            Customize as cores da plataforma para o seu cliente
+            Configure o logo e as cores da plataforma para sua empresa
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -65,16 +163,92 @@ const AdminTemasPage: React.FC = () => {
           </button>
           <button
             onClick={handleSave}
+            disabled={isSaving}
             className="btn btn-primary flex items-center space-x-2"
           >
             <Save size={20} />
-            <span>Salvar Tema</span>
+            <span>{isSaving ? 'Salvando...' : 'Salvar Tema'}</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Color Picker Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-6">
+              <Building2 className="theme-primary" size={24} />
+              <h2 className="text-xl font-semibold theme-text">Logo da Empresa</h2>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <div 
+                className="w-40 h-40 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden"
+                style={{ borderColor: 'var(--color-secondary-300)', backgroundColor: 'var(--color-bg-secondary)' }}
+              >
+                {logoPreview ? (
+                  <img 
+                    src={logoPreview} 
+                    alt="Logo da empresa" 
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <div className="text-center p-4">
+                    <Image className="w-12 h-12 mx-auto mb-2 theme-text-secondary" />
+                    <p className="text-sm theme-text-secondary">Sem logo</p>
+                  </div>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoChange}
+                className="hidden"
+              />
+
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="btn btn-outline flex items-center space-x-2"
+                >
+                  <Upload size={18} />
+                  <span>Enviar Logo</span>
+                </button>
+                {logoPreview && (
+                  <button
+                    onClick={handleRemoveLogo}
+                    className="btn btn-outline text-red-500 border-red-300 hover:bg-red-50 flex items-center space-x-2"
+                  >
+                    <Trash2 size={18} />
+                    <span>Remover</span>
+                  </button>
+                )}
+              </div>
+
+              <p className="text-xs theme-text-secondary text-center">
+                Formatos: PNG, JPG, SVG (máx. 2MB)<br/>
+                Recomendado: 200x200px ou maior
+              </p>
+            </div>
+          </div>
+
+          {empresa && (
+            <div className="card">
+              <div className="flex items-center space-x-2 mb-4">
+                <Building2 className="theme-primary" size={20} />
+                <h3 className="text-lg font-semibold theme-text">Dados da Empresa</h3>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p><span className="theme-text-secondary">Nome:</span> <span className="theme-text font-medium">{empresa.nome}</span></p>
+                {empresa.cnpj && (
+                  <p><span className="theme-text-secondary">CNPJ:</span> <span className="theme-text">{empresa.cnpj}</span></p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-4">
           <div className="card">
             <div className="flex items-center space-x-2 mb-6">
@@ -82,7 +256,7 @@ const AdminTemasPage: React.FC = () => {
               <h2 className="text-xl font-semibold theme-text">Cores do Sistema</h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
               {colorOptions.map(option => (
                 <div key={option.key} className="space-y-2">
                   <label className="block">
@@ -113,13 +287,22 @@ const AdminTemasPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Preview Panel */}
         {showPreview && (
           <div className="space-y-4">
             <div className="card">
               <h2 className="text-xl font-semibold theme-text mb-6">Preview em Tempo Real</h2>
 
-              {/* KPI Cards Preview */}
+              {logoPreview && (
+                <div className="flex justify-center mb-6">
+                  <div 
+                    className="w-20 h-20 rounded-lg flex items-center justify-center p-2"
+                    style={{ backgroundColor: tempTema.primary + '15' }}
+                  >
+                    <img src={logoPreview} alt="Preview logo" className="max-w-full max-h-full object-contain" />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div 
                   className="p-4 rounded-lg"
@@ -174,7 +357,6 @@ const AdminTemasPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Buttons Preview */}
               <div className="mt-6 space-y-3">
                 <h3 className="text-sm font-semibold theme-text mb-3">Botões</h3>
                 <button
@@ -205,7 +387,6 @@ const AdminTemasPage: React.FC = () => {
         )}
       </div>
 
-      {/* Info Card */}
       <div 
         className="card border-l-4"
         style={{ borderLeftColor: tempTema.info }}
@@ -220,10 +401,9 @@ const AdminTemasPage: React.FC = () => {
           <div>
             <h3 className="font-semibold theme-text mb-1">Dica sobre Personalização</h3>
             <p className="text-sm theme-text-secondary">
-              As cores escolhidas serão aplicadas em toda a plataforma. Certifique-se de escolher
-              cores que tenham bom contraste e representem a identidade visual do seu cliente.
-              As alterações são salvas localmente e podem ser exportadas para serem aplicadas em
-              outras instalações da plataforma.
+              O logo e as cores escolhidas serão aplicados em toda a plataforma para os usuários 
+              da sua empresa. Certifique-se de escolher cores que tenham bom contraste e 
+              representem a identidade visual da sua organização.
             </p>
           </div>
         </div>
