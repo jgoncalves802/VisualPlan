@@ -25,7 +25,11 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Responsive Design**: Optimized for mobile, tablet, and desktop.
     *   **Component-based**: Utilizes a reusable UI component library (`src/components/ui/`) including `Toast`, `Modal`, `ConfirmDialog`, and `Button` for consistent design and enhanced user experience.
 *   **Technical Implementations**:
-    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and Gantt charts (DHTMLX Gantt, gantt-task-react).
+    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and Gantt charts (DHTMLX Gantt, VisionGantt).
+    *   **Dual-Engine Gantt**: CronogramaPage supports both DHTMLX Gantt and VisionGantt engines with a toggle for validation and comparison.
+    *   **VisionGantt Library**: Custom Gantt library (`src/lib/vision-gantt/`) inspired by Bryntum Scheduler Pro with enterprise-grade features.
+    *   **Resource Management**: Full resource allocation system with histogram visualization, resource types, calendars, and conflict detection.
+    *   **Baseline Tracking**: Support for project baselines with variance analysis (Primavera P6 model).
     *   **Real-time Updates**: Achieved via WebSockets through Supabase.
     *   **Multi-tenancy**: Implemented through a robust company system (`empresas` table) with Row Level Security (RLS) for data isolation.
     *   **User Management**: Comprehensive user, profile, and permission management including Governance Layers (PROPONENTE, FISCALIZACAO, CONTRATADA) and fine-grained Access Profiles.

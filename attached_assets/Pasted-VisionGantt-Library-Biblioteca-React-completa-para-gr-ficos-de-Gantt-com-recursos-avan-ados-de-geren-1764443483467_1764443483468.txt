@@ -1,0 +1,341 @@
+VisionGantt Library
+Biblioteca React completa para gráficos de Gantt com recursos avançados de gerenciamento de projetos
+
+
+
+
+
+
+✨ Características
+📈 Funcionalidades Core
+✅ Gráfico de Gantt Interativo - Visualização completa de timeline com zoom
+✅ Drag & Drop - Arraste tarefas para alterar datas
+✅ Redimensionamento - Ajuste a duração das tarefas
+✅ Hierarquia WBS - Work Breakdown Structure completa
+✅ Dependências - 4 tipos (FS, SS, FF, SF) com validação
+✅ Grupos de Tarefas - Organização visual similar ao MS Project
+🎨 Interface Avançada
+✅ Design Primavera P6 - Interface profissional
+✅ Timeline Multi-nível - Hora/Dia/Semana/Mês/Trimestre/Ano
+✅ Edição Inline - WBS e outros campos editáveis
+✅ Indicadores Visuais - Status, progresso, conflitos
+✅ Tema Responsivo - Dark/Light mode
+👥 Gestão de Recursos
+✅ Alocação de Recursos - Atribuição de equipes
+✅ Histograma de Carga - Visualização por dia/semana/mês
+✅ Detecção de Conflitos - Alertas de sobrealocação
+✅ Tracking de Custos - Custo por recurso e projeto
+✅ Análise de Utilização - Métricas de performance
+🔧 Recursos Técnicos
+✅ TypeScript - Type-safe com tipos completos
+✅ Zustand + Jotai - Gerenciamento de estado performático
+✅ Date-fns - Manipulação otimizada de datas
+✅ Shadcn UI - Componentes acessíveis e customizáveis
+✅ Zero Hydration Errors - SSR-safe
+🚀 Quick Start
+Instalação
+bash
+Copy
+# 1. Copie a biblioteca para seu projeto
+cp -r lib/vision-gantt /seu-projeto/lib/
+
+# 2. Instale dependências
+cd /seu-projeto
+yarn add date-fns zustand jotai
+
+# 3. Configure Tailwind CSS
+# Adicione em tailwind.config.ts:
+content: [
+  './lib/vision-gantt/**/*.{js,ts,jsx,tsx}',
+  // ... outros paths
+]
+
+# 4. Adicione estilos em app/globals.css
+# (veja seção de configuração abaixo)
+Uso Básico
+tsx
+Copy
+'use client';
+
+import { GanttChart } from '@/lib/vision-gantt';
+import type { Task } from '@/lib/vision-gantt/types';
+
+export default function MeuGantt() {
+  const tasks: Task[] = [
+    {
+      id: '1',
+      name: 'Planejamento',
+      startDate: new Date('2025-01-01'),
+      endDate: new Date('2025-01-15'),
+      progress: 100,
+      status: 'completed',
+      wbs: '1',
+      level: 0,
+    },
+    {
+      id: '2',
+      name: 'Desenvolvimento',
+      startDate: new Date('2025-01-16'),
+      endDate: new Date('2025-02-28'),
+      progress: 60,
+      status: 'in-progress',
+      wbs: '2',
+      level: 0,
+    },
+  ];
+
+  return (
+    <div className="h-screen p-4">
+      <GanttChart 
+        tasks={tasks} 
+        dependencies={[]} 
+      />
+    </div>
+  );
+}
+📚 Documentação
+Guias Disponíveis
+Documento	Descrição
+GUIA_DE_USO.md	📖 Guia completo em português
+EXEMPLO_PRATICO.md	💻 Exemplos práticos de código
+USAGE_GUIDE.md	📘 Guia técnico em inglês
+ADVANCED_FEATURES.md	🚀 Recursos avançados
+FULL_FEATURES.md	📋 Documentação completa
+Guias Técnicos
+Documento	Descrição
+DEPENDENCY_DRAG_DROP_GUIDE.md	🔗 Implementação de dependências
+DEPENDENCY_VISUALS_GUIDE.md	🎨 Visualização de setas
+MS_PROJECT_WBS_GROUPS.md	📊 WBS e grupos
+RESOURCE_MANAGEMENT_P6_STYLE.md	👥 Gestão de recursos
+PRIMAVERA_P6_LAYOUT.md	🎨 Layout P6
+Bug Fixes e Melhorias
+Documento	Descrição
+BUGFIX_DEPENDENCY_HANDLES.md	🐛 Correção handles
+HANDLES_SPACING_FIX.md	🔧 Espaçamento handles
+BUGFIX_INFINITE_RENDER_LOOP.md	🔄 Loop de render
+CSS_ONLY_HANDLES_SOLUTION.md	💅 Solução CSS
+🎯 Estrutura do Projeto
+vision_gantt_lib/
+├── nextjs_space/              # Aplicação Next.js de demonstração
+│   ├── app/                   # App Router Next.js 14
+│   │   ├── page.tsx          # Página principal
+│   │   ├── layout.tsx        # Layout raiz
+│   │   └── globals.css       # Estilos globais
+│   ├── components/            # Componentes de demonstração
+│   │   ├── full-features-demo.tsx
+│   │   ├── resource-management-demo.tsx
+│   │   └── ui/               # Componentes Shadcn UI
+│   └── lib/
+│       ├── vision-gantt/     # 🎯 BIBLIOTECA PRINCIPAL
+│       │   ├── components/   # Componentes React
+│       │   ├── types/        # Definições TypeScript
+│       │   ├── hooks/        # Custom Hooks
+│       │   ├── stores/       # Gerenciamento de estado
+│       │   ├── utils/        # Funções auxiliares
+│       │   ├── config/       # Configurações
+│       │   └── index.ts      # Export principal
+│       └── data/             # Dados mock para testes
+└── docs/                      # 📚 Documentação (arquivos .md)
+⚙️ Configuração
+Tailwind CSS
+Adicione no tailwind.config.ts:
+
+typescript
+Copy
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/vision-gantt/**/*.{js,ts,jsx,tsx}', // ← Adicione esta linha
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'gantt-primary': '#3b82f6',
+        'gantt-success': '#10b981',
+      },
+    },
+  },
+}
+Estilos Globais
+Adicione no app/globals.css:
+
+css
+Copy
+/* Dependency Handle Styles */
+.gantt-task-hover-area:hover .dependency-handle {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.dependency-handle {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.gantt-task-bar:hover .dependency-handle {
+  opacity: 1;
+}
+🔌 API Reference
+GanttChart Props
+typescript
+Copy
+interface GanttChartProps {
+  tasks: Task[];                    // Array de tarefas (obrigatório)
+  dependencies: Dependency[];       // Array de dependências (obrigatório)
+  onTaskUpdate?: (task: Task) => void;     // Callback ao atualizar
+  onTaskClick?: (task: Task) => void;      // Callback ao clicar
+  resources?: Resource[];           // Recursos do projeto
+  viewPreset?: ViewPreset;          // Escala de tempo
+  enableDragDrop?: boolean;         // Habilitar drag (padrão: true)
+  enableResize?: boolean;           // Habilitar resize (padrão: true)
+  enableDependencyCreation?: boolean; // Criar dependências (padrão: true)
+  height?: number;                  // Altura em pixels
+}
+Task Type
+typescript
+Copy
+interface Task {
+  id: string;                       // ID único
+  name: string;                     // Nome da tarefa
+  startDate: Date;                  // Data de início
+  endDate: Date;                    // Data de término
+  progress: number;                 // Progresso (0-100)
+  status: 'not-started' | 'in-progress' | 'completed';
+  wbs?: string;                     // Work Breakdown Structure
+  level?: number;                   // Nível hierárquico
+  parentId?: string;                // ID da tarefa pai
+  duration?: number;                // Duração em dias
+  color?: string;                   // Cor customizada
+  isExpanded?: boolean;             // Se está expandida
+}
+Dependency Type
+typescript
+Copy
+interface Dependency {
+  id: string;                       // ID único
+  fromTaskId: string;               // Tarefa origem
+  toTaskId: string;                 // Tarefa destino
+  type: 'FS' | 'SS' | 'FF' | 'SF'; // Tipo de dependência
+  lag?: number;                     // Atraso em dias
+}
+Tipos de Dependência:
+
+FS (Finish-to-Start): B inicia quando A termina
+SS (Start-to-Start): Ambas iniciam juntas
+FF (Finish-to-Finish): Ambas terminam juntas
+SF (Start-to-Finish): B termina quando A inicia
+🎨 Componentes Disponíveis
+Core Components
+GanttChart - Componente principal
+GanttGrid - Grade de colunas
+GanttTimeline - Timeline com barras
+TaskBar - Barra de tarefa individual
+DependencyArrow - Setas de dependência
+Advanced Components
+ResourceHistogram - Histograma de recursos
+ResourceCostSummary - Resumo de custos
+ResourcePanel - Painel de gestão
+TaskDetailsPanel - Detalhes da tarefa
+ProjectStats - Estatísticas do projeto
+UI Components (Shadcn)
+Button, Card, Badge, Tabs
+Dialog, Select, Input, Label
+Tooltip, Popover, Sheet
+E mais...
+🧪 Executar Demonstração
+bash
+Copy
+# Clone o repositório
+git clone https://github.com/seu-usuario/vision-gantt-lib.git
+cd vision-gantt-lib/nextjs_space
+
+# Instale dependências
+yarn install
+
+# Execute o servidor de desenvolvimento
+yarn dev
+
+# Abra no navegador
+open http://localhost:3000
+📦 Dependências
+Produção
+json
+Copy
+{
+  "date-fns": "^3.6.0",
+  "zustand": "^5.0.3",
+  "jotai": "^2.6.0",
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "next": "^14.2.28"
+}
+Desenvolvimento
+json
+Copy
+{
+  "typescript": "^5.2.2",
+  "tailwindcss": "^3.3.3",
+  "@types/react": "^18.2.22",
+  "@types/node": "^20.6.2"
+}
+🛠️ Tecnologias Utilizadas
+Next.js 14 - Framework React
+TypeScript - Type Safety
+Tailwind CSS - Styling
+Zustand - State Management
+Jotai - Atomic State
+Date-fns - Date Utilities
+Shadcn UI - UI Components
+Lucide Icons - Icon System
+🎯 Casos de Uso
+Desenvolvimento de Software
+Sprints e milestones
+Roadmap de produto
+Gestão de releases
+Gestão de Projetos
+Cronogramas de projeto
+Alocação de equipes
+Tracking de progresso
+Construção Civil
+Cronogramas de obra
+Gestão de empreiteiras
+Controle de custos
+Produção e Manufatura
+Planejamento de produção
+Gestão de recursos
+Otimização de processos
+🤝 Contribuindo
+Contribuições são bem-vindas! Por favor:
+
+Fork o projeto
+Crie uma branch (git checkout -b feature/nova-funcionalidade)
+Commit suas mudanças (git commit -m 'Adiciona nova funcionalidade')
+Push para a branch (git push origin feature/nova-funcionalidade)
+Abra um Pull Request
+📝 Changelog
+v1.0.0 (2025-11-29)
+✅ Implementação inicial completa
+✅ Gráfico de Gantt com drag & drop
+✅ Sistema de dependências
+✅ Hierarquia WBS
+✅ Gestão de recursos
+✅ Histograma e custos
+✅ Design Primavera P6
+✅ Guias de uso completos
+📄 Licença
+Este projeto é fornecido como está para uso em seus projetos.
+
+👤 Autor
+Desenvolvido com ❤️ usando Abacus.AI DeepAgent
+
+🙏 Agradecimentos
+Inspirado no Microsoft Project e Primavera P6
+UI baseada em Shadcn UI
+Comunidade React e Next.js
+📞 Suporte
+Para dúvidas ou problemas:
+
+Consulte a documentação
+Veja os exemplos práticos
+Abra uma issue
+⭐ Se este projeto foi útil, não esqueça de dar uma estrela!

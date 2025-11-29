@@ -1,5 +1,6 @@
 /**
  * Página principal do Cronograma (Gantt Chart)
+ * Suporta DHTMLX Gantt e VisionGantt (toggle disponível)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -7,11 +8,11 @@ import { useParams } from 'react-router-dom';
 import { useCronograma } from '../hooks/useCronograma';
 import { VisualizacaoCronograma } from '../types/cronograma';
 
-// Componentes (serão criados)
 import { CronogramaToolbar } from '../components/features/cronograma/CronogramaToolbar';
 import { GanttExtensionsToolbar } from '../components/features/cronograma/GanttExtensionsToolbar';
 import { CronogramaFilters } from '../components/features/cronograma/CronogramaFilters';
 import { GanttChart } from '../components/features/cronograma/GanttChart';
+import { VisionGanttWrapper } from '../components/features/cronograma/VisionGanttWrapper';
 import { TaskList } from '../components/features/cronograma/TaskList';
 import { TaskModal } from '../components/features/cronograma/TaskModal';
 import { DependencyModal } from '../components/features/cronograma/DependencyModal';
@@ -21,6 +22,9 @@ import { RestricaoModal } from '../components/features/restricoes/RestricaoModal
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import { RestricaoLPS } from '../types/lps';
+import { Layers, Grid3X3 } from 'lucide-react';
+
+type GanttEngine = 'dhtmlx' | 'visiongantt';
 
 /**
  * Página do Cronograma
@@ -56,6 +60,9 @@ export const CronogramaPage: React.FC = () => {
   const [atividadeParaAcoes, setAtividadeParaAcoes] = useState<any | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+  
+  // Estado para alternar entre engines de Gantt
+  const [ganttEngine, setGanttEngine] = useState<GanttEngine>('dhtmlx');
 
   // Store LPS para criar restrições
   const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
@@ -226,13 +233,30 @@ export const CronogramaPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
             {visualizacao === VisualizacaoCronograma.GANTT ? (
               <div className="flex-1 min-h-[600px]">
-                <GanttChart
-                  tasks={tasks}
-                  viewMode={viewMode}
-                  onTaskChange={handleTaskChange}
-                  onTaskDelete={handleTaskDelete}
-                  onTaskDoubleClick={(task) => handleAtividadeClick(task.id)}
-                />
+                {ganttEngine === 'dhtmlx' ? (
+                  <GanttChart
+                    tasks={tasks}
+                    viewMode={viewMode}
+                    onTaskChange={handleTaskChange}
+                    onTaskDelete={handleTaskDelete}
+                    onTaskDoubleClick={(task) => handleAtividadeClick(task.id)}
+                  />
+                ) : (
+                  <VisionGanttWrapper
+                    atividades={todasAtividades}
+                    dependencias={dependencias}
+                    projetoId={projetoId || 'proj-1'}
+                    onAtividadeUpdate={async (atividade, changes) => {
+                      await atualizarAtividade(atividade.id, changes);
+                    }}
+                    onDependenciaCreate={async (dep) => {
+                      await adicionarDependencia(dep);
+                    }}
+                    onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
+                    height={600}
+                    gridWidth={500}
+                  />
+                )}
               </div>
             ) : (
               <TaskList
@@ -377,6 +401,34 @@ export const CronogramaPage: React.FC = () => {
             <p className="text-sm text-gray-500 mt-1">
               Gerencie o cronograma do projeto com visualização Gantt
             </p>
+          </div>
+          
+          {/* Toggle Engine Gantt */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setGanttEngine('dhtmlx')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                ganttEngine === 'dhtmlx'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="DHTMLX Gantt - Engine tradicional"
+            >
+              <Grid3X3 className="w-4 h-4" />
+              <span>DHTMLX</span>
+            </button>
+            <button
+              onClick={() => setGanttEngine('visiongantt')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                ganttEngine === 'visiongantt'
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="VisionGantt - Engine avançada com recursos P6"
+            >
+              <Layers className="w-4 h-4" />
+              <span>VisionGantt</span>
+            </button>
           </div>
         </div>
       </div>
