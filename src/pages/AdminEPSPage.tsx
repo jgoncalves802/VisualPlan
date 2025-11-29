@@ -26,6 +26,7 @@ import { empresaService } from '../services/empresaService';
 import { userService } from '../services/userService';
 import { epsService, type EpsNode } from '../services/epsService';
 import { epsCreatorService, type EpsCreator } from '../services/epsCreatorService';
+import { wbsEditorService, type WbsEditor } from '../services/wbsEditorService';
 import { userObsAssignmentService, type UserObsAssignment } from '../services/userObsAssignmentService';
 import { obsService, type ObsNode } from '../services/obsService';
 import { profileService } from '../services/profileService';
@@ -36,7 +37,7 @@ interface AccessProfile {
 }
 import { useToast, ConfirmDialog } from '../components/ui';
 
-type TabType = 'eps' | 'creators' | 'assignments';
+type TabType = 'eps' | 'creators' | 'wbs_editors' | 'assignments';
 
 interface EpsTreeNodeProps {
   node: EpsNode;
@@ -313,12 +314,27 @@ export default function AdminEPSPage() {
   const [assignmentToDelete, setAssignmentToDelete] = useState<UserObsAssignment | null>(null);
   const [deletingAssignment, setDeletingAssignment] = useState(false);
 
+  const [wbsEditors, setWbsEditors] = useState<WbsEditor[]>([]);
+  const [wbsEditorsLoading, setWbsEditorsLoading] = useState(false);
+  const [showWbsEditorModal, setShowWbsEditorModal] = useState(false);
+  const [selectedWbsProject, setSelectedWbsProject] = useState<string>('');
+  const [selectedWbsUserId, setSelectedWbsUserId] = useState<string>('');
+  const [wbsEditorPermissions, setWbsEditorPermissions] = useState({
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+  });
+  const [showDeleteWbsEditorModal, setShowDeleteWbsEditorModal] = useState(false);
+  const [wbsEditorToDelete, setWbsEditorToDelete] = useState<WbsEditor | null>(null);
+  const [deletingWbsEditor, setDeletingWbsEditor] = useState(false);
+
   useEffect(() => {
     if (empresaId) {
       loadEmpresa();
       loadUsuarios();
       loadEpsTree();
       loadCreators();
+      loadWbsEditors();
       loadAssignments();
       loadObsNodes();
       loadProfiles();
@@ -377,6 +393,19 @@ export default function AdminEPSPage() {
       console.error('Error loading EPS creators:', error);
     } finally {
       setCreatorsLoading(false);
+    }
+  };
+
+  const loadWbsEditors = async () => {
+    if (!empresaId) return;
+    setWbsEditorsLoading(true);
+    try {
+      const data = await wbsEditorService.getByEmpresa(empresaId);
+      setWbsEditors(data);
+    } catch (error) {
+      console.error('Error loading WBS editors:', error);
+    } finally {
+      setWbsEditorsLoading(false);
     }
   };
 
@@ -612,6 +641,57 @@ export default function AdminEPSPage() {
     }
   };
 
+  const handleAddWbsEditor = async () => {
+    if (!empresaId || !selectedWbsProject || !selectedWbsUserId) return;
+    try {
+      await wbsEditorService.create({
+        empresaId,
+        epsNodeId: selectedWbsProject,
+        usuarioId: selectedWbsUserId,
+        ...wbsEditorPermissions,
+      });
+      toast.success('Editor de WBS adicionado!');
+      setShowWbsEditorModal(false);
+      setSelectedWbsProject('');
+      setSelectedWbsUserId('');
+      setWbsEditorPermissions({ canCreate: true, canEdit: true, canDelete: true });
+      loadWbsEditors();
+    } catch (error) {
+      console.error('Error adding WBS editor:', error);
+      toast.error('Erro ao adicionar editor de WBS');
+    }
+  };
+
+  const handleDeleteWbsEditor = (editor: WbsEditor) => {
+    setWbsEditorToDelete(editor);
+    setShowDeleteWbsEditorModal(true);
+  };
+
+  const confirmDeleteWbsEditor = async () => {
+    if (!wbsEditorToDelete) return;
+    setDeletingWbsEditor(true);
+    try {
+      await wbsEditorService.delete(wbsEditorToDelete.id);
+      toast.success('Editor de WBS removido!');
+      setShowDeleteWbsEditorModal(false);
+      setWbsEditorToDelete(null);
+      loadWbsEditors();
+    } catch (error) {
+      console.error('Error deleting WBS editor:', error);
+      toast.error('Erro ao remover editor de WBS');
+    } finally {
+      setDeletingWbsEditor(false);
+    }
+  };
+
+  const epsProjectsOnly = epsTree.filter(node => node.nivel === 0);
+
+  const availableUsersForWbsEditor = (projectId: string) => {
+    return usuarios.filter(
+      u => !wbsEditors.some(e => e.epsNodeId === projectId && e.usuarioId === u.id)
+    );
+  };
+
   const handleAddAssignment = async () => {
     if (!empresaId || !assignmentForm.usuarioId || !assignmentForm.obsNodeId) return;
     try {
@@ -674,6 +754,7 @@ export default function AdminEPSPage() {
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'eps', label: 'Estrutura EPS/WBS', icon: <FolderTree className="w-4 h-4" /> },
     { id: 'creators', label: 'Criadores de EPS', icon: <Shield className="w-4 h-4" /> },
+    { id: 'wbs_editors', label: 'Editores de WBS', icon: <Edit2 className="w-4 h-4" /> },
     { id: 'assignments', label: 'Atribuição de OBS (Responsible Manager)', icon: <UserCheck className="w-4 h-4" /> },
   ];
 
@@ -862,6 +943,108 @@ export default function AdminEPSPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'wbs_editors' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Editores de WBS</h2>
+              <p className="text-sm text-gray-600">
+                Defina quais usuários podem criar, editar ou excluir itens WBS em cada projeto.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowWbsEditorModal(true);
+                setSelectedWbsProject('');
+                setSelectedWbsUserId('');
+                setWbsEditorPermissions({ canCreate: true, canEdit: true, canDelete: true });
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={epsProjectsOnly.length === 0}
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar Editor
+            </button>
+          </div>
+
+          {epsProjectsOnly.length === 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-amber-800">
+                Nenhum projeto (EPS) cadastrado. Crie um projeto na aba "Estrutura EPS/WBS" primeiro.
+              </p>
+            </div>
+          )}
+
+          {wbsEditorsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : wbsEditors.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Edit2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>Nenhum editor de WBS cadastrado.</p>
+              <p className="text-sm">Adicione usuários para editar a estrutura WBS dos projetos.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Projeto (EPS)</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Usuário</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Permissões</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {wbsEditors.map((editor) => (
+                    <tr key={editor.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm">
+                          <Briefcase className="w-3 h-3" />
+                          {editor.epsNode?.nome}
+                          {editor.epsNode?.codigo && (
+                            <span className="text-purple-500">({editor.epsNode.codigo})</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium text-gray-900">{editor.usuario?.nome}</p>
+                          <p className="text-sm text-gray-500">{editor.usuario?.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          {editor.canCreate && (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Criar</span>
+                          )}
+                          {editor.canEdit && (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Editar</span>
+                          )}
+                          {editor.canDelete && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Excluir</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleDeleteWbsEditor(editor)}
+                          className="p-2 hover:bg-red-100 rounded text-red-600"
+                          title="Remover editor"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -1232,6 +1415,106 @@ export default function AdminEPSPage() {
         </div>
       )}
 
+      {showWbsEditorModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Adicionar Editor de WBS</h3>
+              <button onClick={() => setShowWbsEditorModal(false)} className="p-2 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Projeto (EPS) *</label>
+                <select
+                  value={selectedWbsProject}
+                  onChange={(e) => {
+                    setSelectedWbsProject(e.target.value);
+                    setSelectedWbsUserId('');
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Selecione um projeto</option>
+                  {epsProjectsOnly.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.nome} ({project.codigo})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  O usuário poderá gerenciar a WBS deste projeto.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Usuário *</label>
+                <select
+                  value={selectedWbsUserId}
+                  onChange={(e) => setSelectedWbsUserId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!selectedWbsProject}
+                >
+                  <option value="">Selecione um usuário</option>
+                  {selectedWbsProject && availableUsersForWbsEditor(selectedWbsProject).map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.nome} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Permissões de WBS</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={wbsEditorPermissions.canCreate}
+                      onChange={(e) => setWbsEditorPermissions({ ...wbsEditorPermissions, canCreate: e.target.checked })}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Pode criar itens WBS</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={wbsEditorPermissions.canEdit}
+                      onChange={(e) => setWbsEditorPermissions({ ...wbsEditorPermissions, canEdit: e.target.checked })}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Pode editar itens WBS</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={wbsEditorPermissions.canDelete}
+                      onChange={(e) => setWbsEditorPermissions({ ...wbsEditorPermissions, canDelete: e.target.checked })}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Pode excluir itens WBS</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowWbsEditorModal(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddWbsEditor}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={!selectedWbsProject || !selectedWbsUserId}
+              >
+                <Save className="w-4 h-4" />
+                Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAssignmentModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
@@ -1351,6 +1634,17 @@ export default function AdminEPSPage() {
         confirmText="Remover"
         type="danger"
         loading={deletingAssignment}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteWbsEditorModal}
+        onClose={() => setShowDeleteWbsEditorModal(false)}
+        onConfirm={confirmDeleteWbsEditor}
+        title="Remover Editor de WBS"
+        message={`Tem certeza que deseja remover a permissão de edição de WBS de "${wbsEditorToDelete?.usuario?.nome}" no projeto "${wbsEditorToDelete?.epsNode?.nome}"?`}
+        confirmText="Remover"
+        type="danger"
+        loading={deletingWbsEditor}
       />
     </div>
   );
