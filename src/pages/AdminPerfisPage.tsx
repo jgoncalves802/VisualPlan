@@ -24,7 +24,7 @@ import { useProfileStore } from '../stores/profileStore';
 import { empresaService } from '../services/empresaService';
 import { userService } from '../services/userService';
 import { obsService, type ObsNode } from '../services/obsService';
-import type { AccessProfile } from '../services/profileService';
+import { profileService, type AccessProfile } from '../services/profileService';
 
 type TabType = 'obs' | 'perfis' | 'usuarios';
 
@@ -199,6 +199,8 @@ export default function AdminPerfisPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [nodeToDelete, setNodeToDelete] = useState<ObsNode | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
+  const [assigningProfile, setAssigningProfile] = useState<string | null>(null);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -474,6 +476,30 @@ export default function AdminPerfisPage() {
       alert('Perfis padrão criados com sucesso!');
     } catch (error) {
       console.error('Error creating default profiles:', error);
+    }
+  };
+
+  const handleAssignProfileToUser = async (usuarioId: string) => {
+    const profileId = selectedProfiles[usuarioId];
+    if (!profileId) {
+      alert('Selecione um perfil para atribuir.');
+      return;
+    }
+
+    setAssigningProfile(usuarioId);
+    try {
+      await profileService.assignProfileToUser({
+        usuarioId,
+        profileId,
+        isPrimary: true,
+      });
+      setSelectedProfiles(prev => ({ ...prev, [usuarioId]: '' }));
+      alert('Perfil atribuído com sucesso!');
+    } catch (error) {
+      console.error('Error assigning profile:', error);
+      alert('Erro ao atribuir perfil. Verifique as permissões.');
+    } finally {
+      setAssigningProfile(null);
     }
   };
 
@@ -798,7 +824,8 @@ export default function AdminPerfisPage() {
                       <td className="py-3 px-4">
                         <select
                           className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                          defaultValue=""
+                          value={selectedProfiles[usuario.id] || ''}
+                          onChange={(e) => setSelectedProfiles(prev => ({ ...prev, [usuario.id]: e.target.value }))}
                         >
                           <option value="">Selecionar perfil...</option>
                           {profiles.map((profile) => (
@@ -809,8 +836,15 @@ export default function AdminPerfisPage() {
                         </select>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                          Atribuir
+                        <button 
+                          onClick={() => handleAssignProfileToUser(usuario.id)}
+                          disabled={!selectedProfiles[usuario.id] || assigningProfile === usuario.id}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {assigningProfile === usuario.id ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : null}
+                          <span>Atribuir</span>
                         </button>
                       </td>
                     </tr>

@@ -1,0 +1,69 @@
+-- ===========================================
+-- SCRIPT DE CORREÇÃO DEFINITIVA
+-- Copie TODO este script e cole no SQL Editor
+-- ===========================================
+
+-- PASSO 1: Verificar se o campo existe, se não, criar
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'obs_nodes' AND column_name = 'responsible_manager_id'
+    ) THEN
+        ALTER TABLE obs_nodes ADD COLUMN responsible_manager_id UUID REFERENCES usuarios(id) ON DELETE SET NULL;
+        RAISE NOTICE 'Campo responsible_manager_id criado com sucesso!';
+    ELSE
+        RAISE NOTICE 'Campo responsible_manager_id já existe.';
+    END IF;
+END $$;
+
+-- PASSO 2: Desabilitar RLS temporariamente para limpar
+ALTER TABLE obs_nodes DISABLE ROW LEVEL SECURITY;
+
+-- PASSO 3: Remover TODAS as políticas
+DO $$ 
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN 
+        SELECT policyname FROM pg_policies WHERE tablename = 'obs_nodes' AND schemaname = 'public'
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON obs_nodes', pol.policyname);
+        RAISE NOTICE 'Política removida: %', pol.policyname;
+    END LOOP;
+END $$;
+
+-- PASSO 4: Reabilitar RLS
+ALTER TABLE obs_nodes ENABLE ROW LEVEL SECURITY;
+
+-- PASSO 5: Criar política ÚNICA e SIMPLES para autenticados
+-- Esta política permite TUDO para qualquer usuário autenticado (temporário para teste)
+CREATE POLICY "obs_nodes_authenticated_all" ON obs_nodes
+    FOR ALL TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+-- PASSO 6: Verificar resultado
+SELECT 
+    'Verificação' as tipo,
+    'Campo responsible_manager_id' as item,
+    CASE WHEN EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'obs_nodes' AND column_name = 'responsible_manager_id'
+    ) THEN '✓ OK' ELSE '✗ ERRO' END as status
+UNION ALL
+SELECT 
+    'Verificação',
+    'RLS habilitado',
+    CASE WHEN (SELECT rowsecurity FROM pg_tables WHERE tablename = 'obs_nodes') THEN '✓ OK' ELSE '✗ ERRO' END
+UNION ALL
+SELECT 
+    'Verificação',
+    'Política criada',
+    CASE WHEN EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'obs_nodes' AND policyname = 'obs_nodes_authenticated_all'
+    ) THEN '✓ OK' ELSE '✗ ERRO' END;
+
+-- Mostrar políticas atuais
+SELECT '=== POLÍTICAS ATUAIS ===' as info;
+SELECT policyname, cmd, permissive FROM pg_policies WHERE tablename = 'obs_nodes';
