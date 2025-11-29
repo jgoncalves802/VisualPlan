@@ -112,7 +112,7 @@ BEGIN
         SELECT 1 FROM usuarios u
         WHERE u.id = auth.uid()
         AND u.empresa_id = p_empresa_id
-        AND (u."perfilAcesso" = 'ADMIN' OR u."perfilAcesso" = 'DIRETOR')
+        AND (u.perfil_acesso = 'ADMIN' OR u.perfil_acesso = 'DIRETOR')
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
