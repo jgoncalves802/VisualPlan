@@ -143,13 +143,7 @@ const AdminPage: React.FC = () => {
 
     return (
       <div className="mb-8">
-        <h2 
-          className="text-lg font-semibold mb-4 pb-2 border-b"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-secondary-200)'
-          }}
-        >
+        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200 text-gray-900">
           {title}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -157,11 +151,7 @@ const AdminPage: React.FC = () => {
             <button
               key={card.id}
               onClick={() => handleCardClick(card.path)}
-              className="flex flex-col items-center p-6 rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 text-center group"
-              style={{
-                backgroundColor: 'var(--color-bg-secondary)',
-                borderColor: 'var(--color-secondary-200)',
-              }}
+              className="flex flex-col items-center p-6 rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg hover:-translate-y-1 text-center group"
             >
               <div
                 className="mb-3 p-3 rounded-xl transition-transform group-hover:scale-110"
@@ -172,16 +162,10 @@ const AdminPage: React.FC = () => {
               >
                 {card.icon}
               </div>
-              <h3 
-                className="font-semibold text-sm mb-1"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
+              <h3 className="font-semibold text-sm mb-1 text-gray-900">
                 {card.title}
               </h3>
-              <p 
-                className="text-xs leading-tight"
-                style={{ color: 'var(--color-text-secondary)' }}
-              >
+              <p className="text-xs leading-tight text-gray-600">
                 {card.description}
               </p>
             </button>
@@ -194,16 +178,10 @@ const AdminPage: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 
-          className="text-2xl font-bold mb-2"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
+        <h1 className="text-2xl font-bold mb-2 text-gray-900">
           Administração
         </h1>
-        <p 
-          className="text-sm"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
+        <p className="text-sm text-gray-600">
           Gerencie usuários, empresas, permissões e configurações do sistema
         </p>
       </div>
@@ -212,15 +190,12 @@ const AdminPage: React.FC = () => {
       <CardGrid cards={reportCards} title="Relatórios e Configurações" />
 
       {!usuario && (
-        <div 
-          className="text-center py-12 rounded-lg"
-          style={{ backgroundColor: 'var(--color-bg-secondary)' }}
-        >
-          <Shield className="w-16 h-16 mx-auto mb-4 opacity-30" style={{ color: 'var(--color-text-secondary)' }} />
-          <p className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>
+        <div className="text-center py-12 rounded-lg bg-white border border-gray-200">
+          <Shield className="w-16 h-16 mx-auto mb-4 opacity-30 text-gray-400" />
+          <p className="text-lg font-medium text-gray-900">
             Acesso Restrito
           </p>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm text-gray-600">
             Você precisa estar autenticado para acessar esta área
           </p>
         </div>
