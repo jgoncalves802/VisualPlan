@@ -1,288 +1,600 @@
 /**
  * Página WBS - Work Breakdown Structure
- * Visualização da timeline de todos os projetos
+ * Visualização hierárquica de todos os projetos e suas WBS
+ * Com filtro de visibilidade baseado em atribuições OBS
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProjetosComDuracaoReal } from '../mocks/projetosMocks';
-import { WBSGantt, WBSProject } from '../components/features/wbs/WBSGantt';
+import { 
+  FolderTree, 
+  ChevronRight, 
+  ChevronDown, 
+  Briefcase, 
+  Layers, 
+  Search,
+  Filter,
+  Edit2,
+  Save,
+  X,
+  AlertCircle,
+  Users,
+  Eye
+} from 'lucide-react';
+import { useAuthStore } from '../stores/authStore';
+import { epsService, EpsNode } from '../services/epsService';
+import { wbsEditorService, WbsEditor } from '../services/wbsEditorService';
+import { userObsAssignmentService, UserObsAssignment } from '../services/userObsAssignmentService';
+import { useToast } from '../components/ui/Toast';
 
-export const WBSPage: React.FC = () => {
-  const navigate = useNavigate();
-  type WBSViewMode = 'Day' | 'Week' | 'Month' | 'Year';
-  const [viewMode, setViewMode] = useState<WBSViewMode>('Month');
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
-  const [buscaNome, setBuscaNome] = useState('');
+interface WBSTreeNodeProps {
+  node: EpsNode;
+  depth: number;
+  expandedNodes: Set<string>;
+  toggleNode: (id: string) => void;
+  editingWeight: string | null;
+  setEditingWeight: (id: string | null) => void;
+  tempWeight: string;
+  setTempWeight: (value: string) => void;
+  onSaveWeight: (id: string, weight: number) => Promise<void>;
+  canEditWbs: boolean;
+  onNavigate: (id: string) => void;
+  visibleNodeIds: Set<string>;
+  isAdmin: boolean;
+}
 
-  // Obter projetos com duração real calculada baseada nas atividades
-  const projetosMock = useMemo(() => getProjetosComDuracaoReal(), []);
+const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
+  node,
+  depth,
+  expandedNodes,
+  toggleNode,
+  editingWeight,
+  setEditingWeight,
+  tempWeight,
+  setTempWeight,
+  onSaveWeight,
+  canEditWbs,
+  onNavigate,
+  visibleNodeIds,
+  isAdmin,
+}) => {
+  const isExpanded = expandedNodes.has(node.id);
+  const hasChildren = node.children && node.children.length > 0;
+  const isProject = node.nivel === 0;
+  const isVisible = isAdmin || visibleNodeIds.has(node.id);
+  
+  if (!isVisible) return null;
+  
+  const visibleChildren = node.children?.filter(child => 
+    isAdmin || visibleNodeIds.has(child.id)
+  ) || [];
 
-  // Filtrar projetos
-  const projetosFiltrados = useMemo(() => {
-    let projetos = [...projetosMock];
-
-    // Filtro por status
-    if (filtroStatus !== 'todos') {
-      projetos = projetos.filter((p) => {
-        if (filtroStatus === 'ativo') return p.status === 'Em Andamento';
-        if (filtroStatus === 'concluido') return p.status === 'Concluído';
-        if (filtroStatus === 'atrasado') return p.status === 'Atrasado';
-        return true;
-      });
-    }
-
-    // Filtro por nome
-    if (buscaNome.trim()) {
-      projetos = projetos.filter((p) =>
-        p.nome.toLowerCase().includes(buscaNome.toLowerCase()) ||
-        p.codigo.toLowerCase().includes(buscaNome.toLowerCase())
-      );
-    }
-
-    return projetos;
-  }, [filtroStatus, buscaNome]);
-
-  const wbsProjetos: WBSProject[] = useMemo(() => {
-    return projetosFiltrados.map((projeto) => ({
-      id: projeto.id,
-      nome: projeto.nome,
-      codigo: projeto.codigo,
-      gerente: projeto.gerente,
-      data_inicio: projeto.data_inicio,
-      data_fim: projeto.data_fim,
-      status: projeto.status,
-      progresso: projeto.progresso,
-      cor: projeto.cor,
-      categoria: projeto.tags?.[0],
-      cliente: projeto.cliente,
-    }));
-  }, [projetosFiltrados]);
-
-  const handleProjetoClick = (projetoId: string) => {
-    const projeto = projetosMock.find((p) => p.id === projetoId);
-    if (projeto) {
-      navigate(`/cronograma/${projeto.id}`);
+  const handleWeightEdit = () => {
+    if (canEditWbs && !isProject) {
+      setEditingWeight(node.id);
+      setTempWeight((node.pesoEstimado * 100).toFixed(1));
     }
   };
 
-  // Estatísticas
-  const stats = useMemo(() => {
-    return {
-      total: projetosMock.length,
-      emAndamento: projetosMock.filter((p) => p.status === 'Em Andamento').length,
-      concluidos: projetosMock.filter((p) => p.status === 'Concluído').length,
-      atrasados: projetosMock.filter((p) => p.status === 'Atrasado').length,
-      naoIniciados: projetosMock.filter((p) => p.status === 'Não Iniciado').length,
-    };
-  }, [projetosMock]);
+  const handleWeightSave = async () => {
+    const weight = parseFloat(tempWeight);
+    if (!isNaN(weight) && weight >= 0 && weight <= 100) {
+      await onSaveWeight(node.id, weight / 100);
+    }
+    setEditingWeight(null);
+  };
+
+  const handleWeightCancel = () => {
+    setEditingWeight(null);
+  };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">WBS - Visão Geral de Projetos</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Timeline de todos os projetos em execução e concluídos
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Estatísticas */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="grid grid-cols-5 gap-4">
-          {/* Total */}
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase">Total</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-              </div>
-              <div className="bg-gray-200 rounded-full p-2">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Em Andamento */}
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-blue-600 uppercase">Em Andamento</p>
-                <p className="text-2xl font-bold text-blue-900 mt-1">{stats.emAndamento}</p>
-              </div>
-              <div className="bg-blue-200 rounded-full p-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Concluídos */}
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-green-600 uppercase">Concluídos</p>
-                <p className="text-2xl font-bold text-green-900 mt-1">{stats.concluidos}</p>
-              </div>
-              <div className="bg-green-200 rounded-full p-2">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Atrasados */}
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-orange-600 uppercase">Atrasados</p>
-                <p className="text-2xl font-bold text-orange-900 mt-1">{stats.atrasados}</p>
-              </div>
-              <div className="bg-orange-200 rounded-full p-2">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Não Iniciados */}
-          <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 uppercase">Não Iniciados</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.naoIniciados}</p>
-              </div>
-              <div className="bg-gray-300 rounded-full p-2">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          {/* Filtros */}
-          <div className="flex items-center gap-4">
-            {/* Busca */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar projeto..."
-                value={buscaNome}
-                onChange={(e) => setBuscaNome(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-              />
-              <svg
-                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-
-            {/* Filtro Status */}
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="todos">Todos os Status</option>
-              <option value="ativo">Em Andamento</option>
-              <option value="concluido">Concluídos</option>
-              <option value="atrasado">Atrasados</option>
-            </select>
-          </div>
-
-          {/* Escala de Tempo */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Escala:</span>
-            <select
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value as WBSViewMode)}
-              className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Day">Dia</option>
-              <option value="Week">Semana</option>
-              <option value="Month">Mês</option>
-              <option value="Year">Ano</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline Gantt */}
-      <div className="flex-1 overflow-hidden p-6">
-        {wbsProjetos.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <svg
-                className="mx-auto h-16 w-16 text-gray-400 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum projeto encontrado</h3>
-              <p className="text-gray-500">Tente ajustar os filtros.</p>
-            </div>
-          </div>
+    <div className="select-none">
+      <div
+        className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+          isProject 
+            ? 'bg-purple-50 hover:bg-purple-100 border border-purple-200' 
+            : 'hover:bg-gray-100'
+        }`}
+        style={{ marginLeft: depth * 24 }}
+      >
+        {hasChildren || visibleChildren.length > 0 ? (
+          <button
+            onClick={() => toggleNode(node.id)}
+            className="p-1 rounded hover:bg-gray-200"
+          >
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
         ) : (
-          <div className="bg-transparent h-full min-h-[520px]">
-            <WBSGantt projetos={wbsProjetos} escala={viewMode} onProjetoClick={handleProjetoClick} />
+          <div className="w-6" />
+        )}
+
+        <div
+          className={`w-8 h-8 rounded flex items-center justify-center ${
+            isProject ? 'bg-purple-200' : 'bg-blue-100'
+          }`}
+        >
+          {isProject ? (
+            <Briefcase className={`w-4 h-4 ${isProject ? 'text-purple-600' : 'text-blue-600'}`} />
+          ) : (
+            <Layers className="w-4 h-4 text-blue-600" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={`font-medium truncate ${isProject ? 'text-purple-900' : 'text-gray-900'}`}>
+              {node.nome}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              isProject ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {node.codigo}
+            </span>
+            {isProject && (
+              <span className="text-xs px-2 py-0.5 rounded bg-purple-500 text-white">
+                PROJETO
+              </span>
+            )}
+            {!isProject && (
+              <span className="text-xs px-2 py-0.5 rounded bg-blue-500 text-white">
+                WBS
+              </span>
+            )}
+          </div>
+          {node.descricao && (
+            <p className="text-xs text-gray-500 truncate mt-0.5">{node.descricao}</p>
+          )}
+        </div>
+
+        {!isProject && (
+          <div className="flex items-center gap-2">
+            {editingWeight === node.id ? (
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  value={tempWeight}
+                  onChange={(e) => setTempWeight(e.target.value)}
+                  className="w-16 px-2 py-1 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleWeightSave();
+                    if (e.key === 'Escape') handleWeightCancel();
+                  }}
+                />
+                <span className="text-sm text-gray-500">%</span>
+                <button
+                  onClick={handleWeightSave}
+                  className="p-1 text-green-600 hover:bg-green-100 rounded"
+                >
+                  <Save className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleWeightCancel}
+                  className="p-1 text-red-600 hover:bg-red-100 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div 
+                className={`flex items-center gap-1 px-2 py-1 rounded ${
+                  canEditWbs ? 'cursor-pointer hover:bg-blue-50' : ''
+                }`}
+                onClick={handleWeightEdit}
+                title={canEditWbs ? 'Clique para editar o peso' : 'Peso estimado'}
+              >
+                <span className="text-sm font-medium text-gray-700">
+                  {(node.pesoEstimado * 100).toFixed(1)}%
+                </span>
+                {canEditWbs && (
+                  <Edit2 className="w-3 h-3 text-gray-400" />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {isProject && (
+          <button
+            onClick={() => onNavigate(node.id)}
+            className="flex items-center gap-1 px-3 py-1 text-sm text-purple-600 hover:bg-purple-100 rounded transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            Ver Detalhes
+          </button>
+        )}
+
+        {node.responsibleManager && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs text-gray-600">
+            <Users className="w-3 h-3" />
+            {node.responsibleManager.nome}
           </div>
         )}
       </div>
 
-      {/* Legenda */}
+      {isExpanded && visibleChildren.length > 0 && (
+        <div>
+          {visibleChildren.map((child) => (
+            <WBSTreeNode
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              expandedNodes={expandedNodes}
+              toggleNode={toggleNode}
+              editingWeight={editingWeight}
+              setEditingWeight={setEditingWeight}
+              tempWeight={tempWeight}
+              setTempWeight={setTempWeight}
+              onSaveWeight={onSaveWeight}
+              canEditWbs={canEditWbs}
+              onNavigate={onNavigate}
+              visibleNodeIds={visibleNodeIds}
+              isAdmin={isAdmin}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const WBSPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { usuario } = useAuthStore();
+  const toast = useToast();
+  
+  const [loading, setLoading] = useState(true);
+  const [epsTree, setEpsTree] = useState<EpsNode[]>([]);
+  const [wbsEditors, setWbsEditors] = useState<WbsEditor[]>([]);
+  const [userAssignments, setUserAssignments] = useState<UserObsAssignment[]>([]);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterProject, setFilterProject] = useState<string>('all');
+  const [editingWeight, setEditingWeight] = useState<string | null>(null);
+  const [tempWeight, setTempWeight] = useState<string>('');
+
+  const empresaId = usuario?.empresaId;
+  const isAdmin = usuario?.perfilAcesso === 'ADMIN';
+
+  const loadData = useCallback(async () => {
+    if (!empresaId || !usuario?.id) return;
+    
+    setLoading(true);
+    try {
+      const [tree, editors, assignments] = await Promise.all([
+        epsService.getTree(empresaId),
+        wbsEditorService.getByUser(usuario.id),
+        userObsAssignmentService.getByUser(usuario.id),
+      ]);
+      
+      setEpsTree(tree);
+      setWbsEditors(editors);
+      setUserAssignments(assignments);
+      
+      const rootIds = tree.map(node => node.id);
+      setExpandedNodes(new Set(rootIds));
+    } catch (error) {
+      console.error('Error loading WBS data:', error);
+      toast.error('Erro ao carregar dados do WBS');
+    } finally {
+      setLoading(false);
+    }
+  }, [empresaId, usuario?.id, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const visibleNodeIds = useMemo(() => {
+    if (isAdmin) return new Set<string>();
+    
+    const visible = new Set<string>();
+    
+    const obsNodeIds = userAssignments.map(a => a.obsNodeId);
+    
+    const addVisibleNodes = (node: EpsNode) => {
+      if (node.responsibleManagerId && obsNodeIds.includes(node.responsibleManagerId)) {
+        visible.add(node.id);
+        const addAllChildren = (n: EpsNode) => {
+          visible.add(n.id);
+          n.children?.forEach(addAllChildren);
+        };
+        node.children?.forEach(addAllChildren);
+      }
+      
+      node.children?.forEach(addVisibleNodes);
+    };
+    
+    epsTree.forEach(addVisibleNodes);
+    
+    const addParentChain = (nodes: EpsNode[], targetId: string, chain: string[] = []): string[] | null => {
+      for (const node of nodes) {
+        if (node.id === targetId) {
+          return chain;
+        }
+        if (node.children) {
+          const result = addParentChain(node.children, targetId, [...chain, node.id]);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+    
+    const currentVisible = new Set(visible);
+    currentVisible.forEach(nodeId => {
+      const parentChain = addParentChain(epsTree, nodeId);
+      if (parentChain) {
+        parentChain.forEach(id => visible.add(id));
+      }
+    });
+    
+    return visible;
+  }, [isAdmin, userAssignments, epsTree]);
+
+  const canEditWbsForProject = useCallback((projectId: string): boolean => {
+    if (isAdmin) return true;
+    return wbsEditors.some(editor => 
+      editor.epsNodeId === projectId && (editor.canEdit || editor.canCreate)
+    );
+  }, [isAdmin, wbsEditors]);
+
+  const projects = useMemo(() => {
+    return epsTree.filter(node => node.nivel === 0);
+  }, [epsTree]);
+
+  const filteredTree = useMemo(() => {
+    let tree = [...epsTree];
+    
+    if (filterProject !== 'all') {
+      tree = tree.filter(node => node.id === filterProject);
+    }
+    
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      const filterNode = (node: EpsNode): EpsNode | null => {
+        const matches = 
+          node.nome.toLowerCase().includes(search) ||
+          node.codigo.toLowerCase().includes(search) ||
+          node.descricao?.toLowerCase().includes(search);
+        
+        const filteredChildren = node.children
+          ?.map(filterNode)
+          .filter((n): n is EpsNode => n !== null) || [];
+        
+        if (matches || filteredChildren.length > 0) {
+          return { ...node, children: filteredChildren };
+        }
+        return null;
+      };
+      
+      tree = tree.map(filterNode).filter((n): n is EpsNode => n !== null);
+    }
+    
+    return tree;
+  }, [epsTree, filterProject, searchTerm]);
+
+  const toggleNode = (id: string) => {
+    setExpandedNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    const allIds = new Set<string>();
+    const addAllIds = (nodes: EpsNode[]) => {
+      nodes.forEach(node => {
+        allIds.add(node.id);
+        if (node.children) addAllIds(node.children);
+      });
+    };
+    addAllIds(epsTree);
+    setExpandedNodes(allIds);
+  };
+
+  const collapseAll = () => {
+    setExpandedNodes(new Set());
+  };
+
+  const handleSaveWeight = async (nodeId: string, weight: number) => {
+    try {
+      await epsService.update(nodeId, { pesoEstimado: weight });
+      await loadData();
+      toast.success('Peso atualizado com sucesso');
+    } catch (error) {
+      console.error('Error updating weight:', error);
+      toast.error('Erro ao atualizar o peso');
+    }
+  };
+
+  const handleNavigate = (projectId: string) => {
+    navigate(`/cronograma/${projectId}`);
+  };
+
+  const stats = useMemo(() => {
+    const countNodes = (nodes: EpsNode[]): { projects: number; wbs: number } => {
+      let projects = 0;
+      let wbs = 0;
+      nodes.forEach(node => {
+        if (isAdmin || visibleNodeIds.has(node.id)) {
+          if (node.nivel === 0) {
+            projects++;
+          } else {
+            wbs++;
+          }
+          if (node.children) {
+            const childCounts = countNodes(node.children);
+            projects += childCounts.projects;
+            wbs += childCounts.wbs;
+          }
+        }
+      });
+      return { projects, wbs };
+    };
+    return countNodes(epsTree);
+  }, [epsTree, visibleNodeIds, isAdmin]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando estrutura WBS...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <FolderTree className="w-7 h-7 text-purple-600" />
+              WBS - Todos os Projetos
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Estrutura hierárquica de projetos e pacotes de trabalho
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-lg">
+              <Briefcase className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-900">{stats.projects} Projetos</span>
+            </div>
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
+              <Layers className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-900">{stats.wbs} Itens WBS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar por nome ou código..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-72"
+              />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">Todos os Projetos</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.nome} ({project.codigo})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={expandAll}
+              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Expandir Tudo
+            </button>
+            <button
+              onClick={collapseAll}
+              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Recolher Tudo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-6">
+        {filteredTree.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm || filterProject !== 'all' 
+                  ? 'Nenhum resultado encontrado'
+                  : 'Nenhum projeto cadastrado'}
+              </h3>
+              <p className="text-gray-500">
+                {searchTerm || filterProject !== 'all'
+                  ? 'Tente ajustar os filtros de busca.'
+                  : 'Crie um projeto na página de administração EPS/WBS.'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-1">
+            {filteredTree.map((node) => (
+              <WBSTreeNode
+                key={node.id}
+                node={node}
+                depth={0}
+                expandedNodes={expandedNodes}
+                toggleNode={toggleNode}
+                editingWeight={editingWeight}
+                setEditingWeight={setEditingWeight}
+                tempWeight={tempWeight}
+                setTempWeight={setTempWeight}
+                onSaveWeight={handleSaveWeight}
+                canEditWbs={canEditWbsForProject(node.id)}
+                onNavigate={handleNavigate}
+                visibleNodeIds={visibleNodeIds}
+                isAdmin={isAdmin}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex items-center gap-6 text-sm text-gray-600">
           <span className="font-medium">Legenda:</span>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-            <span>Software</span>
+            <div className="w-6 h-6 bg-purple-200 rounded flex items-center justify-center">
+              <Briefcase className="w-3 h-3 text-purple-600" />
+            </div>
+            <span>Projeto (EPS)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
-            <span>Construção Civil</span>
+            <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+              <Layers className="w-3 h-3 text-blue-600" />
+            </div>
+            <span>Item WBS</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-            <span>Reforma</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-            <span>Emergencial</span>
-          </div>
-          <span className="ml-auto text-xs italic">💡 Clique em um projeto para ver seu cronograma detalhado</span>
+          <span className="ml-auto text-xs italic">
+            {isAdmin 
+              ? 'Como administrador, você pode ver todos os projetos e WBS'
+              : 'Você vê apenas os projetos e WBS atribuídos a você via OBS'}
+          </span>
         </div>
       </div>
     </div>
   );
 };
-

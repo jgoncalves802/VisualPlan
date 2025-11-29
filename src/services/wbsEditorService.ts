@@ -101,6 +101,34 @@ export const wbsEditorService = {
     return (data || []).map(mapFromDB);
   },
 
+  async getByUser(usuarioId: string): Promise<WbsEditor[]> {
+    const { data, error } = await supabase
+      .from('wbs_editors')
+      .select(`
+        *,
+        usuarios:usuario_id (
+          id,
+          nome,
+          email,
+          perfil_acesso
+        ),
+        eps_nodes:eps_node_id (
+          id,
+          nome,
+          codigo
+        )
+      `)
+      .eq('usuario_id', usuarioId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching WBS editors for user:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapFromDB);
+  },
+
   async getByProject(epsNodeId: string): Promise<WbsEditor[]> {
     const { data, error } = await supabase
       .from('wbs_editors')
