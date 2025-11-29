@@ -1,19 +1,22 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { MainLayout } from './components/common/MainLayout';
-import { LoginPage } from './pages/Login';
-import { DashboardPage } from './pages/Dashboard';
-import { CronogramaPage } from './pages/CronogramaPage';
-import { useAuthStore } from './store';
+import MainLayout from '../components/layout/Layout';
+import { LoginPage } from '../pages/Login';
+import DashboardPage from '../pages/DashboardPage';
+import { CronogramaPage } from '../pages/CronogramaPage';
+import AdminPage from '../pages/AdminPage';
+import AdminUsuariosPage from '../pages/AdminUsuariosPage';
+import AdminEmpresasPage from '../pages/AdminEmpresasPage';
+import AdminTemasPage from '../pages/AdminTemasPage';
+import { useAuthStore } from '../stores/authStore';
 
-// Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, hasHydrated } = useAuthStore();
 
-  if (isLoading) {
+  if (!hasHydrated) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
-        <div className="spinner"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -65,9 +68,20 @@ export const AppRoutes: React.FC = () => {
           <Route path="kanban" element={<PlaceholderPage title="Minhas Tarefas" />} />
           <Route path="bim" element={<PlaceholderPage title="BIM 4D" />} />
           <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
-          <Route path="usuarios" element={<PlaceholderPage title="Gestão de Usuários" />} />
           <Route path="configuracoes" element={<PlaceholderPage title="Configurações" />} />
           <Route path="perfil" element={<PlaceholderPage title="Meu Perfil" />} />
+          
+          {/* Admin Routes */}
+          <Route path="admin" element={<AdminPage />} />
+          <Route path="admin/usuarios" element={<AdminUsuariosPage />} />
+          <Route path="admin/empresas" element={<AdminEmpresasPage />} />
+          <Route path="admin/temas" element={<AdminTemasPage />} />
+          <Route path="admin/perfis" element={<PlaceholderPage title="Perfis de Acesso" />} />
+          <Route path="admin/seguranca" element={<PlaceholderPage title="Segurança" />} />
+          <Route path="admin/relatorios" element={<PlaceholderPage title="Relatórios" />} />
+          <Route path="admin/logs" element={<PlaceholderPage title="Logs de Atividade" />} />
+          <Route path="admin/api-keys" element={<PlaceholderPage title="Chaves de API" />} />
+          <Route path="admin/configuracoes" element={<PlaceholderPage title="Configurações Gerais" />} />
         </Route>
 
         {/* 404 */}

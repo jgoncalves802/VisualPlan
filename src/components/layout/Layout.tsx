@@ -16,10 +16,10 @@ import {
   User,
   Network
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -122,7 +122,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ul className="space-y-2">
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || 
+                  (item.path === '/admin' && location.pathname.startsWith('/admin'));
                 
                 return (
                   <li key={item.path}>
@@ -195,7 +196,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <div className="p-6 h-[calc(100vh-73px)] overflow-y-auto">
-          {children}
+          {children || <Outlet />}
         </div>
       </main>
 

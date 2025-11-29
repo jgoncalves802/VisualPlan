@@ -6,9 +6,11 @@ interface AuthState {
   usuario: Usuario | null;
   isAuthenticated: boolean;
   token: string | null;
+  hasHydrated: boolean;
   login: (usuario: Usuario, token: string) => void;
   logout: () => void;
   updateUsuario: (usuario: Partial<Usuario>) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -17,6 +19,7 @@ export const useAuthStore = create<AuthState>()(
       usuario: null,
       isAuthenticated: false,
       token: null,
+      hasHydrated: false,
       
       login: (usuario, token) => {
         set({
@@ -38,10 +41,17 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           usuario: state.usuario ? { ...state.usuario, ...updates } : null
         }));
+      },
+      
+      setHasHydrated: (state) => {
+        set({ hasHydrated: state });
       }
     }),
     {
-      name: 'visionplan-auth'
+      name: 'visionplan-auth',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      }
     }
   )
 );
