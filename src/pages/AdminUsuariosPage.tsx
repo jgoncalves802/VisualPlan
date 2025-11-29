@@ -517,17 +517,16 @@ const AdminUsuariosPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+          <h1 className="text-3xl font-bold text-gray-900">
             Gestão de Usuários
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm mt-1 text-gray-600">
             Gerencie os usuários e suas permissões de acesso à plataforma
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="px-4 py-2 rounded-lg text-white transition-colors flex items-center gap-2 hover:opacity-90"
-          style={{ backgroundColor: 'var(--color-primary-500)' }}
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white transition-colors flex items-center gap-2 hover:bg-blue-700"
         >
           <Plus className="w-5 h-5" />
           <span>Novo Usuário</span>
@@ -535,88 +534,64 @@ const AdminUsuariosPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div
-          className="p-4 rounded-xl"
-          style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-secondary-200)' }}
-        >
+        <div className="p-4 rounded-xl bg-white border border-gray-200">
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'var(--color-primary-500)20' }}
-            >
-              <Users className="w-6 h-6" style={{ color: 'var(--color-primary-500)' }} />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-2xl font-bold text-gray-900">
                 {stats.total}
               </p>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-sm text-gray-600">
                 Total de Usuários
               </p>
             </div>
           </div>
         </div>
 
-        <div
-          className="p-4 rounded-xl"
-          style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-secondary-200)' }}
-        >
+        <div className="p-4 rounded-xl bg-white border border-gray-200">
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'var(--color-success)20' }}
-            >
-              <UserCheck className="w-6 h-6" style={{ color: 'var(--color-success)' }} />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-100">
+              <UserCheck className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-2xl font-bold text-gray-900">
                 {stats.ativos}
               </p>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-sm text-gray-600">
                 Usuários Ativos
               </p>
             </div>
           </div>
         </div>
 
-        <div
-          className="p-4 rounded-xl"
-          style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-secondary-200)' }}
-        >
+        <div className="p-4 rounded-xl bg-white border border-gray-200">
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'var(--color-warning)20' }}
-            >
-              <UserX className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-100">
+              <UserX className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-2xl font-bold text-gray-900">
                 {stats.inativos}
               </p>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-sm text-gray-600">
                 Usuários Inativos
               </p>
             </div>
           </div>
         </div>
 
-        <div
-          className="p-4 rounded-xl"
-          style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-secondary-200)' }}
-        >
+        <div className="p-4 rounded-xl bg-white border border-gray-200">
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'var(--color-info)20' }}
-            >
-              <Building2 className="w-6 h-6" style={{ color: 'var(--color-info)' }} />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-cyan-100">
+              <Building2 className="w-6 h-6 text-cyan-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-2xl font-bold text-gray-900">
                 3
               </p>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-sm text-gray-600">
                 Camadas de Governança
               </p>
             </div>
@@ -624,49 +599,30 @@ const AdminUsuariosPage: React.FC = () => {
         </div>
       </div>
 
-      <div
-        className="rounded-xl p-6"
-        style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-secondary-200)' }}
-      >
+      <div className="rounded-xl p-6 bg-white border border-gray-200">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-              style={{ color: 'var(--color-text-secondary)' }}
-            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar por nome ou e-mail..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-              style={{
-                borderColor: 'var(--color-secondary-200)',
-                backgroundColor: 'var(--color-bg-main)',
-                color: 'var(--color-text-primary)',
-              }}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
-              showFilters ? 'bg-primary-50' : ''
+              showFilters ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
-            style={{
-              borderColor: showFilters ? 'var(--color-primary-500)' : 'var(--color-secondary-200)',
-              color: showFilters ? 'var(--color-primary-500)' : 'var(--color-text-primary)',
-            }}
           >
             <Filter className="w-5 h-5" />
             <span>Filtros</span>
           </button>
           <button
             onClick={loadUsuarios}
-            className="px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 hover:bg-gray-50"
-            style={{
-              borderColor: 'var(--color-secondary-200)',
-              color: 'var(--color-text-primary)',
-            }}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 transition-colors flex items-center gap-2 hover:bg-gray-50"
           >
             <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Atualizar</span>
@@ -674,23 +630,15 @@ const AdminUsuariosPage: React.FC = () => {
         </div>
 
         {showFilters && (
-          <div
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-lg mb-6"
-            style={{ backgroundColor: 'var(--color-bg-main)' }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-lg mb-6 bg-gray-50">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Empresa
               </label>
               <select
                 value={filters.empresaId}
                 onChange={(e) => setFilters({ ...filters, empresaId: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-secondary)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Todas</option>
                 {empresas.map((empresa) => (
@@ -702,7 +650,7 @@ const AdminUsuariosPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Camada de Governança
               </label>
               <select
@@ -710,12 +658,7 @@ const AdminUsuariosPage: React.FC = () => {
                 onChange={(e) =>
                   setFilters({ ...filters, camadaGovernanca: e.target.value as CamadaGovernanca | '' })
                 }
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-secondary)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Todas</option>
                 {Object.entries(CAMADA_GOVERNANCA_LABELS).map(([value, label]) => (
@@ -727,18 +670,13 @@ const AdminUsuariosPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Perfil de Acesso
               </label>
               <select
                 value={filters.perfilAcesso}
                 onChange={(e) => setFilters({ ...filters, perfilAcesso: e.target.value as PerfilAcesso | '' })}
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-secondary)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Todos</option>
                 {Object.entries(PERFIL_ACESSO_LABELS).map(([value, label]) => (
@@ -750,18 +688,13 @@ const AdminUsuariosPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Status
               </label>
               <select
                 value={filters.ativo}
                 onChange={(e) => setFilters({ ...filters, ativo: e.target.value as 'true' | 'false' | '' })}
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-secondary)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Todos</option>
                 <option value="true">Ativos</option>
@@ -773,15 +706,15 @@ const AdminUsuariosPage: React.FC = () => {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-8 h-8 animate-spin" style={{ color: 'var(--color-primary-500)' }} />
+            <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-12">
-            <Users className="w-16 h-16 mx-auto mb-4 opacity-30" style={{ color: 'var(--color-text-secondary)' }} />
-            <p className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>
+            <Users className="w-16 h-16 mx-auto mb-4 opacity-30 text-gray-400" />
+            <p className="text-lg font-medium text-gray-900">
               Nenhum usuário encontrado
             </p>
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="text-sm text-gray-600">
               Tente ajustar os filtros ou criar um novo usuário
             </p>
           </div>
@@ -789,23 +722,23 @@ const AdminUsuariosPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-secondary-200)' }}>
-                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Usuário
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Empresa
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Camada
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Perfil
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Status
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
                     Ações
                   </th>
                 </tr>
@@ -814,24 +747,20 @@ const AdminUsuariosPage: React.FC = () => {
                 {filteredUsers.map((user) => (
                   <tr
                     key={user.id}
-                    className="hover:bg-gray-50 transition-colors"
-                    style={{ borderBottom: '1px solid var(--color-secondary-200)' }}
+                    className="hover:bg-gray-50 transition-colors border-b border-gray-200"
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                          style={{
-                            backgroundColor: user.ativo ? 'var(--color-primary-500)' : 'var(--color-secondary-400)',
-                          }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${user.ativo ? 'bg-blue-600' : 'bg-gray-400'}`}
                         >
                           {user.nome.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                          <p className="font-medium text-gray-900">
                             {user.nome}
                           </p>
-                          <p className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-secondary)' }}>
+                          <p className="text-sm flex items-center gap-1 text-gray-500">
                             <Mail className="w-3 h-3" />
                             {user.email}
                           </p>
@@ -840,48 +769,38 @@ const AdminUsuariosPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-1">
-                        <Building2 className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                        <span style={{ color: 'var(--color-text-primary)' }}>
+                        <Building2 className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-900">
                           {empresas.find(e => e.id === user.empresaId)?.nome || '-'}
                         </span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <span
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          backgroundColor:
-                            user.camadaGovernanca === CamadaGovernanca.PROPONENTE
-                              ? 'var(--color-primary-500)15'
-                              : user.camadaGovernanca === CamadaGovernanca.FISCALIZACAO
-                              ? 'var(--color-warning)15'
-                              : 'var(--color-info)15',
-                          color:
-                            user.camadaGovernanca === CamadaGovernanca.PROPONENTE
-                              ? 'var(--color-primary-500)'
-                              : user.camadaGovernanca === CamadaGovernanca.FISCALIZACAO
-                              ? 'var(--color-warning)'
-                              : 'var(--color-info)',
-                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          user.camadaGovernanca === CamadaGovernanca.PROPONENTE
+                            ? 'bg-blue-100 text-blue-700'
+                            : user.camadaGovernanca === CamadaGovernanca.FISCALIZACAO
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-cyan-100 text-cyan-700'
+                        }`}
                       >
                         {CAMADA_GOVERNANCA_LABELS[user.camadaGovernanca]}
                       </span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-1">
-                        <Shield className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                        <span style={{ color: 'var(--color-text-primary)' }}>
+                        <Shield className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-900">
                           {PERFIL_ACESSO_LABELS[user.perfilAcesso]}
                         </span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <span
-                        className="px-2 py-1 rounded text-xs font-medium flex items-center gap-1 w-fit"
-                        style={{
-                          backgroundColor: user.ativo ? 'var(--color-success)15' : 'var(--color-danger)15',
-                          color: user.ativo ? 'var(--color-success)' : 'var(--color-danger)',
-                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 w-fit ${
+                          user.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}
                       >
                         {user.ativo ? <Power className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
                         {user.ativo ? 'Ativo' : 'Inativo'}
@@ -894,14 +813,14 @@ const AdminUsuariosPage: React.FC = () => {
                           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                           title="Editar usuário"
                         >
-                          <Edit2 className="w-4 h-4" style={{ color: 'var(--color-primary-500)' }} />
+                          <Edit2 className="w-4 h-4 text-blue-600" />
                         </button>
                         <button
                           onClick={() => handleResetPassword(user)}
                           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                           title="Redefinir senha"
                         >
-                          <Key className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
+                          <Key className="w-4 h-4 text-amber-600" />
                         </button>
                         <button
                           onClick={() => handleToggleActive(user)}
@@ -910,9 +829,9 @@ const AdminUsuariosPage: React.FC = () => {
                           disabled={user.id === currentUser?.id}
                         >
                           {user.ativo ? (
-                            <PowerOff className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                            <PowerOff className="w-4 h-4 text-red-600" />
                           ) : (
-                            <Power className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                            <Power className="w-4 h-4 text-green-600" />
                           )}
                         </button>
                       </div>
@@ -925,20 +844,14 @@ const AdminUsuariosPage: React.FC = () => {
         )}
       </div>
 
-      <div
-        className="p-4 rounded-xl border-l-4"
-        style={{
-          backgroundColor: 'var(--color-bg-secondary)',
-          borderLeftColor: 'var(--color-info)',
-        }}
-      >
+      <div className="p-4 rounded-xl border-l-4 bg-blue-50 border-l-blue-500">
         <div className="flex items-start gap-3">
-          <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-info)' }} />
+          <Shield className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-600" />
           <div>
-            <h3 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+            <h3 className="font-semibold text-gray-900">
               Sobre as Permissões
             </h3>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="text-sm mt-1 text-gray-600">
               O sistema possui 3 camadas de governança (Proponente, Fiscalização, Contratada) e 10 perfis de acesso.
               Cada perfil determina quais funcionalidades o usuário pode acessar. Administradores têm acesso completo,
               enquanto colaboradores têm acesso restrito às suas tarefas.
