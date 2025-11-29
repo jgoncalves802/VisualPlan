@@ -100,12 +100,49 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Admin User Management Page
+  - Created `AdminUsuariosPage.tsx` - complete user management page with:
+    - User listing with search and filters (by governance layer, access profile, status)
+    - Statistics cards showing total, active, and inactive users
+    - Create new user modal with Supabase Auth integration
+    - Edit user functionality (name, governance layer, access profile)
+    - Activate/deactivate user toggle
+    - Password reset via email
+  - Created `userService.ts` with CRUD operations:
+    - Integration with Supabase Auth for user creation
+    - Database operations for user profile management
+    - Error handling for duplicate emails
+  - Route protection:
+    - Only ADMIN and DIRETOR profiles can access `/admin/usuarios`
+    - AdminRoute component for protected admin routes
+  - Sidebar navigation updated with "Gestão de Usuários" link
+  - Labels for 3 governance layers and 10 access profiles
+
 - **2024-11-29**: Initial Replit setup
   - Configured Vite for Replit environment (port 5000, host 0.0.0.0)
   - Set up HMR for Replit proxy with WSS protocol
   - Installed all dependencies
   - Configured deployment for static site hosting
   - Created workflow for frontend development
+
+## User Permissions System
+
+### Governance Layers (Camadas de Governança)
+1. **PROPONENTE** - Client/Owner (Profiles: ADMIN, DIRETOR, GERENTE_PROJETO)
+2. **FISCALIZACAO** - Inspection/Audit (Profiles: FISCALIZACAO_LEAD, FISCALIZACAO_TECNICO)
+3. **CONTRATADA** - Contractor (Profiles: ENGENHEIRO_PLANEJAMENTO, COORDENADOR_OBRA, MESTRE_OBRAS, ENCARREGADO, COLABORADOR)
+
+### Access Profiles
+- ADMIN: Full system access including user management and themes
+- DIRETOR: Dashboard, reports, scope change approvals
+- GERENTE_PROJETO: Project management and oversight
+- ENGENHEIRO_PLANEJAMENTO: Schedule editing, activity creation, restrictions
+- COORDENADOR_OBRA: Construction coordination
+- MESTRE_OBRAS: Field supervision
+- ENCARREGADO: Team management
+- COLABORADOR: Kanban tasks, check-in/check-out
+- FISCALIZACAO_LEAD: Quality approvals, schedule releases
+- FISCALIZACAO_TECNICO: Technical inspections
 
 ## Notes
 

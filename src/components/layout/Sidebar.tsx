@@ -79,9 +79,9 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'usuarios',
-    label: 'Usuários',
+    label: 'Gestão de Usuários',
     icon: <Users className="w-5 h-5" />,
-    path: '/usuarios',
+    path: '/admin/usuarios',
     minPerfil: [PerfilAcesso.ADMIN, PerfilAcesso.DIRETOR],
   },
   {

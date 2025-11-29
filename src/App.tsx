@@ -7,10 +7,12 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
+import AdminUsuariosPage from './pages/AdminUsuariosPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
 import { RestricoesPage } from './pages/RestricoesPage';
+import { PerfilAcesso } from './types';
 import './styles/global.css';
 
 // Protected Route Component
@@ -19,6 +21,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin Protected Route - Only for ADMIN users
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, usuario } = useAuthStore();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (usuario?.perfilAcesso !== PerfilAcesso.ADMIN && usuario?.perfilAcesso !== PerfilAcesso.DIRETOR) {
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -180,6 +197,17 @@ function App() {
                 <AdminTemasPage />
               </Layout>
             </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/usuarios"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminUsuariosPage />
+              </Layout>
+            </AdminRoute>
           }
         />
 
