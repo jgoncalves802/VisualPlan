@@ -4,6 +4,9 @@ import MainLayout from '../components/layout/Layout';
 import { LoginPage } from '../pages/Login';
 import DashboardPage from '../pages/DashboardPage';
 import { CronogramaPage } from '../pages/CronogramaPage';
+import KanbanPage from '../pages/KanbanPage';
+import { RestricoesPage } from '../pages/RestricoesPage';
+import { LPSPage } from '../pages/LPSPage';
 import AdminPage from '../pages/AdminPage';
 import AdminUsuariosPage from '../pages/AdminUsuariosPage';
 import AdminEmpresasPage from '../pages/AdminEmpresasPage';
@@ -65,9 +68,9 @@ export const AppRoutes: React.FC = () => {
           <Route path="projetos" element={<PlaceholderPage title="Projetos" />} />
           <Route path="planejamento" element={<PlaceholderPage title="Planejamento" />} />
           <Route path="cronograma/:projetoId" element={<CronogramaPage />} />
-          <Route path="lps" element={<PlaceholderPage title="Last Planner System" />} />
-          <Route path="restricoes" element={<PlaceholderPage title="Gestão de Restrições" />} />
-          <Route path="kanban" element={<PlaceholderPage title="Minhas Tarefas" />} />
+          <Route path="lps" element={<LPSPage />} />
+          <Route path="restricoes" element={<RestricoesPage />} />
+          <Route path="kanban" element={<KanbanPage />} />
           <Route path="bim" element={<PlaceholderPage title="BIM 4D" />} />
           <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
           <Route path="configuracoes" element={<PlaceholderPage title="Configurações" />} />
