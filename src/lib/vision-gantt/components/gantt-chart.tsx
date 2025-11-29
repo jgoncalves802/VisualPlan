@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Task, Dependency, Resource, ViewPreset, ColumnConfig, GanttConfig, ViewPresetConfig } from '../types';
+import type { WorkingCalendar } from '../types/advanced-features';
 import { GanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
 import { ZoomControl } from './zoom-control';
@@ -34,9 +35,10 @@ export function GanttChart({
   tasks: initialTasks,
   dependencies: initialDependencies,
   resources: initialResources,
+  calendars: initialCalendars,
   viewPreset: initialViewPreset = 'month',
   columns = DEFAULT_COLUMNS,
-  rowHeight = 50, // Aumentado de 40 para 50 para dar mais espaço às linhas de dependência
+  rowHeight = 50,
   barHeight = 28,
   barRadius = 4,
   gridWidth = 600,
@@ -66,10 +68,11 @@ export function GanttChart({
   const timelineScrollRef = useRef<HTMLDivElement>(null);
 
   // Initialize stores
-  const { taskStore, dependencyStore, tasks, dependencies } = useGanttStores(
+  const { taskStore, dependencyStore, calendarStore, tasks, dependencies, calendars } = useGanttStores(
     initialTasks,
     initialDependencies,
-    initialResources
+    initialResources,
+    initialCalendars
   );
 
   // Flatten tasks for display

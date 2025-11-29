@@ -141,11 +141,14 @@ export interface ViewPresetConfig {
 // GANTT CHART CONFIGURATION
 // ============================================================================
 
+import type { WorkingCalendar } from './advanced-features';
+
 export interface GanttConfig {
   // Data
   tasks: Task[];
   dependencies: Dependency[];
   resources?: Resource[];
+  calendars?: WorkingCalendar[];
   
   // View settings
   viewPreset?: ViewPreset;

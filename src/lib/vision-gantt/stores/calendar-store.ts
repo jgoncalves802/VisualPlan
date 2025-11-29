@@ -61,6 +61,12 @@ export class CalendarStore {
     this.notify();
   }
 
+  setCalendars(calendars: WorkingCalendar[]) {
+    this.calendars = calendars.length > 0 ? calendars : [getDefaultCalendar()];
+    this.activeCalendarId = this.calendars[0]?.id ?? null;
+    this.notify();
+  }
+
   updateCalendar(id: string, updates: Partial<WorkingCalendar>) {
     const index = this.calendars.findIndex(c => c.id === id);
     if (index !== -1) {

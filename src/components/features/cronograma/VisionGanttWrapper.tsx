@@ -162,6 +162,7 @@ export function VisionGanttWrapper({
         tasks={ganttData.tasks}
         dependencies={ganttData.dependencies}
         resources={ganttData.resources}
+        calendars={ganttCalendars}
         viewPreset={viewPreset}
         gridWidth={gridWidth}
         height={height}
