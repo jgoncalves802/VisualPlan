@@ -303,7 +303,22 @@ export const obsService = {
   },
 
   async assignResponsibleManager(nodeId: string, userId: string | null): Promise<ObsNode> {
-    // First try to update with the responsible_manager_id field
+    // First check if the node exists and is accessible
+    const { error: checkError } = await supabase
+      .from('obs_nodes')
+      .select('id')
+      .eq('id', nodeId)
+      .single();
+
+    if (checkError) {
+      console.error('Error checking node:', checkError);
+      if (checkError.code === 'PGRST116') {
+        throw new Error('Nó OBS não encontrado ou sem permissão de acesso.');
+      }
+      throw checkError;
+    }
+
+    // Try to update with the responsible_manager_id field
     const { data, error } = await supabase
       .from('obs_nodes')
       .update({ responsible_manager_id: userId })
@@ -312,13 +327,18 @@ export const obsService = {
       .single();
 
     if (error) {
-      // Check if it's a column not found error
-      if (error.code === 'PGRST116' || error.message?.includes('responsible_manager_id')) {
-        console.error('responsible_manager_id column does not exist. Please run the migration.');
-        throw new Error('O campo Responsible Manager não existe no banco de dados. Execute a migração SQL.');
-      }
       console.error('Error assigning responsible manager:', error);
-      throw error;
+      // Check specific error types
+      if (error.code === 'PGRST116') {
+        throw new Error('Erro de permissão RLS. O UPDATE foi bloqueado. Verifique as políticas de segurança.');
+      }
+      if (error.code === '42703' || error.message?.includes('column')) {
+        throw new Error('O campo responsible_manager_id não existe. Execute a migração SQL.');
+      }
+      if (error.code === '42501') {
+        throw new Error('Sem permissão para atualizar. Verifique as políticas RLS.');
+      }
+      throw new Error(`Erro: ${error.message || error.code}`);
     }
 
     return mapFromDB(data);
