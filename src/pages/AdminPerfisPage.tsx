@@ -25,6 +25,7 @@ import { empresaService } from '../services/empresaService';
 import { userService } from '../services/userService';
 import { obsService, type ObsNode } from '../services/obsService';
 import { profileService, type AccessProfile } from '../services/profileService';
+import { useToast, ConfirmDialog } from '../components/ui';
 
 type TabType = 'obs' | 'perfis' | 'usuarios';
 
@@ -173,6 +174,7 @@ export default function AdminPerfisPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const empresaId = searchParams.get('empresaId');
+  const toast = useToast();
 
   const [activeTab, setActiveTab] = useState<TabType>('obs');
   const [empresa, setEmpresa] = useState<{ id: string; nome: string } | null>(null);
@@ -201,6 +203,11 @@ export default function AdminPerfisPage() {
   const [deleting, setDeleting] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
   const [assigningProfile, setAssigningProfile] = useState<string | null>(null);
+
+  const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<AccessProfile | null>(null);
+  const [showDefaultProfilesModal, setShowDefaultProfilesModal] = useState(false);
+  const [creatingDefaultProfiles, setCreatingDefaultProfiles] = useState(false);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -399,14 +406,23 @@ export default function AdminPerfisPage() {
 
   const handleDeleteProfile = async (profile: AccessProfile) => {
     if (profile.isSystem) {
-      alert('Perfis do sistema não podem ser excluídos.');
+      toast.warning('Perfis do sistema não podem ser excluídos.');
       return;
     }
-    if (!confirm(`Deseja excluir o perfil "${profile.nome}"?`)) return;
+    setProfileToDelete(profile);
+    setShowDeleteProfileModal(true);
+  };
+
+  const confirmDeleteProfile = async () => {
+    if (!profileToDelete) return;
     try {
-      await deleteProfile(profile.id);
+      await deleteProfile(profileToDelete.id);
+      toast.success(`Perfil "${profileToDelete.nome}" excluído com sucesso!`);
+      setShowDeleteProfileModal(false);
+      setProfileToDelete(null);
     } catch (error) {
       console.error('Error deleting profile:', error);
+      toast.error('Erro ao excluir perfil.');
     }
   };
 
@@ -461,28 +477,37 @@ export default function AdminPerfisPage() {
         .filter(([_, nivel]) => nivel !== 'none')
         .map(([permissionCode, nivel]) => ({ permissionCode, nivel }));
       await setProfilePermissions(selectedProfile.id, perms);
-      alert('Permissões salvas com sucesso!');
+      toast.success('Permissões salvas com sucesso!');
     } catch (error) {
       console.error('Error saving permissions:', error);
-      alert('Erro ao salvar permissões.');
+      toast.error('Erro ao salvar permissões.');
     }
   };
 
   const handleCreateDefaultProfiles = async () => {
     if (!empresaId) return;
-    if (!confirm('Isso irá criar os perfis padrão do sistema. Deseja continuar?')) return;
+    setShowDefaultProfilesModal(true);
+  };
+
+  const confirmCreateDefaultProfiles = async () => {
+    if (!empresaId) return;
+    setCreatingDefaultProfiles(true);
     try {
       await createDefaultProfiles(empresaId);
-      alert('Perfis padrão criados com sucesso!');
+      toast.success('Perfis padrão criados com sucesso!');
+      setShowDefaultProfilesModal(false);
     } catch (error) {
       console.error('Error creating default profiles:', error);
+      toast.error('Erro ao criar perfis padrão.');
+    } finally {
+      setCreatingDefaultProfiles(false);
     }
   };
 
   const handleAssignProfileToUser = async (usuarioId: string) => {
     const profileId = selectedProfiles[usuarioId];
     if (!profileId) {
-      alert('Selecione um perfil para atribuir.');
+      toast.warning('Selecione um perfil para atribuir.');
       return;
     }
 
@@ -494,10 +519,10 @@ export default function AdminPerfisPage() {
         isPrimary: true,
       });
       setSelectedProfiles(prev => ({ ...prev, [usuarioId]: '' }));
-      alert('Perfil atribuído com sucesso!');
+      toast.success('Perfil atribuído com sucesso!');
     } catch (error) {
       console.error('Error assigning profile:', error);
-      alert('Erro ao atribuir perfil. Verifique as permissões.');
+      toast.error('Erro ao atribuir perfil. Verifique as permissões.');
     } finally {
       setAssigningProfile(null);
     }
@@ -1214,6 +1239,37 @@ export default function AdminPerfisPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteProfileModal}
+        onClose={() => {
+          setShowDeleteProfileModal(false);
+          setProfileToDelete(null);
+        }}
+        onConfirm={confirmDeleteProfile}
+        title="Excluir Perfil"
+        message={
+          <p>
+            Deseja excluir o perfil <strong>"{profileToDelete?.nome}"</strong>? 
+            Esta ação não pode ser desfeita.
+          </p>
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDefaultProfilesModal}
+        onClose={() => setShowDefaultProfilesModal(false)}
+        onConfirm={confirmCreateDefaultProfiles}
+        title="Criar Perfis Padrão"
+        message="Isso irá criar os perfis padrão do sistema para esta empresa. Deseja continuar?"
+        confirmText="Criar Perfis"
+        cancelText="Cancelar"
+        type="info"
+        loading={creatingDefaultProfiles}
+      />
     </div>
   );
 }

@@ -6,6 +6,8 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
@@ -16,6 +18,8 @@ export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
+  subtitle,
+  icon,
   children,
   size = 'md',
   showCloseButton = true,
@@ -47,66 +51,70 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-2xl',
     full: 'max-w-full mx-4',
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-fade-in"
         onClick={onClose}
       />
       
-      {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           className={classNames(
-            'relative w-full rounded-lg shadow-xl transition-theme',
+            'relative w-full bg-white rounded-2xl shadow-2xl animate-scale-in',
             sizeClasses[size]
           )}
-          style={{
-            backgroundColor: 'var(--color-bg-main)',
-          }}
         >
-          {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between border-b p-6"
-                 style={{ borderColor: 'var(--color-secondary-200)' }}>
-              {title && (
-                <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  {title}
-                </h2>
-              )}
+            <div className="flex items-start justify-between p-6 pb-0">
+              <div className="flex items-center gap-3">
+                {icon && <div className="flex-shrink-0">{icon}</div>}
+                {title && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+                    {subtitle && (
+                      <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+                    )}
+                  </div>
+                )}
+              </div>
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-1 hover:bg-secondary-100 transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors -mr-2 -mt-2"
                 >
-                  <X className="w-5 h-5" style={{ color: 'var(--color-text-secondary)' }} />
+                  <X className="w-5 h-5 text-gray-400" />
                 </button>
               )}
             </div>
           )}
           
-          {/* Body */}
           <div className="p-6">
             {children}
           </div>
           
-          {/* Footer */}
           {footer && (
-            <div className="border-t p-6"
-                 style={{ borderColor: 'var(--color-secondary-200)' }}>
+            <div className="border-t border-gray-100 p-6 pt-4 flex justify-end gap-3">
               {footer}
             </div>
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+export const ModalFooter: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+      {children}
     </div>
   );
 };

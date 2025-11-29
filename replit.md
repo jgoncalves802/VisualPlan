@@ -100,6 +100,39 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Reusable UI Component Library
+  - Created `src/components/ui/` folder with design system components:
+    - **Toast.tsx**: Toast notification system with ToastProvider context
+      - Types: success (green), error (red), warning (amber), info (blue)
+      - Auto-dismiss with configurable duration
+      - Animated slide-in from right
+      - Usage: `const toast = useToast()` then `toast.success('Message')`
+    - **Modal.tsx**: Enhanced modal component with animations
+      - Props: isOpen, onClose, title, subtitle, icon, size, footer
+      - Sizes: sm, md, lg, xl, full
+      - Escape key to close, click outside to close
+    - **ConfirmDialog.tsx**: Confirmation dialog for destructive actions
+      - Types: danger (red), warning (amber), info (blue)
+      - Loading state support
+      - Customizable confirm/cancel buttons
+    - **Button.tsx**: Standardized button component
+      - Variants: primary, secondary, danger, warning, success, ghost
+      - Sizes: sm, md, lg
+      - Loading state with spinner
+      - Icon support (left/right)
+      - IconButton variant for icon-only buttons
+    - **index.ts**: Barrel export for all UI components
+  - Added CSS animations to global.css:
+    - `animate-fade-in`: Opacity fade
+    - `animate-scale-in`: Scale + fade
+    - `animate-slide-in`: Slide from right
+    - `animate-slide-up`: Slide from bottom
+  - Updated App.tsx to wrap with ToastProvider
+  - Refactored AdminPerfisPage.tsx to use new UI components:
+    - Replaced all `alert()` calls with `toast.success/error/warning()`
+    - Replaced `confirm()` dialogs with ConfirmDialog component
+    - Added confirm dialogs for: delete profile, create default profiles
+
 - **2024-11-29**: OBS (Organizational Breakdown Structure) and Access Profiles System
   - Created comprehensive database migration `004_create_obs_profiles.sql`:
     - `permission_catalog`: System-wide permission definitions (50+ permissions)
