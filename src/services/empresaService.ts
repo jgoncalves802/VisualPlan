@@ -84,29 +84,37 @@ export const empresaService = {
   async updateLogo(empresaId: string, file: File): Promise<{ data: string | null; error: Error | null }> {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${empresaId}/logo.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${empresaId}/logo_${timestamp}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('logos')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw uploadError;
+      }
 
       const { data: urlData } = supabase.storage
         .from('logos')
         .getPublicUrl(fileName);
 
-      const logoUrl = urlData.publicUrl;
+      const logoUrl = `${urlData.publicUrl}?t=${timestamp}`;
 
       const { error: updateError } = await supabase
         .from('empresas')
         .update({ logo_url: logoUrl, updated_at: new Date().toISOString() })
         .eq('id', empresaId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erro ao atualizar empresa:', updateError);
+        throw updateError;
+      }
 
       return { data: logoUrl, error: null };
     } catch (error) {
+      console.error('Erro completo:', error);
       return { data: null, error: error as Error };
     }
   },

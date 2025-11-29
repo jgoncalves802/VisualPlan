@@ -57,17 +57,32 @@ const AdminTemasPage: React.FC = () => {
           textSecondary: tempTema.textSecondary || '#64748b',
           border: tempTema.border || '#e2e8f0',
         };
-        await updateTema(temaConfig);
+        const temaSuccess = await updateTema(temaConfig);
+        if (!temaSuccess) {
+          showNotification('error', 'Erro ao salvar configurações de tema. Verifique se você tem permissão.');
+          setIsSaving(false);
+          return;
+        }
       }
       
-      if (logoFile) {
-        await updateLogo(logoFile);
+      if (logoFile && empresa) {
+        const logoSuccess = await updateLogo(logoFile);
+        if (!logoSuccess) {
+          showNotification('error', 'Erro ao enviar logo. Verifique se o bucket "logos" existe no Supabase Storage.');
+          setIsSaving(false);
+          return;
+        }
         setLogoFile(null);
+        
+        if (usuario?.empresaId) {
+          await loadEmpresa(usuario.empresaId);
+        }
       }
       
-      showNotification('success', 'Tema salvo com sucesso!');
-    } catch {
-      showNotification('error', 'Erro ao salvar tema');
+      showNotification('success', 'Configurações salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      showNotification('error', 'Erro ao salvar. Verifique o console para mais detalhes.');
     } finally {
       setIsSaving(false);
     }
@@ -81,7 +96,39 @@ const AdminTemasPage: React.FC = () => {
     }
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateImageDimensions = (file: File): Promise<{ valid: boolean; width: number; height: number; error?: string }> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const width = img.width;
+        const height = img.height;
+        
+        if (width < 32 || height < 32) {
+          resolve({ valid: false, width, height, error: 'A imagem deve ter no mínimo 32x32 pixels' });
+          return;
+        }
+        
+        if (width > 512 || height > 512) {
+          resolve({ valid: false, width, height, error: 'A imagem deve ter no máximo 512x512 pixels' });
+          return;
+        }
+        
+        const aspectRatio = width / height;
+        if (aspectRatio < 0.8 || aspectRatio > 1.25) {
+          resolve({ valid: false, width, height, error: 'A logo deve ser quadrada ou quase quadrada (proporção entre 4:5 e 5:4)' });
+          return;
+        }
+        
+        resolve({ valid: true, width, height });
+      };
+      img.onerror = () => {
+        resolve({ valid: false, width: 0, height: 0, error: 'Não foi possível carregar a imagem' });
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
@@ -89,15 +136,23 @@ const AdminTemasPage: React.FC = () => {
         return;
       }
       if (!file.type.startsWith('image/')) {
-        showNotification('error', 'Selecione uma imagem válida');
+        showNotification('error', 'Selecione uma imagem válida (PNG, JPG, SVG)');
         return;
       }
+      
+      const validation = await validateImageDimensions(file);
+      if (!validation.valid) {
+        showNotification('error', validation.error || 'Imagem inválida');
+        return;
+      }
+      
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      showNotification('success', `Logo carregada (${validation.width}x${validation.height}px). Clique em "Salvar Tema" para aplicar.`);
     }
   };
 
@@ -228,7 +283,8 @@ const AdminTemasPage: React.FC = () => {
 
               <p className="text-xs theme-text-secondary text-center">
                 Formatos: PNG, JPG, SVG (máx. 2MB)<br/>
-                Recomendado: 200x200px ou maior
+                Dimensões: 32x32 até 512x512px<br/>
+                Proporção: quadrada ou quase quadrada
               </p>
             </div>
           </div>
