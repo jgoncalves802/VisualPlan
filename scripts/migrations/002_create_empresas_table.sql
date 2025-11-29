@@ -38,11 +38,77 @@ CREATE TRIGGER update_empresas_updated_at
 -- Create index
 CREATE INDEX IF NOT EXISTS idx_empresas_ativo ON public.empresas(ativo);
 
+-- Enable Row Level Security
+ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy: Users can only view their own company
+CREATE POLICY "users_view_own_empresa" ON public.empresas
+  FOR SELECT
+  USING (
+    id IN (
+      SELECT empresa_id FROM public.usuarios 
+      WHERE auth_id = auth.uid()
+    )
+  );
+
+-- RLS Policy: Only ADMIN and DIRETOR can update their company
+CREATE POLICY "admin_diretor_update_empresa" ON public.empresas
+  FOR UPDATE
+  USING (
+    id IN (
+      SELECT empresa_id FROM public.usuarios 
+      WHERE auth_id = auth.uid() 
+        AND perfil_acesso IN ('ADMIN', 'DIRETOR')
+    )
+  )
+  WITH CHECK (
+    id IN (
+      SELECT empresa_id FROM public.usuarios 
+      WHERE auth_id = auth.uid() 
+        AND perfil_acesso IN ('ADMIN', 'DIRETOR')
+    )
+  );
+
+-- RLS Policy: Only system admins can insert new companies (usually done through admin panel)
+CREATE POLICY "admin_insert_empresa" ON public.empresas
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.usuarios 
+      WHERE auth_id = auth.uid() 
+        AND perfil_acesso = 'ADMIN'
+    )
+  );
+
+-- Storage bucket policy for company logos
+-- Run this in Supabase Dashboard > Storage > Policies
+-- CREATE POLICY "empresa_logo_select" ON storage.objects
+--   FOR SELECT USING (bucket_id = 'logos' AND auth.uid() IS NOT NULL);
+-- CREATE POLICY "empresa_logo_insert" ON storage.objects
+--   FOR INSERT WITH CHECK (
+--     bucket_id = 'logos' 
+--     AND EXISTS (
+--       SELECT 1 FROM public.usuarios 
+--       WHERE auth_id = auth.uid() 
+--         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
+--     )
+--   );
+-- CREATE POLICY "empresa_logo_update" ON storage.objects
+--   FOR UPDATE USING (
+--     bucket_id = 'logos' 
+--     AND EXISTS (
+--       SELECT 1 FROM public.usuarios 
+--       WHERE auth_id = auth.uid() 
+--         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
+--     )
+--   );
+
 -- Create a default company
 INSERT INTO public.empresas (id, nome, cnpj)
-VALUES ('00000000-0000-0000-0000-000000000001', 'VisionPlan Demo', '00.000.000/0001-00');
+VALUES ('00000000-0000-0000-0000-000000000001', 'VisionPlan Demo', '00.000.000/0001-00')
+ON CONFLICT (id) DO NOTHING;
 
 -- Update admin user to belong to the default company
 UPDATE public.usuarios 
 SET empresa_id = '00000000-0000-0000-0000-000000000001'
-WHERE perfil_acesso = 'ADMIN';
+WHERE perfil_acesso = 'ADMIN' AND empresa_id IS NULL;
