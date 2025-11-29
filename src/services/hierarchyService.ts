@@ -154,7 +154,7 @@ export const hierarchyService = {
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('hierarchy_levels')
-      .update({ ativo: false })
+      .delete()
       .eq('id', id);
 
     if (error) {

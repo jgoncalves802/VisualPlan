@@ -206,7 +206,7 @@ export const organizationalUnitService = {
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('organizational_units')
-      .update({ ativo: false })
+      .delete()
       .eq('id', id);
 
     if (error) {
