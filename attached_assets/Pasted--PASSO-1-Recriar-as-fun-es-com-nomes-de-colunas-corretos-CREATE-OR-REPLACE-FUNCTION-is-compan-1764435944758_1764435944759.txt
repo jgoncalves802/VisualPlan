@@ -1,0 +1,60 @@
+-- PASSO 1: Recriar as funções com nomes de colunas corretos
+
+CREATE OR REPLACE FUNCTION is_company_admin(p_empresa_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM usuarios u
+        WHERE u.id = auth.uid()
+        AND u.empresa_id = p_empresa_id
+        AND (u.perfil_acesso = 'ADMIN' OR u.perfil_acesso = 'DIRETOR')
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION belongs_to_company(p_empresa_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM usuarios u
+        WHERE u.id = auth.uid()
+        AND u.empresa_id = p_empresa_id
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- PASSO 2: Recriar as políticas RLS para hierarchy_levels
+
+DROP POLICY IF EXISTS "hierarchy_levels_select_policy" ON hierarchy_levels;
+CREATE POLICY "hierarchy_levels_select_policy" ON hierarchy_levels
+    FOR SELECT USING (belongs_to_company(empresa_id));
+
+DROP POLICY IF EXISTS "hierarchy_levels_insert_policy" ON hierarchy_levels;
+CREATE POLICY "hierarchy_levels_insert_policy" ON hierarchy_levels
+    FOR INSERT WITH CHECK (is_company_admin(empresa_id));
+
+DROP POLICY IF EXISTS "hierarchy_levels_update_policy" ON hierarchy_levels;
+CREATE POLICY "hierarchy_levels_update_policy" ON hierarchy_levels
+    FOR UPDATE USING (is_company_admin(empresa_id));
+
+DROP POLICY IF EXISTS "hierarchy_levels_delete_policy" ON hierarchy_levels;
+CREATE POLICY "hierarchy_levels_delete_policy" ON hierarchy_levels
+    FOR DELETE USING (is_company_admin(empresa_id));
+
+-- PASSO 3: Recriar as políticas RLS para organizational_units
+
+DROP POLICY IF EXISTS "org_units_select_policy" ON organizational_units;
+CREATE POLICY "org_units_select_policy" ON organizational_units
+    FOR SELECT USING (belongs_to_company(empresa_id));
+
+DROP POLICY IF EXISTS "org_units_insert_policy" ON organizational_units;
+CREATE POLICY "org_units_insert_policy" ON organizational_units
+    FOR INSERT WITH CHECK (is_company_admin(empresa_id));
+
+DROP POLICY IF EXISTS "org_units_update_policy" ON organizational_units;
+CREATE POLICY "org_units_update_policy" ON organizational_units
+    FOR UPDATE USING (is_company_admin(empresa_id));
+
+DROP POLICY IF EXISTS "org_units_delete_policy" ON organizational_units;
+CREATE POLICY "org_units_delete_policy" ON organizational_units
+    FOR DELETE USING (is_company_admin(empresa_id));
