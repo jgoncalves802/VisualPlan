@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useTemaStore } from '../stores/temaStore';
-import { PerfilAcesso, CamadaGovernanca } from '../types';
+import { CamadaGovernanca, PerfilAcesso } from '../types';
 import { Building2, Mail, Lock, LogIn } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,29 +14,76 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // Simulação de login - em produção, chamar API
-    setTimeout(() => {
-      const mockUsuario = {
-        id: '1',
-        nome: 'João Silva',
-        email: email,
-        ativo: true,
-        empresaId: '1',
-        camadaGovernanca: CamadaGovernanca.CONTRATADA,
-        perfilAcesso: PerfilAcesso.ENGENHEIRO_PLANEJAMENTO,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha,
+      });
+
+      if (authError) {
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('E-mail ou senha incorretos');
+        } else {
+          setError(authError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (!authData.user) {
+        setError('Erro ao autenticar usuário');
+        setLoading(false);
+        return;
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError || !userData) {
+        setError('Usuário não encontrado no sistema');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      if (!userData.ativo) {
+        setError('Usuário desativado. Entre em contato com o administrador.');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      const usuario = {
+        id: userData.id,
+        nome: userData.nome,
+        email: userData.email,
+        ativo: userData.ativo,
+        empresaId: userData.empresa_id,
+        camadaGovernanca: userData.camada_governanca as CamadaGovernanca,
+        perfilAcesso: userData.perfil_acesso as PerfilAcesso,
+        avatarUrl: userData.avatar_url,
+        createdAt: new Date(userData.created_at),
+        updatedAt: new Date(userData.updated_at),
       };
 
-      login(mockUsuario, 'mock-token-123');
-      setLoading(false);
+      login(usuario, authData.session?.access_token || '');
       navigate('/dashboard');
-    }, 1000);
+    } catch (err) {
+      setError('Erro ao fazer login. Tente novamente.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +108,11 @@ const LoginPage: React.FC = () => {
           <h2 className="text-2xl font-bold theme-text mb-6">Entrar</h2>
           
           <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm">
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium theme-text mb-2">
                 E-mail
@@ -72,8 +125,7 @@ const LoginPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border theme-border-primary rounded-lg focus:outline-none focus:ring-2"
-                  style={{ focusRingColor: tema.primary }}
+                  className="w-full pl-10 pr-4 py-2 border theme-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="seu@email.com"
                   required
                 />
