@@ -47,7 +47,7 @@ CREATE POLICY "users_view_own_empresa" ON public.empresas
   USING (
     id IN (
       SELECT empresa_id FROM public.usuarios 
-      WHERE auth_id = auth.uid()
+      WHERE id = auth.uid()
     )
   );
 
@@ -57,14 +57,14 @@ CREATE POLICY "admin_diretor_update_empresa" ON public.empresas
   USING (
     id IN (
       SELECT empresa_id FROM public.usuarios 
-      WHERE auth_id = auth.uid() 
+      WHERE id = auth.uid() 
         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
     )
   )
   WITH CHECK (
     id IN (
       SELECT empresa_id FROM public.usuarios 
-      WHERE auth_id = auth.uid() 
+      WHERE id = auth.uid() 
         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
     )
   );
@@ -75,7 +75,7 @@ CREATE POLICY "admin_insert_empresa" ON public.empresas
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.usuarios 
-      WHERE auth_id = auth.uid() 
+      WHERE id = auth.uid() 
         AND perfil_acesso = 'ADMIN'
     )
   );
@@ -89,7 +89,7 @@ CREATE POLICY "admin_insert_empresa" ON public.empresas
 --     bucket_id = 'logos' 
 --     AND EXISTS (
 --       SELECT 1 FROM public.usuarios 
---       WHERE auth_id = auth.uid() 
+--       WHERE id = auth.uid() 
 --         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
 --     )
 --   );
@@ -98,7 +98,7 @@ CREATE POLICY "admin_insert_empresa" ON public.empresas
 --     bucket_id = 'logos' 
 --     AND EXISTS (
 --       SELECT 1 FROM public.usuarios 
---       WHERE auth_id = auth.uid() 
+--       WHERE id = auth.uid() 
 --         AND perfil_acesso IN ('ADMIN', 'DIRETOR')
 --     )
 --   );
