@@ -25,9 +25,12 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Responsive Design**: Optimized for mobile, tablet, and desktop.
     *   **Component-based**: Utilizes a reusable UI component library (`src/components/ui/`) including `Toast`, `Modal`, `ConfirmDialog`, and `Button` for consistent design and enhanced user experience.
 *   **Technical Implementations**:
-    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and Gantt charts (DHTMLX Gantt, VisionGantt).
-    *   **Dual-Engine Gantt**: CronogramaPage supports both DHTMLX Gantt and VisionGantt engines with a toggle for validation and comparison.
-    *   **VisionGantt Library**: Custom Gantt library (`src/lib/vision-gantt/`) inspired by Bryntum Scheduler Pro with enterprise-grade features.
+    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and VisionGantt for advanced scheduling.
+    *   **VisionGantt Library**: Custom Gantt library (`src/lib/vision-gantt/`) inspired by Bryntum Scheduler Pro with enterprise-grade features including:
+        - CalendarStore for working calendar management with holidays and exceptions
+        - Resource management with allocation tracking
+        - Full calendar integration via visionplan-adapter.ts converter
+        - Critical path analysis and constraint validation
     *   **Resource Management**: Full resource allocation system with histogram visualization, resource types, calendars, and conflict detection.
     *   **Baseline Tracking**: Support for project baselines with variance analysis (Primavera P6 model).
     *   **Real-time Updates**: Achieved via WebSockets through Supabase.
@@ -59,5 +62,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **Supabase**: Provides PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
 *   **Recharts**: For dynamic and interactive charts.
 *   **React Three Fiber**: For 3D visualization capabilities.
-*   **DHTMLX Gantt**: For professional Gantt chart functionalities.
-*   **gantt-task-react**: Another library for Gantt chart rendering.
+*   **VisionGantt** (internal): Custom Gantt chart library with MS Project/Primavera P6 grade features.
+
+## Recent Changes (November 2025)
+
+*   **VisionGantt-only architecture**: Removed DHTMLX Gantt dual-engine architecture, CronogramaPage now uses VisionGantt exclusively.
+*   **Calendar integration**: Added full calendar conversion from VisionPlan to VisionGantt CalendarStore.
+*   **Resource and baseline hooks**: Created useResources.ts and useBaselines.ts for proper state management.
