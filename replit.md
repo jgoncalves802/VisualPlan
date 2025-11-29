@@ -100,6 +100,28 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: OBS (Organizational Breakdown Structure) and Access Profiles System
+  - Created comprehensive database migration `004_create_obs_profiles.sql`:
+    - `permission_catalog`: System-wide permission definitions (50+ permissions)
+    - `obs_nodes`: Hierarchical organizational structure per company
+    - `access_profiles`: Configurable access profiles per company
+    - `profile_permissions`: Permissions assigned to each profile
+    - `profile_obs_scope`: OBS scope access per profile
+    - `usuario_perfis`: User-profile assignments
+  - Created new services:
+    - `obsService.ts`: CRUD for OBS tree structure with hierarchy support
+    - `profileService.ts`: Profile and permission management
+  - Created new Zustand stores:
+    - `obsStore.ts`: OBS state management
+    - `profileStore.ts`: Profile and permission state
+  - Created `AdminPerfisPage.tsx` with 3 tabs:
+    - **Estrutura Organizacional (OBS)**: Tree view for hierarchical org structure
+    - **Perfis e Permissões**: Profile configuration with permission matrix
+    - **Atribuição de Usuários**: Assign profiles to company users
+  - Added route `/admin/perfis?empresaId=X` for per-company configuration
+  - Added "Perfis de Acesso" button in AdminEmpresasPage (Shield icon)
+  - RLS policies for multi-tenant security on all new tables
+
 - **2024-11-29**: Admin Panel Dashboard
   - Created `AdminPage.tsx` with visual card grid for administrative functions:
     - Gestão de Usuários (User Management)
