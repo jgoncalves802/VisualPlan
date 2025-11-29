@@ -100,6 +100,23 @@ The application uses Supabase as its backend service, which provides:
 
 ## Recent Changes
 
+- **2024-11-29**: Multi-Tenant Company System
+  - Created `empresas` table with logo_url and tema_config fields
+  - Implemented Row Level Security (RLS) policies for tenant isolation
+  - Created `empresaService.ts` for company CRUD operations and logo upload
+  - Created `empresaStore.ts` (Zustand) for company state management
+  - Enhanced `AdminTemasPage.tsx` with:
+    - Logo upload with preview (supports PNG, JPG, GIF, SVG)
+    - Per-company theme customization (11 colors)
+    - Real-time preview and persistence to database
+  - Updated `Sidebar.tsx` to:
+    - Display company logo and name
+    - Show logout button with navigation
+    - Load company data based on user's empresa_id
+  - Migration file: `scripts/migrations/002_create_empresas_table.sql`
+    - Includes RLS policies for secure multi-tenant access
+    - Storage bucket policies for logo files (commented, run separately)
+
 - **2024-11-29**: Admin User Management Page
   - Created `AdminUsuariosPage.tsx` - complete user management page with:
     - User listing with search and filters (by governance layer, access profile, status)
