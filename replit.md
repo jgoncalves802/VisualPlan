@@ -69,6 +69,7 @@ See `.env.example` for the complete list of available variables.
 
 - **Port**: 5000 (configured for Replit webview)
 - **Host**: 0.0.0.0 (allows Replit proxy access)
+- **Allowed Hosts**: true (required for Replit proxy to access the dev server)
 - **HMR Protocol**: WSS on port 443 (for Replit environment)
 - **Workflow**: "VisionPlan Frontend" runs `npm run dev`
 
