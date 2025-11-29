@@ -34,10 +34,16 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 41189
+localPort = 40171
 externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"
 build = ["npm", "run", "build"]
 publicDir = "dist"
+
+[userenv]
+
+[userenv.shared]
+VITE_SUPABASE_URL = "https://xcllohzvlysqvpmskvah.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbGxvaHp2bHlzcXZwbXNrdmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzODIyMTIsImV4cCI6MjA3OTk1ODIxMn0.qSGPFNGuLvnGm7tCE9832hF38UXm4ik9wOlfas34nRs"
