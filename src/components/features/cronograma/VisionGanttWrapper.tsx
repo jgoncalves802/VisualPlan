@@ -7,9 +7,9 @@ import {
   ganttDependencyToDependencia,
   detectTaskChanges 
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
-import type { AtividadeMock, DependenciaAtividade } from '../../../types/cronograma';
+import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
-import { BarChart3, Calendar, Users, AlertTriangle } from 'lucide-react';
+import { BarChart3, Calendar, Users, AlertTriangle, Settings } from 'lucide-react';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -17,6 +17,7 @@ interface VisionGanttWrapperProps {
   projetoId: string;
   resources?: Resource[];
   allocations?: ResourceAllocation[];
+  calendarios?: CalendarioProjeto[];
   onAtividadeUpdate?: (atividade: AtividadeMock, changes: Partial<AtividadeMock>) => void;
   onDependenciaCreate?: (dep: DependenciaAtividade) => void;
   onDependenciaDelete?: (depId: string) => void;
@@ -33,6 +34,7 @@ export function VisionGanttWrapper({
   projetoId,
   resources = [],
   allocations = [],
+  calendarios = [],
   onAtividadeUpdate,
   onDependenciaCreate,
   onDependenciaDelete,
