@@ -303,21 +303,20 @@ export const obsService = {
   },
 
   async assignResponsibleManager(nodeId: string, userId: string | null): Promise<ObsNode> {
+    // First try to update with the responsible_manager_id field
     const { data, error } = await supabase
       .from('obs_nodes')
       .update({ responsible_manager_id: userId })
       .eq('id', nodeId)
-      .select(`
-        *,
-        usuarios:responsible_manager_id (
-          id,
-          nome,
-          email
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
+      // Check if it's a column not found error
+      if (error.code === 'PGRST116' || error.message?.includes('responsible_manager_id')) {
+        console.error('responsible_manager_id column does not exist. Please run the migration.');
+        throw new Error('O campo Responsible Manager não existe no banco de dados. Execute a migração SQL.');
+      }
       console.error('Error assigning responsible manager:', error);
       throw error;
     }

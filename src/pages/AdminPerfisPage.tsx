@@ -195,6 +195,7 @@ export default function AdminPerfisPage() {
   const [managerNode, setManagerNode] = useState<ObsNode | null>(null);
   const [selectedManagerId, setSelectedManagerId] = useState<string>('');
   const [assigningManager, setAssigningManager] = useState(false);
+  const [managerError, setManagerError] = useState<string | null>(null);
 
   const [obsForm, setObsForm] = useState({ nome: '', codigo: '', descricao: '' });
   const [profileForm, setProfileForm] = useState({
@@ -315,12 +316,14 @@ export default function AdminPerfisPage() {
   const openManagerModal = (node: ObsNode) => {
     setManagerNode(node);
     setSelectedManagerId(node.responsibleManagerId || '');
+    setManagerError(null);
     setShowManagerModal(true);
   };
 
   const handleAssignManager = async () => {
     if (!managerNode || !empresaId) return;
     setAssigningManager(true);
+    setManagerError(null);
     try {
       await obsService.assignResponsibleManager(
         managerNode.id,
@@ -330,8 +333,13 @@ export default function AdminPerfisPage() {
       setShowManagerModal(false);
       setManagerNode(null);
       setSelectedManagerId('');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error assigning manager:', error);
+      if (error instanceof Error) {
+        setManagerError(error.message);
+      } else {
+        setManagerError('Erro ao atribuir Responsible Manager. Verifique se a migração SQL foi executada.');
+      }
     } finally {
       setAssigningManager(false);
     }
@@ -1057,6 +1065,15 @@ export default function AdminPerfisPage() {
                   O Responsible Manager terá acesso aos projetos vinculados a este nível da OBS.
                 </p>
               </div>
+
+              {managerError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{managerError}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Execute o SQL no Supabase para adicionar o campo responsible_manager_id.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
