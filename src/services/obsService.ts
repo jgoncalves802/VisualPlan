@@ -59,7 +59,7 @@ const mapFromDB = (node: ObsNodeDB): ObsNode => ({
   ativo: node.ativo,
   createdAt: node.created_at,
   updatedAt: node.updated_at,
-  responsibleManagerId: node.responsible_manager_id,
+  responsibleManagerId: node.responsible_manager_id || null,
   responsibleManager: node.usuarios ? {
     id: node.usuarios.id,
     nome: node.usuarios.nome,
@@ -69,7 +69,12 @@ const mapFromDB = (node: ObsNodeDB): ObsNode => ({
 
 export const obsService = {
   async getByEmpresa(empresaId: string): Promise<ObsNode[]> {
-    const { data, error } = await supabase
+    // Try with responsible_manager join first, fallback to simple query
+    let data;
+    let error;
+    
+    // First try with the responsible_manager join
+    const result1 = await supabase
       .from('obs_nodes')
       .select(`
         *,
@@ -83,6 +88,24 @@ export const obsService = {
       .eq('ativo', true)
       .order('nivel', { ascending: true })
       .order('ordem', { ascending: true });
+    
+    // If the join fails (field doesn't exist), try simple query
+    if (result1.error && result1.error.code === 'PGRST200') {
+      console.log('responsible_manager_id field not found, using simple query');
+      const result2 = await supabase
+        .from('obs_nodes')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('ativo', true)
+        .order('nivel', { ascending: true })
+        .order('ordem', { ascending: true });
+      
+      data = result2.data;
+      error = result2.error;
+    } else {
+      data = result1.data;
+      error = result1.error;
+    }
 
     if (error) {
       console.error('Error fetching OBS nodes:', error);
