@@ -117,6 +117,30 @@ The application uses Supabase as its backend service, which provides:
     - Includes RLS policies for secure multi-tenant access
     - Storage bucket policies for logo files (commented, run separately)
 
+- **2024-11-29**: Company Management System (CRUD)
+  - Created `AdminEmpresasPage.tsx` with complete company CRUD:
+    - List all companies with search and filter by status
+    - Statistics cards (total, active, inactive companies)
+    - Create new company modal (name + CNPJ)
+    - Edit company name and CNPJ inline
+    - Toggle active/inactive status
+    - Delete company with confirmation
+    - Navigate to personalization (logo/theme) via "Personalizar" button
+  - Added empresaService CRUD methods:
+    - getAll(): List all companies
+    - create(nome, cnpj): Create new company
+    - update(id, data): Update company name/CNPJ
+    - delete(id): Delete company
+    - toggleAtivo(id, ativo): Toggle active status
+  - AdminTemasPage now accepts URL parameter `empresaId`:
+    - Loads specific company data for personalization
+    - Shows back button to return to company list
+    - Allows logo upload with dimension validation (32-512px, square)
+  - Navigation updates:
+    - Added "Gestão de Empresas" menu in Sidebar for ADMIN users
+    - Route /admin/empresas -> AdminEmpresasPage
+    - Route /admin/temas?empresaId=X -> per-company personalization
+
 - **2024-11-29**: Admin User Management Page
   - Created `AdminUsuariosPage.tsx` - complete user management page with:
     - User listing with search and filters (by governance layer, access profile, status)
