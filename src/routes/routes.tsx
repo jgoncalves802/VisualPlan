@@ -8,6 +8,8 @@ import AdminPage from '../pages/AdminPage';
 import AdminUsuariosPage from '../pages/AdminUsuariosPage';
 import AdminEmpresasPage from '../pages/AdminEmpresasPage';
 import AdminTemasPage from '../pages/AdminTemasPage';
+import AdminPerfisPage from '../pages/AdminPerfisPage';
+import AdminEPSPage from '../pages/AdminEPSPage';
 import { useAuthStore } from '../stores/authStore';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -76,7 +78,8 @@ export const AppRoutes: React.FC = () => {
           <Route path="admin/usuarios" element={<AdminUsuariosPage />} />
           <Route path="admin/empresas" element={<AdminEmpresasPage />} />
           <Route path="admin/temas" element={<AdminTemasPage />} />
-          <Route path="admin/perfis" element={<PlaceholderPage title="Perfis de Acesso" />} />
+          <Route path="admin/perfis" element={<AdminPerfisPage />} />
+          <Route path="admin/eps" element={<AdminEPSPage />} />
           <Route path="admin/seguranca" element={<PlaceholderPage title="Segurança" />} />
           <Route path="admin/relatorios" element={<PlaceholderPage title="Relatórios" />} />
           <Route path="admin/logs" element={<PlaceholderPage title="Logs de Atividade" />} />

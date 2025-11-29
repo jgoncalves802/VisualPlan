@@ -8,6 +8,7 @@ import {
   Trash2, 
   Palette,
   Shield,
+  Network,
   ToggleLeft,
   ToggleRight,
   X,
@@ -315,6 +316,13 @@ const AdminEmpresasPage: React.FC = () => {
                           title="Perfis de Acesso"
                         >
                           <Shield size={18} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/eps?empresaId=${empresa.id}`)}
+                          className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600 transition-colors"
+                          title="EPS - Estrutura de Projetos"
+                        >
+                          <Network size={18} />
                         </button>
                         <button
                           onClick={() => openEditModal(empresa)}
