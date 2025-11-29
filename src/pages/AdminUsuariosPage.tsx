@@ -155,45 +155,40 @@ const UserModal: React.FC<UserModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: 9999 }}
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 9999, backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+      onClick={onClose}
     >
       <div
-        className="rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: 'var(--color-bg-secondary)' }}
+        className="rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--color-secondary-200)' }}>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">
             {isEdit ? 'Editar Usuário' : 'Novo Usuário'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5" style={{ color: 'var(--color-text-secondary)' }} />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+            <label className="block text-sm font-medium mb-1 text-gray-700">
               Nome Completo *
             </label>
             <input
               type="text"
               value={formData.nome}
               onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-              style={{
-                borderColor: errors.nome ? 'var(--color-danger)' : 'var(--color-secondary-200)',
-                backgroundColor: 'var(--color-bg-main)',
-                color: 'var(--color-text-primary)',
-              }}
+              className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 ${errors.nome ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="Digite o nome completo"
             />
-            {errors.nome && <p className="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>{errors.nome}</p>}
+            {errors.nome && <p className="text-sm mt-1 text-red-500">{errors.nome}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+            <label className="block text-sm font-medium mb-1 text-gray-700">
               E-mail *
             </label>
             <input
@@ -201,17 +196,12 @@ const UserModal: React.FC<UserModalProps> = ({
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               disabled={isEdit}
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                borderColor: errors.email ? 'var(--color-danger)' : 'var(--color-secondary-200)',
-                backgroundColor: 'var(--color-bg-main)',
-                color: 'var(--color-text-primary)',
-              }}
+              className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="email@exemplo.com"
             />
-            {errors.email && <p className="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>{errors.email}</p>}
+            {errors.email && <p className="text-sm mt-1 text-red-500">{errors.email}</p>}
             {isEdit && (
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-xs mt-1 text-gray-500">
                 O e-mail não pode ser alterado após a criação.
               </p>
             )}
@@ -220,42 +210,32 @@ const UserModal: React.FC<UserModalProps> = ({
           {!isEdit && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
                   Senha *
                 </label>
                 <input
                   type="password"
                   value={formData.senha}
                   onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                  style={{
-                    borderColor: errors.senha ? 'var(--color-danger)' : 'var(--color-secondary-200)',
-                    backgroundColor: 'var(--color-bg-main)',
-                    color: 'var(--color-text-primary)',
-                  }}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 ${errors.senha ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Mínimo 8 caracteres"
                 />
-                {errors.senha && <p className="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>{errors.senha}</p>}
+                {errors.senha && <p className="text-sm mt-1 text-red-500">{errors.senha}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
                   Confirmar Senha *
                 </label>
                 <input
                   type="password"
                   value={formData.confirmarSenha}
                   onChange={(e) => setFormData({ ...formData, confirmarSenha: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                  style={{
-                    borderColor: errors.confirmarSenha ? 'var(--color-danger)' : 'var(--color-secondary-200)',
-                    backgroundColor: 'var(--color-bg-main)',
-                    color: 'var(--color-text-primary)',
-                  }}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 ${errors.confirmarSenha ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Repita a senha"
                 />
                 {errors.confirmarSenha && (
-                  <p className="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>{errors.confirmarSenha}</p>
+                  <p className="text-sm mt-1 text-red-500">{errors.confirmarSenha}</p>
                 )}
               </div>
             </>
@@ -263,18 +243,13 @@ const UserModal: React.FC<UserModalProps> = ({
 
           {!isEdit && empresas.length > 0 && (
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Empresa *
               </label>
               <select
                 value={formData.empresaId}
                 onChange={(e) => setFormData({ ...formData, empresaId: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-main)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Selecione uma empresa</option>
                 {empresas.filter(e => e.ativo).map((empresa) => (
@@ -283,7 +258,7 @@ const UserModal: React.FC<UserModalProps> = ({
                   </option>
                 ))}
               </select>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-xs mt-1 text-gray-500">
                 O usuário será vinculado a esta empresa.
               </p>
             </div>
@@ -291,7 +266,7 @@ const UserModal: React.FC<UserModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Camada de Governança *
               </label>
               <select
@@ -302,12 +277,7 @@ const UserModal: React.FC<UserModalProps> = ({
                     camadaGovernanca: e.target.value as CamadaGovernanca,
                   })
                 }
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-main)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 {Object.entries(CAMADA_GOVERNANCA_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -318,7 +288,7 @@ const UserModal: React.FC<UserModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Perfil de Acesso *
               </label>
               <select
@@ -329,12 +299,7 @@ const UserModal: React.FC<UserModalProps> = ({
                     perfilAcesso: e.target.value as PerfilAcesso,
                   })
                 }
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: 'var(--color-secondary-200)',
-                  backgroundColor: 'var(--color-bg-main)',
-                  color: 'var(--color-text-primary)',
-                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 {availablePerfis.map((perfil) => (
                   <option key={perfil} value={perfil}>
@@ -345,20 +310,14 @@ const UserModal: React.FC<UserModalProps> = ({
             </div>
           </div>
 
-          <div
-            className="p-4 rounded-lg border-l-4"
-            style={{
-              backgroundColor: 'var(--color-info)10',
-              borderLeftColor: 'var(--color-info)',
-            }}
-          >
+          <div className="p-4 rounded-lg border-l-4 bg-blue-50 border-l-blue-500">
             <div className="flex items-start gap-2">
-              <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-info)' }} />
+              <Shield className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                <p className="text-sm font-medium text-gray-900">
                   Permissões de Acesso
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                <p className="text-xs mt-1 text-gray-600">
                   O perfil selecionado determina quais funcionalidades o usuário poderá acessar na plataforma.
                   Os perfis estão organizados por camada de governança conforme a documentação do sistema.
                 </p>
@@ -366,23 +325,27 @@ const UserModal: React.FC<UserModalProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+            <p className="text-sm font-medium text-gray-700 mb-2">Sobre as Permissões</p>
+            <p className="text-xs text-gray-600">
+              O sistema possui 3 camadas de governança (Proponente, Fiscalização, Contratada) e 10 perfis de acesso. 
+              Cada perfil determina quais funcionalidades o usuário pode acessar. 
+              Administradores têm acesso completo, enquanto colaboradores têm acesso restrito às suas tarefas.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border transition-colors hover:bg-gray-50"
-              style={{
-                borderColor: 'var(--color-secondary-200)',
-                color: 'var(--color-text-primary)',
-              }}
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2"
-              style={{ backgroundColor: 'var(--color-primary-500)' }}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
               {isEdit ? 'Salvar Alterações' : 'Criar Usuário'}
