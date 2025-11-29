@@ -277,6 +277,7 @@ export default function AdminEPSPage() {
   const [editingEps, setEditingEps] = useState<EpsNode | null>(null);
   const [parentEps, setParentEps] = useState<EpsNode | null>(null);
   const [epsForm, setEpsForm] = useState({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
+  const [availableWeight, setAvailableWeight] = useState<number>(100);
 
   const [showDeleteEpsModal, setShowDeleteEpsModal] = useState(false);
   const [epsToDelete, setEpsToDelete] = useState<EpsNode | null>(null);
@@ -493,6 +494,15 @@ export default function AdminEPSPage() {
 
   const openEpsEditModal = (node: EpsNode) => {
     setEditingEps(node);
+    if (node.parentId) {
+      const parent = findNodeById(epsTree, node.parentId);
+      if (parent) {
+        const currentSum = parent.children?.reduce((sum, child) => 
+          sum + (child.id === node.id ? 0 : (child.pesoEstimado || 1)), 0) || 0;
+        const remaining = Math.max(0, (1 - currentSum) * 100);
+        setAvailableWeight(remaining);
+      }
+    }
     setEpsForm({
       codigo: node.codigo,
       nome: node.nome,
@@ -503,16 +513,31 @@ export default function AdminEPSPage() {
     setShowEpsModal(true);
   };
 
+  const findNodeById = (nodes: EpsNode[], id: string): EpsNode | null => {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children) {
+        const found = findNodeById(node.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   const openEpsAddChildModal = (parent: EpsNode) => {
     setParentEps(parent);
     setEditingEps(null);
-    setEpsForm({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
+    const currentSum = parent.children?.reduce((sum, child) => sum + (child.pesoEstimado || 1), 0) || 0;
+    const remaining = Math.max(0, (1 - currentSum) * 100);
+    setAvailableWeight(remaining);
+    setEpsForm({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: remaining.toFixed(1) });
     setShowEpsModal(true);
   };
 
   const openEpsAddRootModal = () => {
     setParentEps(null);
     setEditingEps(null);
+    setAvailableWeight(100);
     setEpsForm({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
     setShowEpsModal(true);
   };
@@ -995,16 +1020,28 @@ export default function AdminEPSPage() {
                       type="number"
                       value={epsForm.pesoEstimado}
                       onChange={(e) => setEpsForm({ ...epsForm, pesoEstimado: e.target.value })}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className={`w-24 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                        parseFloat(epsForm.pesoEstimado) > availableWeight 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
                       min="0"
                       max="100"
                       step="0.1"
                     />
                     <span className="text-gray-500">%</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    A soma dos pesos dos sub-níveis deve totalizar 100% no projeto.
-                  </p>
+                  <div className="mt-2 space-y-1">
+                    <p className={`text-xs ${parseFloat(epsForm.pesoEstimado) > availableWeight ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                      {parseFloat(epsForm.pesoEstimado) > availableWeight 
+                        ? `Peso excede o disponível! Máximo: ${availableWeight.toFixed(1)}%`
+                        : `Peso disponível: ${availableWeight.toFixed(1)}%`
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      A soma dos pesos dos sub-níveis deve totalizar 100% no projeto.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -1027,8 +1064,13 @@ export default function AdminEPSPage() {
               </button>
               <button
                 onClick={editingEps ? handleUpdateEps : handleCreateEps}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                disabled={!epsForm.codigo || !epsForm.nome}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={
+                  !epsForm.codigo || 
+                  !epsForm.nome || 
+                  (isCreatingWbs && parseFloat(epsForm.pesoEstimado) > availableWeight) ||
+                  Boolean(editingEps && editingEps.nivel > 0 && parseFloat(epsForm.pesoEstimado) > availableWeight)
+                }
               >
                 <Save className="w-4 h-4" />
                 {editingEps ? 'Salvar' : 'Criar'}
