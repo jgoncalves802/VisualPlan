@@ -25,6 +25,11 @@ export interface Empresa {
   updatedAt: Date;
 }
 
+export interface CreateEmpresaData {
+  nome: string;
+  cnpj?: string;
+}
+
 const defaultTema: TemaConfig = {
   primary: '#0ea5e9',
   secondary: '#64748b',
@@ -39,7 +44,35 @@ const defaultTema: TemaConfig = {
   border: '#e2e8f0',
 };
 
+const mapEmpresa = (data: Record<string, unknown>): Empresa => ({
+  id: data.id as string,
+  nome: data.nome as string,
+  cnpj: data.cnpj as string | null,
+  logoUrl: data.logo_url as string | null,
+  temaConfig: (data.tema_config as TemaConfig) || defaultTema,
+  ativo: data.ativo as boolean,
+  createdAt: new Date(data.created_at as string),
+  updatedAt: new Date(data.updated_at as string),
+});
+
 export const empresaService = {
+  async getAll(): Promise<{ data: Empresa[]; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('*')
+        .order('nome', { ascending: true });
+
+      if (error) throw error;
+
+      const empresas = (data || []).map(mapEmpresa);
+      return { data: empresas, error: null };
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+      return { data: [], error: error as Error };
+    }
+  },
+
   async getById(id: string): Promise<{ data: Empresa | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
@@ -138,6 +171,62 @@ export const empresaService = {
       const { error } = await supabase
         .from('empresas')
         .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('id', empresaId);
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  },
+
+  async create(data: CreateEmpresaData): Promise<{ data: Empresa | null; error: Error | null }> {
+    try {
+      const { data: created, error } = await supabase
+        .from('empresas')
+        .insert({
+          nome: data.nome,
+          cnpj: data.cnpj || null,
+          ativo: true,
+          tema_config: defaultTema,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar empresa:', error);
+        throw error;
+      }
+
+      return { data: mapEmpresa(created), error: null };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  },
+
+  async delete(empresaId: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .delete()
+        .eq('id', empresaId);
+
+      if (error) {
+        console.error('Erro ao deletar empresa:', error);
+        throw error;
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  },
+
+  async toggleAtivo(empresaId: string, ativo: boolean): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .update({ ativo, updated_at: new Date().toISOString() })
         .eq('id', empresaId);
 
       if (error) throw error;

@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Building2,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -85,6 +86,13 @@ const menuItems: MenuItem[] = [
     icon: <Users className="w-5 h-5" />,
     path: '/admin/usuarios',
     minPerfil: [PerfilAcesso.ADMIN, PerfilAcesso.DIRETOR],
+  },
+  {
+    id: 'empresas',
+    label: 'Gestão de Empresas',
+    icon: <Building2 className="w-5 h-5" />,
+    path: '/admin/empresas',
+    minPerfil: [PerfilAcesso.ADMIN],
   },
   {
     id: 'configuracoes',

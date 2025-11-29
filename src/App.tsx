@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
 import AdminUsuariosPage from './pages/AdminUsuariosPage';
+import AdminEmpresasPage from './pages/AdminEmpresasPage';
 import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
@@ -206,6 +207,28 @@ function App() {
             <AdminRoute>
               <Layout>
                 <AdminUsuariosPage />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/empresas"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminEmpresasPage />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/temas"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminTemasPage />
               </Layout>
             </AdminRoute>
           }

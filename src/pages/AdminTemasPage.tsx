@@ -1,13 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
-import { useEmpresaStore } from '../stores/empresaStore';
-import { Palette, RotateCcw, Save, Eye, Upload, Trash2, Building2, Image } from 'lucide-react';
+import { empresaService, Empresa, TemaConfig } from '../services/empresaService';
+import { Palette, RotateCcw, Save, Eye, Upload, Trash2, Building2, Image, ArrowLeft } from 'lucide-react';
 
 const AdminTemasPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const empresaIdFromUrl = searchParams.get('empresaId');
+  
   const { tema, setTema, resetTema } = useTemaStore();
   const { usuario } = useAuthStore();
-  const { empresa, loadEmpresa, updateTema, updateLogo, removeLogo } = useEmpresaStore();
+  
+  const [empresa, setEmpresa] = useState<Empresa | null>(null);
+  const [isLoadingEmpresa, setIsLoadingEmpresa] = useState(false);
   
   const [tempTema, setTempTema] = useState(tema);
   const [showPreview, setShowPreview] = useState(false);
@@ -17,17 +24,38 @@ const AdminTemasPage: React.FC = () => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (usuario?.empresaId) {
-      loadEmpresa(usuario.empresaId);
+  const loadEmpresa = useCallback(async (id: string) => {
+    setIsLoadingEmpresa(true);
+    const { data, error } = await empresaService.getById(id);
+    if (!error && data) {
+      setEmpresa(data);
+      setLogoPreview(data.logoUrl);
+      if (data.temaConfig) {
+        setTempTema((prev) => ({
+          ...prev,
+          primary: data.temaConfig.primary,
+          secondary: data.temaConfig.secondary,
+          accent: data.temaConfig.accent,
+          success: data.temaConfig.success,
+          warning: data.temaConfig.warning,
+          danger: data.temaConfig.danger,
+          background: data.temaConfig.bgMain,
+          surface: data.temaConfig.bgSecondary,
+          text: data.temaConfig.textPrimary,
+          textSecondary: data.temaConfig.textSecondary,
+          border: data.temaConfig.border,
+        }));
+      }
     }
-  }, [usuario?.empresaId, loadEmpresa]);
+    setIsLoadingEmpresa(false);
+  }, []);
 
   useEffect(() => {
-    if (empresa?.logoUrl) {
-      setLogoPreview(empresa.logoUrl);
+    const empresaId = empresaIdFromUrl || usuario?.empresaId;
+    if (empresaId) {
+      loadEmpresa(empresaId);
     }
-  }, [empresa?.logoUrl]);
+  }, [empresaIdFromUrl, usuario?.empresaId, loadEmpresa]);
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
@@ -39,47 +67,52 @@ const AdminTemasPage: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!empresa) {
+      showNotification('error', 'Nenhuma empresa selecionada');
+      return;
+    }
+    
     setIsSaving(true);
     try {
-      setTema(tempTema);
+      const temaConfig: TemaConfig = {
+        primary: tempTema.primary,
+        secondary: tempTema.secondary,
+        accent: tempTema.accent || tempTema.primary,
+        success: tempTema.success,
+        warning: tempTema.warning,
+        danger: tempTema.danger,
+        bgMain: tempTema.background || '#ffffff',
+        bgSecondary: tempTema.surface || '#f8fafc',
+        textPrimary: tempTema.text || '#1e293b',
+        textSecondary: tempTema.textSecondary || '#64748b',
+        border: tempTema.border || '#e2e8f0',
+      };
       
-      if (empresa) {
-        const temaConfig = {
-          primary: tempTema.primary,
-          secondary: tempTema.secondary,
-          accent: tempTema.accent || tempTema.primary,
-          success: tempTema.success,
-          warning: tempTema.warning,
-          danger: tempTema.danger,
-          bgMain: tempTema.background || '#ffffff',
-          bgSecondary: tempTema.surface || '#f8fafc',
-          textPrimary: tempTema.text || '#1e293b',
-          textSecondary: tempTema.textSecondary || '#64748b',
-          border: tempTema.border || '#e2e8f0',
-        };
-        const temaSuccess = await updateTema(temaConfig);
-        if (!temaSuccess) {
-          showNotification('error', 'Erro ao salvar configurações de tema. Verifique se você tem permissão.');
-          setIsSaving(false);
-          return;
-        }
+      const { error: temaError } = await empresaService.updateTema(empresa.id, temaConfig);
+      if (temaError) {
+        showNotification('error', 'Erro ao salvar configurações de tema. Verifique se você tem permissão.');
+        setIsSaving(false);
+        return;
       }
       
-      if (logoFile && empresa) {
-        const logoSuccess = await updateLogo(logoFile);
-        if (!logoSuccess) {
+      if (logoFile) {
+        const { data: logoUrl, error: logoError } = await empresaService.updateLogo(empresa.id, logoFile);
+        if (logoError) {
           showNotification('error', 'Erro ao enviar logo. Verifique se o bucket "logos" existe no Supabase Storage.');
           setIsSaving(false);
           return;
         }
         setLogoFile(null);
-        
-        if (usuario?.empresaId) {
-          await loadEmpresa(usuario.empresaId);
-        }
+        setLogoPreview(logoUrl);
+      }
+      
+      if (!empresaIdFromUrl) {
+        setTema(tempTema);
       }
       
       showNotification('success', 'Configurações salvas com sucesso!');
+      
+      await loadEmpresa(empresa.id);
     } catch (error) {
       console.error('Erro ao salvar:', error);
       showNotification('error', 'Erro ao salvar. Verifique o console para mais detalhes.');
@@ -157,12 +190,22 @@ const AdminTemasPage: React.FC = () => {
   };
 
   const handleRemoveLogo = async () => {
+    if (!empresa) return;
+    
     if (confirm('Deseja remover o logo da empresa?')) {
-      await removeLogo();
-      setLogoFile(null);
-      setLogoPreview(null);
-      showNotification('success', 'Logo removido');
+      const { error } = await empresaService.removeLogo(empresa.id);
+      if (!error) {
+        setLogoFile(null);
+        setLogoPreview(null);
+        showNotification('success', 'Logo removido');
+      } else {
+        showNotification('error', 'Erro ao remover logo');
+      }
     }
+  };
+  
+  const handleGoBack = () => {
+    navigate('/admin/empresas');
   };
 
   const colorOptions = [
@@ -194,12 +237,44 @@ const AdminTemasPage: React.FC = () => {
         </div>
       )}
 
+      {isLoadingEmpresa ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : !empresa ? (
+        <div className="text-center py-12">
+          <Building2 className="mx-auto theme-text-secondary mb-4" size={48} />
+          <p className="theme-text-secondary">Nenhuma empresa selecionada</p>
+          <button
+            onClick={handleGoBack}
+            className="btn btn-primary mt-4"
+          >
+            Ir para Gestão de Empresas
+          </button>
+        </div>
+      ) : null}
+      
+      {empresa && (
+      <>
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold theme-text">Personalização da Empresa</h1>
-          <p className="text-sm theme-text-secondary mt-1">
-            Configure o logo e as cores da plataforma para sua empresa
-          </p>
+        <div className="flex items-center gap-4">
+          {empresaIdFromUrl && (
+            <button
+              onClick={handleGoBack}
+              className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
+              title="Voltar para Gestão de Empresas"
+            >
+              <ArrowLeft size={24} className="theme-text" />
+            </button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold theme-text">
+              {empresaIdFromUrl ? `Personalizar: ${empresa.nome}` : 'Personalização da Empresa'}
+            </h1>
+            <p className="text-sm theme-text-secondary mt-1">
+              Configure o logo e as cores da plataforma
+            </p>
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           <button
@@ -464,6 +539,8 @@ const AdminTemasPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };
