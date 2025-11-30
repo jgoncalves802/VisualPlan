@@ -1,8 +1,6 @@
 
 
 
-import React from 'react';
-import type { Task } from '../types';
 import { DependencyDragState } from '../hooks/use-dependency-drag';
 
 interface DependencyDragLineProps {
@@ -123,14 +121,6 @@ export function DependencyDragLine({ dragState, getTaskPosition }: DependencyDra
         </g>
       )}
 
-      {/* Adiciona CSS para animação */}
-      <style jsx>{`
-        @keyframes dash {
-          to {
-            stroke-dashoffset: -10;
-          }
-        }
-      `}</style>
     </g>
   );
 }
