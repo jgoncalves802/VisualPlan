@@ -68,6 +68,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (November 2025)
 
+*   **MS Project-Style Keyboard Shortcuts**: Implemented professional keyboard navigation:
+    - **Right-click context menu**: Task actions modal now opens on right-click (like MS Project/Excel)
+    - **Left-click selection**: Click to select a single task
+    - **Shift+Arrow Up/Down**: Multi-select tasks for batch operations
+    - **Alt+Shift+Arrow Right**: Indent task (make subtask of task above)
+    - **Alt+Shift+Arrow Left**: Outdent task (move to parent level)
+*   **Task Hierarchy Management**: Added `indentTask`, `outdentTask`, `indentTasks`, `outdentTasks` methods to TaskStore for managing task hierarchies with automatic WBS regeneration.
 *   **EditDependencyModal**: Created component (`src/components/features/cronograma/EditDependencyModal.tsx`) allowing users to click on dependency arrows to edit dependency type (FS/SS/FF/SF) and lag. Features visual type selection, validated lag input (-365 to 365 days), and delete functionality.
 *   **Dependency Click Handler**: Integrated onDependencyClick handler throughout the component chain (DependencyArrow → GanttTimeline → GanttChart → VisionGanttWrapper) enabling interactive dependency editing.
 *   **Dynamic Critical Path System**: Implemented `useCriticalPath` hook with automatic recalculation when tasks or dependencies change. Includes near-critical path detection (total float ≤ 5 days) with distinct orange visual styling.
