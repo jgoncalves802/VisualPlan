@@ -349,8 +349,10 @@ export function GanttChart({
       return;
     }
     
-    // Just dispatch the action - sync to external store happens via useEffect
-    // after React commits the new state
+    // Lock sync BEFORE the operation to prevent external data from resetting
+    lockSync(5000);
+    
+    // Dispatch the action - sync to external store happens via useEffect
     if (taskIds.length > 1) {
       const result = taskStore.indentTasks(taskIds);
       console.log('[GanttChart] indentTasks result:', result);
@@ -358,7 +360,7 @@ export function GanttChart({
       const result = taskStore.indentTask(taskIds[0]);
       console.log('[GanttChart] indentTask result:', result);
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, lockSync]);
 
   const handleOutdentTask = useCallback(() => {
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
@@ -368,8 +370,10 @@ export function GanttChart({
       return;
     }
     
-    // Just dispatch the action - sync to external store happens via useEffect
-    // after React commits the new state
+    // Lock sync BEFORE the operation to prevent external data from resetting
+    lockSync(5000);
+    
+    // Dispatch the action - sync to external store happens via useEffect
     if (taskIds.length > 1) {
       const result = taskStore.outdentTasks(taskIds);
       console.log('[GanttChart] outdentTasks result:', result);
@@ -377,7 +381,7 @@ export function GanttChart({
       const result = taskStore.outdentTask(taskIds[0]);
       console.log('[GanttChart] outdentTask result:', result);
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, lockSync]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
