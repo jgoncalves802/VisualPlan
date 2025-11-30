@@ -157,8 +157,8 @@ function indentTaskAtomic(tasks: Task[], taskId: string): Task[] {
         level: (t.level ?? 0) + levelDelta 
       };
     }
-    if (t.id === prevSibling.id && !t.isGroup) {
-      // Previous sibling becomes a group
+    if (t.id === prevSibling.id) {
+      // Previous sibling becomes a group (or stays group) - always expand when adding children
       return { 
         ...t, 
         isGroup: true, 
