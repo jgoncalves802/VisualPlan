@@ -380,6 +380,61 @@ body {
   r: 8;
 }
 
+/* Gantt Handle Animations */
+.gantt-handle-group {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gantt-task-bar-wrapper:hover .gantt-handle-group,
+.gantt-milestone:hover .gantt-handle-group,
+.gantt-summary:hover .gantt-handle-group {
+  opacity: 1;
+}
+
+.gantt-dependency-handle-group circle:hover {
+  transform: scale(1.2);
+  transform-origin: center;
+}
+
+.gantt-handle-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Dependency Arrow Styles */
+.gantt-dependency-arrow {
+  pointer-events: stroke;
+}
+
+.gantt-dependency-arrow:hover .gantt-dependency-path {
+  stroke-width: 2.5px;
+}
+
+.gantt-dependency-arrow:hover .gantt-dependency-arrowhead {
+  transform: scale(1.2);
+  transform-origin: center;
+}
+
+/* Drag Feedback */
+.gantt-task-bar-wrapper[data-dragging="true"] {
+  opacity: 0.7;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Resize Visual Feedback */
+.gantt-task-bar-wrapper[data-resizing="true"] {
+  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.4));
+}
+
 /* Kanban Board Styles */
 .kanban-column {
   background-color: var(--color-surface);

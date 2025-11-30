@@ -143,8 +143,11 @@ export function TaskBar({
   const progress = task?.progress ?? 0;
   const duration = (task as any)?.duration ?? 0;
 
-  const HANDLE_WIDTH = 8;
-  const HANDLE_HEIGHT = barHeight - 4;
+  // Larger, more visible handles for better UX
+  const HANDLE_WIDTH = 10;
+  const HANDLE_HEIGHT = barHeight - 2;
+  const DEPENDENCY_HANDLE_SIZE = 8;
+  const DEPENDENCY_HANDLE_SIZE_HOVER = 10;
 
   // ===========================================
   // MILESTONE RENDERING (Diamond Shape P6 Style)
@@ -190,35 +193,55 @@ export function TaskBar({
           </text>
         )}
 
-        {/* Dependency handles */}
+        {/* Dependency handles - larger and more visible */}
         {showHandles && (
           <>
-            <circle
-              cx={centerX - size / 2}
-              cy={centerY}
-              r={5}
-              fill="#1E40AF"
-              stroke="white"
-              strokeWidth={2}
-              style={{ cursor: 'crosshair' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'start', e);
-              }}
-            />
-            <circle
-              cx={centerX + size / 2}
-              cy={centerY}
-              r={5}
-              fill="#1E40AF"
-              stroke="white"
-              strokeWidth={2}
-              style={{ cursor: 'crosshair' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'end', e);
-              }}
-            />
+            <g className="gantt-dependency-handle-group">
+              {/* Left handle with glow effect */}
+              <circle
+                cx={centerX - size / 2}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE + 2}
+                fill="rgba(30, 64, 175, 0.2)"
+                className="gantt-handle-glow"
+              />
+              <circle
+                cx={centerX - size / 2}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE}
+                fill="#1E40AF"
+                stroke="white"
+                strokeWidth={2.5}
+                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  onDependencyDragStart?.(task, 'start', e);
+                }}
+              />
+            </g>
+            <g className="gantt-dependency-handle-group">
+              {/* Right handle with glow effect */}
+              <circle
+                cx={centerX + size / 2}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE + 2}
+                fill="rgba(30, 64, 175, 0.2)"
+                className="gantt-handle-glow"
+              />
+              <circle
+                cx={centerX + size / 2}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE}
+                fill="#1E40AF"
+                stroke="white"
+                strokeWidth={2.5}
+                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  onDependencyDragStart?.(task, 'end', e);
+                }}
+              />
+            </g>
           </>
         )}
       </g>
@@ -312,35 +335,53 @@ export function TaskBar({
           </text>
         )}
 
-        {/* Dependency handles */}
+        {/* Dependency handles - larger with glow effect */}
         {showHandles && (
           <>
-            <circle
-              cx={position.x}
-              cy={centerY}
-              r={5}
-              fill="#1E40AF"
-              stroke="white"
-              strokeWidth={2}
-              style={{ cursor: 'crosshair' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'start', e);
-              }}
-            />
-            <circle
-              cx={position.x + position.width}
-              cy={centerY}
-              r={5}
-              fill="#1E40AF"
-              stroke="white"
-              strokeWidth={2}
-              style={{ cursor: 'crosshair' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'end', e);
-              }}
-            />
+            <g className="gantt-dependency-handle-group">
+              <circle
+                cx={position.x}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE + 2}
+                fill="rgba(30, 64, 175, 0.2)"
+                className="gantt-handle-glow"
+              />
+              <circle
+                cx={position.x}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE}
+                fill="#1E40AF"
+                stroke="white"
+                strokeWidth={2.5}
+                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  onDependencyDragStart?.(task, 'start', e);
+                }}
+              />
+            </g>
+            <g className="gantt-dependency-handle-group">
+              <circle
+                cx={position.x + position.width}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE + 2}
+                fill="rgba(30, 64, 175, 0.2)"
+                className="gantt-handle-glow"
+              />
+              <circle
+                cx={position.x + position.width}
+                cy={centerY}
+                r={DEPENDENCY_HANDLE_SIZE}
+                fill="#1E40AF"
+                stroke="white"
+                strokeWidth={2.5}
+                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  onDependencyDragStart?.(task, 'end', e);
+                }}
+              />
+            </g>
           </>
         )}
       </g>
@@ -500,20 +541,20 @@ export function TaskBar({
         </g>
       )}
 
-      {/* Resize and dependency handles */}
+      {/* Resize and dependency handles - improved visibility and interaction */}
       {showHandles && (
         <g className="gantt-handle-group">
-          {/* Left resize handle */}
+          {/* Left resize handle - larger with gradient */}
           <rect
-            x={position.x + 2}
-            y={position.y + 2}
+            x={position.x + 1}
+            y={position.y + 1}
             width={HANDLE_WIDTH}
             height={HANDLE_HEIGHT}
-            rx={2}
-            fill="rgba(255,255,255,0.8)"
-            stroke="rgba(0,0,0,0.2)"
-            strokeWidth={1}
-            style={{ cursor: 'ew-resize' }}
+            rx={3}
+            fill="rgba(255,255,255,0.9)"
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth={1.5}
+            style={{ cursor: 'ew-resize', transition: 'fill 0.15s ease' }}
             onMouseDown={(e) => {
               if (onResizeStart) {
                 e.stopPropagation();
@@ -521,18 +562,21 @@ export function TaskBar({
               }
             }}
           />
+          {/* Grip lines on left handle */}
+          <line x1={position.x + 4} y1={position.y + barHeight * 0.35} x2={position.x + 4} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
+          <line x1={position.x + 7} y1={position.y + barHeight * 0.35} x2={position.x + 7} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
 
-          {/* Right resize handle */}
+          {/* Right resize handle - larger with gradient */}
           <rect
-            x={position.x + position.width - HANDLE_WIDTH - 2}
-            y={position.y + 2}
+            x={position.x + position.width - HANDLE_WIDTH - 1}
+            y={position.y + 1}
             width={HANDLE_WIDTH}
             height={HANDLE_HEIGHT}
-            rx={2}
-            fill="rgba(255,255,255,0.8)"
-            stroke="rgba(0,0,0,0.2)"
-            strokeWidth={1}
-            style={{ cursor: 'ew-resize' }}
+            rx={3}
+            fill="rgba(255,255,255,0.9)"
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth={1.5}
+            style={{ cursor: 'ew-resize', transition: 'fill 0.15s ease' }}
             onMouseDown={(e) => {
               if (onResizeStart) {
                 e.stopPropagation();
@@ -540,42 +584,63 @@ export function TaskBar({
               }
             }}
           />
+          {/* Grip lines on right handle */}
+          <line x1={position.x + position.width - 7} y1={position.y + barHeight * 0.35} x2={position.x + position.width - 7} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
+          <line x1={position.x + position.width - 4} y1={position.y + barHeight * 0.35} x2={position.x + position.width - 4} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
 
-          {/* Left dependency handle */}
-          <circle
-            cx={position.x}
-            cy={position.y + barHeight / 2}
-            r={6}
-            className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
-            fill="#1E40AF"
-            stroke="white"
-            strokeWidth={2}
-            style={{ cursor: 'crosshair' }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              onDependencyDragStart?.(task, 'start', e);
-            }}
-            onMouseEnter={() => onDependencyDragEnter?.(task, 'start')}
-            onMouseLeave={() => onDependencyDragLeave?.()}
-          />
+          {/* Left dependency handle with glow */}
+          <g className="gantt-dependency-handle-group">
+            <circle
+              cx={position.x}
+              cy={position.y + barHeight / 2}
+              r={DEPENDENCY_HANDLE_SIZE + 3}
+              fill="rgba(30, 64, 175, 0.15)"
+              className="gantt-handle-glow"
+            />
+            <circle
+              cx={position.x}
+              cy={position.y + barHeight / 2}
+              r={DEPENDENCY_HANDLE_SIZE}
+              className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
+              fill={isDependencyDragTarget ? '#10B981' : '#1E40AF'}
+              stroke="white"
+              strokeWidth={2.5}
+              style={{ cursor: 'crosshair', transition: 'fill 0.15s ease, r 0.15s ease' }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                onDependencyDragStart?.(task, 'start', e);
+              }}
+              onMouseEnter={() => onDependencyDragEnter?.(task, 'start')}
+              onMouseLeave={() => onDependencyDragLeave?.()}
+            />
+          </g>
 
-          {/* Right dependency handle */}
-          <circle
-            cx={position.x + position.width}
-            cy={position.y + barHeight / 2}
-            r={6}
-            className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
-            fill="#1E40AF"
-            stroke="white"
-            strokeWidth={2}
-            style={{ cursor: 'crosshair' }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              onDependencyDragStart?.(task, 'end', e);
-            }}
-            onMouseEnter={() => onDependencyDragEnter?.(task, 'end')}
-            onMouseLeave={() => onDependencyDragLeave?.()}
-          />
+          {/* Right dependency handle with glow */}
+          <g className="gantt-dependency-handle-group">
+            <circle
+              cx={position.x + position.width}
+              cy={position.y + barHeight / 2}
+              r={DEPENDENCY_HANDLE_SIZE + 3}
+              fill="rgba(30, 64, 175, 0.15)"
+              className="gantt-handle-glow"
+            />
+            <circle
+              cx={position.x + position.width}
+              cy={position.y + barHeight / 2}
+              r={DEPENDENCY_HANDLE_SIZE}
+              className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
+              fill={isDependencyDragTarget ? '#10B981' : '#1E40AF'}
+              stroke="white"
+              strokeWidth={2.5}
+              style={{ cursor: 'crosshair', transition: 'fill 0.15s ease, r 0.15s ease' }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                onDependencyDragStart?.(task, 'end', e);
+              }}
+              onMouseEnter={() => onDependencyDragEnter?.(task, 'end')}
+              onMouseLeave={() => onDependencyDragLeave?.()}
+            />
+          </g>
         </g>
       )}
     </g>
