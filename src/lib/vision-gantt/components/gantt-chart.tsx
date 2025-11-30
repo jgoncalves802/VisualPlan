@@ -337,27 +337,39 @@ export function GanttChart({
 
   const handleIndentTask = useCallback(() => {
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
-    if (taskIds.length === 0) return;
+    console.log('[GanttChart] handleIndentTask called, taskIds:', taskIds);
+    if (taskIds.length === 0) {
+      console.log('[GanttChart] No tasks selected for indent');
+      return;
+    }
     
     // Just dispatch the action - sync to external store happens via useEffect
     // after React commits the new state
     if (taskIds.length > 1) {
-      taskStore.indentTasks(taskIds);
+      const result = taskStore.indentTasks(taskIds);
+      console.log('[GanttChart] indentTasks result:', result);
     } else {
-      taskStore.indentTask(taskIds[0]);
+      const result = taskStore.indentTask(taskIds[0]);
+      console.log('[GanttChart] indentTask result:', result);
     }
   }, [selectedTaskId, selectedTaskIds, taskStore]);
 
   const handleOutdentTask = useCallback(() => {
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
-    if (taskIds.length === 0) return;
+    console.log('[GanttChart] handleOutdentTask called, taskIds:', taskIds);
+    if (taskIds.length === 0) {
+      console.log('[GanttChart] No tasks selected for outdent');
+      return;
+    }
     
     // Just dispatch the action - sync to external store happens via useEffect
     // after React commits the new state
     if (taskIds.length > 1) {
-      taskStore.outdentTasks(taskIds);
+      const result = taskStore.outdentTasks(taskIds);
+      console.log('[GanttChart] outdentTasks result:', result);
     } else {
-      taskStore.outdentTask(taskIds[0]);
+      const result = taskStore.outdentTask(taskIds[0]);
+      console.log('[GanttChart] outdentTask result:', result);
     }
   }, [selectedTaskId, selectedTaskIds, taskStore]);
 

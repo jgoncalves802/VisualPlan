@@ -438,11 +438,20 @@ export function useTaskReducer(initialTasks: Task[] = []): UseTaskReducerResult 
   const indentTask = useCallback((taskId: string): boolean => {
     const currentTasks = stateRef.current.tasks;
     const task = currentTasks.find((t: Task) => t.id === taskId);
-    if (!task) return false;
+    console.log('[useTaskReducer] indentTask called:', taskId, 'task:', task?.name, 'level:', task?.level, 'parentId:', task?.parentId);
+    if (!task) {
+      console.log('[useTaskReducer] indentTask: task not found');
+      return false;
+    }
     
     const prevSibling = getPrevSibling(currentTasks, taskId);
-    if (!prevSibling) return false;
+    console.log('[useTaskReducer] indentTask: prevSibling:', prevSibling?.name, prevSibling?.id);
+    if (!prevSibling) {
+      console.log('[useTaskReducer] indentTask: no prev sibling, cannot indent');
+      return false;
+    }
     
+    console.log('[useTaskReducer] dispatching INDENT_TASK');
     dispatch({ type: 'INDENT_TASK', payload: { taskId } });
     return true;
   }, []);
@@ -450,8 +459,13 @@ export function useTaskReducer(initialTasks: Task[] = []): UseTaskReducerResult 
   const outdentTask = useCallback((taskId: string): boolean => {
     const currentTasks = stateRef.current.tasks;
     const task = currentTasks.find((t: Task) => t.id === taskId);
-    if (!task?.parentId) return false;
+    console.log('[useTaskReducer] outdentTask called:', taskId, 'task:', task?.name, 'parentId:', task?.parentId);
+    if (!task?.parentId) {
+      console.log('[useTaskReducer] outdentTask: task has no parent, cannot outdent');
+      return false;
+    }
     
+    console.log('[useTaskReducer] dispatching OUTDENT_TASK');
     dispatch({ type: 'OUTDENT_TASK', payload: { taskId } });
     return true;
   }, []);
