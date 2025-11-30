@@ -100,25 +100,38 @@ export class TaskStore extends BaseStore<Task> {
     if (!task) return null;
     
     const parentId = task.parentId ?? null;
-    const flatList = this.getFlatTasks();
-    const taskIndex = flatList.findIndex(t => t.id === taskId);
     
-    if (taskIndex <= 0) return null;
+    const siblings = this.data.filter(t => (t.parentId ?? null) === parentId);
+    const taskIndexInSiblings = siblings.findIndex(t => t.id === taskId);
     
-    for (let i = taskIndex - 1; i >= 0; i--) {
-      const candidate = flatList[i];
-      const candidateParentId = candidate.parentId ?? null;
-      
-      if (candidateParentId === parentId) {
-        return candidate;
-      }
-      
-      if ((candidate.level ?? 0) < (task.level ?? 0)) {
-        break;
-      }
+    if (taskIndexInSiblings <= 0) return null;
+    
+    return siblings[taskIndexInSiblings - 1];
+  }
+
+  /**
+   * Get all descendants of a task (children, grandchildren, etc.)
+   */
+  getDescendants(taskId: string): Task[] {
+    const descendants: Task[] = [];
+    const children = this.getChildren(taskId);
+    
+    for (const child of children) {
+      descendants.push(child);
+      descendants.push(...this.getDescendants(child.id));
     }
     
-    return null;
+    return descendants;
+  }
+
+  /**
+   * Reorder data array to maintain hierarchical order (depth-first)
+   * This ensures buildTaskTree produces consistent results
+   */
+  private reorderDataHierarchically(): void {
+    const tree = this.getTaskTree();
+    const orderedData = this.treeToFlatArray(tree);
+    this.setData(orderedData);
   }
 
   /**
@@ -128,8 +141,13 @@ export class TaskStore extends BaseStore<Task> {
    * NOT the previous task in the visual list.
    * 
    * Example:
-   * Before: A(0), B(1 child of A), C(0)
-   * Indent C: C becomes child of A (its prev sibling at level 0), NOT B
+   * Before: A(0), B(0), C(0)
+   * Indent B: B becomes child of A
+   * Indent C: C becomes child of B (which is now C's previous sibling at level 0... wait, no!)
+   * 
+   * After indent B: A(0) -> B(1), C(0)
+   * C's sibling at level 0 is A (not B, because B is now level 1)
+   * So indent C: C becomes child of A, sibling of B
    * 
    * Returns true if successful, false if cannot indent
    */
@@ -145,17 +163,37 @@ export class TaskStore extends BaseStore<Task> {
     
     if (newLevel > maxLevel) return false;
     
-    const updatedData = this.data.map(t => {
+    const taskWithDescendants = [taskId, ...this.getDescendants(taskId).map(d => d.id)];
+    const levelDelta = newLevel - (task.level ?? 0);
+    
+    const dataWithoutTask = this.data.filter(t => !taskWithDescendants.includes(t.id));
+    const taskItems = this.data.filter(t => taskWithDescendants.includes(t.id));
+    
+    const updatedTaskItems = taskItems.map(t => {
       if (t.id === taskId) {
         return { ...t, parentId: prevSibling.id, level: newLevel };
       }
+      return { ...t, level: (t.level ?? 0) + levelDelta };
+    });
+    
+    const prevSiblingIndex = dataWithoutTask.findIndex(t => t.id === prevSibling.id);
+    const prevSiblingDescendants = this.getDescendants(prevSibling.id);
+    const insertIndex = prevSiblingIndex + 1 + prevSiblingDescendants.length;
+    
+    const updatedDataWithoutTask = dataWithoutTask.map(t => {
       if (t.id === prevSibling.id && !t.isGroup) {
         return { ...t, isGroup: true, expanded: true };
       }
       return t;
     });
     
-    this.setData(updatedData);
+    const newData = [
+      ...updatedDataWithoutTask.slice(0, insertIndex),
+      ...updatedTaskItems,
+      ...updatedDataWithoutTask.slice(insertIndex)
+    ];
+    
+    this.setData(newData);
     this.generateWBSCodes();
     
     return true;
@@ -163,7 +201,7 @@ export class TaskStore extends BaseStore<Task> {
 
   /**
    * Outdent task - Move it up one level (DHTMLX/MS Project style)
-   * Task moves to become a sibling of its current parent
+   * Task moves to become a sibling of its current parent, positioned right after parent
    * 
    * Returns true if successful, false if cannot outdent
    */
@@ -179,20 +217,40 @@ export class TaskStore extends BaseStore<Task> {
     const newParentId = parent.parentId ?? null;
     const newLevel = Math.max(0, (task.level ?? 1) - 1);
     
-    const remainingChildren = this.getChildren(parent.id).filter(c => c.id !== taskId);
-    const parentNeedsUpdate = remainingChildren.length === 0;
+    const taskWithDescendants = [taskId, ...this.getDescendants(taskId).map(d => d.id)];
+    const levelDelta = newLevel - (task.level ?? 0);
     
-    const updatedData = this.data.map(t => {
+    const dataWithoutTask = this.data.filter(t => !taskWithDescendants.includes(t.id));
+    const taskItems = this.data.filter(t => taskWithDescendants.includes(t.id));
+    
+    const updatedTaskItems = taskItems.map(t => {
       if (t.id === taskId) {
         return { ...t, parentId: newParentId, level: newLevel };
       }
+      return { ...t, level: (t.level ?? 0) + levelDelta };
+    });
+    
+    const parentIndex = dataWithoutTask.findIndex(t => t.id === parent.id);
+    const parentDescendants = this.getDescendants(parent.id).filter(d => !taskWithDescendants.includes(d.id));
+    const insertIndex = parentIndex + 1 + parentDescendants.length;
+    
+    const remainingChildren = this.getChildren(parent.id).filter(c => !taskWithDescendants.includes(c.id));
+    const parentNeedsUpdate = remainingChildren.length === 0;
+    
+    const updatedDataWithoutTask = dataWithoutTask.map(t => {
       if (t.id === parent.id && parentNeedsUpdate) {
         return { ...t, isGroup: false };
       }
       return t;
     });
     
-    this.setData(updatedData);
+    const newData = [
+      ...updatedDataWithoutTask.slice(0, insertIndex),
+      ...updatedTaskItems,
+      ...updatedDataWithoutTask.slice(insertIndex)
+    ];
+    
+    this.setData(newData);
     this.generateWBSCodes();
     
     return true;
