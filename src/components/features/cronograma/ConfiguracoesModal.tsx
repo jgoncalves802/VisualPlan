@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { X, Calendar, Eye, Palette, Settings } from 'lucide-react';
+import { X, Calendar, Eye, Palette, Settings, Keyboard, RotateCcw } from 'lucide-react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { useKeyboardShortcutsStore, SHORTCUT_CATEGORIES, KeyboardShortcut } from '../../../stores/keyboardShortcutsStore';
 import { FormatoData } from '../../../types/cronograma';
 import { getFormatosDisponiveis, formatarData } from '../../../utils/dateFormatter';
 
@@ -14,10 +15,11 @@ interface ConfiguracoesModalProps {
   onClose: () => void;
 }
 
-type AbaAtiva = 'datas' | 'exibicao' | 'cores' | 'comportamento';
+type AbaAtiva = 'datas' | 'exibicao' | 'cores' | 'comportamento' | 'atalhos';
 
 export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, onClose }) => {
   const { configuracoes, setConfiguracoes } = useCronogramaStore();
+  const { toggleShortcut, resetShortcut, resetAllShortcuts, formatShortcut, getShortcutsByCategory } = useKeyboardShortcutsStore();
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('datas');
 
   const formatosDisponiveis = getFormatosDisponiveis();
@@ -137,6 +139,17 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
           >
             <Settings className="w-4 h-4" />
             Comportamento
+          </button>
+          <button
+            onClick={() => setAbaAtiva('atalhos')}
+            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors ${
+              abaAtiva === 'atalhos'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Keyboard className="w-4 h-4" />
+            Atalhos
           </button>
         </div>
 
@@ -683,6 +696,99 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
                   </p>
                 </div>
               </label>
+            </div>
+          )}
+
+          {/* ABA: Atalhos de Teclado */}
+          {abaAtiva === 'atalhos' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Configure os atalhos de teclado para navegação e edição do cronograma.
+                </p>
+                <button
+                  onClick={() => {
+                    if (confirm('Deseja restaurar todos os atalhos para os valores padrão?')) {
+                      resetAllShortcuts();
+                    }
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restaurar Padrões
+                </button>
+              </div>
+
+              {(Object.keys(SHORTCUT_CATEGORIES) as Array<keyof typeof SHORTCUT_CATEGORIES>).map((category) => {
+                const categoryShortcuts = getShortcutsByCategory(category);
+                if (categoryShortcuts.length === 0) return null;
+
+                return (
+                  <div key={category} className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      {SHORTCUT_CATEGORIES[category].label}
+                    </h4>
+                    <div className="space-y-2">
+                      {categoryShortcuts.map((shortcut) => (
+                        <div
+                          key={shortcut.id}
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                            shortcut.enabled 
+                              ? 'bg-white border-gray-200' 
+                              : 'bg-gray-50 border-gray-100 opacity-60'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <p className={`font-medium ${shortcut.enabled ? 'text-gray-900' : 'text-gray-500'}`}>
+                              {shortcut.name}
+                            </p>
+                            <p className="text-xs text-gray-500">{shortcut.description}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              {shortcut.modifiers.ctrl && (
+                                <span className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 text-gray-700 rounded">Ctrl</span>
+                              )}
+                              {shortcut.modifiers.alt && (
+                                <span className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 text-gray-700 rounded">Alt</span>
+                              )}
+                              {shortcut.modifiers.shift && (
+                                <span className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 text-gray-700 rounded">Shift</span>
+                              )}
+                              <span className="px-2 py-0.5 text-xs font-mono bg-blue-50 text-blue-700 rounded border border-blue-200">
+                                {formatShortcut({ ...shortcut, modifiers: {} } as KeyboardShortcut)}
+                              </span>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={shortcut.enabled}
+                                onChange={(e) => toggleShortcut(shortcut.id, e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                            <button
+                              onClick={() => resetShortcut(shortcut.id)}
+                              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                              title="Restaurar padrão"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-xs text-blue-700">
+                  <strong>Dica:</strong> Use Alt + Scroll do mouse sobre a timeline para fazer zoom. 
+                  Use clique direito em uma atividade para abrir o menu de contexto.
+                </p>
+              </div>
             </div>
           )}
         </div>

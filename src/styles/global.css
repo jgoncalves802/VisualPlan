@@ -321,6 +321,24 @@ body {
 }
 
 /* ==========================================
+   VisionGantt - Hidden Scrollbars for Grid/Timeline
+   ========================================== */
+
+/* Hide scrollbars in gantt grid and timeline containers */
+.gantt-grid-container::-webkit-scrollbar,
+.gantt-timeline-container::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+.gantt-grid-container,
+.gantt-timeline-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+/* ==========================================
    VisionGantt - Primavera P6 Professional Theme
    ========================================== */
 
