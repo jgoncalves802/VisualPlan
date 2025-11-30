@@ -149,18 +149,15 @@ export function GanttChart({
 
   const handleSelectTask = useCallback((taskId: string) => {
     setSelectedTaskId(taskId);
-    const task = flatTasks.find(t => t.id === taskId);
-    if (task) {
-      onTaskClick?.(task);
-    }
-  }, [flatTasks, onTaskClick]);
+    setSelectedTaskIds([taskId]);
+  }, []);
 
   useKeyboardLinking({
     tasks: flatTasks,
     selectedTaskId,
     onCreateDependency: handleCreateDependency,
     onSelectTask: handleSelectTask,
-    enabled: true
+    enabled: dependencyMode
   });
 
   useEffect(() => {
@@ -259,9 +256,61 @@ export function GanttChart({
     [selectedTaskIds, onTaskClick]
   );
 
+  const handleIndentTask = useCallback(() => {
+    if (selectedTaskIds.length > 0) {
+      const success = taskStore.indentTasks(selectedTaskIds);
+      if (success) {
+        const updatedTask = taskStore.getTaskById(selectedTaskIds[0]);
+        if (updatedTask) {
+          onTaskUpdate?.(updatedTask);
+        }
+      }
+    } else if (selectedTaskId) {
+      const success = taskStore.indentTask(selectedTaskId);
+      if (success) {
+        const updatedTask = taskStore.getTaskById(selectedTaskId);
+        if (updatedTask) {
+          onTaskUpdate?.(updatedTask);
+        }
+      }
+    }
+  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+
+  const handleOutdentTask = useCallback(() => {
+    if (selectedTaskIds.length > 0) {
+      const success = taskStore.outdentTasks(selectedTaskIds);
+      if (success) {
+        const updatedTask = taskStore.getTaskById(selectedTaskIds[0]);
+        if (updatedTask) {
+          onTaskUpdate?.(updatedTask);
+        }
+      }
+    } else if (selectedTaskId) {
+      const success = taskStore.outdentTask(selectedTaskId);
+      if (success) {
+        const updatedTask = taskStore.getTaskById(selectedTaskId);
+        if (updatedTask) {
+          onTaskUpdate?.(updatedTask);
+        }
+      }
+    }
+  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!selectedTaskId) return;
+      
+      if (e.altKey && e.shiftKey) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          handleIndentTask();
+          return;
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          handleOutdentTask();
+          return;
+        }
+      }
       
       const currentIndex = flatTasks.findIndex(t => t.id === selectedTaskId);
       if (currentIndex === -1) return;
@@ -293,7 +342,7 @@ export function GanttChart({
         setSelectedTaskIds([newTask.id]);
       }
     },
-    [flatTasks, selectedTaskId, selectedTaskIds]
+    [flatTasks, selectedTaskId, selectedTaskIds, handleIndentTask, handleOutdentTask]
   );
 
   const handleToggleExpand = useCallback(
@@ -493,15 +542,28 @@ export function GanttChart({
             </div>
           </div>
 
-          {/* Keyboard shortcut hint */}
+          {/* Keyboard shortcut hints */}
           <div 
-            className="flex items-center gap-1.5 ml-auto pl-4 border-l border-gray-200"
-            title="Selecione uma atividade e pressione Shift+↓ ou Shift+↑ para criar link"
+            className="flex items-center gap-3 ml-auto pl-4 border-l border-gray-200"
           >
-            <span className="text-xs text-gray-400 font-mono px-1.5 py-0.5 bg-gray-100 rounded">Shift</span>
-            <span className="text-xs text-gray-400">+</span>
-            <span className="text-xs text-gray-400 font-mono px-1.5 py-0.5 bg-gray-100 rounded">↑↓</span>
-            <span className="text-xs text-gray-500 ml-1">Criar link</span>
+            <div 
+              className="flex items-center gap-1"
+              title="Shift+↑↓ para selecionar múltiplas atividades"
+            >
+              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">Shift</span>
+              <span className="text-xs text-gray-400">+</span>
+              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">↑↓</span>
+              <span className="text-xs text-gray-500 ml-1">Selecionar</span>
+            </div>
+            <div 
+              className="flex items-center gap-1"
+              title="Alt+Shift+←→ para recuar/avançar hierarquia"
+            >
+              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">Alt+Shift</span>
+              <span className="text-xs text-gray-400">+</span>
+              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">←→</span>
+              <span className="text-xs text-gray-500 ml-1">Hierarquia</span>
+            </div>
           </div>
         </div>
       )}
