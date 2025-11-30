@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { GanttChart, useCriticalPath } from '../../../lib/vision-gantt';
 import type { Task, Dependency, ViewPreset } from '../../../lib/vision-gantt/types';
 import { 
@@ -62,15 +62,33 @@ export function VisionGanttWrapper({
     toTask: null,
   });
   
-  const ganttData = useMemo(() => {
+  // Base gantt data from props - only used for initial conversion
+  const baseGanttData = useMemo(() => {
     return createGanttDataSync(atividades, dependencias, resources, allocations);
   }, [atividades, dependencias, resources, allocations]);
+
+  // Optimistic task cache - this is the SINGLE SOURCE OF TRUTH for tasks
+  // It's initialized from baseGanttData but updated optimistically on hierarchy changes
+  const [optimisticTasks, setOptimisticTasks] = useState<Task[]>(() => baseGanttData.tasks);
+  const lastAtividadesIdsRef = useRef<string>(atividades.map(a => a.id).sort().join(','));
+  
+  // Only sync from external data when task IDs change (add/remove tasks)
+  // NOT when hierarchy changes (parentId/level) since those are internal
+  useEffect(() => {
+    const newIdsHash = atividades.map(a => a.id).sort().join(',');
+    if (newIdsHash !== lastAtividadesIdsRef.current) {
+      console.log('[VisionGanttWrapper] Task IDs changed, syncing from external source');
+      setOptimisticTasks(baseGanttData.tasks);
+      lastAtividadesIdsRef.current = newIdsHash;
+    }
+  }, [atividades, baseGanttData.tasks]);
 
   const ganttCalendars = useMemo(() => {
     return convertCalendarsToGantt(calendarios);
   }, [calendarios]);
 
-  const criticalPath = useCriticalPath(ganttData.tasks, ganttData.dependencies, {
+  // Use optimistic tasks for critical path calculation
+  const criticalPath = useCriticalPath(optimisticTasks, baseGanttData.dependencies, {
     nearCriticalThreshold: 5
   });
 
@@ -78,8 +96,19 @@ export function VisionGanttWrapper({
     return new Map(atividades.map(a => [a.id, a]));
   }, [atividades]);
 
-
+  // Handle task update - OPTIMISTICALLY update local cache, then sync to external store
   const handleTaskUpdate = useCallback((task: Task) => {
+    // Optimistically update our local cache IMMEDIATELY
+    // This prevents the reducer from being reset by stale props
+    setOptimisticTasks(prev => {
+      const index = prev.findIndex(t => t.id === task.id);
+      if (index === -1) return prev;
+      const updated = [...prev];
+      updated[index] = task;
+      return updated;
+    });
+    
+    // Then sync to external store
     const originalAtividade = atividadeMap.get(task.id);
     if (!originalAtividade || !onAtividadeUpdate) return;
 
@@ -229,9 +258,9 @@ export function VisionGanttWrapper({
       </div>
 
       <GanttChart
-        tasks={ganttData.tasks}
-        dependencies={ganttData.dependencies}
-        resources={ganttData.resources}
+        tasks={optimisticTasks}
+        dependencies={baseGanttData.dependencies}
+        resources={baseGanttData.resources}
         calendars={ganttCalendars}
         viewPreset={viewPreset}
         gridWidth={gridWidth}
@@ -251,7 +280,7 @@ export function VisionGanttWrapper({
         criticalPathIds={criticalPath.criticalPathIds}
         nearCriticalPathIds={criticalPath.nearCriticalPathIds}
         violationTaskIds={criticalPath.violations.map(v => v.toTaskId)}
-        conflictTaskIds={ganttData.conflictTaskIds}
+        conflictTaskIds={baseGanttData.conflictTaskIds}
         className="rounded-lg shadow-sm"
       />
       
