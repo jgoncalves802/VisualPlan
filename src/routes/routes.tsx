@@ -7,6 +7,7 @@ import { CronogramaPage } from '../pages/CronogramaPage';
 import KanbanPage from '../pages/KanbanPage';
 import { RestricoesPage } from '../pages/RestricoesPage';
 import { LPSPage } from '../pages/LPSPage';
+import { ConfiguracoesPage } from '../pages/ConfiguracoesPage';
 import AdminPage from '../pages/AdminPage';
 import AdminUsuariosPage from '../pages/AdminUsuariosPage';
 import AdminEmpresasPage from '../pages/AdminEmpresasPage';
@@ -73,7 +74,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="kanban" element={<KanbanPage />} />
           <Route path="bim" element={<PlaceholderPage title="BIM 4D" />} />
           <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
-          <Route path="configuracoes" element={<PlaceholderPage title="Configurações" />} />
+          <Route path="configuracoes" element={<ConfiguracoesPage />} />
           <Route path="perfil" element={<PlaceholderPage title="Meu Perfil" />} />
           
           {/* Admin Routes */}

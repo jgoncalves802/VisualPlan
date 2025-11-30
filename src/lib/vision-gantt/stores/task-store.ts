@@ -82,7 +82,18 @@ export class TaskStore extends BaseStore<Task> {
   }
 
   /**
-   * Indent task - Make it a child of the task above (MS Project style: Alt+Shift+Right)
+   * Indent task - Make it a child of the task immediately above (MS Project/P6 style)
+   * 
+   * MS Project behavior:
+   * - Task ALWAYS becomes child of the task immediately above in the flat list
+   * - New level = parent's level + 1
+   * - This allows building nested hierarchies by consecutive indents
+   * 
+   * Example:
+   * Before: A(0), B(0), C(0)
+   * Indent B: A(0) -> B(1), C(0)  [B becomes child of A]
+   * Indent C: A(0) -> B(1) -> C(2), [C becomes child of B, the task above]
+   * 
    * Returns true if successful, false if cannot indent
    */
   indentTask(taskId: string): boolean {
@@ -92,23 +103,28 @@ export class TaskStore extends BaseStore<Task> {
     if (taskIndex <= 0) return false;
     
     const task = flatList[taskIndex];
+    if (!task) return false;
+    
     const previousTask = flatList[taskIndex - 1];
+    if (!previousTask) return false;
     
-    if (!task || !previousTask) return false;
-    
-    const newLevel = (task.level ?? 0) + 1;
+    const previousLevel = previousTask.level ?? 0;
+    const newLevel = previousLevel + 1;
     const maxLevel = 10;
+    
     if (newLevel > maxLevel) return false;
     
-    this.updateTask(taskId, {
-      parentId: previousTask.id,
-      level: newLevel
+    const updatedData = this.data.map(t => {
+      if (t.id === taskId) {
+        return { ...t, parentId: previousTask.id, level: newLevel };
+      }
+      if (t.id === previousTask.id && !t.isGroup) {
+        return { ...t, isGroup: true };
+      }
+      return t;
     });
     
-    this.updateTask(previousTask.id, {
-      isGroup: true
-    });
-    
+    this.setData(updatedData);
     this.generateWBSCodes();
     
     return true;

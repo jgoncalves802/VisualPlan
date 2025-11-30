@@ -1,0 +1,77 @@
+## 🛠️ Documentação de Colunas para Implementação em Aplicações de Gerenciamento de Projetos
+
+A comparação entre **MS Project** e **Primavera P6** destaca que o Primavera P6 se distingue por uma profundidade maior em gerenciamento de recursos, controle de custos e gerenciamento de portfólio (Enterprise Project Portfolio Management - EPPM). Para auxiliar a implementação dessas funcionalidades em um aplicativo, a documentação a seguir detalha as colunas e recursos específicos que conferem essa distinção, especialmente no nível de **dados corporativos e detalhamento**.
+
+-----
+
+### 1\. Colunas e Recursos Específicos do Primavera P6 (EPPM)
+
+O foco do P6 é o **Gerenciamento de Portfólio de Projetos Empresariais (EPPM)**, o que exige campos para gerenciar dados em múltiplos projetos e em um nível mais estratégico.
+
+#### A. Colunas de Estrutura Organizacional e Portfólio (EPS/WBS)
+
+Estas colunas são cruciais para a estrutura hierárquica e corporativa:
+
+  * **EPS (Enterprise Project Structure):** A estrutura de pastas/níveis mais alta no P6, que organiza projetos e programas.
+      * **EPS Name/ID:** Identificação e nome do nó na estrutura empresarial.
+      * **Responsible Manager (Gerente Responsável):** Campo para atribuição de responsabilidade no nível corporativo/de portfólio.
+  * **Códigos de Projeto (Project Codes):** Usados para classificar, agrupar e filtrar projetos em um portfólio.
+  * **Nível de Detalhe (WBS Nível/Level):** O P6 usa códigos para gerenciar o nível de detalhe (por exemplo, CWP, IWP em construção - *Construction Work Packages*, *Installation Work Packages*), que podem se tornar colunas para análise de progresso físico.
+
+#### B. Colunas e Recursos Avançados de Linha de Base (Baselines)
+
+O MS Project suporta até 11 linhas de base, mas o P6 oferece um recurso mais robusto:
+
+  * **Número Ilimitado de Linhas de Base:** Colunas/funcionalidades para comparar o status atual com **qualquer** número de baselines armazenadas.
+  * **Campos de Comparação de Linha de Base:** Campos que mostram a variação entre o projeto atual e uma Linha de Base primária, secundária ou terciária:
+      * **BL Project Start/Finish (Início/Término do Projeto na Linha de Base):** As datas originais do projeto de referência.
+      * **BL Variance (Variação da Linha de Base):** Campos de desvio (dias, custo, trabalho) calculados em relação à Linha de Base.
+
+#### C. Colunas de Gerenciamento de Recursos (Avançado)
+
+O P6 é notável pelo seu gerenciamento detalhado de recursos, que vai além do básico:
+
+  * **Tipos de Recursos Corporativos:** O P6 diferencia explicitamente tipos de recursos no nível corporativo (**Role/Função** e **Resource/Recurso**), o que é essencial para o planejamento de capacidade.
+  * **Curva de Disponibilidade de Recursos (Resource Curves):** Colunas que definem como a carga de trabalho de um recurso é distribuída ao longo do tempo (por exemplo, triangular, sino, distribuição uniforme).
+  * **Gerenciamento de Funções (Roles):** Campos para atribuir e gerenciar a competência (taxa de custo, disponibilidade) de uma função, antes de atribuir um recurso específico.
+  * **Unidades de Medida (UoM):** Colunas para definir a unidade de medida para recursos de **Material** e **Custo** (por exemplo, **m³**, **Ton**, **Hora**, **Unidade**).
+
+#### D. Colunas de Valor Agregado (EVM)
+
+Embora o MS Project tenha campos de EVM, o P6 oferece um conjunto mais integrado de colunas para análise aprofundada:
+
+  * **Percentual de Conclusão do Desempenho (Performance % Complete):** Um campo chave que representa o percentual real de trabalho concluído com base na técnica de medição de valor agregado escolhida (ex: 50/50, 0/100, Milestones, Duração, Unidades de Trabalho Físico). O MS Project geralmente foca em `% Conclusão da Duração`.
+  * **Técnica de Cálculo de Valor Agregado:** Coluna/Propriedade da Atividade ou WBS que define como o BCWP (EV) é calculado.
+  * **Fatores de Ponderação (Weighting Factors):** Colunas que permitem aplicar peso diferente às atividades dentro de uma WBS para cálculo de progresso físico.
+
+#### E. Colunas de Relacionamento/Lógica de Atividades
+
+O P6 permite uma lógica mais complexa:
+
+  * **Múltiplos Relacionamentos:** A capacidade de ter **múltiplos tipos de relacionamento** (ex: *Término-Início* (TI) e *Início-Início* (II)) entre as **mesmas duas atividades**. O campo da predecessora/sucessora deve permitir a entrada de vários tipos de lógica com a mesma ID de atividade.
+  * **Lag Type (Tipo de Atraso):** Além da duração do atraso (`Lag`), o P6 pode ter colunas que diferenciam o tipo de atraso (e.g., *Fixed* (Fixo) vs. *Variable* (Variável)) para análises mais complexas.
+
+-----
+
+### 2\. Colunas Personalizadas (Personalização e Integração)
+
+Ambos os softwares oferecem campos personalizados, mas a implementação do P6 é mais hierárquica:
+
+  * **MS Project:** Foco em campos personalizados com **fórmulas** a nível de Tarefa/Recurso (Texto, Data, Número, Bandeira).
+  * **Primavera P6:** Foco em **Códigos** e **Campos Configuráveis (User Defined Fields - UDFs)** aplicáveis em vários níveis:
+      * **Activity Codes:** Códigos específicos da atividade (e.g., Disciplina, Localização, Fase) que atuam como colunas poderosas para filtragem e agrupamento.
+      * **Project UDFs:** Campos personalizados definidos no nível do projeto (e.g., Número do Pedido de Compra - PO, Gerente do Contrato).
+      * **Resource UDFs:** Campos personalizados definidos no nível do recurso (e.g., Número do crachá, Skill Level).
+      * **EPS UDFs:** Campos personalizados aplicados no nível do portfólio, cruciais para relatórios de gestão empresarial.
+
+A documentação enfatiza que o P6 é um **sistema de banco de dados multiusuário**, em contraste com o MS Project, que originalmente era um aplicativo de desktop. Essa arquitetura de banco de dados (que usa **EPS** e **Códigos**) é o que permite o Gerenciamento de Portfólio, **colunas ilimitadas de linha de base** e um **rastreamento nativo de *issues/riscos***.
+
+-----
+
+Você gostaria de focar na criação dos campos de **User Defined Fields (UDFs)** do Primavera P6 para a aplicação, ou prefere um aprofundamento nos campos de **Gerenciamento de Recursos**?
+
+<br>
+
+Para uma visão mais completa sobre a importação e tratamento de dados entre os dois softwares, assista a este vídeo: [Import MS Project para P6 - Completo](https://www.youtube.com/watch?v=nbHW7OIqvXs).
+
+http://googleusercontent.com/youtube_content/0

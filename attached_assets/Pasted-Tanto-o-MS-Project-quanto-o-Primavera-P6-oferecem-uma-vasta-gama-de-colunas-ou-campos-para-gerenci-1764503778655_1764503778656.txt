@@ -1,0 +1,17 @@
+Tanto o MS Project quanto o Primavera P6 oferecem uma vasta gama de colunas (ou campos) para gerenciar projetos, mas o Primavera P6 possui mais de 200 colunas padrão, enquanto o MS Project tem cerca de 500 campos disponíveis. As principais diferenças residem na complexidade e no nível de detalhe que cada software pode gerenciar. 
+Tipos de Colunas Disponíveis
+Ambos os softwares oferecem categorias semelhantes de informações, incluindo: 
+Datas (Início, Término, Datas Reais, Previsão, Restrições).
+Duração e Trabalho (Planejado, Real, Restante, Percentual Concluído).
+Custos (Orçado, Real, Previsto na Conclusão, Valor Agregado/EVM).
+Recursos (Nomes, Unidades, Custos/Taxas, Tipos: Trabalho, Material, Custo).
+Identificação e Estrutura (ID da Atividade, WBS/EAP, Nomes, Códigos).
+Relacionamentos (Predecessoras, Sucessoras). 
+Diferenças Principais e Colunas Específicas
+Categoria MS ProjectPrimavera P6Quant. de ColunasAprox. 500 campos padrão para tarefas e recursos.Mais de 200 colunas padrão, focadas em gestão empresarial e detalhada.Valor Agregado (EVM)Campos disponíveis como BCWS (PV), BCWP (EV), ACWP (AC).Gerenciamento de EVM mais robusto e integrado para múltiplos projetos.Campos PersonalizadosSuporta fórmulas e valores adicionais em campos personalizados.Utiliza "Configured Fields" (Campos Configurados) para dados específicos como números de PO ou datas de entrega, inclusive a nível de EPS, WBS, e Recursos.RelacionamentosPermite apenas um tipo de relacionamento entre duas atividades (ex: TI).Permite múltiplos tipos de relacionamentos entre as mesmas duas atividades (ex: TI e II simultaneamente).Linhas de Base (Baselines)Suporta até 11 linhas de base.Suporta um número ilimitado de linhas de base.Gestão de Issues/RiscosFuncionalidade limitada ou inexistente sem o Project Server.Rastreamento nativo de issues e riscos.
+Resumo
+MS Project é mais adequado para projetos de pequeno a médio porte, com uma interface que inclui campos básicos e avançados, sendo mais fácil de aprender para iniciantes.
+Primavera P6 é uma ferramenta de nível empresarial, projetada para gerenciar projetos complexos e de grande escala, oferecendo colunas detalhadas para controle de custos, recursos e gerenciamento de portfólio (EPM). 
+Ambos os programas permitem a criação de colunas personalizadas para atender às necessidades específicas de cada projeto. 
+
+PEsquise mais e criei uma documentação para auxiliar a uma IA a implementar essas funcionalidades no app.

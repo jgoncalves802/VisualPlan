@@ -83,7 +83,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Shift+Arrow Up/Down**: Multi-select tasks for batch operations
     - **Alt+Shift+Arrow Right**: Indent task (make subtask of task above)
     - **Alt+Shift+Arrow Left**: Outdent task (move to parent level)
-*   **Task Hierarchy Management**: Added `indentTask`, `outdentTask`, `indentTasks`, `outdentTasks` methods to TaskStore for managing task hierarchies with automatic WBS regeneration.
+*   **Task Hierarchy Management**: Added `indentTask`, `outdentTask`, `indentTasks`, `outdentTasks` methods to TaskStore for managing task hierarchies with automatic WBS regeneration. Indent logic follows MS Project/P6 behavior: tasks become children of the closest task above at same or higher level, preserving existing hierarchies.
+*   **Invisible Splitter**: Replaced visible scroll divider with invisible splitter between grid and timeline. Only shows on hover (subtle blue indicator when dragging).
+*   **Settings Navigation**: Added Configuracoes link in sidebar menu with Settings icon, routing to full ConfiguracoesPage with Tema and Atalhos tabs.
+*   **P6 Columns Documentation**: Created `docs/P6-COLUMNS-IMPLEMENTATION.md` with detailed specification for Primavera P6-style columns including EPS structure, baselines, resources, EVM, and UDFs for future implementation.
 *   **EditDependencyModal**: Created component (`src/components/features/cronograma/EditDependencyModal.tsx`) allowing users to click on dependency arrows to edit dependency type (FS/SS/FF/SF) and lag. Features visual type selection, validated lag input (-365 to 365 days), and delete functionality.
 *   **Dependency Click Handler**: Integrated onDependencyClick handler throughout the component chain (DependencyArrow → GanttTimeline → GanttChart → VisionGanttWrapper) enabling interactive dependency editing.
 *   **Dynamic Critical Path System**: Implemented `useCriticalPath` hook with automatic recalculation when tasks or dependencies change. Includes near-critical path detection (total float ≤ 5 days) with distinct orange visual styling.

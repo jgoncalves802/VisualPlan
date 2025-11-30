@@ -631,29 +631,25 @@ export function GanttChart({
           />
         </div>
 
-        {/* Resizable Splitter */}
+        {/* Invisible Resizable Splitter - only visible on hover */}
         <div
           className="gantt-splitter flex-shrink-0 flex items-center justify-center cursor-col-resize group"
           style={{
-            width: 6,
-            backgroundColor: isSplitterDragging ? '#2563EB' : '#E5E7EB',
-            transition: isSplitterDragging ? 'none' : 'background-color 0.2s ease',
-            borderLeft: '1px solid #D1D5DB',
-            borderRight: '1px solid #D1D5DB'
+            width: 4,
+            backgroundColor: isSplitterDragging ? '#2563EB' : 'transparent',
+            transition: isSplitterDragging ? 'none' : 'background-color 0.15s ease',
           }}
           onMouseDown={handleSplitterMouseDown}
           title="Arraste para redimensionar"
         >
           <div 
-            className="flex flex-col gap-0.5 opacity-40 group-hover:opacity-80 transition-opacity"
-            style={{ pointerEvents: 'none' }}
-          >
-            <GripVertical 
-              size={12} 
-              className="text-gray-500"
-              style={{ transform: 'rotate(0deg)' }}
-            />
-          </div>
+            className="absolute inset-y-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ 
+              width: 4,
+              backgroundColor: '#94A3B8',
+              pointerEvents: 'none' 
+            }}
+          />
         </div>
 
         {/* Timeline (right side) - with Alt+Scroll zoom hint */}

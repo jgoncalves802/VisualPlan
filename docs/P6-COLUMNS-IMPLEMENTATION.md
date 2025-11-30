@@ -1,0 +1,230 @@
+# VisionPlan - Documentacao de Colunas Primavera P6
+
+## Visao Geral
+
+Este documento detalha as colunas e recursos especificos do Primavera P6 que devem ser implementados no VisionPlan para oferecer funcionalidades de nivel empresarial (EPPM - Enterprise Project Portfolio Management).
+
+## 1. Estrutura Organizacional e Portfolio (EPS/WBS)
+
+### 1.1 EPS (Enterprise Project Structure)
+Estrutura hierarquica de pastas/niveis que organiza projetos e programas.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| eps_id | string | Identificador unico do no EPS | Alta |
+| eps_name | string | Nome do no na estrutura empresarial | Alta |
+| eps_parent_id | string | ID do no pai na hierarquia | Alta |
+| responsible_manager | string | Gerente responsavel (nivel corporativo) | Media |
+| eps_level | number | Nivel na hierarquia (0 = raiz) | Alta |
+
+### 1.2 Codigos de Projeto
+Usados para classificar, agrupar e filtrar projetos em um portfolio.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| project_code | string | Codigo de classificacao do projeto | Media |
+| project_code_type | string | Tipo do codigo (fase, localizacao, etc) | Media |
+
+### 1.3 Nivel de Detalhe WBS
+O P6 usa codigos para gerenciar o nivel de detalhe.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| wbs_level | number | Nivel na estrutura WBS | Alta |
+| cwp_code | string | Construction Work Package | Media |
+| iwp_code | string | Installation Work Package | Media |
+
+## 2. Linhas de Base (Baselines) Avancadas
+
+O P6 oferece linhas de base ilimitadas vs 11 do MS Project.
+
+### 2.1 Campos de Baseline
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| baseline_id | string | Identificador da linha de base | Alta |
+| baseline_name | string | Nome da linha de base | Alta |
+| baseline_type | enum | Tipo: primary, secondary, tertiary | Alta |
+| bl_project_start | date | Data inicio original | Alta |
+| bl_project_finish | date | Data termino original | Alta |
+| bl_duration | number | Duracao original (dias) | Alta |
+| bl_cost | number | Custo original orcado | Media |
+| bl_work | number | Trabalho original (horas) | Media |
+
+### 2.2 Campos de Variacao
+| Campo | Tipo | Descricao | Formula |
+|-------|------|-----------|---------|
+| start_variance | number | Variacao inicio (dias) | actual_start - bl_start |
+| finish_variance | number | Variacao termino (dias) | actual_finish - bl_finish |
+| duration_variance | number | Variacao duracao (dias) | actual_duration - bl_duration |
+| cost_variance | number | Variacao custo | actual_cost - bl_cost |
+| work_variance | number | Variacao trabalho | actual_work - bl_work |
+
+## 3. Gerenciamento de Recursos Avancado
+
+### 3.1 Tipos de Recursos Corporativos
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| resource_type | enum | labor, nonlabor, material | Alta |
+| resource_role | string | Funcao/papel do recurso | Alta |
+| resource_id | string | Identificador unico | Alta |
+| calendar_id | string | Calendario de trabalho | Media |
+
+### 3.2 Curva de Disponibilidade (Resource Curves)
+Define distribuicao de carga ao longo do tempo.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| curve_type | enum | uniform, triangular, bell, front_loaded, back_loaded | Media |
+| curve_data | json | Dados customizados da curva | Baixa |
+
+### 3.3 Gerenciamento de Funcoes (Roles)
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| role_id | string | Identificador da funcao | Alta |
+| role_name | string | Nome da funcao | Alta |
+| role_rate | number | Taxa de custo padrao | Media |
+| role_max_units | number | Unidades maximas disponiveis | Media |
+| role_skills | json | Competencias requeridas | Baixa |
+
+### 3.4 Unidades de Medida
+| Campo | Tipo | Descricao | Exemplos |
+|-------|------|-----------|----------|
+| unit_of_measure | string | Unidade para recursos | m3, Ton, Hr, Un |
+| unit_abbreviation | string | Abreviacao | m3, t, h, un |
+
+## 4. Valor Agregado (EVM) Avancado
+
+### 4.1 Campos Principais EVM
+| Campo | Tipo | Descricao | Formula |
+|-------|------|-----------|---------|
+| bcws | number | Budget Cost Work Scheduled (PV) | Orcamento planejado |
+| bcwp | number | Budget Cost Work Performed (EV) | Valor agregado |
+| acwp | number | Actual Cost Work Performed (AC) | Custo real |
+| bac | number | Budget at Completion | Orcamento total |
+| eac | number | Estimate at Completion | bac / cpi |
+| etc | number | Estimate to Complete | eac - acwp |
+| vac | number | Variance at Completion | bac - eac |
+
+### 4.2 Indices de Performance
+| Campo | Tipo | Descricao | Formula |
+|-------|------|-----------|---------|
+| cpi | number | Cost Performance Index | bcwp / acwp |
+| spi | number | Schedule Performance Index | bcwp / bcws |
+| tcpi | number | To-Complete Performance Index | (bac - bcwp) / (bac - acwp) |
+| csi | number | Cost Schedule Index | cpi * spi |
+
+### 4.3 Tecnicas de Medicao
+| Valor | Descricao |
+|-------|-----------|
+| 0_100 | 0% ate iniciar, 100% ao completar |
+| 50_50 | 50% ao iniciar, 50% ao completar |
+| MILESTONE | Baseado em marcos |
+| DURATION | Baseado em duracao |
+| PHYSICAL_UNITS | Baseado em unidades fisicas |
+| WEIGHTED | Usando fatores de ponderacao |
+
+### 4.4 Performance Percent Complete
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| performance_pct_complete | number | % conclusao baseado em EVM | Alta |
+| ev_technique | enum | Tecnica de calculo do EV | Alta |
+| weighting_factor | number | Fator de ponderacao | Media |
+
+## 5. Relacionamentos/Logica de Atividades
+
+### 5.1 Multiplos Relacionamentos
+O P6 permite multiplos tipos de relacionamento entre as mesmas duas atividades.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| dependency_id | string | ID unico da dependencia | Alta |
+| from_task_id | string | Tarefa predecessora | Alta |
+| to_task_id | string | Tarefa sucessora | Alta |
+| dependency_type | enum | FS, SS, FF, SF | Alta |
+| lag | number | Atraso em dias | Alta |
+| lag_type | enum | fixed, variable | Media |
+| driving | boolean | Se a dependencia e critica | Media |
+
+## 6. Campos Personalizados (UDFs)
+
+### 6.1 Tipos de UDF
+| Nivel | Descricao | Exemplos |
+|-------|-----------|----------|
+| Activity | Campos por atividade | Disciplina, Localizacao, Fase |
+| Project | Campos por projeto | Numero PO, Gerente Contrato |
+| Resource | Campos por recurso | Numero Cracha, Skill Level |
+| EPS | Campos por portfolio | Estrategia, Prioridade Corporativa |
+
+### 6.2 Estrutura UDF
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| udf_id | string | Identificador unico |
+| udf_name | string | Nome do campo |
+| udf_type | enum | text, number, date, cost, indicator |
+| udf_level | enum | activity, project, resource, eps |
+| udf_values | json | Lista de valores permitidos (para listas) |
+| is_required | boolean | Campo obrigatorio |
+
+## 7. Activity Codes (Codigos de Atividade)
+
+Diferentes de UDFs, sao codigos estruturados para filtragem e agrupamento.
+
+| Campo | Tipo | Descricao | Prioridade |
+|-------|------|-----------|------------|
+| code_type_id | string | Tipo do codigo | Alta |
+| code_type_name | string | Nome do tipo (Disciplina, Area) | Alta |
+| code_value | string | Valor do codigo | Alta |
+| code_description | string | Descricao do valor | Media |
+| parent_code_value | string | Para hierarquias de codigos | Baixa |
+
+### 7.1 Tipos Comuns de Activity Codes
+- **Disciplina**: Civil, Mecanica, Eletrica, Instrumentacao
+- **Area/Localizacao**: Bloco A, Bloco B, Area 1, Area 2
+- **Fase**: Planejamento, Execucao, Comissionamento
+- **Responsavel**: Contratada A, Contratada B, Equipe Propria
+- **Tipo de Trabalho**: Fabricacao, Montagem, Teste
+
+## 8. Implementacao Sugerida
+
+### 8.1 Fase 1 - Fundamentos (Alta Prioridade)
+1. EPS estrutura basica
+2. Baselines com comparacao primaria
+3. Multiplos tipos de dependencia
+4. Activity Codes basicos
+
+### 8.2 Fase 2 - Recursos (Media Prioridade)
+1. Tipos de recursos (labor, material)
+2. Roles e competencias
+3. Calendarios por recurso
+4. Histograma de recursos
+
+### 8.3 Fase 3 - EVM e Avancados (Baixa Prioridade)
+1. Campos EVM completos
+2. Resource Curves
+3. UDFs multinivel
+4. Integracao com portfolio
+
+## 9. Diferencial VisionPlan
+
+O VisionPlan combina as melhores praticas de MS Project e Primavera P6:
+
+| Recurso | MS Project | Primavera P6 | VisionPlan |
+|---------|------------|--------------|------------|
+| Baselines | 11 | Ilimitadas | Ilimitadas |
+| EVM | Basico | Avancado | Avancado |
+| Multi-projeto | Limitado | Nativo | Nativo (EPS) |
+| UDFs | Campos personalizados | Por nivel | Por nivel |
+| Curvas de recurso | Nao | Sim | Planejado |
+| Banco de dados | Arquivo | Multiusuario | Multiusuario |
+
+## 10. Referencias
+
+- Oracle Primavera P6 EPPM Documentation
+- Microsoft Project Documentation
+- PMI Practice Standard for EVM
+- VisionPlan Architecture Docs
+
+---
+
+*Ultima atualizacao: Novembro 2025*
+*Versao: 1.0*

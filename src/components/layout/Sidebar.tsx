@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Box,
   BarChart3,
+  Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -76,6 +77,12 @@ const menuItems: MenuItem[] = [
     label: 'Relatórios',
     icon: <BarChart3 className="w-5 h-5" />,
     path: '/relatorios',
+  },
+  {
+    id: 'configuracoes',
+    label: 'Configurações',
+    icon: <Settings className="w-5 h-5" />,
+    path: '/configuracoes',
   },
 ];
 
