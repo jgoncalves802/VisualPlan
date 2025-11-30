@@ -10,7 +10,7 @@ import { GanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
 import { ZoomControl } from './zoom-control';
 import { TimeScaleConfigDialog } from './time-scale-config-dialog';
-import { useGanttStores } from '../hooks/use-gantt-stores';
+import { useGanttStoresV2 } from '../hooks/use-gantt-stores-v2';
 import { useDragDrop } from '../hooks/use-drag-drop';
 import { useResize } from '../hooks/use-resize';
 import { useDependencyCreation } from '../hooks/use-dependency-creation';
@@ -95,12 +95,68 @@ export function GanttChart({
     minTimelineWidth: 200
   });
 
-  const { taskStore, dependencyStore, calendarStore: _calendarStore, tasks: _tasks, dependencies, calendars: _calendars } = useGanttStores(
+  const { taskStore, dependencyStore, calendarStore: _calendarStore, tasks: internalTasks, dependencies, calendars: _calendars, taskVersion } = useGanttStoresV2(
     initialTasks,
     initialDependencies,
     initialResources,
     initialCalendars
   );
+
+  // Track previous tasks for diffing
+  const prevTasksRef = useRef<Task[]>(internalTasks);
+  const isInitialMount = useRef(true);
+  
+  // Sync task changes to external store AFTER React commits the new state
+  useEffect(() => {
+    // Skip initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevTasksRef.current = internalTasks;
+      return;
+    }
+    
+    if (!onTaskUpdate) {
+      prevTasksRef.current = internalTasks;
+      return;
+    }
+    
+    // Build map of previous task states for comparison
+    const prevMap = new Map(prevTasksRef.current.map(t => [t.id, t]));
+    
+    // Find tasks that changed
+    const changedTasks: Task[] = [];
+    for (const task of internalTasks) {
+      const prev = prevMap.get(task.id);
+      if (!prev) {
+        // New task
+        changedTasks.push(task);
+      } else {
+        // Check if any relevant fields changed
+        const parentChanged = (task.parentId ?? null) !== (prev.parentId ?? null);
+        const levelChanged = (task.level ?? 0) !== (prev.level ?? 0);
+        const wbsChanged = task.wbs !== prev.wbs;
+        const isGroupChanged = Boolean(task.isGroup) !== Boolean(prev.isGroup);
+        const expandedChanged = task.expanded !== prev.expanded;
+        const datesChanged = task.startDate?.getTime() !== prev.startDate?.getTime() ||
+                            task.endDate?.getTime() !== prev.endDate?.getTime();
+        const progressChanged = task.progress !== prev.progress;
+        
+        if (parentChanged || levelChanged || wbsChanged || isGroupChanged || 
+            expandedChanged || datesChanged || progressChanged) {
+          changedTasks.push(task);
+        }
+      }
+    }
+    
+    // Emit updates for changed tasks
+    if (changedTasks.length > 0) {
+      console.log('[GanttChart] Syncing changed tasks:', changedTasks.length, 'version:', taskVersion);
+      changedTasks.forEach(task => onTaskUpdate(task));
+    }
+    
+    // Update prev ref for next comparison
+    prevTasksRef.current = internalTasks;
+  }, [internalTasks, taskVersion, onTaskUpdate]);
 
   const flatTasks = flattenTasks(taskStore.getTaskTree());
   const timelineRange = useTimelineRange(flatTasks);
@@ -108,10 +164,11 @@ export function GanttChart({
 
   const handleTaskUpdate = useCallback(
     (taskId: string, updates: Partial<Task>) => {
+      // Just dispatch the update - sync to external store happens via useEffect
+      // after React commits the new state (prevents stale data emission)
       taskStore.updateTask(taskId, updates);
-      onTaskUpdate?.(taskStore.getTaskById(taskId)!);
     },
-    [taskStore, onTaskUpdate]
+    [taskStore]
   );
 
   const {
@@ -282,29 +339,27 @@ export function GanttChart({
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
     if (taskIds.length === 0) return;
     
-    const success = taskIds.length > 1 
-      ? taskStore.indentTasks(taskIds)
-      : taskStore.indentTask(taskIds[0]);
-      
-    if (success && onTaskUpdate) {
-      const allTasks = taskStore.getAll();
-      allTasks.forEach(task => onTaskUpdate(task));
+    // Just dispatch the action - sync to external store happens via useEffect
+    // after React commits the new state
+    if (taskIds.length > 1) {
+      taskStore.indentTasks(taskIds);
+    } else {
+      taskStore.indentTask(taskIds[0]);
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore]);
 
   const handleOutdentTask = useCallback(() => {
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
     if (taskIds.length === 0) return;
     
-    const success = taskIds.length > 1 
-      ? taskStore.outdentTasks(taskIds)
-      : taskStore.outdentTask(taskIds[0]);
-      
-    if (success && onTaskUpdate) {
-      const allTasks = taskStore.getAll();
-      allTasks.forEach(task => onTaskUpdate(task));
+    // Just dispatch the action - sync to external store happens via useEffect
+    // after React commits the new state
+    if (taskIds.length > 1) {
+      taskStore.outdentTasks(taskIds);
+    } else {
+      taskStore.outdentTask(taskIds[0]);
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -364,10 +419,10 @@ export function GanttChart({
 
   const handleWBSUpdate = useCallback(
     (taskId: string, newWBS: string) => {
+      // Just dispatch - sync to external store via useEffect after commit
       taskStore.update(taskId, { wbs: newWBS });
-      onTaskUpdate?.(taskStore.getById(taskId)!);
     },
-    [taskStore, onTaskUpdate]
+    [taskStore]
   );
 
   const handleViewPresetChange = useCallback(
