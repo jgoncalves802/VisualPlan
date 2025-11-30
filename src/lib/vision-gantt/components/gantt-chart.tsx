@@ -158,7 +158,11 @@ export function GanttChart({
     prevTasksRef.current = internalTasks;
   }, [internalTasks, taskVersion, onTaskUpdate]);
 
-  const flatTasks = flattenTasks(taskStore.getTaskTree());
+  const taskTree = taskStore.getTaskTree();
+  const flatTasks = flattenTasks(taskTree);
+  console.log('[GanttChart] Tasks from reducer:', internalTasks.slice(0, 3).map(t => ({ id: t.id, name: t.name, level: t.level, parentId: t.parentId, isGroup: t.isGroup })));
+  console.log('[GanttChart] TaskTree root count:', taskTree.length, 'first:', taskTree[0]?.name, 'children:', taskTree[0]?.children?.length);
+  console.log('[GanttChart] FlatTasks levels:', flatTasks.slice(0, 5).map(t => ({ name: t.name, level: t.level, parentId: t.parentId })));
   const timelineRange = useTimelineRange(flatTasks);
   const pixelsPerDay = getPixelsPerDay(viewPreset);
 

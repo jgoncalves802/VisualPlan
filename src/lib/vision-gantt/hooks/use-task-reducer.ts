@@ -252,6 +252,16 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
       const newTasks = indentTaskAtomic(state.tasks, action.payload.taskId);
       // Only increment version if tasks actually changed
       if (newTasks === state.tasks) return state;
+      
+      // Debug: Log the result of indent
+      const indentedTask = newTasks.find(t => t.id === action.payload.taskId);
+      console.log('[REDUCER] INDENT_TASK result:', { 
+        taskId: action.payload.taskId,
+        newParentId: indentedTask?.parentId,
+        newLevel: indentedTask?.level,
+        version: state.version + 1
+      });
+      
       return {
         tasks: newTasks,
         version: state.version + 1
