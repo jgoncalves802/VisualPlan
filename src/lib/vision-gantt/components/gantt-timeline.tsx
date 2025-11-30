@@ -24,7 +24,7 @@ interface GanttTimelineProps {
   onTaskClick?: (task: Task) => void;
   onDragStart?: (e: React.MouseEvent, task: Task) => void;
   onResizeStart?: (e: React.MouseEvent, task: Task, edge: 'left' | 'right') => void;
-  onDependencyClick?: (dependency: Dependency) => void;
+  onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
   onDependencyConnect?: (task: Task, point: { x: number; y: number }) => void;
   onCreateDependency?: (fromTaskId: string, toTaskId: string, type: DependencyType, lag?: number) => void;
   selectedTaskId?: string;
@@ -46,6 +46,7 @@ export function GanttTimeline({
   onDragStart,
   onResizeStart,
   onCreateDependency,
+  onDependencyClick,
   selectedTaskId,
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -227,6 +228,7 @@ export function GanttTimeline({
                   arrowIndent={10}
                   isCritical={isCriticalDep}
                   isNearCritical={isNearCriticalDep}
+                  onClick={onDependencyClick ? () => onDependencyClick(dep, fromTask, toTask) : undefined}
                 />
               );
             })}

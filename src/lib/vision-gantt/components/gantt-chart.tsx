@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Task, ViewPreset, GanttConfig, ViewPresetConfig } from '../types';
+import type { Task, Dependency, ViewPreset, GanttConfig, ViewPresetConfig } from '../types';
 import { GanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
 import { ZoomControl } from './zoom-control';
@@ -29,6 +29,7 @@ export interface GanttChartProps extends GanttConfig {
   violationTaskIds?: string[];
   conflictTaskIds?: string[];
   projectName?: string;
+  onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
 }
 
 export function GanttChart({
@@ -52,6 +53,7 @@ export function GanttChart({
   onDependencyCreate,
   onDependencyDelete,
   onViewPresetChange,
+  onDependencyClick,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -469,6 +471,7 @@ export function GanttChart({
             onDragStart={handleDragStart}
             onResizeStart={handleResizeStart}
             onCreateDependency={handleCreateDependency}
+            onDependencyClick={onDependencyClick}
             selectedTaskId={selectedTaskId}
             criticalPathIds={criticalPathIds}
             nearCriticalPathIds={nearCriticalPathIds}

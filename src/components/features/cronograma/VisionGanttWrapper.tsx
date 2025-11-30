@@ -8,9 +8,10 @@ import {
   detectTaskChanges,
   convertCalendarsToGantt
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
-import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto } from '../../../types/cronograma';
+import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto, TipoDependencia } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
 import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
+import { EditDependencyModal } from './EditDependencyModal';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -21,6 +22,7 @@ interface VisionGanttWrapperProps {
   calendarios?: CalendarioProjeto[];
   onAtividadeUpdate?: (atividade: AtividadeMock, changes: Partial<AtividadeMock>) => void;
   onDependenciaCreate?: (dep: DependenciaAtividade) => void;
+  onDependenciaUpdate?: (depId: string, updates: { tipo: TipoDependencia; lag_dias: number }) => Promise<void>;
   onDependenciaDelete?: (depId: string) => void;
   onAtividadeClick?: (atividade: AtividadeMock) => void;
   height?: number;
@@ -38,6 +40,7 @@ export function VisionGanttWrapper({
   calendarios = [],
   onAtividadeUpdate,
   onDependenciaCreate,
+  onDependenciaUpdate,
   onDependenciaDelete,
   onAtividadeClick,
   height = 600,
@@ -46,6 +49,18 @@ export function VisionGanttWrapper({
   className = '',
 }: VisionGanttWrapperProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
+  
+  const [editDependencyModal, setEditDependencyModal] = useState<{
+    open: boolean;
+    dependency: Dependency | null;
+    fromTask: Task | null;
+    toTask: Task | null;
+  }>({
+    open: false,
+    dependency: null,
+    fromTask: null,
+    toTask: null,
+  });
   
   const ganttData = useMemo(() => {
     return createGanttDataSync(atividades, dependencias, resources, allocations);
@@ -95,6 +110,40 @@ export function VisionGanttWrapper({
   const handleDependencyDelete = useCallback((depId: string) => {
     if (!onDependenciaDelete) return;
     onDependenciaDelete(depId);
+  }, [onDependenciaDelete]);
+
+  const handleDependencyClick = useCallback((dependency: Dependency, fromTask: Task, toTask: Task) => {
+    setEditDependencyModal({
+      open: true,
+      dependency,
+      fromTask,
+      toTask,
+    });
+  }, []);
+
+  const handleEditDependencyClose = useCallback(() => {
+    setEditDependencyModal({
+      open: false,
+      dependency: null,
+      fromTask: null,
+      toTask: null,
+    });
+  }, []);
+
+  const handleEditDependencySave = useCallback(async (
+    dependencyId: string, 
+    updates: { tipo: TipoDependencia; lag_dias: number }
+  ) => {
+    if (!onDependenciaUpdate) {
+      console.warn('onDependenciaUpdate não definido');
+      return;
+    }
+    await onDependenciaUpdate(dependencyId, updates);
+  }, [onDependenciaUpdate]);
+
+  const handleEditDependencyDelete = useCallback(async (dependencyId: string) => {
+    if (!onDependenciaDelete) return;
+    await Promise.resolve(onDependenciaDelete(dependencyId));
   }, [onDependenciaDelete]);
 
   const criticalCount = criticalPath.criticalPathIds.length;
@@ -200,12 +249,23 @@ export function VisionGanttWrapper({
         onTaskClick={handleTaskClick}
         onDependencyCreate={handleDependencyCreate}
         onDependencyDelete={handleDependencyDelete}
+        onDependencyClick={handleDependencyClick}
         onViewPresetChange={setViewPreset}
         criticalPathIds={criticalPath.criticalPathIds}
         nearCriticalPathIds={criticalPath.nearCriticalPathIds}
         violationTaskIds={criticalPath.violations.map(v => v.toTaskId)}
         conflictTaskIds={ganttData.conflictTaskIds}
         className="rounded-lg shadow-sm"
+      />
+      
+      <EditDependencyModal
+        open={editDependencyModal.open}
+        onClose={handleEditDependencyClose}
+        dependency={editDependencyModal.dependency}
+        fromTask={editDependencyModal.fromTask}
+        toTask={editDependencyModal.toTask}
+        onSave={handleEditDependencySave}
+        onDelete={handleEditDependencyDelete}
       />
       
       <style>{`
