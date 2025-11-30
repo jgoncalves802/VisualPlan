@@ -99,3 +99,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **Enhanced Milestone Visualization**: Milestones now render as larger, more prominent diamond shapes (70% of bar height) with improved centering and visibility.
 *   **Robust Indent/Outdent Synchronization**: Fixed indent/outdent propagation to broadcast ALL tasks after hierarchy changes. This ensures complete synchronization between TaskStore and external VisionPlan stores, including WBS, parentId, isGroup, and level changes for all ancestors and descendants.
 *   **Improved Change Detection**: Enhanced `detectTaskChanges` in visionplan-adapter.ts to properly detect parentId changes (with null/undefined normalization) and tipo transitions (Marco/Fase/Tarefa).
+*   **Event-Sourced Controller Architecture (November 30, 2025)**: Implemented new unidirectional data flow architecture to permanently fix the indent/outdent hierarchy reset issue:
+    - **GanttChartV2**: New component that uses internal controller as single source of truth
+    - **useGanttController hook**: Manages all task state internally with lazy initialization
+    - **Local Task Cache**: VisionGanttWrapper maintains `localTasks` state that is only re-synced when task IDs change (add/remove)
+    - **One-way Sync**: Changes emit to external cronogramaStore via callbacks but NEVER read back from it
+    - **Race Condition Fix**: Eliminated bidirectional data flow that caused hierarchy changes to be immediately overwritten by stale props
