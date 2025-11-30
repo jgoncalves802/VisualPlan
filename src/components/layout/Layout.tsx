@@ -8,7 +8,6 @@ import {
   AlertTriangle, 
   Box,
   FileText,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -33,49 +32,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: LayoutDashboard, 
       label: 'Dashboard', 
       path: '/dashboard',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD']
     },
     { 
       icon: Network, 
       label: 'WBS - Todos Projetos', 
       path: '/wbs',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
     { 
       icon: Calendar, 
       label: 'Gantt / Cronograma', 
       path: '/cronograma/proj-1',
-      roles: ['ADMIN', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
     { 
       icon: KanbanSquare, 
-      label: 'Kanban', 
+      label: 'Kanban de Execução', 
       path: '/kanban',
-      roles: ['COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD']
+    },
+    { 
+      icon: FileText, 
+      label: 'LPS', 
+      path: '/lps',
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
     { 
       icon: AlertTriangle, 
-      label: 'LPS / Restrições', 
-      path: '/lps',
-      roles: ['ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
+      label: 'Restrições', 
+      path: '/restricoes',
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
     { 
       icon: Box, 
       label: 'BIM / 4D', 
       path: '/bim',
-      roles: ['ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA']
     },
     { 
       icon: FileText, 
       label: 'Relatórios', 
       path: '/relatorios',
-      roles: ['DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO']
-    },
-    { 
-      icon: Settings, 
-      label: 'Administração', 
-      path: '/admin',
-      roles: ['ADMIN']
+      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
   ];
 
