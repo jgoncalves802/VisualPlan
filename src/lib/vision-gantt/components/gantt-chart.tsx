@@ -24,6 +24,12 @@ import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
 import { Settings2, Layers, ChevronDown, Flag, AlertTriangle, GripVertical } from 'lucide-react';
 
+export interface HierarchyChange {
+  taskId: string;
+  newParentId: string | null;
+  newLevel: number;
+}
+
 export interface GanttChartProps extends GanttConfig {
   className?: string;
   gridWidth?: number;
@@ -34,6 +40,7 @@ export interface GanttChartProps extends GanttConfig {
   conflictTaskIds?: string[];
   projectName?: string;
   onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
+  onHierarchyChange?: (changes: HierarchyChange[]) => void;
 }
 
 export function GanttChart({
@@ -58,6 +65,7 @@ export function GanttChart({
   onDependencyDelete,
   onViewPresetChange,
   onDependencyClick,
+  onHierarchyChange,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -279,44 +287,58 @@ export function GanttChart({
   );
 
   const handleIndentTask = useCallback(() => {
-    if (selectedTaskIds.length > 0) {
-      const success = taskStore.indentTasks(selectedTaskIds);
-      if (success) {
-        const updatedTask = taskStore.getTaskById(selectedTaskIds[0]);
+    const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
+    if (taskIds.length === 0) return;
+    
+    const success = taskIds.length > 1 
+      ? taskStore.indentTasks(taskIds)
+      : taskStore.indentTask(taskIds[0]);
+      
+    if (success) {
+      if (onHierarchyChange) {
+        const changes: HierarchyChange[] = taskStore.getAll().map(t => ({
+          taskId: t.id,
+          newParentId: t.parentId ?? null,
+          newLevel: t.level ?? 0
+        }));
+        onHierarchyChange(changes);
+      }
+      
+      taskIds.forEach(id => {
+        const updatedTask = taskStore.getTaskById(id);
         if (updatedTask) {
           onTaskUpdate?.(updatedTask);
         }
-      }
-    } else if (selectedTaskId) {
-      const success = taskStore.indentTask(selectedTaskId);
-      if (success) {
-        const updatedTask = taskStore.getTaskById(selectedTaskId);
-        if (updatedTask) {
-          onTaskUpdate?.(updatedTask);
-        }
-      }
+      });
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, onHierarchyChange, onTaskUpdate]);
 
   const handleOutdentTask = useCallback(() => {
-    if (selectedTaskIds.length > 0) {
-      const success = taskStore.outdentTasks(selectedTaskIds);
-      if (success) {
-        const updatedTask = taskStore.getTaskById(selectedTaskIds[0]);
+    const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
+    if (taskIds.length === 0) return;
+    
+    const success = taskIds.length > 1 
+      ? taskStore.outdentTasks(taskIds)
+      : taskStore.outdentTask(taskIds[0]);
+      
+    if (success) {
+      if (onHierarchyChange) {
+        const changes: HierarchyChange[] = taskStore.getAll().map(t => ({
+          taskId: t.id,
+          newParentId: t.parentId ?? null,
+          newLevel: t.level ?? 0
+        }));
+        onHierarchyChange(changes);
+      }
+      
+      taskIds.forEach(id => {
+        const updatedTask = taskStore.getTaskById(id);
         if (updatedTask) {
           onTaskUpdate?.(updatedTask);
         }
-      }
-    } else if (selectedTaskId) {
-      const success = taskStore.outdentTask(selectedTaskId);
-      if (success) {
-        const updatedTask = taskStore.getTaskById(selectedTaskId);
-        if (updatedTask) {
-          onTaskUpdate?.(updatedTask);
-        }
-      }
+      });
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, onHierarchyChange, onTaskUpdate]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
