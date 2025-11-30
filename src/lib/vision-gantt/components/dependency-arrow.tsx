@@ -27,17 +27,17 @@ interface DependencyArrowProps {
   onClick?: (dependency: Dependency) => void;
 }
 
-// Arrow styling constants - P6 professional look
+// Arrow styling constants - P6 professional look (solid, thin, high visibility)
 const ARROW_CONFIG = {
-  strokeWidth: 1.5,
-  strokeWidthHover: 2.5,
-  arrowSize: 6,
-  arrowSizeHover: 8,
-  defaultColor: '#64748B', // Slate gray - professional look
-  criticalColor: '#DC2626', // Red for critical path
-  highlightColor: '#2563EB', // Blue for selected/hover
-  minOffset: 12, // Minimum horizontal offset from task bars
-  verticalGap: 8, // Gap when routing around tasks
+  strokeWidth: 1.5,           // Thin but visible solid line
+  strokeWidthHover: 2,        // Slightly thicker on hover
+  arrowSize: 5,               // Compact arrowhead
+  arrowSizeHover: 6,          // Slightly larger on hover
+  defaultColor: '#374151',    // Dark gray - high visibility on white background
+  criticalColor: '#DC2626',   // Red for critical path
+  highlightColor: '#1D4ED8',  // Darker blue for selected/hover
+  minOffset: 12,              // Minimum horizontal offset from task bars
+  verticalGap: 8,             // Gap when routing around tasks
 };
 
 /**

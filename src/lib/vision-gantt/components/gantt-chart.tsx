@@ -13,6 +13,7 @@ import { useGanttStores } from '../hooks/use-gantt-stores';
 import { useDragDrop } from '../hooks/use-drag-drop';
 import { useResize } from '../hooks/use-resize';
 import { useDependencyCreation } from '../hooks/use-dependency-creation';
+import { useKeyboardLinking } from '../hooks/use-keyboard-linking';
 import { useTimelineRange } from '../hooks/use-timeline-range';
 import { getPixelsPerDay, getViewPreset, VIEW_PRESETS } from '../config/view-presets';
 import { DEFAULT_COLUMNS } from '../config/default-columns';
@@ -140,6 +141,22 @@ export function GanttChart({
     },
     [dependencyStore, onDependencyCreate]
   );
+
+  const handleSelectTask = useCallback((taskId: string) => {
+    setSelectedTaskId(taskId);
+    const task = flatTasks.find(t => t.id === taskId);
+    if (task) {
+      onTaskClick?.(task);
+    }
+  }, [flatTasks, onTaskClick]);
+
+  useKeyboardLinking({
+    tasks: flatTasks,
+    selectedTaskId,
+    onCreateDependency: handleCreateDependency,
+    onSelectTask: handleSelectTask,
+    enabled: true
+  });
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -384,6 +401,17 @@ export function GanttChart({
               </div>
               <span className="text-xs text-gray-600">Progresso</span>
             </div>
+          </div>
+
+          {/* Keyboard shortcut hint */}
+          <div 
+            className="flex items-center gap-1.5 ml-auto pl-4 border-l border-gray-200"
+            title="Selecione uma atividade e pressione Shift+↓ ou Shift+↑ para criar link"
+          >
+            <span className="text-xs text-gray-400 font-mono px-1.5 py-0.5 bg-gray-100 rounded">Shift</span>
+            <span className="text-xs text-gray-400">+</span>
+            <span className="text-xs text-gray-400 font-mono px-1.5 py-0.5 bg-gray-100 rounded">↑↓</span>
+            <span className="text-xs text-gray-500 ml-1">Criar link</span>
           </div>
         </div>
       )}
