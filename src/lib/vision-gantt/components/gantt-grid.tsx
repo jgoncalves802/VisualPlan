@@ -1,17 +1,16 @@
-
 /**
- * GanttGrid - Left side grid displaying task information
- * Primavera P6 Professional Style
+ * GanttGrid - Primavera P6 Professional Style with Theme Support
  */
 
 import { useEffect } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
-import { ChevronRight, ChevronDown, GripVertical, Flag } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { hasChildren } from '../utils';
 import { useColumnResize } from '../hooks/use-column-resize';
 import { EditableWBSCell } from './editable-wbs-cell';
 import { EditableResourceCell } from './editable-resource-cell';
+import { useGanttTheme } from '../context/theme-context';
 
 interface ResourceAssignment {
   resourceId: string;
@@ -51,6 +50,10 @@ export function GanttGrid({
   criticalPathIds = []
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
+  const { theme } = useGanttTheme();
+  const colors = theme.colors;
+  const gridColors = colors.grid;
+  const headerColors = colors.header;
 
   const {
     resizeState,
@@ -61,18 +64,12 @@ export function GanttGrid({
   } = useColumnResize({ columns, onColumnResize });
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      handleResizeMove(e.clientX);
-    };
-
-    const handleMouseUp = () => {
-      handleResizeEnd();
-    };
+    const handleMouseMove = (e: MouseEvent) => handleResizeMove(e.clientX);
+    const handleMouseUp = () => handleResizeEnd();
 
     if (resizeState.isResizing) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
@@ -82,29 +79,25 @@ export function GanttGrid({
 
   return (
     <div 
-      className="gantt-grid overflow-hidden relative"
+      className="gantt-grid"
       style={{
-        backgroundColor: '#FFFFFF',
-        borderRight: '2px solid #E5E7EB',
+        backgroundColor: gridColors.rowEven,
+        borderRight: `1px solid ${gridColors.border}`,
         cursor: resizeState.isResizing ? 'col-resize' : 'default',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        fontFamily: theme.typography.fontFamily,
+        fontSize: theme.typography.gridLabel.fontSize
       }}
     >
       {resizeState.isResizing && (
-        <div 
-          className="absolute inset-0 z-20"
-          style={{ backgroundColor: 'transparent', cursor: 'col-resize' }}
-        />
+        <div className="absolute inset-0 z-20" style={{ cursor: 'col-resize' }} />
       )}
 
-      {/* P6-Style Header - Gray like Primavera P6 */}
       <div
         className="gantt-grid-header flex sticky top-0 z-10"
         style={{ 
           height: actualHeaderHeight,
-          background: 'linear-gradient(180deg, #6B7280 0%, #4B5563 100%)',
-          borderBottom: '2px solid #4B5563',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          background: `linear-gradient(180deg, ${headerColors.background} 0%, ${headerColors.border} 100%)`,
+          borderBottom: `1px solid ${headerColors.border}`
         }}
       >
         {columns.map((column, index) => {
@@ -114,31 +107,32 @@ export function GanttGrid({
           return (
             <div
               key={column?.field?.toString() ?? index}
-              className="flex items-center transition-colors relative group"
+              className="flex items-center relative group"
               style={{ 
                 width: columnWidth, 
                 minWidth: column?.minWidth ?? 50,
-                paddingLeft: '12px',
-                paddingRight: '12px',
-                borderRight: isLastColumn ? 'none' : '1px solid rgba(255,255,255,0.15)',
+                paddingLeft: '10px',
+                paddingRight: '10px',
+                borderRight: isLastColumn ? 'none' : '1px solid rgba(255,255,255,0.1)',
                 cursor: column?.sortable ? 'pointer' : 'default'
               }}
             >
               <span 
-                className="truncate flex-1 text-white font-semibold text-sm uppercase tracking-wide"
-                style={{ letterSpacing: '0.05em' }}
+                className="truncate flex-1"
+                style={{
+                  color: headerColors.text,
+                  fontWeight: theme.typography.headerLabel.fontWeight,
+                  fontSize: theme.typography.headerLabel.fontSize,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.03em'
+                }}
               >
                 {column?.header ?? ''}
               </span>
               
               {column?.resizable !== false && (
                 <div
-                  className="absolute right-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  style={{
-                    backgroundColor: resizeState.isResizing && resizeState.columnIndex === index 
-                      ? 'rgba(255, 255, 255, 0.3)' 
-                      : 'transparent'
-                  }}
+                  className="absolute right-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -146,16 +140,9 @@ export function GanttGrid({
                   }}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full w-[2px] transition-colors"
-                    style={{
-                      backgroundColor: resizeState.isResizing && resizeState.columnIndex === index
-                        ? 'rgba(255, 255, 255, 0.8)'
-                        : 'rgba(255, 255, 255, 0.3)'
-                    }}
+                    className="absolute right-0 top-0 h-full w-px"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
                   />
-                  <div className="absolute right-[-3px] top-1/2 transform -translate-y-1/2 w-2 h-6 flex items-center justify-center bg-white/20 rounded-sm">
-                    <GripVertical size={12} className="text-white/70" />
-                  </div>
                 </div>
               )}
             </div>
@@ -163,7 +150,6 @@ export function GanttGrid({
         })}
       </div>
 
-      {/* P6-Style Rows */}
       <div className="gantt-grid-body">
         {tasks.map((task, rowIndex) => {
           const isSelected = task?.id === selectedTaskId;
@@ -172,56 +158,73 @@ export function GanttGrid({
           const isMilestone = (task as any)?.isMilestone === true || (task as any)?.duration === 0;
           const isCritical = criticalPathIds.includes(task?.id ?? '');
           const level = task?.level ?? 0;
+          const isProject = isGroup && level === 0;
+          const isWBS = isGroup && level > 0;
           
-          // P6-style row backgrounds - Project (green), WBS (yellow), Activity (white/gray)
-          const getRowBackgroundColor = () => {
-            // Check if it's a Project level (level 0 group)
-            if (isGroup && level === 0) return '#16A34A'; // Project - green like P6
-            // Check if it's a WBS level (level 1+ group)
-            if (isGroup) return '#FACC15'; // WBS - yellow like P6
-            if (isSelected) return '#DBEAFE'; // Selected row
-            if (isCritical) return '#FEF2F2'; // Critical path - light red
-            return isEven ? '#FFFFFF' : '#F8FAFC';
+          const getRowStyle = () => {
+            if (isProject) {
+              return {
+                backgroundColor: colors.summaryProject.fill,
+                color: colors.summaryProject.text,
+                borderBottom: `1px solid ${colors.summaryProject.stroke}`
+              };
+            }
+            if (isWBS) {
+              return {
+                backgroundColor: colors.summaryWBS.fill,
+                color: colors.summaryWBS.text,
+                borderBottom: `1px solid ${colors.summaryWBS.stroke}`
+              };
+            }
+            if (isSelected) {
+              return {
+                backgroundColor: gridColors.selected,
+                color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+                borderBottom: `1px solid ${gridColors.border}`,
+                borderLeft: `2px solid ${gridColors.selectedBorder}`
+              };
+            }
+            if (isCritical) {
+              return {
+                backgroundColor: colors.timeline.holiday,
+                color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+                borderBottom: `1px solid ${colors.criticalActivity.stroke}`,
+                borderLeft: `2px solid ${colors.criticalActivity.fill}`
+              };
+            }
+            return {
+              backgroundColor: isEven ? gridColors.rowEven : gridColors.rowOdd,
+              color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+              borderBottom: `1px solid ${gridColors.border}`
+            };
           };
 
-          const getTextColor = () => {
-            if (isGroup && level === 0) return '#FFFFFF'; // White for Project
-            if (isGroup) return '#1F2937'; // Dark for WBS (yellow bg)
-            return '#1F2937';
-          };
-
-          const getBorderColor = () => {
-            if (isCritical && !isGroup) return '#FCA5A5';
-            if (isGroup && level === 0) return '#15803D'; // Darker green for project
-            if (isGroup) return '#EAB308'; // Darker yellow for WBS
-            return '#E5E7EB';
-          };
+          const rowStyle = getRowStyle();
           
           return (
             <div
               key={task?.id ?? `task-${rowIndex}`}
-              className="gantt-grid-row flex cursor-pointer transition-all duration-150"
+              className="gantt-grid-row flex cursor-pointer"
               style={{ 
                 height: rowHeight,
-                backgroundColor: getRowBackgroundColor(),
-                borderBottom: `1px solid ${getBorderColor()}`,
-                borderLeft: isCritical && !isGroup ? '3px solid #DC2626' : 'none',
+                ...rowStyle,
+                transition: 'background-color 0.1s ease'
               }}
               onClick={() => onTaskClick?.(task)}
               onMouseEnter={(e) => {
                 if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = isCritical ? '#FEE2E2' : '#F3F4F6';
+                  e.currentTarget.style.backgroundColor = gridColors.hover;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = getRowBackgroundColor();
+                  e.currentTarget.style.backgroundColor = rowStyle.backgroundColor as string;
                 }
               }}
             >
               {columns.map((column, colIndex) => {
                 const isNameColumn = column?.field === 'name';
-                const paddingLeft = isNameColumn ? level * 24 + 12 : 12;
+                const indent = isNameColumn ? level * 20 + 10 : 10;
                 const columnWidth = getColumnWidth(colIndex);
                 const isWBSColumn = column?.field === 'wbs';
                 const isLastColumn = colIndex === columns.length - 1;
@@ -233,56 +236,43 @@ export function GanttGrid({
                     style={{
                       width: columnWidth,
                       minWidth: column?.minWidth ?? 50,
-                      paddingLeft: `${paddingLeft}px`,
-                      paddingRight: '12px',
-                      borderRight: isLastColumn ? 'none' : `1px solid ${isGroup ? 'rgba(255,255,255,0.15)' : '#E5E7EB'}`,
-                      fontSize: '13px',
-                      fontWeight: isGroup ? 600 : 400,
-                      color: getTextColor(),
-                      overflow: 'hidden'
+                      paddingLeft: `${indent}px`,
+                      paddingRight: '10px',
+                      borderRight: isLastColumn ? 'none' : `1px solid ${isGroup ? 'rgba(255,255,255,0.15)' : gridColors.border}`,
+                      fontWeight: isGroup ? 600 : theme.typography.gridLabel.fontWeight,
+                      fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize
                     }}
                   >
-                    {/* Expansion icon for Task Name column */}
                     {isNameColumn && hasChildren(task) && (
                       <button
-                        className="flex-shrink-0 transition-all duration-200 mr-2 p-0.5 rounded hover:bg-white/20"
+                        className="flex-shrink-0 mr-1.5 p-0.5 rounded"
                         style={{ 
-                          color: isGroup ? '#FFFFFF' : '#6B7280'
+                          color: isGroup ? 'rgba(255,255,255,0.9)' : (gridColors.rowEven === '#FFFFFF' ? '#6B7280' : '#9CA3AF'),
+                          transition: 'transform 0.15s ease'
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleExpand?.(task.id);
                         }}
-                        aria-label={task?.expanded ? 'Collapse' : 'Expand'}
                       >
                         {task?.expanded !== false ? (
-                          <ChevronDown size={16} strokeWidth={2.5} />
+                          <ChevronDown size={14} strokeWidth={2} />
                         ) : (
-                          <ChevronRight size={16} strokeWidth={2.5} />
+                          <ChevronRight size={14} strokeWidth={2} />
                         )}
                       </button>
                     )}
 
-                    {/* Icons for milestones and critical tasks */}
-                    {isNameColumn && !hasChildren(task) && (
-                      <div className="flex items-center mr-2">
-                        {isMilestone && (
-                          <span 
-                            className="text-amber-500 mr-1" 
-                            title="Milestone"
-                            style={{ fontSize: '14px' }}
-                          >
-                            ◆
-                          </span>
-                        )}
-                        {isCritical && !isMilestone && (
-                          <Flag 
-                            size={14} 
-                            className="text-red-500 mr-1" 
-                            fill="#DC2626"
-                          />
-                        )}
-                      </div>
+                    {isNameColumn && !hasChildren(task) && isMilestone && (
+                      <span 
+                        style={{ 
+                          color: isCritical ? colors.milestone.fillCritical : colors.summaryWBS.fill,
+                          fontSize: '10px',
+                          marginRight: '4px'
+                        }}
+                      >
+                        ◆
+                      </span>
                     )}
 
                     {isWBSColumn ? (
@@ -299,7 +289,7 @@ export function GanttGrid({
                         onUpdate={onResourceUpdate}
                       />
                     ) : (
-                      <span className="truncate flex-1" style={{ lineHeight: '1.4' }}>
+                      <span className="truncate flex-1" style={{ lineHeight: '1.5' }}>
                         {column?.renderer
                           ? column.renderer((task as any)?.[column.field], task)
                           : (task as any)?.[column.field]?.toString() ?? ''}

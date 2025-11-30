@@ -1,16 +1,12 @@
 /**
- * TaskBar - Primavera P6 Professional Style
- * Features:
- * - Critical path highlighting (red bars)
- * - Labels on bars (task name + duration)
- * - Progress bar with gradient
- * - Milestones as diamond shapes
- * - Summary tasks with bracket style
+ * TaskBar - Primavera P6 Professional Design with Theme Support
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Task, TaskBarPosition } from '../types';
 import { hasChildren } from '../utils';
+import { format, differenceInDays } from 'date-fns';
+import { useGanttTheme } from '../context/theme-context';
 
 interface TaskBarProps {
   task: Task;
@@ -32,87 +28,7 @@ interface TaskBarProps {
   onDependencyDragLeave?: () => void;
   isDependencyDragTarget?: boolean;
   showLabels?: boolean;
-}
-
-/**
- * P6-style color scheme based on task hierarchy and critical path
- * Project = Green bars, WBS = Yellow bars, Activities = Blue (normal) or Red (critical)
- */
-function getTaskColors(task: Task, isCritical: boolean): { fill: string; stroke: string; progress: string; isProject: boolean; isWBS: boolean } {
-  const level = (task as any)?.level ?? 0;
-  const isParent = hasChildren(task);
-  
-  // Project level (level 0 parent) - Green like P6
-  if (isParent && level === 0) {
-    return {
-      fill: '#16A34A',
-      stroke: '#15803D',
-      progress: '#86EFAC',
-      isProject: true,
-      isWBS: false
-    };
-  }
-  
-  // WBS level (level 1+ parent) - Dark gold/yellow like P6
-  if (isParent) {
-    return {
-      fill: '#B45309', // Dark amber/gold for WBS bars like P6
-      stroke: '#92400E',
-      progress: '#FCD34D',
-      isProject: false,
-      isWBS: true
-    };
-  }
-
-  // Critical path activities - Red
-  if (isCritical) {
-    return {
-      fill: '#DC2626',
-      stroke: '#B91C1C',
-      progress: '#FCA5A5',
-      isProject: false,
-      isWBS: false
-    };
-  }
-
-  const status = task?.status?.toLowerCase() ?? 'not_started';
-  
-  switch (status) {
-    case 'completed':
-      return {
-        fill: '#059669',
-        stroke: '#047857',
-        progress: '#6EE7B7',
-        isProject: false,
-        isWBS: false
-      };
-    case 'in_progress':
-    case 'in-progress':
-      return {
-        fill: '#2563EB',
-        stroke: '#1D4ED8',
-        progress: '#93C5FD',
-        isProject: false,
-        isWBS: false
-      };
-    case 'on_hold':
-    case 'on-hold':
-      return {
-        fill: '#D97706',
-        stroke: '#B45309',
-        progress: '#FCD34D',
-        isProject: false,
-        isWBS: false
-      };
-    default:
-      return {
-        fill: '#2563EB', // Default blue for normal activities
-        stroke: '#1D4ED8',
-        progress: '#93C5FD',
-        isProject: false,
-        isWBS: false
-      };
-  }
+  showTooltip?: boolean;
 }
 
 export function TaskBar({
@@ -129,313 +45,273 @@ export function TaskBar({
   onDragStart,
   onResizeStart,
   onClick,
-  onDependencyConnect,
   onDependencyDragStart,
   onDependencyDragEnter,
   onDependencyDragLeave,
   isDependencyDragTarget = false,
-  showLabels = true
+  showLabels = true,
+  showTooltip = true
 }: TaskBarProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const [showHandles, setShowHandles] = useState(false);
+  const { theme } = useGanttTheme();
+  const themeColors = theme.colors;
   
-  const colors = getTaskColors(task, isCritical);
-  const opacity = isDragging ? 0.6 : 1;
+  const level = (task as any)?.level ?? 0;
+  const isParent = hasChildren(task);
   const progress = task?.progress ?? 0;
-  const duration = (task as any)?.duration ?? 0;
+  const status = task?.status?.toLowerCase() ?? 'not_started';
+  const duration = (task as any)?.duration ?? differenceInDays(task.endDate, task.startDate);
+  const opacity = isDragging ? 0.7 : 1;
 
-  // Larger, more visible handles for better UX
-  const HANDLE_WIDTH = 10;
-  const HANDLE_HEIGHT = barHeight - 2;
-  const DEPENDENCY_HANDLE_SIZE = 8;
-  const DEPENDENCY_HANDLE_SIZE_HOVER = 10;
+  const colors = useMemo(() => {
+    if (isParent && level === 0) {
+      return { ...themeColors.summaryProject, isProject: true, isWBS: false };
+    }
+    if (isParent) {
+      return { ...themeColors.summaryWBS, isProject: false, isWBS: true };
+    }
+    if (isCritical) {
+      return { ...themeColors.criticalActivity, isProject: false, isWBS: false };
+    }
+    if (progress === 100 || status === 'completed') {
+      return { ...themeColors.completedActivity, isProject: false, isWBS: false };
+    }
+    return { ...themeColors.normalActivity, isProject: false, isWBS: false };
+  }, [themeColors, isParent, level, isCritical, progress, status]);
 
-  // ===========================================
-  // MILESTONE RENDERING (Diamond Shape P6 Style)
-  // ===========================================
+  const RESIZE_HANDLE_WIDTH = theme.spacing.handleSize + 1;
+  const DEPENDENCY_HANDLE_SIZE = theme.spacing.handleSize;
+
+  const tooltipContent = useMemo(() => {
+    if (!showTooltip) return null;
+    return {
+      name: task.name,
+      start: format(task.startDate, 'dd/MM/yyyy'),
+      end: format(task.endDate, 'dd/MM/yyyy'),
+      duration: `${duration}d`,
+      progress: `${progress}%`
+    };
+  }, [task, duration, progress, showTooltip]);
+
   if (task?.isMilestone || duration === 0) {
     const centerX = position.x;
     const centerY = position.y + barHeight / 2;
-    const size = barHeight * 0.7;
+    const size = Math.min(barHeight * 0.5, 10);
 
     return (
       <g
-        className="gantt-task-bar gantt-milestone"
+        className="gantt-milestone"
         onClick={() => onClick?.(task)}
         style={{ opacity, cursor: 'pointer' }}
-        onMouseEnter={() => setShowHandles(true)}
-        onMouseLeave={() => setShowHandles(false)}
+        onMouseEnter={() => { setIsHovered(true); setShowHandles(true); }}
+        onMouseLeave={() => { setIsHovered(false); setShowHandles(false); }}
       >
-        {/* Shadow */}
         <polygon
-          points={`${centerX},${centerY - size / 2 + 2} ${centerX + size / 2 + 2},${centerY + 2} ${centerX},${centerY + size / 2 + 2} ${centerX - size / 2 - 2},${centerY + 2}`}
-          fill="rgba(0,0,0,0.15)"
-        />
-        
-        {/* Main diamond */}
-        <polygon
-          points={`${centerX},${centerY - size / 2} ${centerX + size / 2},${centerY} ${centerX},${centerY + size / 2} ${centerX - size / 2},${centerY}`}
-          fill={isCritical ? '#DC2626' : '#D97706'}
-          stroke={isSelected ? '#1E40AF' : (isCritical ? '#991B1B' : '#B45309')}
-          strokeWidth={isSelected ? 3 : 2}
+          points={`${centerX},${centerY - size} ${centerX + size},${centerY} ${centerX},${centerY + size} ${centerX - size},${centerY}`}
+          fill={isCritical ? themeColors.milestone.fillCritical : themeColors.milestone.fill}
+          stroke={isSelected ? themeColors.selection : themeColors.milestone.stroke}
+          strokeWidth={isSelected ? 2 : 1}
+          style={{ transition: 'all 0.15s ease' }}
         />
 
-        {/* Label */}
-        {showLabels && position.width > 30 && (
+        {showLabels && (
           <text
-            x={centerX + size / 2 + 8}
-            y={centerY + 4}
-            fontSize="11"
-            fontWeight="600"
-            fill="#374151"
-            style={{ pointerEvents: 'none' }}
+            x={centerX + size + 6}
+            y={centerY + 3}
+            fontSize={theme.typography.taskLabel.fontSize}
+            fontWeight={theme.typography.taskLabel.fontWeight}
+            fill={themeColors.grid.rowEven === '#FFFFFF' ? '#374151' : '#E5E7EB'}
+            fontFamily={theme.typography.fontFamily}
           >
-            {task?.name?.substring(0, 25)}{(task?.name?.length ?? 0) > 25 ? '...' : ''}
+            {task.name}
           </text>
         )}
 
-        {/* Dependency handles - larger and more visible */}
         {showHandles && (
           <>
-            <g className="gantt-dependency-handle-group">
-              {/* Left handle with glow effect */}
-              <circle
-                cx={centerX - size / 2}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE + 2}
-                fill="rgba(30, 64, 175, 0.2)"
-                className="gantt-handle-glow"
-              />
-              <circle
-                cx={centerX - size / 2}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE}
-                fill="#1E40AF"
-                stroke="white"
-                strokeWidth={2.5}
-                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  onDependencyDragStart?.(task, 'start', e);
-                }}
-              />
-            </g>
-            <g className="gantt-dependency-handle-group">
-              {/* Right handle with glow effect */}
-              <circle
-                cx={centerX + size / 2}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE + 2}
-                fill="rgba(30, 64, 175, 0.2)"
-                className="gantt-handle-glow"
-              />
-              <circle
-                cx={centerX + size / 2}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE}
-                fill="#1E40AF"
-                stroke="white"
-                strokeWidth={2.5}
-                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  onDependencyDragStart?.(task, 'end', e);
-                }}
-              />
-            </g>
+            <circle
+              cx={centerX - size - 3}
+              cy={centerY}
+              r={DEPENDENCY_HANDLE_SIZE}
+              fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
+              stroke="white"
+              strokeWidth={1.5}
+              style={{ cursor: 'crosshair' }}
+              onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'start', e); }}
+            />
+            <circle
+              cx={centerX + size + 3}
+              cy={centerY}
+              r={DEPENDENCY_HANDLE_SIZE}
+              fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
+              stroke="white"
+              strokeWidth={1.5}
+              style={{ cursor: 'crosshair' }}
+              onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'end', e); }}
+            />
           </>
+        )}
+
+        {isHovered && tooltipContent && (
+          <g className="gantt-tooltip" style={{ pointerEvents: 'none' }}>
+            <rect
+              x={centerX - 60}
+              y={centerY - size - 35}
+              width={120}
+              height={28}
+              rx={4}
+              fill="#1F2937"
+              fillOpacity={0.95}
+            />
+            <text x={centerX} y={centerY - size - 17} fontSize="10" fill="white" textAnchor="middle" fontFamily={theme.typography.fontFamily}>
+              {tooltipContent.name} • {tooltipContent.start}
+            </text>
+          </g>
         )}
       </g>
     );
   }
 
-  // ===========================================
-  // SUMMARY TASK (Parent with Children) - P6 Style with thin line and diamond endpoints
-  // ===========================================
   if (hasChildren(task)) {
     const centerY = position.y + barHeight / 2;
-    const diamondSize = 6;
-    const lineHeight = 4;
+    const lineHeight = 3;
+    const endCapSize = 4;
 
     return (
       <g
-        className="gantt-task-bar gantt-summary"
+        className="gantt-summary-bar"
         style={{ opacity }}
-        onMouseEnter={() => setShowHandles(true)}
-        onMouseLeave={() => setShowHandles(false)}
+        onMouseEnter={() => { setIsHovered(true); setShowHandles(true); }}
+        onMouseLeave={() => { setIsHovered(false); setShowHandles(false); }}
       >
-        {/* Hover area */}
         <rect
-          x={position.x - 10}
-          y={position.y - 5}
-          width={position.width + 20}
-          height={barHeight + 10}
+          x={position.x - 5}
+          y={position.y}
+          width={position.width + 10}
+          height={barHeight}
           fill="transparent"
-          pointerEvents="all"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.(task);
-          }}
           style={{ cursor: 'pointer' }}
+          onClick={(e) => { e.stopPropagation(); onClick?.(task); }}
         />
 
-        {/* Main thin bar - P6 style */}
         <rect
-          x={position.x + diamondSize}
+          x={position.x}
           y={centerY - lineHeight / 2}
-          width={Math.max(0, position.width - diamondSize * 2)}
+          width={position.width}
           height={lineHeight}
           fill={colors.fill}
         />
 
-        {/* Left diamond endpoint */}
         <polygon
           points={`
-            ${position.x + diamondSize},${centerY - diamondSize}
-            ${position.x + diamondSize * 2},${centerY}
-            ${position.x + diamondSize},${centerY + diamondSize}
-            ${position.x},${centerY}
+            ${position.x},${centerY - endCapSize}
+            ${position.x + endCapSize},${centerY}
+            ${position.x},${centerY + endCapSize}
+          `}
+          fill={colors.fill}
+        />
+        <polygon
+          points={`
+            ${position.x + position.width},${centerY - endCapSize}
+            ${position.x + position.width - endCapSize},${centerY}
+            ${position.x + position.width},${centerY + endCapSize}
           `}
           fill={colors.fill}
         />
 
-        {/* Right diamond endpoint */}
-        <polygon
-          points={`
-            ${position.x + position.width - diamondSize},${centerY - diamondSize}
-            ${position.x + position.width},${centerY}
-            ${position.x + position.width - diamondSize},${centerY + diamondSize}
-            ${position.x + position.width - diamondSize * 2},${centerY}
-          `}
-          fill={colors.fill}
-        />
-
-        {/* Progress overlay */}
         {progress > 0 && (
           <rect
-            x={position.x + diamondSize}
-            y={centerY - lineHeight / 2}
-            width={Math.max(0, (position.width - diamondSize * 2) * (progress / 100))}
-            height={lineHeight}
-            fill={colors.progress}
-            pointerEvents="none"
+            x={position.x}
+            y={centerY + lineHeight / 2 + 1}
+            width={(position.width * progress) / 100}
+            height={2}
+            fill={colors.isProject ? themeColors.completedActivity.fill : themeColors.baseline.fill}
           />
         )}
 
-        {/* Label to the right */}
         {showLabels && (
           <text
             x={position.x + position.width + 8}
-            y={centerY + 4}
-            fontSize="11"
-            fontWeight="600"
-            fill="#374151"
-            style={{ pointerEvents: 'none' }}
+            y={centerY + 3}
+            fontSize={theme.typography.taskLabel.fontSize}
+            fontWeight={600}
+            fill={colors.isProject ? themeColors.summaryProject.fill : (themeColors.grid.rowEven === '#FFFFFF' ? '#374151' : '#E5E7EB')}
+            fontFamily={theme.typography.fontFamily}
           >
-            {task?.name?.substring(0, 25)}{(task?.name?.length ?? 0) > 25 ? '...' : ''}
+            {task.name}
           </text>
         )}
 
-        {/* Dependency handles - larger with glow effect */}
         {showHandles && (
           <>
-            <g className="gantt-dependency-handle-group">
-              <circle
-                cx={position.x}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE + 2}
-                fill="rgba(30, 64, 175, 0.2)"
-                className="gantt-handle-glow"
-              />
-              <circle
-                cx={position.x}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE}
-                fill="#1E40AF"
-                stroke="white"
-                strokeWidth={2.5}
-                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  onDependencyDragStart?.(task, 'start', e);
-                }}
-              />
-            </g>
-            <g className="gantt-dependency-handle-group">
-              <circle
-                cx={position.x + position.width}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE + 2}
-                fill="rgba(30, 64, 175, 0.2)"
-                className="gantt-handle-glow"
-              />
-              <circle
-                cx={position.x + position.width}
-                cy={centerY}
-                r={DEPENDENCY_HANDLE_SIZE}
-                fill="#1E40AF"
-                stroke="white"
-                strokeWidth={2.5}
-                style={{ cursor: 'crosshair', transition: 'r 0.15s ease' }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  onDependencyDragStart?.(task, 'end', e);
-                }}
-              />
-            </g>
+            <circle
+              cx={position.x - 3}
+              cy={centerY}
+              r={DEPENDENCY_HANDLE_SIZE}
+              fill={themeColors.handle}
+              stroke="white"
+              strokeWidth={1.5}
+              style={{ cursor: 'crosshair' }}
+              onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'start', e); }}
+            />
+            <circle
+              cx={position.x + position.width + 3}
+              cy={centerY}
+              r={DEPENDENCY_HANDLE_SIZE}
+              fill={themeColors.handle}
+              stroke="white"
+              strokeWidth={1.5}
+              style={{ cursor: 'crosshair' }}
+              onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'end', e); }}
+            />
           </>
         )}
       </g>
     );
   }
 
-  // ===========================================
-  // REGULAR TASK BAR - P6 Professional Style
-  // ===========================================
-  const labelText = showLabels && position.width > 80 
-    ? `${task?.name?.substring(0, Math.floor(position.width / 8))}${(task?.name?.length ?? 0) > Math.floor(position.width / 8) ? '...' : ''}`
-    : null;
+  const activityBarHeight = barHeight * 0.65;
+  const activityBarY = position.y + (barHeight - activityBarHeight) / 2;
+  const progressBarHeight = 3;
+  const progressBarY = activityBarY + activityBarHeight + 2;
 
   return (
     <g
-      className="gantt-task-bar-wrapper"
+      className="gantt-activity-bar"
       style={{ opacity }}
-      onMouseEnter={() => setShowHandles(true)}
-      onMouseLeave={() => setShowHandles(false)}
+      onMouseEnter={() => { setIsHovered(true); setShowHandles(true); }}
+      onMouseLeave={() => { setIsHovered(false); setShowHandles(false); }}
     >
-      {/* Hover area */}
       <rect
-        x={position.x - 10}
+        x={position.x - 5}
         y={position.y - 5}
-        width={position.width + 20}
+        width={position.width + 10}
         height={barHeight + 10}
         fill="transparent"
-        pointerEvents="all"
       />
 
-      {/* Shadow for depth */}
-      <rect
-        x={position.x + 2}
-        y={position.y + 2}
-        width={position.width}
-        height={barHeight}
-        rx={barRadius}
-        ry={barRadius}
-        fill="rgba(0,0,0,0.15)"
-        pointerEvents="none"
-      />
+      <defs>
+        <linearGradient id={`bar-gradient-${task.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={(colors as any).fillLight || colors.fill} />
+          <stop offset="100%" stopColor={colors.fill} />
+        </linearGradient>
+      </defs>
 
-      {/* Main task bar */}
       <rect
         x={position.x}
-        y={position.y}
+        y={activityBarY}
         width={position.width}
-        height={barHeight}
-        rx={barRadius}
-        ry={barRadius}
-        fill={colors.fill}
-        stroke={isSelected ? '#1E40AF' : colors.stroke}
-        strokeWidth={isSelected ? 3 : 1}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        height={activityBarHeight}
+        rx={theme.spacing.barRadius}
+        ry={theme.spacing.barRadius}
+        fill={`url(#bar-gradient-${task.id})`}
+        stroke={isSelected ? themeColors.selection : (colors as any).stroke || colors.fill}
+        strokeWidth={isSelected ? 2 : 0.5}
+        style={{ 
+          cursor: isDragging ? 'grabbing' : 'grab',
+          transition: 'stroke-width 0.15s ease'
+        }}
         onMouseDown={(e) => {
           if (onDragStart) {
             e.stopPropagation();
@@ -448,199 +324,144 @@ export function TaskBar({
         }}
       />
 
-      {/* Progress bar (internal) */}
       {progress > 0 && (
         <rect
-          x={position.x + 2}
-          y={position.y + barHeight - 6}
-          width={Math.max(0, (position.width - 4) * (progress / 100))}
-          height={4}
-          rx={2}
-          ry={2}
-          fill="rgba(255,255,255,0.6)"
-          pointerEvents="none"
+          x={position.x}
+          y={progressBarY}
+          width={(position.width * progress) / 100}
+          height={progressBarHeight}
+          rx={1}
+          fill={(colors as any).progress || themeColors.normalActivity.progress}
         />
       )}
 
-      {/* Top shine effect */}
-      <rect
-        x={position.x}
-        y={position.y}
-        width={position.width}
-        height={barHeight / 3}
-        rx={barRadius}
-        ry={barRadius}
-        fill="rgba(255,255,255,0.2)"
-        pointerEvents="none"
-      />
-
-      {/* Label inside bar */}
-      {labelText && (
+      {progress > 0 && position.width > 40 && (
         <text
-          x={position.x + 8}
-          y={position.y + barHeight / 2 + 4}
-          fontSize="11"
+          x={position.x + position.width - 4}
+          y={activityBarY + activityBarHeight / 2 + 3}
+          fontSize="9"
           fontWeight="600"
-          fill="white"
-          style={{ 
-            pointerEvents: 'none',
-            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-          }}
+          fill={(colors as any).text || 'white'}
+          textAnchor="end"
+          fontFamily={theme.typography.fontFamily}
+          style={{ opacity: 0.9 }}
         >
-          {labelText}
+          {progress}%
         </text>
       )}
 
-      {/* Duration label on right side of bar */}
-      {showLabels && duration > 0 && (
+      {showLabels && (
         <text
           x={position.x + position.width + 6}
-          y={position.y + barHeight / 2 + 4}
-          fontSize="10"
-          fontWeight="500"
-          fill="#6B7280"
-          style={{ pointerEvents: 'none' }}
+          y={activityBarY + activityBarHeight / 2 + 3}
+          fontSize={theme.typography.taskLabel.fontSize}
+          fontWeight={theme.typography.taskLabel.fontWeight}
+          fill={themeColors.grid.rowEven === '#FFFFFF' ? '#374151' : '#E5E7EB'}
+          fontFamily={theme.typography.fontFamily}
         >
-          {duration}d
+          {task.name}
         </text>
       )}
 
-      {/* Critical path indicator */}
-      {isCritical && (
-        <rect
-          x={position.x - 3}
-          y={position.y}
-          width={3}
-          height={barHeight}
-          fill="#DC2626"
-          rx={1}
+      {hasConflicts && (
+        <circle
+          cx={position.x + position.width + 2}
+          cy={activityBarY - 2}
+          r={4}
+          fill={themeColors.criticalActivity.fill}
+          stroke="white"
+          strokeWidth={1}
         />
       )}
 
-      {/* Conflict indicator */}
-      {hasConflicts && (
-        <g>
+      {showHandles && (
+        <>
+          <rect
+            x={position.x}
+            y={activityBarY}
+            width={RESIZE_HANDLE_WIDTH}
+            height={activityBarHeight}
+            fill="rgba(255,255,255,0.5)"
+            rx={1}
+            style={{ cursor: 'ew-resize' }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              onResizeStart?.(e, task, 'left');
+            }}
+          />
+          <rect
+            x={position.x + position.width - RESIZE_HANDLE_WIDTH}
+            y={activityBarY}
+            width={RESIZE_HANDLE_WIDTH}
+            height={activityBarHeight}
+            fill="rgba(255,255,255,0.5)"
+            rx={1}
+            style={{ cursor: 'ew-resize' }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              onResizeStart?.(e, task, 'right');
+            }}
+          />
+
           <circle
-            cx={position.x + position.width - 8}
-            cy={position.y - 4}
-            r={6}
-            fill="#EF4444"
+            cx={position.x - 3}
+            cy={activityBarY + activityBarHeight / 2}
+            r={DEPENDENCY_HANDLE_SIZE}
+            fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
             stroke="white"
             strokeWidth={1.5}
+            style={{ cursor: 'crosshair' }}
+            onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'start', e); }}
+            onMouseEnter={() => onDependencyDragEnter?.(task, 'start')}
+            onMouseLeave={() => onDependencyDragLeave?.()}
           />
-          <text
-            x={position.x + position.width - 8}
-            y={position.y - 1}
-            fontSize="9"
-            fontWeight="bold"
-            fill="white"
-            textAnchor="middle"
-          >
-            !
-          </text>
-        </g>
+          <circle
+            cx={position.x + position.width + 3}
+            cy={activityBarY + activityBarHeight / 2}
+            r={DEPENDENCY_HANDLE_SIZE}
+            fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
+            stroke="white"
+            strokeWidth={1.5}
+            style={{ cursor: 'crosshair' }}
+            onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'end', e); }}
+            onMouseEnter={() => onDependencyDragEnter?.(task, 'end')}
+            onMouseLeave={() => onDependencyDragLeave?.()}
+          />
+        </>
       )}
 
-      {/* Resize and dependency handles - improved visibility and interaction */}
-      {showHandles && (
-        <g className="gantt-handle-group">
-          {/* Left resize handle - larger with gradient */}
+      {isHovered && tooltipContent && !isDragging && !isResizing && (
+        <g className="gantt-tooltip" style={{ pointerEvents: 'none' }}>
           <rect
-            x={position.x + 1}
-            y={position.y + 1}
-            width={HANDLE_WIDTH}
-            height={HANDLE_HEIGHT}
-            rx={3}
-            fill="rgba(255,255,255,0.9)"
-            stroke="rgba(0,0,0,0.25)"
-            strokeWidth={1.5}
-            style={{ cursor: 'ew-resize', transition: 'fill 0.15s ease' }}
-            onMouseDown={(e) => {
-              if (onResizeStart) {
-                e.stopPropagation();
-                onResizeStart(e, task, 'left');
-              }
-            }}
+            x={position.x + position.width / 2 - 80}
+            y={position.y - 40}
+            width={160}
+            height={32}
+            rx={4}
+            fill="#1F2937"
+            fillOpacity={0.95}
           />
-          {/* Grip lines on left handle */}
-          <line x1={position.x + 4} y1={position.y + barHeight * 0.35} x2={position.x + 4} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
-          <line x1={position.x + 7} y1={position.y + barHeight * 0.35} x2={position.x + 7} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
-
-          {/* Right resize handle - larger with gradient */}
-          <rect
-            x={position.x + position.width - HANDLE_WIDTH - 1}
-            y={position.y + 1}
-            width={HANDLE_WIDTH}
-            height={HANDLE_HEIGHT}
-            rx={3}
-            fill="rgba(255,255,255,0.9)"
-            stroke="rgba(0,0,0,0.25)"
-            strokeWidth={1.5}
-            style={{ cursor: 'ew-resize', transition: 'fill 0.15s ease' }}
-            onMouseDown={(e) => {
-              if (onResizeStart) {
-                e.stopPropagation();
-                onResizeStart(e, task, 'right');
-              }
-            }}
-          />
-          {/* Grip lines on right handle */}
-          <line x1={position.x + position.width - 7} y1={position.y + barHeight * 0.35} x2={position.x + position.width - 7} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
-          <line x1={position.x + position.width - 4} y1={position.y + barHeight * 0.35} x2={position.x + position.width - 4} y2={position.y + barHeight * 0.65} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
-
-          {/* Left dependency handle with glow */}
-          <g className="gantt-dependency-handle-group">
-            <circle
-              cx={position.x}
-              cy={position.y + barHeight / 2}
-              r={DEPENDENCY_HANDLE_SIZE + 3}
-              fill="rgba(30, 64, 175, 0.15)"
-              className="gantt-handle-glow"
-            />
-            <circle
-              cx={position.x}
-              cy={position.y + barHeight / 2}
-              r={DEPENDENCY_HANDLE_SIZE}
-              className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
-              fill={isDependencyDragTarget ? '#10B981' : '#1E40AF'}
-              stroke="white"
-              strokeWidth={2.5}
-              style={{ cursor: 'crosshair', transition: 'fill 0.15s ease, r 0.15s ease' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'start', e);
-              }}
-              onMouseEnter={() => onDependencyDragEnter?.(task, 'start')}
-              onMouseLeave={() => onDependencyDragLeave?.()}
-            />
-          </g>
-
-          {/* Right dependency handle with glow */}
-          <g className="gantt-dependency-handle-group">
-            <circle
-              cx={position.x + position.width}
-              cy={position.y + barHeight / 2}
-              r={DEPENDENCY_HANDLE_SIZE + 3}
-              fill="rgba(30, 64, 175, 0.15)"
-              className="gantt-handle-glow"
-            />
-            <circle
-              cx={position.x + position.width}
-              cy={position.y + barHeight / 2}
-              r={DEPENDENCY_HANDLE_SIZE}
-              className={isDependencyDragTarget ? 'gantt-dependency-handle-active' : ''}
-              fill={isDependencyDragTarget ? '#10B981' : '#1E40AF'}
-              stroke="white"
-              strokeWidth={2.5}
-              style={{ cursor: 'crosshair', transition: 'fill 0.15s ease, r 0.15s ease' }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onDependencyDragStart?.(task, 'end', e);
-              }}
-              onMouseEnter={() => onDependencyDragEnter?.(task, 'end')}
-              onMouseLeave={() => onDependencyDragLeave?.()}
-            />
-          </g>
+          <text
+            x={position.x + position.width / 2}
+            y={position.y - 27}
+            fontSize="9"
+            fill="#9CA3AF"
+            textAnchor="middle"
+            fontFamily={theme.typography.fontFamily}
+          >
+            {tooltipContent.start} → {tooltipContent.end}
+          </text>
+          <text
+            x={position.x + position.width / 2}
+            y={position.y - 15}
+            fontSize="10"
+            fill="white"
+            textAnchor="middle"
+            fontWeight="500"
+            fontFamily={theme.typography.fontFamily}
+          >
+            {tooltipContent.duration} • {tooltipContent.progress} completo
+          </text>
         </g>
       )}
     </g>

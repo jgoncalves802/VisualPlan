@@ -1,6 +1,5 @@
 /**
- * TimelineHeader - Primavera P6 Professional Style
- * Multi-level time scale with weekend/holiday highlighting
+ * TimelineHeader - Primavera P6 Professional Style with Theme Support
  */
 
 import type { ViewPreset, TimelineRange } from '../types';
@@ -8,6 +7,7 @@ import { generateTimeScale } from '../utils';
 import { getViewPreset } from '../config/view-presets';
 import { format, isWeekend, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useGanttTheme } from '../context/theme-context';
 
 interface TimelineHeaderProps {
   timelineRange: TimelineRange;
@@ -24,6 +24,10 @@ export function TimelineHeader({
   width,
   holidays = []
 }: TimelineHeaderProps) {
+  const { theme } = useGanttTheme();
+  const headerColors = theme.colors.header;
+  const timelineColors = theme.colors.timeline;
+  
   const presetConfig = getViewPreset(viewPreset);
   const { headerLevels, columnWidth } = presetConfig;
   const baseColumnWidth = columnWidth ?? 60;
@@ -43,10 +47,15 @@ export function TimelineHeader({
     };
   });
 
-  const totalHeight = headerLevels.reduce((sum, layer) => sum + (layer.height ?? 32), 0);
+  const totalHeight = headerLevels.reduce((sum, layer) => sum + (layer.height ?? 28), 0);
 
-  const isHoliday = (date: Date) => {
-    return holidays.some(h => isSameDay(h, date));
+  const isHoliday = (date: Date) => holidays.some(h => isSameDay(h, date));
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
   };
 
   return (
@@ -54,25 +63,21 @@ export function TimelineHeader({
       className="timeline-header sticky top-0 z-20"
       style={{
         height: totalHeight,
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        fontFamily: theme.typography.fontFamily,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
       }}
     >
       {scales.map((scale, levelIndex) => {
         const { layer, ticks } = scale;
-        const layerHeight = layer.height ?? 32;
+        const layerHeight = layer.height ?? 28;
         const isBottomLevel = levelIndex === headerLevels.length - 1;
         const isTopLevel = levelIndex === 0;
         const bottomLevelTicks = scales[scales.length - 1].ticks;
 
-        // P6-style gradient backgrounds - Clean gray/neutral theme
-        const getLayerBackground = () => {
-          if (isTopLevel) {
-            return 'linear-gradient(180deg, #6B7280 0%, #4B5563 100%)'; // Gray header like P6
-          }
-          if (isBottomLevel) {
-            return 'linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)'; // White bottom
-          }
-          return 'linear-gradient(180deg, #9CA3AF 0%, #6B7280 100%)'; // Mid gray
+        const getBackground = () => {
+          if (isBottomLevel) return timelineColors.background;
+          if (isTopLevel) return `linear-gradient(180deg, ${headerColors.background} 0%, ${headerColors.border} 100%)`;
+          return `linear-gradient(180deg, ${headerColors.background}CC 0%, ${headerColors.border}CC 100%)`;
         };
 
         return (
@@ -81,60 +86,46 @@ export function TimelineHeader({
             className="flex"
             style={{ 
               height: layerHeight,
-              background: getLayerBackground(),
-              borderBottom: isBottomLevel 
-                ? '2px solid #D1D5DB' 
-                : '1px solid rgba(255,255,255,0.2)',
-              boxShadow: isBottomLevel ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+              background: getBackground(),
+              borderBottom: `1px solid ${isBottomLevel ? timelineColors.gridLine : 'rgba(0,0,0,0.1)'}`
             }}
           >
             {ticks.map((tick, tickIndex) => {
-              let columnTickWidth: number;
+              let cellWidth: number;
               
               if (isBottomLevel) {
-                columnTickWidth = baseColumnWidth;
+                cellWidth = baseColumnWidth;
               } else {
                 const nextTick = ticks[tickIndex + 1];
-                
-                if (nextTick) {
-                  const cellsBetween = bottomLevelTicks.filter(
-                    (bt) => bt.date >= tick.date && bt.date < nextTick.date
-                  ).length;
-                  columnTickWidth = cellsBetween * baseColumnWidth;
-                } else {
-                  const cellsBetween = bottomLevelTicks.filter(
-                    (bt) => bt.date >= tick.date
-                  ).length;
-                  columnTickWidth = cellsBetween * baseColumnWidth;
+                const cellsBetween = nextTick
+                  ? bottomLevelTicks.filter(bt => bt.date >= tick.date && bt.date < nextTick.date).length
+                  : bottomLevelTicks.filter(bt => bt.date >= tick.date).length;
+                cellWidth = cellsBetween * baseColumnWidth;
+              }
+
+              const isTodayCell = isBottomLevel && tick?.date && isToday(tick.date);
+              const isWeekendCell = isBottomLevel && tick?.date && isWeekend(tick.date);
+              const isHolidayCell = isBottomLevel && tick?.date && isHoliday(tick.date);
+
+              let cellBg = 'transparent';
+              let textColor = isBottomLevel 
+                ? (timelineColors.background === '#FFFFFF' ? '#374151' : '#E5E7EB')
+                : headerColors.text;
+
+              if (isBottomLevel) {
+                if (isTodayCell) {
+                  cellBg = timelineColors.today;
+                  textColor = timelineColors.todayLine;
+                } else if (isHolidayCell) {
+                  cellBg = timelineColors.holiday;
+                  textColor = theme.colors.criticalActivity.fill;
+                } else if (isWeekendCell) {
+                  cellBg = timelineColors.weekend;
+                  textColor = timelineColors.background === '#FFFFFF' ? '#9CA3AF' : '#6B7280';
                 }
               }
 
-              const today = new Date();
-              const isToday = isBottomLevel && tick?.date && 
-                tick.date.getDate() === today.getDate() &&
-                tick.date.getMonth() === today.getMonth() &&
-                tick.date.getFullYear() === today.getFullYear();
-
-              const isWeekendDay = isBottomLevel && tick?.date && isWeekend(tick.date);
-              const isHolidayDay = isBottomLevel && tick?.date && isHoliday(tick.date);
-
-              // P6-style cell backgrounds
-              const getCellBackground = () => {
-                if (isToday) return '#FEF3C7'; // Yellow for today
-                if (isHolidayDay) return '#FEE2E2'; // Light red for holidays
-                if (isWeekendDay) return '#F3F4F6'; // Light gray for weekends
-                return 'transparent';
-              };
-
-              const getTextColor = () => {
-                if (isTopLevel || (!isBottomLevel)) return '#FFFFFF';
-                if (isToday) return '#D97706';
-                if (isHolidayDay) return '#DC2626';
-                if (isWeekendDay) return '#9CA3AF';
-                return '#374151';
-              };
-
-              const justifyContent = !isBottomLevel ? 'flex-start' :
+              const alignment = !isBottomLevel ? 'flex-start' :
                 layer.align === 'left' ? 'flex-start' : 
                 layer.align === 'right' ? 'flex-end' : 
                 'center';
@@ -142,45 +133,49 @@ export function TimelineHeader({
               return (
                 <div
                   key={tick?.date?.getTime() ?? tickIndex}
-                  className="flex items-center px-1 relative"
+                  className="flex items-center relative"
                   style={{ 
-                    width: columnTickWidth, 
-                    minWidth: columnTickWidth,
-                    borderRight: `1px solid ${isBottomLevel ? '#E5E7EB' : 'rgba(255,255,255,0.15)'}`,
-                    backgroundColor: getCellBackground(),
-                    justifyContent,
-                    overflow: 'visible',
+                    width: cellWidth, 
+                    minWidth: cellWidth,
+                    borderRight: `1px solid ${isBottomLevel ? timelineColors.gridLine : 'rgba(255,255,255,0.1)'}`,
+                    backgroundColor: cellBg,
+                    justifyContent: alignment,
+                    paddingLeft: !isBottomLevel ? '8px' : '2px',
+                    paddingRight: '2px'
                   }}
                 >
-                  {/* Today indicator line */}
-                  {isToday && (
+                  {isTodayCell && (
                     <div
-                      className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+                      className="absolute bottom-0 left-1/2"
                       style={{
-                        width: '0',
-                        height: '0',
-                        borderLeft: '6px solid transparent',
-                        borderRight: '6px solid transparent',
-                        borderBottom: '6px solid #D97706'
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '4px solid transparent',
+                        borderRight: '4px solid transparent',
+                        borderBottom: `4px solid ${timelineColors.todayLine}`
                       }}
                     />
                   )}
                   
                   <span 
-                    className={!isBottomLevel ? "font-semibold" : "font-medium"}
                     style={{
                       whiteSpace: 'nowrap',
                       overflow: !isBottomLevel ? 'visible' : 'hidden',
-                      textOverflow: !isBottomLevel ? 'clip' : 'ellipsis',
+                      textOverflow: 'ellipsis',
                       position: !isBottomLevel ? 'sticky' : 'relative',
-                      left: !isBottomLevel ? '8px' : 'auto',
-                      zIndex: !isBottomLevel ? 5 : 'auto',
-                      color: getTextColor(),
-                      fontSize: isTopLevel ? '13px' : isBottomLevel ? '11px' : '12px',
-                      letterSpacing: isTopLevel ? '0.05em' : 'normal',
+                      left: !isBottomLevel ? '0' : 'auto',
+                      color: textColor,
+                      fontSize: isTopLevel 
+                        ? theme.typography.headerLabel.fontSize 
+                        : theme.typography.taskLabel.fontSize,
+                      fontWeight: isBottomLevel 
+                        ? theme.typography.taskLabel.fontWeight 
+                        : theme.typography.headerLabel.fontWeight,
+                      letterSpacing: isTopLevel ? '0.02em' : 'normal',
                       textTransform: isTopLevel ? 'uppercase' : 'none'
                     }}
-                    title={format(tick?.date ?? new Date(), 'PPP', { locale: ptBR })}
+                    title={tick?.date ? format(tick.date, 'PPP', { locale: ptBR }) : ''}
                   >
                     {format(tick?.date ?? new Date(), layer.format, { locale: ptBR })}
                   </span>

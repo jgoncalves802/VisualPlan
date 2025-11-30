@@ -76,3 +76,17 @@ export {
 // Configuration
 export { VIEW_PRESETS, getViewPreset, getPixelsPerDay } from './config/view-presets';
 export { DEFAULT_COLUMNS } from './config/default-columns';
+
+// Theme System
+export {
+  P6_CLASSIC_THEME,
+  DARK_THEME,
+  CONSTRUCTION_THEME,
+  AVAILABLE_THEMES,
+  getThemeByName,
+  DEFAULT_ACTIVITY_CODE_COLORS
+} from './config/theme';
+export type { GanttTheme, GanttThemeColors, ActivityCodeColor } from './config/theme';
+
+// Theme Context
+export { GanttThemeProvider, useGanttTheme } from './context/theme-context';
