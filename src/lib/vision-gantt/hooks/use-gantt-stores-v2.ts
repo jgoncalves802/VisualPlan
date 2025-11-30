@@ -77,16 +77,21 @@ export function useGanttStoresV2(
 ) {
   const taskReducer = useTaskReducer(initialTasks);
   
+  // All hooks must be called unconditionally in the same order every render
   const dependencyStoreRef = useRef<DependencyStore | null>(null);
   const calendarStoreRef = useRef<CalendarStore | null>(null);
-  const initializedRef = useRef(false);
-  const lastTaskIdsRef = useRef<string>('');
+  // Use a stable hash that only changes when the dataset truly changes (new/removed tasks)
+  // NOT when hierarchy changes (parentId/level) since those are internal mutations
+  const lastTaskSetHashRef = useRef<string>(initialTasks.map(t => t.id).sort().join(','));
+  // Track if we've already initialized to prevent re-sync on first render
+  const hasInitializedTasksRef = useRef(true);
 
-  if (!initializedRef.current) {
+  // Lazy initialization - runs only once
+  if (dependencyStoreRef.current === null) {
     dependencyStoreRef.current = new DependencyStore(initialDependencies);
+  }
+  if (calendarStoreRef.current === null) {
     calendarStoreRef.current = new CalendarStore(initialCalendars);
-    lastTaskIdsRef.current = initialTasks.map(t => t.id).sort().join(',');
-    initializedRef.current = true;
   }
 
   const [dependencies, setDependencies] = useState<Dependency[]>(initialDependencies);
@@ -106,14 +111,22 @@ export function useGanttStoresV2(
     };
   }, []);
 
-  // Sync external tasks when dataset changes
+  // Sync external tasks ONLY when the dataset truly changes (tasks added/removed)
+  // NOT when hierarchy changes (parentId/level) since those are internal mutations
   useEffect(() => {
-    const newTaskIds = initialTasks.map(t => t.id).sort().join(',');
-    
-    if (newTaskIds !== lastTaskIdsRef.current) {
-      console.log('[useGanttStoresV2] New dataset detected, syncing tasks');
-      taskReducer.setTasks(initialTasks);
-      lastTaskIdsRef.current = newTaskIds;
+    // Skip if already initialized - we already have the data
+    if (hasInitializedTasksRef.current) {
+      // Only sync if the set of task IDs changed (new tasks added or removed)
+      const newTaskSetHash = initialTasks.map(t => t.id).sort().join(',');
+      
+      if (newTaskSetHash !== lastTaskSetHashRef.current) {
+        console.log('[useGanttStoresV2] New dataset detected (IDs changed), syncing tasks');
+        console.log('[useGanttStoresV2] Old hash:', lastTaskSetHashRef.current);
+        console.log('[useGanttStoresV2] New hash:', newTaskSetHash);
+        taskReducer.setTasks(initialTasks);
+        lastTaskSetHashRef.current = newTaskSetHash;
+      }
+      // If IDs are the same, DON'T reset - hierarchy changes are internal
     }
   }, [initialTasks, taskReducer]);
 
