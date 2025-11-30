@@ -1,6 +1,7 @@
 /**
  * GanttChart - Primavera P6 Professional Style
  * Main component with professional toolbar and legend
+ * Features: Resizable splitter, Alt+Scroll zoom, adjustable columns
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -15,10 +16,13 @@ import { useResize } from '../hooks/use-resize';
 import { useDependencyCreation } from '../hooks/use-dependency-creation';
 import { useKeyboardLinking } from '../hooks/use-keyboard-linking';
 import { useTimelineRange } from '../hooks/use-timeline-range';
+import { useSplitter } from '../hooks/use-splitter';
+import { useZoomWheel } from '../hooks/use-zoom-wheel';
+import { useColumnResize } from '../hooks/use-column-resize';
 import { getPixelsPerDay, getViewPreset, VIEW_PRESETS } from '../config/view-presets';
 import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
-import { Settings2, Layers, ChevronDown, Flag, AlertTriangle } from 'lucide-react';
+import { Settings2, Layers, ChevronDown, Flag, AlertTriangle, GripVertical } from 'lucide-react';
 
 export interface GanttChartProps extends GanttConfig {
   className?: string;
@@ -69,9 +73,27 @@ export function GanttChart({
   const [customPresetConfig, setCustomPresetConfig] = useState<ViewPresetConfig | null>(null);
   const [showLegend, setShowLegend] = useState(true);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const gridScrollRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    getTotalColumnsWidth
+  } = useColumnResize({ columns, storageKey: 'gantt-main' });
+
+  const persistedColumnsWidth = getTotalColumnsWidth();
+
+  const {
+    containerRef,
+    gridWidth: splitterGridWidth,
+    isDragging: isSplitterDragging,
+    handleSplitterMouseDown
+  } = useSplitter({
+    storageKey: 'gantt-main',
+    defaultGridWidth: Math.max(gridWidth, persistedColumnsWidth),
+    minGridWidth: Math.max(300, persistedColumnsWidth * 0.7),
+    minTimelineWidth: 200
+  });
 
   const { taskStore, dependencyStore, calendarStore, tasks, dependencies, calendars } = useGanttStores(
     initialTasks,
@@ -368,6 +390,13 @@ export function GanttChart({
     [onViewPresetChange]
   );
 
+  useZoomWheel({
+    containerRef: timelineContainerRef,
+    currentPreset: viewPreset,
+    onPresetChange: handleViewPresetChange,
+    enabled: true
+  });
+
   const handleTimeScaleConfigSave = useCallback(
     (config: ViewPresetConfig) => {
       VIEW_PRESETS[viewPreset] = config;
@@ -575,13 +604,16 @@ export function GanttChart({
         onSave={handleTimeScaleConfigSave}
       />
 
-      {/* Main content area */}
-      <div className="gantt-content flex flex-1 overflow-hidden">
+      {/* Main content area with resizable splitter */}
+      <div className="gantt-content flex flex-1 overflow-hidden relative">
         {/* Grid (left side) */}
         <div
           ref={gridScrollRef}
-          className="gantt-grid-container overflow-auto"
-          style={{ width: gridWidth, minWidth: gridWidth }}
+          className="gantt-grid-container overflow-auto flex-shrink-0"
+          style={{ 
+            width: splitterGridWidth, 
+            minWidth: Math.max(300, persistedColumnsWidth * 0.7)
+          }}
         >
           <GanttGrid
             tasks={flatTasks}
@@ -599,30 +631,67 @@ export function GanttChart({
           />
         </div>
 
-        {/* Timeline (right side) */}
+        {/* Resizable Splitter */}
         <div
-          ref={timelineScrollRef}
-          className="gantt-timeline-container flex-1 overflow-auto"
+          className="gantt-splitter flex-shrink-0 flex items-center justify-center cursor-col-resize group"
+          style={{
+            width: 6,
+            backgroundColor: isSplitterDragging ? '#2563EB' : '#E5E7EB',
+            transition: isSplitterDragging ? 'none' : 'background-color 0.2s ease',
+            borderLeft: '1px solid #D1D5DB',
+            borderRight: '1px solid #D1D5DB'
+          }}
+          onMouseDown={handleSplitterMouseDown}
+          title="Arraste para redimensionar"
         >
-          <GanttTimeline
-            tasks={flatTasks}
-            dependencies={dependencies}
-            viewPreset={viewPreset}
-            timelineRange={timelineRange}
-            rowHeight={rowHeight}
-            barHeight={barHeight}
-            barRadius={barRadius}
-            onTaskClick={handleTaskClick}
-            onDragStart={handleDragStart}
-            onResizeStart={handleResizeStart}
-            onCreateDependency={handleCreateDependency}
-            onDependencyClick={onDependencyClick}
-            selectedTaskId={selectedTaskId}
-            criticalPathIds={criticalPathIds}
-            nearCriticalPathIds={nearCriticalPathIds}
-            violationTaskIds={violationTaskIds}
-            conflictTaskIds={conflictTaskIds}
-          />
+          <div 
+            className="flex flex-col gap-0.5 opacity-40 group-hover:opacity-80 transition-opacity"
+            style={{ pointerEvents: 'none' }}
+          >
+            <GripVertical 
+              size={12} 
+              className="text-gray-500"
+              style={{ transform: 'rotate(0deg)' }}
+            />
+          </div>
+        </div>
+
+        {/* Timeline (right side) - with Alt+Scroll zoom hint */}
+        <div
+          ref={timelineContainerRef}
+          className="gantt-timeline-wrapper flex-1 overflow-hidden relative"
+        >
+          <div
+            ref={timelineScrollRef}
+            className="gantt-timeline-container h-full overflow-auto"
+          >
+            <GanttTimeline
+              tasks={flatTasks}
+              dependencies={dependencies}
+              viewPreset={viewPreset}
+              timelineRange={timelineRange}
+              rowHeight={rowHeight}
+              barHeight={barHeight}
+              barRadius={barRadius}
+              onTaskClick={handleTaskClick}
+              onDragStart={handleDragStart}
+              onResizeStart={handleResizeStart}
+              onCreateDependency={handleCreateDependency}
+              onDependencyClick={onDependencyClick}
+              selectedTaskId={selectedTaskId}
+              criticalPathIds={criticalPathIds}
+              nearCriticalPathIds={nearCriticalPathIds}
+              violationTaskIds={violationTaskIds}
+              conflictTaskIds={conflictTaskIds}
+            />
+          </div>
+          {/* Alt+Scroll zoom hint tooltip */}
+          <div 
+            className="absolute bottom-2 right-2 px-2 py-1 rounded text-xs bg-gray-800/70 text-white opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
+            style={{ backdropFilter: 'blur(4px)' }}
+          >
+            Alt + Scroll para zoom
+          </div>
         </div>
       </div>
 

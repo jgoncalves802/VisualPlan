@@ -68,6 +68,15 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (November 2025)
 
+*   **Resizable Splitter Between Grid and Timeline**: Replaced fixed scroll divider with draggable splitter for adjusting grid/timeline proportions. Position is persisted in localStorage.
+*   **Alt+Scroll Zoom**: Added zoom functionality when holding Alt key and scrolling mouse wheel over the timeline. Cycles through presets: year → quarter → month → week → day.
+*   **Adjustable Columns with Persistence**: Column widths are saved to localStorage and restored on page load. Columns are prioritized over timeline width when resizing.
+*   **Keyboard Shortcuts Configuration Page**: Added new "Atalhos de Teclado" tab in Settings page with:
+    - Editable shortcuts for all actions
+    - Category grouping (Navigation, Selection, Editing, View, General)
+    - Enable/disable individual shortcuts
+    - Reset to defaults functionality
+    - All preferences persisted via Zustand with localStorage
 *   **MS Project-Style Keyboard Shortcuts**: Implemented professional keyboard navigation:
     - **Right-click context menu**: Task actions modal now opens on right-click (like MS Project/Excel)
     - **Left-click selection**: Click to select a single task

@@ -148,6 +148,12 @@ export function useColumnResize({ columns, storageKey, onColumnResize }: UseColu
     [columns, onColumnResize]
   );
 
+  const getTotalColumnsWidth = useCallback((): number => {
+    return columns.reduce((sum, col, index) => {
+      return sum + (columnWidths[index] ?? col.width ?? 100);
+    }, 0);
+  }, [columns, columnWidths]);
+
   return {
     resizeState,
     columnWidths,
@@ -156,6 +162,7 @@ export function useColumnResize({ columns, storageKey, onColumnResize }: UseColu
     handleResizeEnd,
     getColumnWidth,
     setColumnWidth,
-    resetColumnWidths
+    resetColumnWidths,
+    getTotalColumnsWidth
   };
 }
