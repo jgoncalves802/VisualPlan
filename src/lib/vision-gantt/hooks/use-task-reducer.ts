@@ -425,10 +425,15 @@ export interface UseTaskReducerResult {
 }
 
 export function useTaskReducer(initialTasks: Task[] = []): UseTaskReducerResult {
-  const [state, dispatch] = useReducer(taskReducer, {
-    tasks: generateWBSCodes(initialTasks),
-    version: 0
-  });
+  // Use lazy initialization - only runs ONCE on mount, ignores subsequent initialTasks changes
+  const [state, dispatch] = useReducer(
+    taskReducer, 
+    initialTasks,
+    (tasks) => ({
+      tasks: generateWBSCodes(tasks),
+      version: 0
+    })
+  );
   
   // Keep a ref to current state for synchronous validation in callbacks
   // This is updated immediately after each render, so it's always current
