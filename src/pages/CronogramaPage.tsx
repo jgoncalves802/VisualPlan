@@ -12,6 +12,7 @@ import { VisualizacaoCronograma } from '../types/cronograma';
 import { CronogramaToolbar } from '../components/features/cronograma/CronogramaToolbar';
 import { CronogramaFilters } from '../components/features/cronograma/CronogramaFilters';
 import { VisionGanttWrapper } from '../components/features/cronograma/VisionGanttWrapper';
+import { SVARGanttWrapper } from '../lib/svar-gantt/SVARGanttWrapper';
 import { TaskList } from '../components/features/cronograma/TaskList';
 import { TaskModal } from '../components/features/cronograma/TaskModal';
 import { DependencyModal } from '../components/features/cronograma/DependencyModal';
@@ -62,6 +63,7 @@ export const CronogramaPage: React.FC = () => {
   const [atividadeParaAcoes, setAtividadeParaAcoes] = useState<any | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+  const [useSVAR, setUseSVAR] = useState(false);
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -199,26 +201,62 @@ export const CronogramaPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
             {visualizacao === VisualizacaoCronograma.GANTT ? (
               <div className="flex-1 min-h-[600px]">
-                <VisionGanttWrapper
-                  atividades={todasAtividades}
-                  dependencias={dependencias}
-                  projetoId={projetoId || 'proj-1'}
-                  resources={resources}
-                  allocations={allocations}
-                  calendarios={calendarios}
-                  onAtividadeUpdate={async (atividade, changes) => {
-                    await atualizarAtividade(atividade.id, changes);
-                  }}
-                  onDependenciaCreate={async (dep) => {
-                    await adicionarDependencia(dep);
-                  }}
-                  onDependenciaDelete={async (depId) => {
-                    await excluirDependencia(depId);
-                  }}
-                  onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
-                  height={600}
-                  gridWidth={500}
-                />
+                <div className="flex items-center gap-2 p-2 border-b border-gray-200 bg-gray-50">
+                  <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={useSVAR}
+                      onChange={(e) => setUseSVAR(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <span>Usar SVAR Gantt (Beta)</span>
+                  </label>
+                  {useSVAR && (
+                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                      Shift+→ indent | Shift+← outdent
+                    </span>
+                  )}
+                </div>
+                
+                {useSVAR ? (
+                  <SVARGanttWrapper
+                    atividades={todasAtividades}
+                    dependencias={dependencias}
+                    projetoId={projetoId || 'proj-1'}
+                    onAtividadeUpdate={async (atividade, changes) => {
+                      await atualizarAtividade(atividade.id, changes);
+                    }}
+                    onDependenciaCreate={async (dep) => {
+                      await adicionarDependencia(dep);
+                    }}
+                    onDependenciaDelete={async (depId) => {
+                      await excluirDependencia(depId);
+                    }}
+                    onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
+                    height={560}
+                  />
+                ) : (
+                  <VisionGanttWrapper
+                    atividades={todasAtividades}
+                    dependencias={dependencias}
+                    projetoId={projetoId || 'proj-1'}
+                    resources={resources}
+                    allocations={allocations}
+                    calendarios={calendarios}
+                    onAtividadeUpdate={async (atividade, changes) => {
+                      await atualizarAtividade(atividade.id, changes);
+                    }}
+                    onDependenciaCreate={async (dep) => {
+                      await adicionarDependencia(dep);
+                    }}
+                    onDependenciaDelete={async (depId) => {
+                      await excluirDependencia(depId);
+                    }}
+                    onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
+                    height={560}
+                    gridWidth={500}
+                  />
+                )}
               </div>
             ) : (
               <TaskList

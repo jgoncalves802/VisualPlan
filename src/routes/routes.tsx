@@ -14,6 +14,7 @@ import AdminEmpresasPage from '../pages/AdminEmpresasPage';
 import AdminTemasPage from '../pages/AdminTemasPage';
 import AdminPerfisPage from '../pages/AdminPerfisPage';
 import AdminEPSPage from '../pages/AdminEPSPage';
+import { SVARTestPage } from '../pages/SVARTestPage';
 import { useAuthStore } from '../stores/authStore';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,6 +55,7 @@ export const AppRoutes: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/test/svar" element={<SVARTestPage />} />
         
         {/* Protected Routes */}
         <Route
