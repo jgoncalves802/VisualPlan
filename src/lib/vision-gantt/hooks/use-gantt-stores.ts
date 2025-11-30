@@ -15,9 +15,12 @@ export function useGanttStores(
   _initialResources?: Resource[],
   initialCalendars?: WorkingCalendar[]
 ) {
+  // All refs must be declared at the top, before any conditional code
   const taskStoreRef = useRef<TaskStore>();
   const dependencyStoreRef = useRef<DependencyStore>();
   const calendarStoreRef = useRef<CalendarStore>();
+  const initialTaskIdsRef = useRef<Set<string>>(new Set(initialTasks.map(t => t.id)));
+  const initialDepIdsRef = useRef<Set<string>>(new Set(initialDependencies.map(d => d.id)));
 
   // Initialize stores once
   if (!taskStoreRef.current) {
@@ -54,17 +57,36 @@ export function useGanttStores(
     };
   }, []);
 
-  // Update stores when props change
+  // Update stores when props change ONLY if task IDs have actually changed (new dataset)
   useEffect(() => {
     if (taskStoreRef.current) {
-      taskStoreRef.current.setData(initialTasks);
-      taskStoreRef.current.generateWBSCodes();
+      const newIds = new Set(initialTasks.map(t => t.id));
+      const prevIds = initialTaskIdsRef.current;
+      
+      // Only update if the set of task IDs changed (new project loaded)
+      const idsChanged = newIds.size !== prevIds.size || 
+        ![...newIds].every(id => prevIds.has(id));
+      
+      if (idsChanged) {
+        taskStoreRef.current.setData(initialTasks);
+        taskStoreRef.current.generateWBSCodes();
+        initialTaskIdsRef.current = newIds;
+      }
     }
   }, [initialTasks]);
 
   useEffect(() => {
     if (dependencyStoreRef.current) {
-      dependencyStoreRef.current.setData(initialDependencies);
+      const newIds = new Set(initialDependencies.map(d => d.id));
+      const prevIds = initialDepIdsRef.current;
+      
+      const idsChanged = newIds.size !== prevIds.size || 
+        ![...newIds].every(id => prevIds.has(id));
+      
+      if (idsChanged) {
+        dependencyStoreRef.current.setData(initialDependencies);
+        initialDepIdsRef.current = newIds;
+      }
     }
   }, [initialDependencies]);
 

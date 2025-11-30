@@ -125,16 +125,6 @@ export class TaskStore extends BaseStore<Task> {
   }
 
   /**
-   * Reorder data array to maintain hierarchical order (depth-first)
-   * This ensures buildTaskTree produces consistent results
-   */
-  private reorderDataHierarchically(): void {
-    const tree = this.getTaskTree();
-    const orderedData = this.treeToFlatArray(tree);
-    this.setData(orderedData);
-  }
-
-  /**
    * Indent task - DHTMLX/MS Project style
    * 
    * Key insight: Task becomes child of its PREVIOUS SIBLING (same level),
