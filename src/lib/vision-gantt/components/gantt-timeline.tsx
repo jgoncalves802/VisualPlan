@@ -5,10 +5,9 @@
 
 
 
-import React, { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import type { Task, Dependency, ViewPreset, TaskBarPosition, TimelineRange, DependencyType } from '../types';
 import { TaskBar } from './task-bar';
-import { DependencyLine } from './dependency-line';
 import { DependencyArrow } from './dependency-arrow';
 import { DependencyDragLine } from './dependency-drag-line';
 import { TimelineHeader } from './timeline-header';

@@ -1,14 +1,13 @@
 
 /**
  * GanttGrid - Left side grid displaying task information
+ * Primavera P6 Professional Style
  */
 
-
-
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
-import { ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
+import { ChevronRight, ChevronDown, GripVertical, Flag } from 'lucide-react';
 import { hasChildren } from '../utils';
 import { useColumnResize } from '../hooks/use-column-resize';
 import { EditableWBSCell } from './editable-wbs-cell';
@@ -33,6 +32,7 @@ interface GanttGridProps {
   resources?: Resource[];
   allocations?: ResourceAllocation[];
   onResourceUpdate?: (taskId: string, assignments: ResourceAssignment[]) => void;
+  criticalPathIds?: string[];
 }
 
 export function GanttGrid({
@@ -47,7 +47,8 @@ export function GanttGrid({
   onWBSUpdate,
   resources = [],
   allocations = [],
-  onResourceUpdate
+  onResourceUpdate,
+  criticalPathIds = []
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
 
@@ -59,7 +60,6 @@ export function GanttGrid({
     getColumnWidth
   } = useColumnResize({ columns, onColumnResize });
 
-  // Handle mouse events for resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       handleResizeMove(e.clientX);
@@ -84,35 +84,32 @@ export function GanttGrid({
     <div 
       className="gantt-grid overflow-hidden relative"
       style={{
-        backgroundColor: 'var(--gantt-grid-background)',
-        borderRight: '1px solid var(--gantt-grid-border)',
-        cursor: resizeState.isResizing ? 'col-resize' : 'default'
+        backgroundColor: '#FFFFFF',
+        borderRight: '2px solid #E5E7EB',
+        cursor: resizeState.isResizing ? 'col-resize' : 'default',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}
     >
-      {/* Overlay during resize */}
       {resizeState.isResizing && (
         <div 
           className="absolute inset-0 z-20"
-          style={{ 
-            backgroundColor: 'transparent',
-            cursor: 'col-resize'
-          }}
+          style={{ backgroundColor: 'transparent', cursor: 'col-resize' }}
         />
       )}
-      {/* Header */}
+
+      {/* P6-Style Header */}
       <div
         className="gantt-grid-header flex sticky top-0 z-10"
         style={{ 
           height: actualHeaderHeight,
-          backgroundColor: 'var(--gantt-grid-header-background)',
-          borderBottom: '1px solid var(--gantt-grid-border)',
-          fontSize: 'var(--gantt-font-size-base)',
-          fontWeight: 'var(--gantt-font-weight-medium)',
-          color: 'var(--gantt-text-base)'
+          background: 'linear-gradient(180deg, #1E40AF 0%, #1E3A8A 100%)',
+          borderBottom: '2px solid #1E3A8A',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}
       >
         {columns.map((column, index) => {
           const columnWidth = getColumnWidth(index);
+          const isLastColumn = index === columns.length - 1;
           
           return (
             <div
@@ -121,21 +118,25 @@ export function GanttGrid({
               style={{ 
                 width: columnWidth, 
                 minWidth: column?.minWidth ?? 50,
-                paddingLeft: 'var(--gantt-spacing-md)',
-                paddingRight: 'var(--gantt-spacing-md)',
-                borderRight: '1px solid var(--gantt-border-light)',
+                paddingLeft: '12px',
+                paddingRight: '12px',
+                borderRight: isLastColumn ? 'none' : '1px solid rgba(255,255,255,0.15)',
                 cursor: column?.sortable ? 'pointer' : 'default'
               }}
             >
-              <span className="truncate flex-1">{column?.header ?? ''}</span>
+              <span 
+                className="truncate flex-1 text-white font-semibold text-sm uppercase tracking-wide"
+                style={{ letterSpacing: '0.05em' }}
+              >
+                {column?.header ?? ''}
+              </span>
               
-              {/* Resize Handle */}
               {column?.resizable !== false && (
                 <div
                   className="absolute right-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   style={{
                     backgroundColor: resizeState.isResizing && resizeState.columnIndex === index 
-                      ? 'rgba(59, 130, 246, 0.3)' 
+                      ? 'rgba(255, 255, 255, 0.3)' 
                       : 'transparent'
                   }}
                   onMouseDown={(e) => {
@@ -144,19 +145,16 @@ export function GanttGrid({
                     handleResizeStart(index, e.clientX);
                   }}
                 >
-                  {/* Visual indicator */}
                   <div 
                     className="absolute right-0 top-0 h-full w-[2px] transition-colors"
                     style={{
                       backgroundColor: resizeState.isResizing && resizeState.columnIndex === index
-                        ? 'rgb(59, 130, 246)'
-                        : 'rgba(148, 163, 184, 0.5)'
+                        ? 'rgba(255, 255, 255, 0.8)'
+                        : 'rgba(255, 255, 255, 0.3)'
                     }}
                   />
-                  
-                  {/* Grip icon */}
-                  <div className="absolute right-[-3px] top-1/2 transform -translate-y-1/2 w-2 h-6 flex items-center justify-center bg-white/80 rounded-sm shadow-sm">
-                    <GripVertical size={12} className="text-gray-500" />
+                  <div className="absolute right-[-3px] top-1/2 transform -translate-y-1/2 w-2 h-6 flex items-center justify-center bg-white/20 rounded-sm">
+                    <GripVertical size={12} className="text-white/70" />
                   </div>
                 </div>
               )}
@@ -165,18 +163,33 @@ export function GanttGrid({
         })}
       </div>
 
-      {/* Rows */}
+      {/* P6-Style Rows */}
       <div className="gantt-grid-body">
         {tasks.map((task, rowIndex) => {
           const isSelected = task?.id === selectedTaskId;
           const isEven = rowIndex % 2 === 0;
-          const isGroup = task?.isGroup === true;
+          const isGroup = task?.isGroup === true || hasChildren(task);
+          const isMilestone = (task as any)?.isMilestone === true || (task as any)?.duration === 0;
+          const isCritical = criticalPathIds.includes(task?.id ?? '');
+          const level = task?.level ?? 0;
           
-          // MS Project style: Groups have blue background
+          // P6-style row backgrounds
           const getRowBackgroundColor = () => {
-            if (isGroup) return '#0078D4'; // MS Project blue
-            if (isSelected) return 'var(--gantt-grid-row-selected)';
-            return isEven ? 'var(--gantt-grid-background)' : 'var(--gantt-grid-row-alt)';
+            if (isGroup && level === 0) return '#1E40AF'; // Top-level group - blue
+            if (isGroup) return '#3B82F6'; // Sub-group - lighter blue
+            if (isSelected) return '#DBEAFE'; // Selected row
+            if (isCritical) return '#FEF2F2'; // Critical path - light red
+            return isEven ? '#FFFFFF' : '#F9FAFB';
+          };
+
+          const getTextColor = () => {
+            if (isGroup) return '#FFFFFF';
+            return '#1F2937';
+          };
+
+          const getBorderColor = () => {
+            if (isCritical && !isGroup) return '#FCA5A5';
+            return '#E5E7EB';
           };
           
           return (
@@ -186,32 +199,27 @@ export function GanttGrid({
               style={{ 
                 height: rowHeight,
                 backgroundColor: getRowBackgroundColor(),
-                borderBottom: '1px solid var(--gantt-border-light)',
-                fontWeight: isGroup ? 600 : 400,
-                color: isGroup ? 'white' : 'var(--gantt-text-base)'
+                borderBottom: `1px solid ${getBorderColor()}`,
+                borderLeft: isCritical && !isGroup ? '3px solid #DC2626' : 'none',
               }}
               onClick={() => onTaskClick?.(task)}
               onMouseEnter={(e) => {
                 if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = 'var(--gantt-grid-row-hover)';
+                  e.currentTarget.style.backgroundColor = isCritical ? '#FEE2E2' : '#F3F4F6';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = isEven 
-                    ? 'var(--gantt-grid-background)' 
-                    : 'var(--gantt-grid-row-alt)';
+                  e.currentTarget.style.backgroundColor = getRowBackgroundColor();
                 }
               }}
             >
               {columns.map((column, colIndex) => {
-                const isFirstColumn = colIndex === 0;
                 const isNameColumn = column?.field === 'name';
-                const level = task?.level ?? 0;
-                // Indentation only in Task Name column
-                const paddingLeft = isNameColumn ? level * 20 + 12 : 12;
+                const paddingLeft = isNameColumn ? level * 24 + 12 : 12;
                 const columnWidth = getColumnWidth(colIndex);
                 const isWBSColumn = column?.field === 'wbs';
+                const isLastColumn = colIndex === columns.length - 1;
 
                 return (
                   <div
@@ -221,23 +229,20 @@ export function GanttGrid({
                       width: columnWidth,
                       minWidth: column?.minWidth ?? 50,
                       paddingLeft: `${paddingLeft}px`,
-                      paddingRight: 'var(--gantt-spacing-md)',
-                      borderRight: '1px solid var(--gantt-border-light)',
-                      fontSize: 'var(--gantt-font-size-base)',
-                      fontWeight: hasChildren(task) && isNameColumn 
-                        ? 'var(--gantt-font-weight-medium)' 
-                        : 'var(--gantt-font-weight-normal)',
-                      color: isGroup ? 'white' : 'var(--gantt-text-base)',
-                      overflow: 'hidden' // Prevent text overflow
+                      paddingRight: '12px',
+                      borderRight: isLastColumn ? 'none' : `1px solid ${isGroup ? 'rgba(255,255,255,0.15)' : '#E5E7EB'}`,
+                      fontSize: '13px',
+                      fontWeight: isGroup ? 600 : 400,
+                      color: getTextColor(),
+                      overflow: 'hidden'
                     }}
                   >
-                    {/* Expansion icon only in Task Name column */}
-                    {isNameColumn && hasChildren(task) && !isGroup && (
+                    {/* Expansion icon for Task Name column */}
+                    {isNameColumn && hasChildren(task) && (
                       <button
-                        className="flex-shrink-0 transition-colors hover:opacity-70"
+                        className="flex-shrink-0 transition-all duration-200 mr-2 p-0.5 rounded hover:bg-white/20"
                         style={{ 
-                          marginRight: 'var(--gantt-spacing-sm)',
-                          color: isGroup ? 'white' : 'var(--gantt-icons)'
+                          color: isGroup ? '#FFFFFF' : '#6B7280'
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -246,12 +251,35 @@ export function GanttGrid({
                         aria-label={task?.expanded ? 'Collapse' : 'Expand'}
                       >
                         {task?.expanded !== false ? (
-                          <ChevronDown size={16} />
+                          <ChevronDown size={16} strokeWidth={2.5} />
                         ) : (
-                          <ChevronRight size={16} />
+                          <ChevronRight size={16} strokeWidth={2.5} />
                         )}
                       </button>
                     )}
+
+                    {/* Icons for milestones and critical tasks */}
+                    {isNameColumn && !hasChildren(task) && (
+                      <div className="flex items-center mr-2">
+                        {isMilestone && (
+                          <span 
+                            className="text-amber-500 mr-1" 
+                            title="Milestone"
+                            style={{ fontSize: '14px' }}
+                          >
+                            ◆
+                          </span>
+                        )}
+                        {isCritical && !isMilestone && (
+                          <Flag 
+                            size={14} 
+                            className="text-red-500 mr-1" 
+                            fill="#DC2626"
+                          />
+                        )}
+                      </div>
+                    )}
+
                     {isWBSColumn ? (
                       <EditableWBSCell 
                         task={task}
@@ -266,7 +294,7 @@ export function GanttGrid({
                         onUpdate={onResourceUpdate}
                       />
                     ) : (
-                      <span className="truncate" style={{ flex: 1 }}>
+                      <span className="truncate flex-1" style={{ lineHeight: '1.4' }}>
                         {column?.renderer
                           ? column.renderer((task as any)?.[column.field], task)
                           : (task as any)?.[column.field]?.toString() ?? ''}
