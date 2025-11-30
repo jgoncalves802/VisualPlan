@@ -82,44 +82,75 @@ export class TaskStore extends BaseStore<Task> {
   }
 
   /**
-   * Indent task - Make it a child of the task immediately above (MS Project/P6 style)
+   * Get siblings (tasks with same parent)
+   */
+  getSiblings(taskId: string): Task[] {
+    const task = this.getById(taskId);
+    if (!task) return [];
+    const parentId = task.parentId ?? null;
+    return this.data.filter(t => (t.parentId ?? null) === parentId && t.id !== taskId);
+  }
+
+  /**
+   * Get previous sibling (DHTMLX-style: sibling at same level, before this task in order)
+   * This is the KEY function for correct indent behavior
+   */
+  getPrevSibling(taskId: string): Task | null {
+    const task = this.getById(taskId);
+    if (!task) return null;
+    
+    const parentId = task.parentId ?? null;
+    const flatList = this.getFlatTasks();
+    const taskIndex = flatList.findIndex(t => t.id === taskId);
+    
+    if (taskIndex <= 0) return null;
+    
+    for (let i = taskIndex - 1; i >= 0; i--) {
+      const candidate = flatList[i];
+      const candidateParentId = candidate.parentId ?? null;
+      
+      if (candidateParentId === parentId) {
+        return candidate;
+      }
+      
+      if ((candidate.level ?? 0) < (task.level ?? 0)) {
+        break;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Indent task - DHTMLX/MS Project style
    * 
-   * MS Project behavior:
-   * - Task ALWAYS becomes child of the task immediately above in the flat list
-   * - New level = parent's level + 1
-   * - This allows building nested hierarchies by consecutive indents
+   * Key insight: Task becomes child of its PREVIOUS SIBLING (same level),
+   * NOT the previous task in the visual list.
    * 
    * Example:
-   * Before: A(0), B(0), C(0)
-   * Indent B: A(0) -> B(1), C(0)  [B becomes child of A]
-   * Indent C: A(0) -> B(1) -> C(2), [C becomes child of B, the task above]
+   * Before: A(0), B(1 child of A), C(0)
+   * Indent C: C becomes child of A (its prev sibling at level 0), NOT B
    * 
    * Returns true if successful, false if cannot indent
    */
   indentTask(taskId: string): boolean {
-    const flatList = this.getFlatTasks();
-    const taskIndex = flatList.findIndex(t => t.id === taskId);
-    
-    if (taskIndex <= 0) return false;
-    
-    const task = flatList[taskIndex];
+    const task = this.getById(taskId);
     if (!task) return false;
     
-    const previousTask = flatList[taskIndex - 1];
-    if (!previousTask) return false;
+    const prevSibling = this.getPrevSibling(taskId);
+    if (!prevSibling) return false;
     
-    const previousLevel = previousTask.level ?? 0;
-    const newLevel = previousLevel + 1;
+    const newLevel = (prevSibling.level ?? 0) + 1;
     const maxLevel = 10;
     
     if (newLevel > maxLevel) return false;
     
     const updatedData = this.data.map(t => {
       if (t.id === taskId) {
-        return { ...t, parentId: previousTask.id, level: newLevel };
+        return { ...t, parentId: prevSibling.id, level: newLevel };
       }
-      if (t.id === previousTask.id && !t.isGroup) {
-        return { ...t, isGroup: true };
+      if (t.id === prevSibling.id && !t.isGroup) {
+        return { ...t, isGroup: true, expanded: true };
       }
       return t;
     });
@@ -131,54 +162,53 @@ export class TaskStore extends BaseStore<Task> {
   }
 
   /**
-   * Outdent task - Move it up one level (MS Project style: Alt+Shift+Left)
+   * Outdent task - Move it up one level (DHTMLX/MS Project style)
+   * Task moves to become a sibling of its current parent
+   * 
    * Returns true if successful, false if cannot outdent
    */
   outdentTask(taskId: string): boolean {
-    const task = this.getTaskById(taskId);
+    const task = this.getById(taskId);
     if (!task) return false;
     
     if (!task.parentId) return false;
     
-    const parent = this.getParent(taskId);
+    const parent = this.getById(task.parentId);
     if (!parent) return false;
     
     const newParentId = parent.parentId ?? null;
     const newLevel = Math.max(0, (task.level ?? 1) - 1);
     
-    this.updateTask(taskId, {
-      parentId: newParentId,
-      level: newLevel
+    const remainingChildren = this.getChildren(parent.id).filter(c => c.id !== taskId);
+    const parentNeedsUpdate = remainingChildren.length === 0;
+    
+    const updatedData = this.data.map(t => {
+      if (t.id === taskId) {
+        return { ...t, parentId: newParentId, level: newLevel };
+      }
+      if (t.id === parent.id && parentNeedsUpdate) {
+        return { ...t, isGroup: false };
+      }
+      return t;
     });
     
-    const remainingChildren = this.getChildren(parent.id);
-    if (remainingChildren.length === 0) {
-      this.updateTask(parent.id, {
-        isGroup: false
-      });
-    }
-    
+    this.setData(updatedData);
     this.generateWBSCodes();
     
     return true;
   }
 
   /**
-   * Indent multiple tasks - processes in order, refreshing flat list after each
+   * Indent multiple tasks - processes in visual order
    */
   indentTasks(taskIds: string[]): boolean {
     if (taskIds.length === 0) return false;
     
     let success = true;
-    const processedIds = new Set<string>();
-    
     for (const taskId of taskIds) {
-      if (processedIds.has(taskId)) continue;
-      
       if (!this.indentTask(taskId)) {
         success = false;
       }
-      processedIds.add(taskId);
     }
     
     return success;
@@ -192,15 +222,11 @@ export class TaskStore extends BaseStore<Task> {
     
     let success = true;
     const reversedIds = [...taskIds].reverse();
-    const processedIds = new Set<string>();
     
     for (const taskId of reversedIds) {
-      if (processedIds.has(taskId)) continue;
-      
       if (!this.outdentTask(taskId)) {
         success = false;
       }
-      processedIds.add(taskId);
     }
     
     return success;
