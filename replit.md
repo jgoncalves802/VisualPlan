@@ -95,3 +95,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **VisionGantt-only architecture**: Removed DHTMLX Gantt dual-engine architecture, CronogramaPage now uses VisionGantt exclusively.
 *   **Calendar integration**: Added full calendar conversion from VisionPlan to VisionGantt CalendarStore.
 *   **Resource and baseline hooks**: Created useResources.ts and useBaselines.ts for proper state management.
+*   **Improved Dependency Arrow Rendering**: Enhanced dependency arrows with orthogonal routing (SVAR-style) with proper spacing and elegant arrowheads. Dependencies now follow 90-degree paths for cleaner visualization.
+*   **Enhanced Milestone Visualization**: Milestones now render as larger, more prominent diamond shapes (70% of bar height) with improved centering and visibility.
+*   **Robust Indent/Outdent Synchronization**: Fixed indent/outdent propagation to broadcast ALL tasks after hierarchy changes. This ensures complete synchronization between TaskStore and external VisionPlan stores, including WBS, parentId, isGroup, and level changes for all ancestors and descendants.
+*   **Improved Change Detection**: Enhanced `detectTaskChanges` in visionplan-adapter.ts to properly detect parentId changes (with null/undefined normalization) and tipo transitions (Marco/Fase/Tarefa).
