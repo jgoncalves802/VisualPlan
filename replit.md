@@ -30,7 +30,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         - CalendarStore for working calendar management with holidays and exceptions
         - Resource management with allocation tracking
         - Full calendar integration via visionplan-adapter.ts converter
-        - Critical path analysis and constraint validation
+        - Dynamic Critical Path Method (CPM) with automatic recalculation via `useCriticalPath` hook
+        - Near-critical path detection (total float ≤ 5 days per Primavera P6 standard)
+        - Constraint validation with visual violation indicators
     *   **Resource Management**: Full resource allocation system with histogram visualization, resource types, calendars, and conflict detection.
     *   **Baseline Tracking**: Support for project baselines with variance analysis (Primavera P6 model).
     *   **Real-time Updates**: Achieved via WebSockets through Supabase.
@@ -66,6 +68,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (November 2025)
 
+*   **Dynamic Critical Path System**: Implemented `useCriticalPath` hook with automatic recalculation when tasks or dependencies change. Includes near-critical path detection (total float ≤ 5 days) with distinct orange visual styling.
+*   **Visual Critical Path Updates**: All Gantt components (TaskBar, DependencyArrow, GanttTimeline, GanttChart) now reactively display critical (red), near-critical (orange), and normal (blue) states.
+*   **Theme Enhancements**: Added `nearCriticalActivity` colors to all three themes (P6 Classic, Dark, Construction).
 *   **VisionGantt-only architecture**: Removed DHTMLX Gantt dual-engine architecture, CronogramaPage now uses VisionGantt exclusively.
 *   **Calendar integration**: Added full calendar conversion from VisionPlan to VisionGantt CalendarStore.
 *   **Resource and baseline hooks**: Created useResources.ts and useBaselines.ts for proper state management.
