@@ -95,7 +95,7 @@ export function GanttChart({
     minTimelineWidth: 200
   });
 
-  const { taskStore, dependencyStore, calendarStore: _calendarStore, tasks: internalTasks, dependencies, calendars: _calendars, taskVersion } = useGanttStoresV2(
+  const { taskStore, dependencyStore, calendarStore: _calendarStore, tasks: internalTasks, dependencies, calendars: _calendars, taskVersion, lockSync } = useGanttStoresV2(
     initialTasks,
     initialDependencies,
     initialResources,
@@ -151,12 +151,14 @@ export function GanttChart({
     // Emit updates for changed tasks
     if (changedTasks.length > 0) {
       console.log('[GanttChart] Syncing changed tasks:', changedTasks.length, 'version:', taskVersion);
+      // Lock sync to prevent external data from resetting reducer while async updates are in flight
+      lockSync(3000);
       changedTasks.forEach(task => onTaskUpdate(task));
     }
     
     // Update prev ref for next comparison
     prevTasksRef.current = internalTasks;
-  }, [internalTasks, taskVersion, onTaskUpdate]);
+  }, [internalTasks, taskVersion, onTaskUpdate, lockSync]);
 
   const taskTree = taskStore.getTaskTree();
   const flatTasks = flattenTasks(taskTree);

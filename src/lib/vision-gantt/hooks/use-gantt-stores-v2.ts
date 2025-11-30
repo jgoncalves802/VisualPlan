@@ -85,6 +85,9 @@ export function useGanttStoresV2(
   const lastTaskSetHashRef = useRef<string>(initialTasks.map(t => t.id).sort().join(','));
   // Track if we've already initialized to prevent re-sync on first render
   const hasInitializedTasksRef = useRef(true);
+  // Sync lock - don't accept external changes while we're syncing changes out
+  const syncLockRef = useRef(false);
+  const syncLockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Lazy initialization - runs only once
   if (dependencyStoreRef.current === null) {
@@ -114,6 +117,12 @@ export function useGanttStoresV2(
   // Sync external tasks ONLY when the dataset truly changes (tasks added/removed)
   // NOT when hierarchy changes (parentId/level) since those are internal mutations
   useEffect(() => {
+    // Skip if sync lock is active - we're syncing changes out and shouldn't accept incoming changes
+    if (syncLockRef.current) {
+      console.log('[useGanttStoresV2] Sync lock active, ignoring external task changes');
+      return;
+    }
+    
     // Skip if already initialized - we already have the data
     if (hasInitializedTasksRef.current) {
       // Only sync if the set of task IDs changed (new tasks added or removed)
@@ -229,6 +238,31 @@ export function useGanttStoresV2(
     }
   }), [taskReducer.tasks, taskReducer.updateTask, taskReducer.setTasks, taskReducer.indentTask, taskReducer.outdentTask, taskReducer.indentTasks, taskReducer.outdentTasks, taskReducer.toggleExpansion]);
 
+  // Lock sync for a duration (prevents external data from resetting reducer)
+  const lockSync = (durationMs: number = 2000) => {
+    // Clear any existing timeout
+    if (syncLockTimeoutRef.current) {
+      clearTimeout(syncLockTimeoutRef.current);
+    }
+    
+    syncLockRef.current = true;
+    console.log('[useGanttStoresV2] Sync lock ENABLED');
+    
+    // Auto-unlock after duration
+    syncLockTimeoutRef.current = setTimeout(() => {
+      syncLockRef.current = false;
+      console.log('[useGanttStoresV2] Sync lock RELEASED');
+    }, durationMs);
+  };
+  
+  const unlockSync = () => {
+    if (syncLockTimeoutRef.current) {
+      clearTimeout(syncLockTimeoutRef.current);
+    }
+    syncLockRef.current = false;
+    console.log('[useGanttStoresV2] Sync lock RELEASED (manual)');
+  };
+
   return {
     taskStore,
     dependencyStore: dependencyStoreRef.current!,
@@ -237,6 +271,9 @@ export function useGanttStoresV2(
     dependencies,
     calendars,
     // Expose version for debugging
-    taskVersion: taskReducer.version
+    taskVersion: taskReducer.version,
+    // Sync control
+    lockSync,
+    unlockSync
   };
 }
