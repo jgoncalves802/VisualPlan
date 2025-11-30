@@ -24,8 +24,11 @@ interface GanttGridProps {
   rowHeight: number;
   headerHeight?: number;
   onTaskClick?: (task: Task) => void;
+  onTaskSelect?: (task: Task, event?: React.MouseEvent) => void;
+  onTaskContextMenu?: (task: Task, event: React.MouseEvent) => void;
   onToggleExpand?: (taskId: string) => void;
   selectedTaskId?: string;
+  selectedTaskIds?: string[];
   onColumnResize?: (columnIndex: number, newWidth: number) => void;
   onWBSUpdate?: (taskId: string, newWBS: string) => void;
   resources?: Resource[];
@@ -40,8 +43,11 @@ export function GanttGrid({
   rowHeight,
   headerHeight,
   onTaskClick,
+  onTaskSelect,
+  onTaskContextMenu,
   onToggleExpand,
   selectedTaskId,
+  selectedTaskIds = [],
   onColumnResize,
   onWBSUpdate,
   resources = [],
@@ -152,7 +158,7 @@ export function GanttGrid({
 
       <div className="gantt-grid-body">
         {tasks.map((task, rowIndex) => {
-          const isSelected = task?.id === selectedTaskId;
+          const isSelected = task?.id === selectedTaskId || selectedTaskIds.includes(task?.id ?? '');
           const isEven = rowIndex % 2 === 0;
           const isGroup = task?.isGroup === true || hasChildren(task);
           const isMilestone = (task as any)?.isMilestone === true || (task as any)?.duration === 0;
@@ -204,13 +210,31 @@ export function GanttGrid({
           return (
             <div
               key={task?.id ?? `task-${rowIndex}`}
-              className="gantt-grid-row flex cursor-pointer"
+              className="gantt-grid-row flex cursor-pointer select-none"
+              tabIndex={0}
+              data-task-id={task?.id}
+              data-row-index={rowIndex}
               style={{ 
                 height: rowHeight,
                 ...rowStyle,
-                transition: 'background-color 0.1s ease'
+                transition: 'background-color 0.1s ease',
+                outline: 'none'
               }}
-              onClick={() => onTaskClick?.(task)}
+              onClick={(e) => {
+                if (onTaskSelect) {
+                  onTaskSelect(task, e);
+                } else {
+                  onTaskClick?.(task);
+                }
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                if (onTaskContextMenu) {
+                  onTaskContextMenu(task, e);
+                } else {
+                  onTaskClick?.(task);
+                }
+              }}
               onMouseEnter={(e) => {
                 if (!isSelected && !isGroup) {
                   e.currentTarget.style.backgroundColor = gridColors.hover;

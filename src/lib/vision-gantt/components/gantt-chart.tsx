@@ -63,6 +63,7 @@ export function GanttChart({
 }: GanttChartProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>();
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [dependencyMode, setDependencyMode] = useState(enableDependencyCreation);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [customPresetConfig, setCustomPresetConfig] = useState<ViewPresetConfig | null>(null);
@@ -219,6 +220,82 @@ export function GanttChart({
     [onTaskClick]
   );
 
+  const handleTaskSelect = useCallback(
+    (task: Task, event?: React.MouseEvent) => {
+      if (!task?.id) return;
+      
+      if (event?.shiftKey && selectedTaskId) {
+        const startIndex = flatTasks.findIndex(t => t.id === selectedTaskId);
+        const endIndex = flatTasks.findIndex(t => t.id === task.id);
+        
+        if (startIndex !== -1 && endIndex !== -1) {
+          const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
+          const range = flatTasks.slice(from, to + 1).map(t => t.id);
+          setSelectedTaskIds(range);
+        }
+      } else if (event?.ctrlKey || event?.metaKey) {
+        setSelectedTaskIds(prev => 
+          prev.includes(task.id) 
+            ? prev.filter(id => id !== task.id)
+            : [...prev, task.id]
+        );
+      } else {
+        setSelectedTaskId(task.id);
+        setSelectedTaskIds([task.id]);
+      }
+    },
+    [flatTasks, selectedTaskId]
+  );
+
+  const handleTaskContextMenu = useCallback(
+    (task: Task, event: React.MouseEvent) => {
+      event.preventDefault();
+      if (!selectedTaskIds.includes(task?.id ?? '')) {
+        setSelectedTaskId(task?.id);
+        setSelectedTaskIds([task?.id ?? '']);
+      }
+      onTaskClick?.(task);
+    },
+    [selectedTaskIds, onTaskClick]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!selectedTaskId) return;
+      
+      const currentIndex = flatTasks.findIndex(t => t.id === selectedTaskId);
+      if (currentIndex === -1) return;
+      
+      let newIndex = currentIndex;
+      
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        newIndex = Math.max(0, currentIndex - 1);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        newIndex = Math.min(flatTasks.length - 1, currentIndex + 1);
+      } else {
+        return;
+      }
+      
+      const newTask = flatTasks[newIndex];
+      if (!newTask) return;
+      
+      if (e.shiftKey) {
+        const anchorIndex = flatTasks.findIndex(t => selectedTaskIds[0] === t.id);
+        const anchor = anchorIndex !== -1 ? anchorIndex : currentIndex;
+        const [from, to] = anchor < newIndex ? [anchor, newIndex] : [newIndex, anchor];
+        const range = flatTasks.slice(from, to + 1).map(t => t.id);
+        setSelectedTaskIds(range);
+        setSelectedTaskId(newTask.id);
+      } else {
+        setSelectedTaskId(newTask.id);
+        setSelectedTaskIds([newTask.id]);
+      }
+    },
+    [flatTasks, selectedTaskId, selectedTaskIds]
+  );
+
   const handleToggleExpand = useCallback(
     (taskId: string) => {
       taskStore.toggleExpansion(taskId);
@@ -268,13 +345,16 @@ export function GanttChart({
     <div
       ref={containerRef}
       className={`gantt-chart flex flex-col overflow-hidden ${className}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       style={{ 
         height,
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         backgroundColor: '#F8FAFC',
         border: '1px solid #E2E8F0',
         borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        outline: 'none'
       }}
     >
       {/* P6-Style Professional Toolbar */}
@@ -447,8 +527,11 @@ export function GanttChart({
             rowHeight={rowHeight}
             headerHeight={headerHeight}
             onTaskClick={handleTaskClick}
+            onTaskSelect={handleTaskSelect}
+            onTaskContextMenu={handleTaskContextMenu}
             onToggleExpand={handleToggleExpand}
             selectedTaskId={selectedTaskId}
+            selectedTaskIds={selectedTaskIds}
             onWBSUpdate={handleWBSUpdate}
             criticalPathIds={criticalPathIds}
           />
