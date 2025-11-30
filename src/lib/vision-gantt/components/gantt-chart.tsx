@@ -322,7 +322,7 @@ export function GanttChart({
     (e: React.KeyboardEvent) => {
       if (!selectedTaskId) return;
       
-      if (e.altKey && e.shiftKey) {
+      if (e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
         if (e.key === 'ArrowRight') {
           e.preventDefault();
           handleIndentTask();
@@ -586,9 +586,9 @@ export function GanttChart({
             </div>
             <div 
               className="flex items-center gap-1"
-              title="Alt+Shift+←→ para recuar/avançar hierarquia"
+              title="Shift+←→ para recuar/avançar hierarquia"
             >
-              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">Alt+Shift</span>
+              <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">Shift</span>
               <span className="text-xs text-gray-400">+</span>
               <span className="text-xs text-gray-400 font-mono px-1 py-0.5 bg-gray-100 rounded">←→</span>
               <span className="text-xs text-gray-500 ml-1">Hierarquia</span>

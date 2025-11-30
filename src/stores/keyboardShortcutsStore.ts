@@ -77,7 +77,7 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: 'editing',
     defaultKey: 'ArrowRight',
     currentKey: 'ArrowRight',
-    modifiers: { alt: true, shift: true },
+    modifiers: { shift: true },
     enabled: true
   },
   {
@@ -87,7 +87,7 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: 'editing',
     defaultKey: 'ArrowLeft',
     currentKey: 'ArrowLeft',
-    modifiers: { alt: true, shift: true },
+    modifiers: { shift: true },
     enabled: true
   },
   {
