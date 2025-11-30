@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCronograma } from '../hooks/useCronograma';
+import { useResources } from '../hooks/useResources';
 import { VisualizacaoCronograma } from '../types/cronograma';
 
 import { CronogramaToolbar } from '../components/features/cronograma/CronogramaToolbar';
@@ -44,6 +45,13 @@ export const CronogramaPage: React.FC = () => {
   } = useCronograma(projetoId || 'proj-1');
 
   const { calendarios } = useCronogramaStore();
+  const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
+  const { usuario } = useAuthStore();
+  
+  const { 
+    resources, 
+    allocations,
+  } = useResources(usuario?.empresaId || '', projetoId);
 
   const [modalTaskOpen, setModalTaskOpen] = useState(false);
   const [modalDependencyOpen, setModalDependencyOpen] = useState(false);
@@ -54,9 +62,6 @@ export const CronogramaPage: React.FC = () => {
   const [atividadeParaAcoes, setAtividadeParaAcoes] = useState<any | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
-
-  const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
-  const { usuario } = useAuthStore();
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -198,6 +203,8 @@ export const CronogramaPage: React.FC = () => {
                   atividades={todasAtividades}
                   dependencias={dependencias}
                   projetoId={projetoId || 'proj-1'}
+                  resources={resources}
+                  allocations={allocations}
                   calendarios={calendarios}
                   onAtividadeUpdate={async (atividade, changes) => {
                     await atualizarAtividade(atividade.id, changes);
