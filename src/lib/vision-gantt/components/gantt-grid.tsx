@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
 import { ChevronRight, ChevronDown } from 'lucide-react';
-import { hasChildren } from '../utils';
 import { useColumnResize } from '../hooks/use-column-resize';
 import { EditableWBSCell } from './editable-wbs-cell';
 import { EditableResourceCell } from './editable-resource-cell';
@@ -160,7 +159,7 @@ export function GanttGrid({
         {tasks.map((task, rowIndex) => {
           const isSelected = task?.id === selectedTaskId || selectedTaskIds.includes(task?.id ?? '');
           const isEven = rowIndex % 2 === 0;
-          const isGroup = task?.isGroup === true || hasChildren(task);
+          const isGroup = task?.isGroup === true;
           const isMilestone = (task as any)?.isMilestone === true || (task as any)?.duration === 0;
           const isCritical = criticalPathIds.includes(task?.id ?? '');
           const level = task?.level ?? 0;
@@ -267,11 +266,11 @@ export function GanttGrid({
                       fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize
                     }}
                   >
-                    {isNameColumn && hasChildren(task) && (
+                    {isNameColumn && isGroup && (
                       <button
-                        className="flex-shrink-0 mr-1.5 p-0.5 rounded"
+                        className="flex-shrink-0 mr-1.5 p-0.5 rounded hover:bg-white/10"
                         style={{ 
-                          color: isGroup ? 'rgba(255,255,255,0.9)' : (gridColors.rowEven === '#FFFFFF' ? '#6B7280' : '#9CA3AF'),
+                          color: 'rgba(255,255,255,0.9)',
                           transition: 'transform 0.15s ease'
                         }}
                         onClick={(e) => {
@@ -287,7 +286,7 @@ export function GanttGrid({
                       </button>
                     )}
 
-                    {isNameColumn && !hasChildren(task) && isMilestone && (
+                    {isNameColumn && !isGroup && isMilestone && (
                       <span 
                         style={{ 
                           color: isCritical ? colors.milestone.fillCritical : colors.summaryWBS.fill,
