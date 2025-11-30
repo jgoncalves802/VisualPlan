@@ -286,13 +286,9 @@ export function GanttChart({
       ? taskStore.indentTasks(taskIds)
       : taskStore.indentTask(taskIds[0]);
       
-    if (success) {
-      taskIds.forEach(id => {
-        const updatedTask = taskStore.getTaskById(id);
-        if (updatedTask) {
-          onTaskUpdate?.(updatedTask);
-        }
-      });
+    if (success && onTaskUpdate) {
+      const allTasks = taskStore.getAll();
+      allTasks.forEach(task => onTaskUpdate(task));
     }
   }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
 
@@ -304,13 +300,9 @@ export function GanttChart({
       ? taskStore.outdentTasks(taskIds)
       : taskStore.outdentTask(taskIds[0]);
       
-    if (success) {
-      taskIds.forEach(id => {
-        const updatedTask = taskStore.getTaskById(id);
-        if (updatedTask) {
-          onTaskUpdate?.(updatedTask);
-        }
-      });
+    if (success && onTaskUpdate) {
+      const allTasks = taskStore.getAll();
+      allTasks.forEach(task => onTaskUpdate(task));
     }
   }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
 

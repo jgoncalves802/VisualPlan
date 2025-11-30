@@ -241,6 +241,25 @@ export function detectTaskChanges(
     changes.edt = updated.wbs;
   }
   
+  const originalParentId = original.parent_id ?? null;
+  const updatedParentId = updated.parentId ?? null;
+  if (originalParentId !== updatedParentId) {
+    changes.parent_id = updatedParentId ?? undefined;
+  }
+  
+  const originalTipo = original.tipo;
+  let newTipo: 'Marco' | 'Fase' | 'Tarefa';
+  if (updated.isMilestone) {
+    newTipo = 'Marco';
+  } else if (updated.isGroup) {
+    newTipo = 'Fase';
+  } else {
+    newTipo = 'Tarefa';
+  }
+  if (originalTipo !== newTipo) {
+    changes.tipo = newTipo;
+  }
+  
   return changes;
 }
 
