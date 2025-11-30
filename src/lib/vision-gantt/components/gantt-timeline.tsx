@@ -29,6 +29,7 @@ interface GanttTimelineProps {
   onCreateDependency?: (fromTaskId: string, toTaskId: string, type: DependencyType, lag?: number) => void;
   selectedTaskId?: string;
   criticalPathIds?: string[];
+  nearCriticalPathIds?: string[];
   violationTaskIds?: string[];
   conflictTaskIds?: string[];
 }
@@ -47,6 +48,7 @@ export function GanttTimeline({
   onCreateDependency,
   selectedTaskId,
   criticalPathIds = [],
+  nearCriticalPathIds = [],
   violationTaskIds = [],
   conflictTaskIds = []
 }: GanttTimelineProps) {
@@ -206,6 +208,9 @@ export function GanttTimeline({
               }
 
               const isCriticalDep = criticalPathIds.includes(fromTask.id) && criticalPathIds.includes(toTask.id);
+              const isNearCriticalDep = !isCriticalDep && (
+                nearCriticalPathIds.includes(fromTask.id) || nearCriticalPathIds.includes(toTask.id)
+              );
 
               return (
                 <DependencyArrow
@@ -221,6 +226,7 @@ export function GanttTimeline({
                   taskHeight={barHeight}
                   arrowIndent={10}
                   isCritical={isCriticalDep}
+                  isNearCritical={isNearCriticalDep}
                 />
               );
             })}
@@ -242,6 +248,7 @@ export function GanttTimeline({
                   barRadius={barRadius}
                   isSelected={task.id === selectedTaskId}
                   isCritical={criticalPathIds.includes(task.id)}
+                  isNearCritical={nearCriticalPathIds.includes(task.id)}
                   hasViolations={violationTaskIds.includes(task.id)}
                   hasConflicts={conflictTaskIds.includes(task.id)}
                   onDragStart={onDragStart}

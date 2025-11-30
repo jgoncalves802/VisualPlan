@@ -25,6 +25,7 @@ export interface GanttChartProps extends GanttConfig {
   gridWidth?: number;
   height?: number;
   criticalPathIds?: string[];
+  nearCriticalPathIds?: string[];
   violationTaskIds?: string[];
   conflictTaskIds?: string[];
   projectName?: string;
@@ -53,6 +54,7 @@ export function GanttChart({
   onViewPresetChange,
   className = '',
   criticalPathIds = [],
+  nearCriticalPathIds = [],
   violationTaskIds = [],
   conflictTaskIds = [],
   projectName = 'Project Schedule'
@@ -370,6 +372,12 @@ export function GanttChart({
               <span className="text-xs text-gray-600">Crítica</span>
             </div>
             
+            {/* Near-Critical Task */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-3 rounded-sm" style={{ backgroundColor: '#F97316' }} />
+              <span className="text-xs text-gray-600">Quase Crítica</span>
+            </div>
+            
             {/* Completed Task */}
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-3 rounded-sm" style={{ backgroundColor: '#059669' }} />
@@ -463,6 +471,7 @@ export function GanttChart({
             onCreateDependency={handleCreateDependency}
             selectedTaskId={selectedTaskId}
             criticalPathIds={criticalPathIds}
+            nearCriticalPathIds={nearCriticalPathIds}
             violationTaskIds={violationTaskIds}
             conflictTaskIds={conflictTaskIds}
           />

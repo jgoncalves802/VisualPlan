@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState } from 'react';
-import { GanttChart } from '../../../lib/vision-gantt';
+import { GanttChart, useCriticalPath } from '../../../lib/vision-gantt';
 import type { Task, Dependency, ViewPreset } from '../../../lib/vision-gantt/types';
 import { 
   createGanttDataSync, 
@@ -10,7 +10,7 @@ import {
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
 import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
-import { BarChart3, Calendar, Users, AlertTriangle, Clock } from 'lucide-react';
+import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -55,6 +55,10 @@ export function VisionGanttWrapper({
     return convertCalendarsToGantt(calendarios);
   }, [calendarios]);
 
+  const criticalPath = useCriticalPath(ganttData.tasks, ganttData.dependencies, {
+    nearCriticalThreshold: 5
+  });
+
   const atividadeMap = useMemo(() => {
     return new Map(atividades.map(a => [a.id, a]));
   }, [atividades]);
@@ -93,7 +97,8 @@ export function VisionGanttWrapper({
     onDependenciaDelete(depId);
   }, [onDependenciaDelete]);
 
-  const criticalCount = atividades.filter(a => a.e_critica).length;
+  const criticalCount = criticalPath.criticalPathIds.length;
+  const nearCriticalCount = criticalPath.nearCriticalPathIds.length;
   const delayedCount = atividades.filter(a => {
     const endDate = new Date(a.data_fim);
     return endDate < new Date() && a.progresso < 100;
@@ -101,6 +106,7 @@ export function VisionGanttWrapper({
   const totalProgress = atividades.length > 0
     ? Math.round(atividades.reduce((sum, a) => sum + a.progresso, 0) / atividades.length)
     : 0;
+  const violationCount = criticalPath.violations.length;
 
   return (
     <div className={`vision-gantt-wrapper ${className}`}>
@@ -129,11 +135,29 @@ export function VisionGanttWrapper({
             </div>
           )}
           
+          {nearCriticalCount > 0 && (
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-orange-500" />
+              <span className="text-sm font-medium text-orange-600">
+                {nearCriticalCount} Quase Críticas
+              </span>
+            </div>
+          )}
+          
           {delayedCount > 0 && (
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
               <span className="text-sm font-medium text-yellow-600">
                 {delayedCount} Atrasadas
+              </span>
+            </div>
+          )}
+          
+          {violationCount > 0 && (
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-purple-500" />
+              <span className="text-sm font-medium text-purple-600">
+                {violationCount} Violações
               </span>
             </div>
           )}
@@ -177,7 +201,9 @@ export function VisionGanttWrapper({
         onDependencyCreate={handleDependencyCreate}
         onDependencyDelete={handleDependencyDelete}
         onViewPresetChange={setViewPreset}
-        criticalPathIds={ganttData.criticalPathIds}
+        criticalPathIds={criticalPath.criticalPathIds}
+        nearCriticalPathIds={criticalPath.nearCriticalPathIds}
+        violationTaskIds={criticalPath.violations.map(v => v.toTaskId)}
         conflictTaskIds={ganttData.conflictTaskIds}
         className="rounded-lg shadow-sm"
       />

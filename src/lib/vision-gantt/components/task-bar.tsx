@@ -17,6 +17,7 @@ interface TaskBarProps {
   isResizing?: boolean;
   isSelected?: boolean;
   isCritical?: boolean;
+  isNearCritical?: boolean;
   hasViolations?: boolean;
   hasConflicts?: boolean;
   onDragStart?: (e: React.MouseEvent, task: Task) => void;
@@ -40,6 +41,7 @@ export function TaskBar({
   isResizing = false,
   isSelected = false,
   isCritical = false,
+  isNearCritical = false,
   hasViolations = false,
   hasConflicts = false,
   onDragStart,
@@ -71,14 +73,17 @@ export function TaskBar({
     if (isParent) {
       return { ...themeColors.summaryWBS, isProject: false, isWBS: true };
     }
-    if (isCritical) {
-      return { ...themeColors.criticalActivity, isProject: false, isWBS: false };
-    }
     if (progress === 100 || status === 'completed') {
       return { ...themeColors.completedActivity, isProject: false, isWBS: false };
     }
+    if (isCritical) {
+      return { ...themeColors.criticalActivity, isProject: false, isWBS: false };
+    }
+    if (isNearCritical) {
+      return { ...themeColors.nearCriticalActivity, isProject: false, isWBS: false };
+    }
     return { ...themeColors.normalActivity, isProject: false, isWBS: false };
-  }, [themeColors, isParent, level, isCritical, progress, status]);
+  }, [themeColors, isParent, level, isCritical, isNearCritical, progress, status]);
 
   const RESIZE_HANDLE_WIDTH = theme.spacing.handleSize + 1;
   const DEPENDENCY_HANDLE_SIZE = theme.spacing.handleSize;

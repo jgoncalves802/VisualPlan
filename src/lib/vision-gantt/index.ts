@@ -70,8 +70,10 @@ export {
   useResize,
   useDependencyCreation,
   useVirtualScroll,
-  useTimelineRange
+  useTimelineRange,
+  useCriticalPath
 } from './hooks';
+export type { CriticalPathResult, UseCriticalPathOptions } from './hooks';
 
 // Auto-scheduling hook
 export { 

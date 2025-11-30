@@ -20,6 +20,13 @@ export interface GanttThemeColors {
     progress: string;
     text: string;
   };
+  nearCriticalActivity: {
+    fill: string;
+    fillLight: string;
+    stroke: string;
+    progress: string;
+    text: string;
+  };
   completedActivity: {
     fill: string;
     fillLight: string;
@@ -49,6 +56,7 @@ export interface GanttThemeColors {
   dependency: {
     normal: string;
     critical: string;
+    nearCritical: string;
     hover: string;
   };
   grid: {
@@ -121,6 +129,13 @@ export const P6_CLASSIC_THEME: GanttTheme = {
       progress: '#B91C1C',
       text: '#FFFFFF'
     },
+    nearCriticalActivity: {
+      fill: '#F97316',
+      fillLight: '#FB923C',
+      stroke: '#EA580C',
+      progress: '#C2410C',
+      text: '#FFFFFF'
+    },
     completedActivity: {
       fill: '#10B981',
       fillLight: '#34D399',
@@ -150,6 +165,7 @@ export const P6_CLASSIC_THEME: GanttTheme = {
     dependency: {
       normal: '#6B7280',
       critical: '#DC2626',
+      nearCritical: '#F97316',
       hover: '#1D4ED8'
     },
     grid: {
@@ -218,6 +234,13 @@ export const DARK_THEME: GanttTheme = {
       progress: '#DC2626',
       text: '#FFFFFF'
     },
+    nearCriticalActivity: {
+      fill: '#FB923C',
+      fillLight: '#FDBA74',
+      stroke: '#F97316',
+      progress: '#EA580C',
+      text: '#FFFFFF'
+    },
     completedActivity: {
       fill: '#34D399',
       fillLight: '#6EE7B7',
@@ -247,6 +270,7 @@ export const DARK_THEME: GanttTheme = {
     dependency: {
       normal: '#9CA3AF',
       critical: '#F87171',
+      nearCritical: '#FB923C',
       hover: '#60A5FA'
     },
     grid: {
@@ -315,6 +339,13 @@ export const CONSTRUCTION_THEME: GanttTheme = {
       progress: '#991B1B',
       text: '#FFFFFF'
     },
+    nearCriticalActivity: {
+      fill: '#EA580C',
+      fillLight: '#F97316',
+      stroke: '#C2410C',
+      progress: '#9A3412',
+      text: '#FFFFFF'
+    },
     completedActivity: {
       fill: '#059669',
       fillLight: '#10B981',
@@ -344,6 +375,7 @@ export const CONSTRUCTION_THEME: GanttTheme = {
     dependency: {
       normal: '#78716C',
       critical: '#DC2626',
+      nearCritical: '#EA580C',
       hover: '#0284C7'
     },
     grid: {

@@ -20,6 +20,7 @@ interface DependencyArrowProps {
   color?: string;
   isHighlighted?: boolean;
   isCritical?: boolean;
+  isNearCritical?: boolean;
   onClick?: (dependency: Dependency) => void;
 }
 
@@ -141,6 +142,7 @@ export function DependencyArrow({
   color,
   isHighlighted = false,
   isCritical = false,
+  isNearCritical = false,
   onClick
 }: DependencyArrowProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -150,7 +152,14 @@ export function DependencyArrow({
   const from = { x: fromX, y: fromY };
   const to = { x: toX, y: toY };
   
-  const baseColor = color || (isCritical ? depColors.critical : depColors.normal);
+  const getBaseColor = () => {
+    if (color) return color;
+    if (isCritical) return depColors.critical;
+    if (isNearCritical) return depColors.nearCritical;
+    return depColors.normal;
+  };
+  
+  const baseColor = getBaseColor();
   const activeColor = isHovered || isHighlighted ? depColors.hover : baseColor;
   
   const pathData = useMemo(() => {
