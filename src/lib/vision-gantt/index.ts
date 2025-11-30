@@ -24,6 +24,12 @@
 // Main components
 export { GanttChart } from './components/gantt-chart';
 export type { GanttChartProps } from './components/gantt-chart';
+export { GanttChartV2 } from './components/gantt-chart-v2';
+export type { GanttChartV2Props } from './components/gantt-chart-v2';
+
+// Controller hook (new architecture)
+export { useGanttController } from './hooks/use-gantt-controller';
+export type { GanttControllerResult, UseGanttControllerOptions } from './hooks/use-gantt-controller';
 
 // Sub-components (for advanced usage)
 export {

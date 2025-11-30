@@ -1,11 +1,10 @@
 import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
-import { GanttChart, useCriticalPath } from '../../../lib/vision-gantt';
+import { GanttChartV2, useCriticalPath } from '../../../lib/vision-gantt';
 import type { Task, Dependency, ViewPreset } from '../../../lib/vision-gantt/types';
 import { 
   createGanttDataSync, 
   ganttTaskToAtividade,
   ganttDependencyToDependencia,
-  detectTaskChanges,
   convertCalendarsToGantt
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
 import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto, TipoDependencia } from '../../../types/cronograma';
@@ -62,24 +61,25 @@ export function VisionGanttWrapper({
     toTask: null,
   });
   
-  // Base gantt data from props - only used for initial conversion
+  // Convert external data to gantt format - used for initial conversion
   const baseGanttData = useMemo(() => {
     return createGanttDataSync(atividades, dependencias, resources, allocations);
   }, [atividades, dependencias, resources, allocations]);
 
-  // Optimistic task cache - this is the SINGLE SOURCE OF TRUTH for tasks
-  // It's initialized from baseGanttData but updated optimistically on hierarchy changes
-  const [optimisticTasks, setOptimisticTasks] = useState<Task[]>(() => baseGanttData.tasks);
-  const lastAtividadesIdsRef = useRef<string>(atividades.map(a => a.id).sort().join(','));
+  // LOCAL TASK CACHE - This is the SINGLE SOURCE OF TRUTH
+  // It's initialized from baseGanttData but ONLY updated by controller callbacks
+  // Never overwritten by external prop changes (except when task IDs change)
+  const [localTasks, setLocalTasks] = useState<Task[]>(() => baseGanttData.tasks);
+  const lastTaskIdsRef = useRef<string>(atividades.map(a => a.id).sort().join(','));
   
   // Only sync from external data when task IDs change (add/remove tasks)
-  // NOT when hierarchy changes (parentId/level) since those are internal
+  // NEVER sync when hierarchy changes - those are internal mutations
   useEffect(() => {
-    const newIdsHash = atividades.map(a => a.id).sort().join(',');
-    if (newIdsHash !== lastAtividadesIdsRef.current) {
+    const newIds = atividades.map(a => a.id).sort().join(',');
+    if (newIds !== lastTaskIdsRef.current) {
       console.log('[VisionGanttWrapper] Task IDs changed, syncing from external source');
-      setOptimisticTasks(baseGanttData.tasks);
-      lastAtividadesIdsRef.current = newIdsHash;
+      setLocalTasks(baseGanttData.tasks);
+      lastTaskIdsRef.current = newIds;
     }
   }, [atividades, baseGanttData.tasks]);
 
@@ -87,8 +87,8 @@ export function VisionGanttWrapper({
     return convertCalendarsToGantt(calendarios);
   }, [calendarios]);
 
-  // Use optimistic tasks for critical path calculation
-  const criticalPath = useCriticalPath(optimisticTasks, baseGanttData.dependencies, {
+  // Critical path uses LOCAL tasks (the controller's source of truth)
+  const criticalPath = useCriticalPath(localTasks, baseGanttData.dependencies, {
     nearCriticalThreshold: 5
   });
 
@@ -96,26 +96,84 @@ export function VisionGanttWrapper({
     return new Map(atividades.map(a => [a.id, a]));
   }, [atividades]);
 
-  // Handle task update - OPTIMISTICALLY update local cache, then sync to external store
+  // Handle single task update from controller
   const handleTaskUpdate = useCallback((task: Task) => {
-    // Optimistically update our local cache IMMEDIATELY
-    // This prevents the reducer from being reset by stale props
-    setOptimisticTasks(prev => {
-      const index = prev.findIndex(t => t.id === task.id);
-      if (index === -1) return prev;
-      const updated = [...prev];
-      updated[index] = task;
-      return updated;
-    });
+    console.log('[VisionGanttWrapper] handleTaskUpdate:', task.id, task.name, 'parentId:', task.parentId, 'level:', task.level);
     
-    // Then sync to external store
+    // CRITICAL: Update local cache FIRST to maintain source of truth
+    setLocalTasks(prevTasks => prevTasks.map(t => t.id === task.id ? { ...t, ...task } : t));
+    
     const originalAtividade = atividadeMap.get(task.id);
     if (!originalAtividade || !onAtividadeUpdate) return;
 
-    const changes = detectTaskChanges(originalAtividade, task);
+    // Build changes object manually
+    const changes: Partial<AtividadeMock> = {};
+    
+    // Check hierarchy changes
+    if ((task.parentId ?? undefined) !== originalAtividade.parent_id) {
+      changes.parent_id = task.parentId ?? undefined;
+    }
+    if (task.wbs !== originalAtividade.edt) {
+      changes.edt = task.wbs;
+    }
+    if (Boolean(task.isGroup) !== (originalAtividade.tipo === 'Fase')) {
+      changes.tipo = task.isGroup ? 'Fase' : (task.isMilestone ? 'Marco' : 'Tarefa');
+    }
+    
+    // Check date changes
+    if (task.startDate && task.startDate.getTime() !== new Date(originalAtividade.data_inicio).getTime()) {
+      changes.data_inicio = task.startDate.toISOString().split('T')[0];
+    }
+    if (task.endDate && task.endDate.getTime() !== new Date(originalAtividade.data_fim).getTime()) {
+      changes.data_fim = task.endDate.toISOString().split('T')[0];
+    }
+    
+    // Check progress
+    if (task.progress !== originalAtividade.progresso) {
+      changes.progresso = task.progress ?? 0;
+    }
+
     if (Object.keys(changes).length > 0) {
       const updatedAtividade = ganttTaskToAtividade(task, projetoId, originalAtividade);
+      console.log('[VisionGanttWrapper] Syncing changes to external store:', changes);
       onAtividadeUpdate(updatedAtividade, changes);
+    }
+  }, [atividadeMap, projetoId, onAtividadeUpdate]);
+
+  // Handle batch task changes from controller (for hierarchy operations like indent/outdent)
+  const handleTasksChange = useCallback((tasks: Task[]) => {
+    console.log('[VisionGanttWrapper] handleTasksChange: batch of', tasks.length, 'tasks');
+    
+    // CRITICAL: Update local cache FIRST before syncing to external store
+    // This ensures the controller always has the latest hierarchy data
+    setLocalTasks(prevTasks => {
+      const taskMap = new Map(tasks.map(t => [t.id, t]));
+      return prevTasks.map(t => taskMap.get(t.id) || t);
+    });
+    
+    if (!onAtividadeUpdate) return;
+    
+    // Sync each changed task to external store (one-way, won't cause reset)
+    for (const task of tasks) {
+      const originalAtividade = atividadeMap.get(task.id);
+      if (!originalAtividade) continue;
+
+      const changes: Partial<AtividadeMock> = {};
+      
+      if ((task.parentId ?? undefined) !== originalAtividade.parent_id) {
+        changes.parent_id = task.parentId ?? undefined;
+      }
+      if (task.wbs !== originalAtividade.edt) {
+        changes.edt = task.wbs;
+      }
+      if (Boolean(task.isGroup) !== (originalAtividade.tipo === 'Fase')) {
+        changes.tipo = task.isGroup ? 'Fase' : (task.isMilestone ? 'Marco' : 'Tarefa');
+      }
+
+      if (Object.keys(changes).length > 0) {
+        const updatedAtividade = ganttTaskToAtividade(task, projetoId, originalAtividade);
+        onAtividadeUpdate(updatedAtividade, changes);
+      }
     }
   }, [atividadeMap, projetoId, onAtividadeUpdate]);
 
@@ -133,7 +191,7 @@ export function VisionGanttWrapper({
     onDependenciaCreate(dependencia);
   }, [onDependenciaCreate]);
 
-  const handleDependencyDelete = useCallback((depId: string) => {
+  const _handleDependencyDelete = useCallback((depId: string) => {
     if (!onDependenciaDelete) return;
     onDependenciaDelete(depId);
   }, [onDependenciaDelete]);
@@ -257,8 +315,8 @@ export function VisionGanttWrapper({
         </div>
       </div>
 
-      <GanttChart
-        tasks={optimisticTasks}
+      <GanttChartV2
+        tasks={localTasks}
         dependencies={baseGanttData.dependencies}
         resources={baseGanttData.resources}
         calendars={ganttCalendars}
@@ -272,9 +330,9 @@ export function VisionGanttWrapper({
         enableResize={true}
         enableDependencyCreation={true}
         onTaskUpdate={handleTaskUpdate}
+        onTasksChange={handleTasksChange}
         onTaskClick={handleTaskClick}
         onDependencyCreate={handleDependencyCreate}
-        onDependencyDelete={handleDependencyDelete}
         onDependencyClick={handleDependencyClick}
         onViewPresetChange={setViewPreset}
         criticalPathIds={criticalPath.criticalPathIds}
