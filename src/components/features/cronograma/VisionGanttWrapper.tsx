@@ -1,7 +1,6 @@
 import { useMemo, useCallback, useState } from 'react';
 import { GanttChart, useCriticalPath } from '../../../lib/vision-gantt';
 import type { Task, Dependency, ViewPreset } from '../../../lib/vision-gantt/types';
-import type { HierarchyChange } from '../../../lib/vision-gantt';
 import { 
   createGanttDataSync, 
   ganttTaskToAtividade,
@@ -51,8 +50,6 @@ export function VisionGanttWrapper({
 }: VisionGanttWrapperProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
   
-  const [hierarchyMap, setHierarchyMap] = useState<Map<string, { parentId: string | null; level: number }>>(new Map());
-  
   const [editDependencyModal, setEditDependencyModal] = useState<{
     open: boolean;
     dependency: Dependency | null;
@@ -65,40 +62,9 @@ export function VisionGanttWrapper({
     toTask: null,
   });
   
-  const handleHierarchyChange = useCallback((changes: HierarchyChange[]) => {
-    setHierarchyMap(prevMap => {
-      const newMap = new Map(prevMap);
-      changes.forEach(change => {
-        newMap.set(change.taskId, {
-          parentId: change.newParentId,
-          level: change.newLevel
-        });
-      });
-      return newMap;
-    });
-  }, []);
-  
-  const atividadesWithHierarchy = useMemo(() => {
-    if (hierarchyMap.size === 0) {
-      return atividades;
-    }
-    
-    return atividades.map(a => {
-      const hierarchy = hierarchyMap.get(a.id);
-      if (hierarchy) {
-        return {
-          ...a,
-          parent_id: hierarchy.parentId ?? undefined,
-          nivel: hierarchy.level
-        };
-      }
-      return a;
-    });
-  }, [atividades, hierarchyMap]);
-  
   const ganttData = useMemo(() => {
-    return createGanttDataSync(atividadesWithHierarchy, dependencias, resources, allocations);
-  }, [atividadesWithHierarchy, dependencias, resources, allocations]);
+    return createGanttDataSync(atividades, dependencias, resources, allocations);
+  }, [atividades, dependencias, resources, allocations]);
 
   const ganttCalendars = useMemo(() => {
     return convertCalendarsToGantt(calendarios);
@@ -282,7 +248,6 @@ export function VisionGanttWrapper({
         onDependencyDelete={handleDependencyDelete}
         onDependencyClick={handleDependencyClick}
         onViewPresetChange={setViewPreset}
-        onHierarchyChange={handleHierarchyChange}
         criticalPathIds={criticalPath.criticalPathIds}
         nearCriticalPathIds={criticalPath.nearCriticalPathIds}
         violationTaskIds={criticalPath.violations.map(v => v.toTaskId)}

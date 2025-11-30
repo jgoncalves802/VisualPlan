@@ -24,12 +24,6 @@ import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
 import { Settings2, Layers, ChevronDown, Flag, AlertTriangle, GripVertical } from 'lucide-react';
 
-export interface HierarchyChange {
-  taskId: string;
-  newParentId: string | null;
-  newLevel: number;
-}
-
 export interface GanttChartProps extends GanttConfig {
   className?: string;
   gridWidth?: number;
@@ -40,7 +34,6 @@ export interface GanttChartProps extends GanttConfig {
   conflictTaskIds?: string[];
   projectName?: string;
   onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
-  onHierarchyChange?: (changes: HierarchyChange[]) => void;
 }
 
 export function GanttChart({
@@ -65,7 +58,6 @@ export function GanttChart({
   onDependencyDelete,
   onViewPresetChange,
   onDependencyClick,
-  onHierarchyChange,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -295,15 +287,6 @@ export function GanttChart({
       : taskStore.indentTask(taskIds[0]);
       
     if (success) {
-      if (onHierarchyChange) {
-        const changes: HierarchyChange[] = taskStore.getAll().map(t => ({
-          taskId: t.id,
-          newParentId: t.parentId ?? null,
-          newLevel: t.level ?? 0
-        }));
-        onHierarchyChange(changes);
-      }
-      
       taskIds.forEach(id => {
         const updatedTask = taskStore.getTaskById(id);
         if (updatedTask) {
@@ -311,7 +294,7 @@ export function GanttChart({
         }
       });
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onHierarchyChange, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
 
   const handleOutdentTask = useCallback(() => {
     const taskIds = selectedTaskIds.length > 0 ? selectedTaskIds : (selectedTaskId ? [selectedTaskId] : []);
@@ -322,15 +305,6 @@ export function GanttChart({
       : taskStore.outdentTask(taskIds[0]);
       
     if (success) {
-      if (onHierarchyChange) {
-        const changes: HierarchyChange[] = taskStore.getAll().map(t => ({
-          taskId: t.id,
-          newParentId: t.parentId ?? null,
-          newLevel: t.level ?? 0
-        }));
-        onHierarchyChange(changes);
-      }
-      
       taskIds.forEach(id => {
         const updatedTask = taskStore.getTaskById(id);
         if (updatedTask) {
@@ -338,7 +312,7 @@ export function GanttChart({
         }
       });
     }
-  }, [selectedTaskId, selectedTaskIds, taskStore, onHierarchyChange, onTaskUpdate]);
+  }, [selectedTaskId, selectedTaskIds, taskStore, onTaskUpdate]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

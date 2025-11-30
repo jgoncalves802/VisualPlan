@@ -23,7 +23,7 @@
 
 // Main components
 export { GanttChart } from './components/gantt-chart';
-export type { GanttChartProps, HierarchyChange } from './components/gantt-chart';
+export type { GanttChartProps } from './components/gantt-chart';
 
 // Sub-components (for advanced usage)
 export {

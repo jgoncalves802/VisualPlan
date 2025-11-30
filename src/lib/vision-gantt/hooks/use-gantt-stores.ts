@@ -1,6 +1,10 @@
 
 /**
  * Hook to access Gantt stores with React state synchronization
+ * 
+ * IMPORTANT: This hook uses stable refs to prevent external props from
+ * resetting internal modifications (like indent/outdent). The TaskStore
+ * is only reset when a genuinely new dataset is loaded (different task IDs).
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -15,23 +19,19 @@ export function useGanttStores(
   _initialResources?: Resource[],
   initialCalendars?: WorkingCalendar[]
 ) {
-  // All refs must be declared at the top, before any conditional code
-  const taskStoreRef = useRef<TaskStore>();
-  const dependencyStoreRef = useRef<DependencyStore>();
-  const calendarStoreRef = useRef<CalendarStore>();
-  const initialTaskIdsRef = useRef<Set<string>>(new Set(initialTasks.map(t => t.id)));
-  const initialDepIdsRef = useRef<Set<string>>(new Set(initialDependencies.map(d => d.id)));
+  const taskStoreRef = useRef<TaskStore | null>(null);
+  const dependencyStoreRef = useRef<DependencyStore | null>(null);
+  const calendarStoreRef = useRef<CalendarStore | null>(null);
+  const initializedRef = useRef(false);
+  const lastTaskIdsRef = useRef<string>('');
 
-  // Initialize stores once
-  if (!taskStoreRef.current) {
+  if (!initializedRef.current) {
     taskStoreRef.current = new TaskStore(initialTasks);
     taskStoreRef.current.generateWBSCodes();
-  }
-  if (!dependencyStoreRef.current) {
     dependencyStoreRef.current = new DependencyStore(initialDependencies);
-  }
-  if (!calendarStoreRef.current) {
     calendarStoreRef.current = new CalendarStore(initialCalendars);
+    lastTaskIdsRef.current = initialTasks.map(t => t.id).sort().join(',');
+    initializedRef.current = true;
   }
 
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -42,7 +42,6 @@ export function useGanttStores(
     return calendarStoreRef.current?.getCalendars() ?? [];
   });
 
-  // Subscribe to store changes
   useEffect(() => {
     const taskUnsubscribe = taskStoreRef.current?.subscribe(setTasks);
     const depUnsubscribe = dependencyStoreRef.current?.subscribe(setDependencies);
@@ -57,36 +56,27 @@ export function useGanttStores(
     };
   }, []);
 
-  // Update stores when props change ONLY if task IDs have actually changed (new dataset)
   useEffect(() => {
-    if (taskStoreRef.current) {
-      const newIds = new Set(initialTasks.map(t => t.id));
-      const prevIds = initialTaskIdsRef.current;
-      
-      // Only update if the set of task IDs changed (new project loaded)
-      const idsChanged = newIds.size !== prevIds.size || 
-        ![...newIds].every(id => prevIds.has(id));
-      
-      if (idsChanged) {
-        taskStoreRef.current.setData(initialTasks);
-        taskStoreRef.current.generateWBSCodes();
-        initialTaskIdsRef.current = newIds;
-      }
+    if (!taskStoreRef.current) return;
+    
+    const newTaskIds = initialTasks.map(t => t.id).sort().join(',');
+    
+    if (newTaskIds !== lastTaskIdsRef.current) {
+      console.log('[useGanttStores] New dataset detected, resetting TaskStore');
+      taskStoreRef.current.setData(initialTasks);
+      taskStoreRef.current.generateWBSCodes();
+      lastTaskIdsRef.current = newTaskIds;
     }
   }, [initialTasks]);
 
   useEffect(() => {
-    if (dependencyStoreRef.current) {
-      const newIds = new Set(initialDependencies.map(d => d.id));
-      const prevIds = initialDepIdsRef.current;
-      
-      const idsChanged = newIds.size !== prevIds.size || 
-        ![...newIds].every(id => prevIds.has(id));
-      
-      if (idsChanged) {
-        dependencyStoreRef.current.setData(initialDependencies);
-        initialDepIdsRef.current = newIds;
-      }
+    if (!dependencyStoreRef.current) return;
+    
+    const currentIds = dependencyStoreRef.current.getAll().map(d => d.id).sort().join(',');
+    const newIds = initialDependencies.map(d => d.id).sort().join(',');
+    
+    if (newIds !== currentIds) {
+      dependencyStoreRef.current.setData(initialDependencies);
     }
   }, [initialDependencies]);
 
