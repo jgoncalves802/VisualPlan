@@ -35,7 +35,7 @@ export function TaskBar({
   task,
   position,
   barHeight,
-  barRadius,
+  barRadius: _barRadius,
   isDragging = false,
   isResizing = false,
   isSelected = false,
@@ -361,6 +361,27 @@ export function TaskBar({
         >
           {task.name}
         </text>
+      )}
+
+      {hasViolations && (
+        <g className="gantt-violation-indicator">
+          <polygon
+            points={`${position.x - 8},${activityBarY - 2} ${position.x - 2},${activityBarY - 2} ${position.x - 5},${activityBarY - 8}`}
+            fill="#F59E0B"
+            stroke="white"
+            strokeWidth={0.5}
+          />
+          <text
+            x={position.x - 5}
+            y={activityBarY - 4}
+            fontSize="6"
+            fontWeight="bold"
+            fill="white"
+            textAnchor="middle"
+          >
+            !
+          </text>
+        </g>
       )}
 
       {hasConflicts && (

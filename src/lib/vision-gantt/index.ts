@@ -73,6 +73,30 @@ export {
   useTimelineRange
 } from './hooks';
 
+// Auto-scheduling hook
+export { 
+  useAutoSchedule,
+  getDependencyTypeDescription,
+  getDependencyTypeName
+} from './hooks/use-auto-schedule';
+
+// Critical Path utilities
+export {
+  calculateCriticalPath,
+  calculateSchedule,
+  calculateSuggestedDates,
+  autoScheduleTasks,
+  getCriticalPath,
+  getTaskFloat,
+  isTaskCritical,
+  getViolatingTasks
+} from './utils/critical-path-utils';
+export type { 
+  TaskSchedule, 
+  DependencyViolation, 
+  ScheduleResult 
+} from './utils/critical-path-utils';
+
 // Configuration
 export { VIEW_PRESETS, getViewPreset, getPixelsPerDay } from './config/view-presets';
 export { DEFAULT_COLUMNS } from './config/default-columns';
