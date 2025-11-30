@@ -68,6 +68,8 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (November 2025)
 
+*   **EditDependencyModal**: Created component (`src/components/features/cronograma/EditDependencyModal.tsx`) allowing users to click on dependency arrows to edit dependency type (FS/SS/FF/SF) and lag. Features visual type selection, validated lag input (-365 to 365 days), and delete functionality.
+*   **Dependency Click Handler**: Integrated onDependencyClick handler throughout the component chain (DependencyArrow → GanttTimeline → GanttChart → VisionGanttWrapper) enabling interactive dependency editing.
 *   **Dynamic Critical Path System**: Implemented `useCriticalPath` hook with automatic recalculation when tasks or dependencies change. Includes near-critical path detection (total float ≤ 5 days) with distinct orange visual styling.
 *   **Visual Critical Path Updates**: All Gantt components (TaskBar, DependencyArrow, GanttTimeline, GanttChart) now reactively display critical (red), near-critical (orange), and normal (blue) states.
 *   **Theme Enhancements**: Added `nearCriticalActivity` colors to all three themes (P6 Classic, Dark, Construction).
