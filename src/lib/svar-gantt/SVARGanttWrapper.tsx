@@ -29,6 +29,14 @@ interface SVARLink {
   source: number | string;
   target: number | string;
   type: 'e2s' | 's2s' | 'e2e' | 's2e';
+  lag?: number;
+}
+
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 interface SVARScale {
@@ -85,6 +93,7 @@ function dependenciaToSVARLink(dep: DependenciaAtividade): SVARLink {
     source: dep.atividade_origem_id,
     target: dep.atividade_destino_id,
     type: DEPENDENCY_TYPE_MAP[dep.tipo] || 'e2s',
+    lag: dep.lag_dias ?? 0,
   };
 }
 
@@ -105,9 +114,8 @@ function svarTaskToAtividade(
     tipo: task.type === 'milestone' ? 'Marco' : 
           task.type === 'summary' ? 'Fase' : 'Tarefa',
     parent_id: task.parent ? String(task.parent) : undefined,
-    data_inicio: task.start.toISOString().split('T')[0],
-    data_fim: task.end ? task.end.toISOString().split('T')[0] : 
-              task.start.toISOString().split('T')[0],
+    data_inicio: formatDateLocal(task.start),
+    data_fim: task.end ? formatDateLocal(task.end) : formatDateLocal(task.start),
     duracao_dias: task.duration,
     progresso: task.progress,
     status: original?.status || 'A Fazer',
@@ -182,13 +190,13 @@ export function SVARGanttWrapper({
         changes.nome = task.text;
       }
       if (task.start) {
-        const newStart = task.start.toISOString().split('T')[0];
+        const newStart = formatDateLocal(task.start);
         if (newStart !== original.data_inicio) {
           changes.data_inicio = newStart;
         }
       }
       if (task.end) {
-        const newEnd = task.end.toISOString().split('T')[0];
+        const newEnd = formatDateLocal(task.end);
         if (newEnd !== original.data_fim) {
           changes.data_fim = newEnd;
         }
@@ -226,8 +234,8 @@ export function SVARGanttWrapper({
         id: `dep-${Date.now()}`,
         atividade_origem_id: String(link.source),
         atividade_destino_id: String(link.target),
-        tipo: DEPENDENCY_TYPE_REVERSE[link.type] || 'FS',
-        lag_dias: 0,
+        tipo: DEPENDENCY_TYPE_REVERSE[link.type] || TipoDependencia.FS,
+        lag_dias: link.lag || 0,
       };
       onDependenciaCreate(dep);
     });
@@ -237,7 +245,7 @@ export function SVARGanttWrapper({
       
       const { id, link } = ev;
       onDependenciaUpdate(String(id), {
-        tipo: DEPENDENCY_TYPE_REVERSE[link.type] || 'FS',
+        tipo: DEPENDENCY_TYPE_REVERSE[link.type] || TipoDependencia.FS,
         lag_dias: link.lag || 0,
       });
     });
