@@ -6,7 +6,6 @@
 
 
 
-import React from 'react';
 import type { Dependency, Task } from '../types';
 
 interface DependencyArrowProps {
@@ -42,7 +41,6 @@ function calculateOrthogonalPath(
   
   // Calculate intermediate points for orthogonal path
   const midPoint1X = from.x + horizontalOffset;
-  const midPoint2X = to.x - horizontalOffset;
   
   // Check if we need horizontal offset
   const needsHorizontalOffset = from.x + horizontalOffset * 2 >= to.x;

@@ -64,15 +64,15 @@ export function TimelineHeader({
         const isTopLevel = levelIndex === 0;
         const bottomLevelTicks = scales[scales.length - 1].ticks;
 
-        // P6-style gradient backgrounds
+        // P6-style gradient backgrounds - Clean gray/neutral theme
         const getLayerBackground = () => {
           if (isTopLevel) {
-            return 'linear-gradient(180deg, #1E40AF 0%, #1E3A8A 100%)';
+            return 'linear-gradient(180deg, #6B7280 0%, #4B5563 100%)'; // Gray header like P6
           }
           if (isBottomLevel) {
-            return 'linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)';
+            return 'linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)'; // White bottom
           }
-          return 'linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)';
+          return 'linear-gradient(180deg, #9CA3AF 0%, #6B7280 100%)'; // Mid gray
         };
 
         return (
@@ -83,9 +83,9 @@ export function TimelineHeader({
               height: layerHeight,
               background: getLayerBackground(),
               borderBottom: isBottomLevel 
-                ? '2px solid #1E3A8A' 
+                ? '2px solid #D1D5DB' 
                 : '1px solid rgba(255,255,255,0.2)',
-              boxShadow: isBottomLevel ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+              boxShadow: isBottomLevel ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
             }}
           >
             {ticks.map((tick, tickIndex) => {

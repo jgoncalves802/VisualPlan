@@ -35,22 +35,43 @@ interface TaskBarProps {
 }
 
 /**
- * P6-style color scheme based on task status and critical path
+ * P6-style color scheme based on task hierarchy and critical path
+ * Project = Green bars, WBS = Yellow bars, Activities = Blue (normal) or Red (critical)
  */
-function getTaskColors(task: Task, isCritical: boolean): { fill: string; stroke: string; progress: string } {
-  if (isCritical) {
+function getTaskColors(task: Task, isCritical: boolean): { fill: string; stroke: string; progress: string; isProject: boolean; isWBS: boolean } {
+  const level = (task as any)?.level ?? 0;
+  const isParent = hasChildren(task);
+  
+  // Project level (level 0 parent) - Green like P6
+  if (isParent && level === 0) {
     return {
-      fill: '#DC2626', // Red for critical
-      stroke: '#991B1B',
-      progress: '#FCA5A5'
+      fill: '#16A34A',
+      stroke: '#15803D',
+      progress: '#86EFAC',
+      isProject: true,
+      isWBS: false
+    };
+  }
+  
+  // WBS level (level 1+ parent) - Dark gold/yellow like P6
+  if (isParent) {
+    return {
+      fill: '#B45309', // Dark amber/gold for WBS bars like P6
+      stroke: '#92400E',
+      progress: '#FCD34D',
+      isProject: false,
+      isWBS: true
     };
   }
 
-  if (hasChildren(task)) {
+  // Critical path activities - Red
+  if (isCritical) {
     return {
-      fill: '#1E40AF', // Dark blue for summary
-      stroke: '#1E3A8A',
-      progress: '#60A5FA'
+      fill: '#DC2626',
+      stroke: '#B91C1C',
+      progress: '#FCA5A5',
+      isProject: false,
+      isWBS: false
     };
   }
 
@@ -59,29 +80,37 @@ function getTaskColors(task: Task, isCritical: boolean): { fill: string; stroke:
   switch (status) {
     case 'completed':
       return {
-        fill: '#059669', // Green
+        fill: '#059669',
         stroke: '#047857',
-        progress: '#6EE7B7'
+        progress: '#6EE7B7',
+        isProject: false,
+        isWBS: false
       };
     case 'in_progress':
     case 'in-progress':
       return {
-        fill: '#2563EB', // Blue
+        fill: '#2563EB',
         stroke: '#1D4ED8',
-        progress: '#93C5FD'
+        progress: '#93C5FD',
+        isProject: false,
+        isWBS: false
       };
     case 'on_hold':
     case 'on-hold':
       return {
-        fill: '#D97706', // Amber
+        fill: '#D97706',
         stroke: '#B45309',
-        progress: '#FCD34D'
+        progress: '#FCD34D',
+        isProject: false,
+        isWBS: false
       };
     default:
       return {
-        fill: '#6B7280', // Gray
-        stroke: '#4B5563',
-        progress: '#D1D5DB'
+        fill: '#2563EB', // Default blue for normal activities
+        stroke: '#1D4ED8',
+        progress: '#93C5FD',
+        isProject: false,
+        isWBS: false
       };
   }
 }
@@ -197,11 +226,12 @@ export function TaskBar({
   }
 
   // ===========================================
-  // SUMMARY TASK (Parent with Children) - P6 Bracket Style
+  // SUMMARY TASK (Parent with Children) - P6 Style with thin line and diamond endpoints
   // ===========================================
   if (hasChildren(task)) {
-    const bracketHeight = 6;
-    const bracketWidth = 8;
+    const centerY = position.y + barHeight / 2;
+    const diamondSize = 6;
+    const lineHeight = 4;
 
     return (
       <g
@@ -218,15 +248,6 @@ export function TaskBar({
           height={barHeight + 10}
           fill="transparent"
           pointerEvents="all"
-        />
-
-        {/* Main summary bar */}
-        <rect
-          x={position.x}
-          y={position.y + barHeight / 2 - 3}
-          width={position.width}
-          height={6}
-          fill={colors.fill}
           onClick={(e) => {
             e.stopPropagation();
             onClick?.(task);
@@ -234,51 +255,60 @@ export function TaskBar({
           style={{ cursor: 'pointer' }}
         />
 
-        {/* Left bracket */}
-        <path
-          d={`M ${position.x} ${position.y} 
-              L ${position.x} ${position.y + barHeight} 
-              L ${position.x + bracketWidth} ${position.y + barHeight}`}
-          fill="none"
-          stroke={colors.fill}
-          strokeWidth={3}
-          strokeLinecap="round"
+        {/* Main thin bar - P6 style */}
+        <rect
+          x={position.x + diamondSize}
+          y={centerY - lineHeight / 2}
+          width={Math.max(0, position.width - diamondSize * 2)}
+          height={lineHeight}
+          fill={colors.fill}
         />
 
-        {/* Right bracket */}
-        <path
-          d={`M ${position.x + position.width} ${position.y} 
-              L ${position.x + position.width} ${position.y + barHeight} 
-              L ${position.x + position.width - bracketWidth} ${position.y + barHeight}`}
-          fill="none"
-          stroke={colors.fill}
-          strokeWidth={3}
-          strokeLinecap="round"
+        {/* Left diamond endpoint */}
+        <polygon
+          points={`
+            ${position.x + diamondSize},${centerY - diamondSize}
+            ${position.x + diamondSize * 2},${centerY}
+            ${position.x + diamondSize},${centerY + diamondSize}
+            ${position.x},${centerY}
+          `}
+          fill={colors.fill}
+        />
+
+        {/* Right diamond endpoint */}
+        <polygon
+          points={`
+            ${position.x + position.width - diamondSize},${centerY - diamondSize}
+            ${position.x + position.width},${centerY}
+            ${position.x + position.width - diamondSize},${centerY + diamondSize}
+            ${position.x + position.width - diamondSize * 2},${centerY}
+          `}
+          fill={colors.fill}
         />
 
         {/* Progress overlay */}
         {progress > 0 && (
           <rect
-            x={position.x}
-            y={position.y + barHeight / 2 - 3}
-            width={Math.max(0, position.width * (progress / 100))}
-            height={6}
+            x={position.x + diamondSize}
+            y={centerY - lineHeight / 2}
+            width={Math.max(0, (position.width - diamondSize * 2) * (progress / 100))}
+            height={lineHeight}
             fill={colors.progress}
             pointerEvents="none"
           />
         )}
 
-        {/* Label on top */}
+        {/* Label to the right */}
         {showLabels && (
           <text
-            x={position.x + 4}
-            y={position.y - 4}
+            x={position.x + position.width + 8}
+            y={centerY + 4}
             fontSize="11"
-            fontWeight="700"
-            fill={colors.fill}
+            fontWeight="600"
+            fill="#374151"
             style={{ pointerEvents: 'none' }}
           >
-            {task?.name?.substring(0, 30)}{(task?.name?.length ?? 0) > 30 ? '...' : ''}
+            {task?.name?.substring(0, 25)}{(task?.name?.length ?? 0) > 25 ? '...' : ''}
           </text>
         )}
 
@@ -287,7 +317,7 @@ export function TaskBar({
           <>
             <circle
               cx={position.x}
-              cy={position.y + barHeight / 2}
+              cy={centerY}
               r={5}
               fill="#1E40AF"
               stroke="white"
@@ -300,7 +330,7 @@ export function TaskBar({
             />
             <circle
               cx={position.x + position.width}
-              cy={position.y + barHeight / 2}
+              cy={centerY}
               r={5}
               fill="#1E40AF"
               stroke="white"

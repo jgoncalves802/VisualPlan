@@ -97,13 +97,13 @@ export function GanttGrid({
         />
       )}
 
-      {/* P6-Style Header */}
+      {/* P6-Style Header - Gray like Primavera P6 */}
       <div
         className="gantt-grid-header flex sticky top-0 z-10"
         style={{ 
           height: actualHeaderHeight,
-          background: 'linear-gradient(180deg, #1E40AF 0%, #1E3A8A 100%)',
-          borderBottom: '2px solid #1E3A8A',
+          background: 'linear-gradient(180deg, #6B7280 0%, #4B5563 100%)',
+          borderBottom: '2px solid #4B5563',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}
       >
@@ -173,22 +173,27 @@ export function GanttGrid({
           const isCritical = criticalPathIds.includes(task?.id ?? '');
           const level = task?.level ?? 0;
           
-          // P6-style row backgrounds
+          // P6-style row backgrounds - Project (green), WBS (yellow), Activity (white/gray)
           const getRowBackgroundColor = () => {
-            if (isGroup && level === 0) return '#1E40AF'; // Top-level group - blue
-            if (isGroup) return '#3B82F6'; // Sub-group - lighter blue
+            // Check if it's a Project level (level 0 group)
+            if (isGroup && level === 0) return '#16A34A'; // Project - green like P6
+            // Check if it's a WBS level (level 1+ group)
+            if (isGroup) return '#FACC15'; // WBS - yellow like P6
             if (isSelected) return '#DBEAFE'; // Selected row
             if (isCritical) return '#FEF2F2'; // Critical path - light red
-            return isEven ? '#FFFFFF' : '#F9FAFB';
+            return isEven ? '#FFFFFF' : '#F8FAFC';
           };
 
           const getTextColor = () => {
-            if (isGroup) return '#FFFFFF';
+            if (isGroup && level === 0) return '#FFFFFF'; // White for Project
+            if (isGroup) return '#1F2937'; // Dark for WBS (yellow bg)
             return '#1F2937';
           };
 
           const getBorderColor = () => {
             if (isCritical && !isGroup) return '#FCA5A5';
+            if (isGroup && level === 0) return '#15803D'; // Darker green for project
+            if (isGroup) return '#EAB308'; // Darker yellow for WBS
             return '#E5E7EB';
           };
           
