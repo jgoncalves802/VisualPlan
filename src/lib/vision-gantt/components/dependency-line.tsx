@@ -6,7 +6,7 @@
 
 
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Dependency, Task, TaskBarPosition } from '../types';
 import { calculateDependencyPoints, generateDependencyPath } from '../utils';
 

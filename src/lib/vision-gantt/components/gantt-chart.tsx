@@ -22,7 +22,7 @@ import { useColumnResize } from '../hooks/use-column-resize';
 import { getPixelsPerDay, getViewPreset, VIEW_PRESETS } from '../config/view-presets';
 import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
-import { Settings2, Layers, ChevronDown, Flag, AlertTriangle, GripVertical } from 'lucide-react';
+import { Settings2, Layers, ChevronDown, Flag, AlertTriangle } from 'lucide-react';
 
 export interface GanttChartProps extends GanttConfig {
   className?: string;
@@ -53,9 +53,9 @@ export function GanttChart({
   enableDependencyCreation = false,
   onTaskUpdate,
   onTaskClick,
-  onTaskDoubleClick,
+  onTaskDoubleClick: _onTaskDoubleClick,
   onDependencyCreate,
-  onDependencyDelete,
+  onDependencyDelete: _onDependencyDelete,
   onViewPresetChange,
   onDependencyClick,
   className = '',
@@ -68,7 +68,7 @@ export function GanttChart({
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>();
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
-  const [dependencyMode, setDependencyMode] = useState(enableDependencyCreation);
+  const [dependencyMode, _setDependencyMode] = useState(enableDependencyCreation);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [customPresetConfig, setCustomPresetConfig] = useState<ViewPresetConfig | null>(null);
   const [showLegend, setShowLegend] = useState(true);
@@ -95,7 +95,7 @@ export function GanttChart({
     minTimelineWidth: 200
   });
 
-  const { taskStore, dependencyStore, calendarStore, tasks, dependencies, calendars } = useGanttStores(
+  const { taskStore, dependencyStore, calendarStore: _calendarStore, tasks: _tasks, dependencies, calendars: _calendars } = useGanttStores(
     initialTasks,
     initialDependencies,
     initialResources,
@@ -139,10 +139,10 @@ export function GanttChart({
   });
 
   const {
-    creationState,
-    startCreation,
-    completeCreation,
-    cancelCreation
+    creationState: _creationState,
+    startCreation: _startCreation,
+    completeCreation: _completeCreation,
+    cancelCreation: _cancelCreation
   } = useDependencyCreation({
     onDependencyCreate: (fromId, toId, type) => {
       const success = dependencyStore.createDependency(fromId, toId, type);

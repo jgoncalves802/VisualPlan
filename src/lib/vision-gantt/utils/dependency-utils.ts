@@ -1,22 +1,23 @@
 
 /**
  * Dependency calculation and path generation utilities
+ * Enhanced with SVAR-inspired orthogonal routing
  */
 
-import type { Task, Dependency, DependencyType, Point } from '../types';
+import type { Dependency, DependencyType, Point } from '../types';
 
 /**
  * Calculate dependency end points based on dependency type
  */
 export function calculateDependencyPoints(
-  fromTask: Task,
-  toTask: Task,
+  _fromTask: unknown,
+  _toTask: unknown,
   type: DependencyType,
   fromRect: { x: number; y: number; width: number; height: number },
   toRect: { x: number; y: number; width: number; height: number }
 ): { start: Point; end: Point } {
   const centerY = fromRect.height / 2;
-  const HANDLE_OFFSET = 8; // Offset dos handles para fora da barra (mesmo valor usado no task-bar.tsx)
+  const HANDLE_OFFSET = 8;
   
   switch (type) {
     case 'FS': // Finish to Start
@@ -48,57 +49,97 @@ export function calculateDependencyPoints(
 }
 
 /**
- * Generate SVG path for dependency line with orthogonal routing (Bryntum/DHTMLX style)
- * Creates clear, defined paths with right-angle corners
+ * Generate SVG path for dependency line with SVAR-style orthogonal routing
+ * Uses smooth corners with rounded bends for professional appearance
  */
 export function generateDependencyPath(start: Point, end: Point): string {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   
-  // Horizontal spacing for routing
-  const horizontalGap = 15; // Minimum gap before turning
-  const verticalOffset = 30; // Offset for routing around tasks
+  const horizontalGap = 12;
+  const cornerRadius = 6;
   
-  if (dx > horizontalGap) {
-    // Target is to the right - simple orthogonal path
+  if (Math.abs(dy) < 3) {
+    return `M ${start.x},${start.y} L ${end.x},${end.y}`;
+  }
+  
+  if (dx > horizontalGap * 2) {
     const midX = start.x + dx / 2;
-    
-    if (Math.abs(dy) < 5) {
-      // Same row - straight line
-      return `M ${start.x},${start.y} L ${end.x},${end.y}`;
-    } else {
-      // Different rows - orthogonal routing with sharp corners
-      return `M ${start.x},${start.y} L ${midX},${start.y} L ${midX},${end.y} L ${end.x},${end.y}`;
-    }
-  } else {
-    // Target is to the left or very close - route around
-    // This creates the "S" or "Z" shaped path seen in professional Gantt charts
-    const rightExtend = start.x + horizontalGap;
-    const leftExtend = end.x - horizontalGap;
+    const r = Math.min(cornerRadius, Math.abs(dy) / 2, Math.abs(dx) / 4);
     
     if (dy > 0) {
-      // Target is below - route downward
-      const midY1 = start.y + verticalOffset;
-      const midY2 = end.y - verticalOffset;
-      
       return `M ${start.x},${start.y} 
-              L ${rightExtend},${start.y} 
-              L ${rightExtend},${midY1} 
-              L ${leftExtend},${midY2} 
-              L ${leftExtend},${end.y} 
+              L ${midX - r},${start.y} 
+              Q ${midX},${start.y} ${midX},${start.y + r}
+              L ${midX},${end.y - r}
+              Q ${midX},${end.y} ${midX + r},${end.y}
               L ${end.x},${end.y}`;
     } else {
-      // Target is above - route upward
-      const midY1 = start.y - verticalOffset;
-      const midY2 = end.y + verticalOffset;
-      
       return `M ${start.x},${start.y} 
-              L ${rightExtend},${start.y} 
-              L ${rightExtend},${midY1} 
-              L ${leftExtend},${midY2} 
-              L ${leftExtend},${end.y} 
+              L ${midX - r},${start.y} 
+              Q ${midX},${start.y} ${midX},${start.y - r}
+              L ${midX},${end.y + r}
+              Q ${midX},${end.y} ${midX + r},${end.y}
               L ${end.x},${end.y}`;
     }
+  } else {
+    const rightExtend = start.x + horizontalGap;
+    const leftExtend = end.x - horizontalGap;
+    const r = Math.min(cornerRadius, Math.abs(dy) / 4);
+    
+    if (dy > 0) {
+      const midY = (start.y + end.y) / 2;
+      
+      return `M ${start.x},${start.y} 
+              L ${rightExtend - r},${start.y} 
+              Q ${rightExtend},${start.y} ${rightExtend},${start.y + r}
+              L ${rightExtend},${midY - r}
+              Q ${rightExtend},${midY} ${rightExtend - r},${midY}
+              L ${leftExtend + r},${midY}
+              Q ${leftExtend},${midY} ${leftExtend},${midY + r}
+              L ${leftExtend},${end.y - r}
+              Q ${leftExtend},${end.y} ${leftExtend + r},${end.y}
+              L ${end.x},${end.y}`;
+    } else {
+      const midY = (start.y + end.y) / 2;
+      
+      return `M ${start.x},${start.y} 
+              L ${rightExtend - r},${start.y} 
+              Q ${rightExtend},${start.y} ${rightExtend},${start.y - r}
+              L ${rightExtend},${midY + r}
+              Q ${rightExtend},${midY} ${rightExtend - r},${midY}
+              L ${leftExtend + r},${midY}
+              Q ${leftExtend},${midY} ${leftExtend},${midY - r}
+              L ${leftExtend},${end.y + r}
+              Q ${leftExtend},${end.y} ${leftExtend + r},${end.y}
+              L ${end.x},${end.y}`;
+    }
+  }
+}
+
+/**
+ * Generate polyline points for SVAR-style dependency arrows
+ * Returns points string for use with SVG polyline element
+ */
+export function generateDependencyPolyline(start: Point, end: Point): string {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  
+  const horizontalGap = 12;
+  
+  if (Math.abs(dy) < 3) {
+    return `${start.x},${start.y} ${end.x},${end.y}`;
+  }
+  
+  if (dx > horizontalGap * 2) {
+    const midX = start.x + dx / 2;
+    return `${start.x},${start.y} ${midX},${start.y} ${midX},${end.y} ${end.x},${end.y}`;
+  } else {
+    const rightExtend = start.x + horizontalGap;
+    const leftExtend = end.x - horizontalGap;
+    const midY = (start.y + end.y) / 2;
+    
+    return `${start.x},${start.y} ${rightExtend},${start.y} ${rightExtend},${midY} ${leftExtend},${midY} ${leftExtend},${end.y} ${end.x},${end.y}`;
   }
 }
 

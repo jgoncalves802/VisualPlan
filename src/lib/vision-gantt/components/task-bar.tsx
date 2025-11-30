@@ -102,7 +102,11 @@ export function TaskBar({
   if (task?.isMilestone || duration === 0) {
     const centerX = position.x;
     const centerY = position.y + barHeight / 2;
-    const size = Math.min(barHeight * 0.5, 10);
+    const size = Math.min(barHeight * 0.55, 12);
+
+    const milestoneColor = isCritical 
+      ? themeColors.milestone.fillCritical 
+      : (isNearCritical ? '#F97316' : themeColors.milestone.fill);
 
     return (
       <g
@@ -112,18 +116,33 @@ export function TaskBar({
         onMouseEnter={() => { setIsHovered(true); setShowHandles(true); }}
         onMouseLeave={() => { setIsHovered(false); setShowHandles(false); }}
       >
+        <defs>
+          <filter id={`milestone-shadow-${task.id}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.25"/>
+          </filter>
+          <linearGradient id={`milestone-gradient-${task.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={milestoneColor} stopOpacity="1"/>
+            <stop offset="100%" stopColor={milestoneColor} stopOpacity="0.8"/>
+          </linearGradient>
+        </defs>
+        
         <polygon
           points={`${centerX},${centerY - size} ${centerX + size},${centerY} ${centerX},${centerY + size} ${centerX - size},${centerY}`}
-          fill={isCritical ? themeColors.milestone.fillCritical : themeColors.milestone.fill}
-          stroke={isSelected ? themeColors.selection : themeColors.milestone.stroke}
-          strokeWidth={isSelected ? 2 : 1}
-          style={{ transition: 'all 0.15s ease' }}
+          fill={`url(#milestone-gradient-${task.id})`}
+          stroke={isSelected ? themeColors.selection : (isHovered ? milestoneColor : themeColors.milestone.stroke)}
+          strokeWidth={isSelected ? 2.5 : (isHovered ? 1.5 : 1)}
+          filter={isHovered ? `url(#milestone-shadow-${task.id})` : undefined}
+          style={{ 
+            transition: 'all 0.2s ease',
+            transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+            transformOrigin: `${centerX}px ${centerY}px`
+          }}
         />
 
         {showLabels && (
           <text
-            x={centerX + size + 6}
-            y={centerY + 3}
+            x={centerX + size + 8}
+            y={centerY + 4}
             fontSize={theme.typography.taskLabel.fontSize}
             fontWeight={theme.typography.taskLabel.fontWeight}
             fill={themeColors.grid.rowEven === '#FFFFFF' ? '#374151' : '#E5E7EB'}
@@ -136,7 +155,7 @@ export function TaskBar({
         {showHandles && (
           <>
             <circle
-              cx={centerX - size - 3}
+              cx={centerX - size - 5}
               cy={centerY}
               r={DEPENDENCY_HANDLE_SIZE}
               fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
@@ -146,7 +165,7 @@ export function TaskBar({
               onMouseDown={(e) => { e.stopPropagation(); onDependencyDragStart?.(task, 'start', e); }}
             />
             <circle
-              cx={centerX + size + 3}
+              cx={centerX + size + 5}
               cy={centerY}
               r={DEPENDENCY_HANDLE_SIZE}
               fill={isDependencyDragTarget ? themeColors.handleHover : themeColors.handle}
@@ -161,16 +180,19 @@ export function TaskBar({
         {isHovered && tooltipContent && (
           <g className="gantt-tooltip" style={{ pointerEvents: 'none' }}>
             <rect
-              x={centerX - 60}
-              y={centerY - size - 35}
-              width={120}
-              height={28}
-              rx={4}
+              x={centerX - 70}
+              y={centerY - size - 40}
+              width={140}
+              height={32}
+              rx={6}
               fill="#1F2937"
               fillOpacity={0.95}
             />
-            <text x={centerX} y={centerY - size - 17} fontSize="10" fill="white" textAnchor="middle" fontFamily={theme.typography.fontFamily}>
-              {tooltipContent.name} • {tooltipContent.start}
+            <text x={centerX} y={centerY - size - 20} fontSize="11" fill="white" textAnchor="middle" fontWeight="500" fontFamily={theme.typography.fontFamily}>
+              {tooltipContent.name}
+            </text>
+            <text x={centerX} y={centerY - size - 8} fontSize="9" fill="#9CA3AF" textAnchor="middle" fontFamily={theme.typography.fontFamily}>
+              {tooltipContent.start}
             </text>
           </g>
         )}
