@@ -119,6 +119,11 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **P6 Backend Services (December 2025)**: Complete backend infrastructure for P6 features:
     - **Activity Codes SQL Schema**: `docs/sql/activity-codes-schema.sql` with RLS policies for empresa/project scoping
     - **activityCodeService.ts**: Full CRUD service for activity code types, values, and task assignments
-    - **useP6Data Hook**: Aggregates baselines, activity codes, and EPS/OBS context in single hook
+    - **useP6Data Hook**: Aggregates baselines, activity codes, and EPS/OBS context in single hook with baseline switching
     - **VisionGanttWrapper P6 Integration**: Component now accepts `empresaId` prop to load and display P6 data
     - **atividadeToGanttTaskWithP6**: Enhanced adapter function that enriches tasks with baseline variance and activity codes
+*   **P6 UI Components (December 2025)**: User interface for P6 features:
+    - **ColumnSelector**: Dynamic column selection dropdown (`src/components/features/cronograma/ColumnSelector.tsx`) organized by P6 categories (Baseline, EVM, Activity Codes, Resources, Critical Path, Schedule) with localStorage persistence
+    - **BaselineSelector**: Dropdown selector (`src/components/features/cronograma/BaselineSelector.tsx`) for choosing project baselines with primary baseline indicator and interactive baseline switching via `setCurrentBaselineById`
+    - **AdminActivityCodesPage**: Full CRUD admin interface (`src/pages/AdminActivityCodesPage.tsx`) for managing Activity Code Types and hierarchical Values with drag-reorder support
+    - **Supabase Migration Script**: Complete SQL migration (`docs/sql/supabase-migration.sql`) for activity_code_types, activity_code_values, and activity_task_codes tables with enterprise RLS policies
