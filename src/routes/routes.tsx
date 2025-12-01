@@ -14,6 +14,7 @@ import AdminEmpresasPage from '../pages/AdminEmpresasPage';
 import AdminTemasPage from '../pages/AdminTemasPage';
 import AdminPerfisPage from '../pages/AdminPerfisPage';
 import AdminEPSPage from '../pages/AdminEPSPage';
+import AdminActivityCodesPage from '../pages/AdminActivityCodesPage';
 import { SVARTestPage } from '../pages/SVARTestPage';
 import { useAuthStore } from '../stores/authStore';
 
@@ -86,6 +87,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="admin/temas" element={<AdminTemasPage />} />
           <Route path="admin/perfis" element={<AdminPerfisPage />} />
           <Route path="admin/eps" element={<AdminEPSPage />} />
+          <Route path="admin/activity-codes" element={<AdminActivityCodesPage />} />
           <Route path="admin/seguranca" element={<PlaceholderPage title="Segurança" />} />
           <Route path="admin/relatorios" element={<PlaceholderPage title="Relatórios" />} />
           <Route path="admin/logs" element={<PlaceholderPage title="Logs de Atividade" />} />

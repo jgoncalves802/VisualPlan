@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { GanttChartV2, useCriticalPath } from '../../../lib/vision-gantt';
-import type { Task, Dependency, ViewPreset } from '../../../lib/vision-gantt/types';
+import type { Task, Dependency, ViewPreset, ColumnConfig } from '../../../lib/vision-gantt/types';
 import { 
   createGanttDataSync, 
   ganttTaskToAtividade,
@@ -14,6 +14,9 @@ import type { Resource, ResourceAllocation } from '../../../services/resourceSer
 import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
 import { EditDependencyModal } from './EditDependencyModal';
 import { useP6Data } from '../../../hooks/useP6Data';
+import { ColumnSelector } from './ColumnSelector';
+import { BaselineSelector } from './BaselineSelector';
+import { DEFAULT_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -53,6 +56,7 @@ export function VisionGanttWrapper({
   className = '',
 }: VisionGanttWrapperProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
+  const [selectedColumns, setSelectedColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   
   const [editDependencyModal, setEditDependencyModal] = useState<{
     open: boolean;
@@ -475,6 +479,37 @@ export function VisionGanttWrapper({
             </div>
           )}
         </div>
+        
+        <div className="flex items-center gap-3">
+          <BaselineSelector
+            baselines={p6Data.baselines.map(b => ({
+              id: b.id,
+              numero: b.numero,
+              nome: b.nome,
+              descricao: b.descricao,
+              dataCaptura: b.dataBaseline,
+              isPrimary: b.isAtual,
+              taskCount: b.totalAtividades
+            }))}
+            selectedBaseline={p6Data.currentBaseline ? {
+              id: p6Data.currentBaseline.id,
+              numero: p6Data.currentBaseline.numero,
+              nome: p6Data.currentBaseline.nome,
+              descricao: p6Data.currentBaseline.descricao,
+              dataCaptura: p6Data.currentBaseline.dataBaseline,
+              isPrimary: p6Data.currentBaseline.isAtual
+            } : null}
+            onSelect={(baseline) => {
+              p6Data.setCurrentBaselineById(baseline?.id || null);
+            }}
+            loading={p6Data.loading}
+          />
+          
+          <ColumnSelector
+            selectedColumns={selectedColumns}
+            onColumnsChange={setSelectedColumns}
+          />
+        </div>
       </div>
 
       <GanttChartV2
@@ -482,6 +517,7 @@ export function VisionGanttWrapper({
         dependencies={baseGanttData.dependencies}
         resources={baseGanttData.resources}
         calendars={ganttCalendars}
+        columns={selectedColumns}
         viewPreset={viewPreset}
         gridWidth={gridWidth}
         height={height}

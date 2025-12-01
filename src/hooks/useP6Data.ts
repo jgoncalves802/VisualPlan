@@ -35,6 +35,7 @@ export interface P6Data {
   getActivityP6Data: (atividadeId: string) => P6ActivityData;
   refreshBaselines: () => Promise<void>;
   refreshActivityCodes: () => Promise<void>;
+  setCurrentBaselineById: (baselineId: string | null) => Promise<void>;
 }
 
 export function useP6Data(
@@ -105,6 +106,42 @@ export function useP6Data(
       console.error('Error loading activity codes:', err);
     }
   }, [empresaId, projetoId]);
+
+  const setCurrentBaselineById = useCallback(async (baselineId: string | null) => {
+    if (!baselineId) {
+      setCurrentBaseline(null);
+      setBaselineTasks(new Map());
+      setVariances(new Map());
+      return;
+    }
+
+    const selected = baselines.find(b => b.id === baselineId);
+    if (!selected) {
+      console.warn('Baseline not found:', baselineId);
+      return;
+    }
+
+    setCurrentBaseline(selected);
+
+    try {
+      const tasks = await baselineService.getBaselineTasks(selected.id);
+      const tasksMap = new Map<string, BaselineTask>();
+      tasks.forEach(task => {
+        tasksMap.set(task.atividadeId, task);
+      });
+      setBaselineTasks(tasksMap);
+
+      const calculatedVariances = baselineService.calculateVariance(tasks, atividades);
+      const varianceMap = new Map<string, BaselineVariance>();
+      calculatedVariances.forEach(v => {
+        varianceMap.set(v.atividadeId, v);
+      });
+      setVariances(varianceMap);
+    } catch (err) {
+      console.error('Error loading baseline tasks:', err);
+      setError(err as Error);
+    }
+  }, [baselines, atividades]);
 
   const refreshEpsObs = useCallback(async () => {
     if (!empresaId) return;
@@ -193,6 +230,7 @@ export function useP6Data(
     getActivityP6Data,
     refreshBaselines,
     refreshActivityCodes,
+    setCurrentBaselineById,
   };
 }
 

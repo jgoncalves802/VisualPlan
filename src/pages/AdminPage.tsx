@@ -11,6 +11,7 @@ import {
   BarChart3,
   FileText,
   Key,
+  Tag,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { PerfilAcesso } from '../types';
@@ -79,6 +80,15 @@ const adminCards: AdminCard[] = [
     path: '/admin/seguranca',
     color: '#dc2626',
     requiredProfiles: [PerfilAcesso.ADMIN],
+  },
+  {
+    id: 'activity-codes',
+    title: 'Códigos de Atividade',
+    description: 'Gerenciar tipos e valores P6',
+    icon: <Tag className="w-10 h-10" />,
+    path: '/admin/activity-codes',
+    color: '#F59E0B',
+    requiredProfiles: [PerfilAcesso.ADMIN, PerfilAcesso.GERENTE_PROJETO],
   },
 ];
 
