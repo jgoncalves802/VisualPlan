@@ -2,6 +2,26 @@ import type { Task, Dependency, Resource, Assignment, TaskStatus, DependencyType
 import type { WorkingCalendar, WorkingDay, Holiday, CalendarException } from '../types/advanced-features';
 import type { AtividadeMock, DependenciaAtividade, TipoDependencia, CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
 import type { Resource as VPResource, ResourceAllocation } from '../../../services/resourceService';
+import type { BaselineTask, BaselineVariance } from '../../../services/baselineService';
+import type { ActivityTaskCode } from '../../../services/activityCodeService';
+
+export interface P6DataContext {
+  project?: {
+    id?: string;
+    nome?: string;
+    codigo?: string;
+    epsId?: string;
+    epsName?: string;
+    responsavel?: string;
+  };
+  baseline?: {
+    id?: string;
+    numero?: number;
+    task?: BaselineTask;
+    variance?: BaselineVariance;
+  };
+  activityCodes?: ActivityTaskCode[];
+}
 
 const STATUS_MAP_TO_GANTT: Record<string, TaskStatus> = {
   'A Fazer': 'not_started',
@@ -147,6 +167,78 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
     spi: spi, // Schedule Performance Index
     csi: (cpi !== undefined && spi !== undefined) ? cpi * spi : undefined, // Cost Schedule Index
   };
+}
+
+export function atividadeToGanttTaskWithP6(
+  atividade: AtividadeMock,
+  p6Context?: P6DataContext
+): Task {
+  const baseTask = atividadeToGanttTask(atividade, p6Context?.project);
+  
+  if (!p6Context) return baseTask;
+  
+  const { baseline, activityCodes } = p6Context;
+  
+  if (baseline?.task) {
+    const blTask = baseline.task;
+    baseTask.blStartDate = new Date(blTask.dataInicioPlanejada);
+    baseTask.blFinishDate = new Date(blTask.dataFimPlanejada);
+    baseTask.blDuration = blTask.duracaoPlanejada;
+    baseTask.blCost = blTask.custoPlanejado;
+    baseTask.blWork = blTask.trabalhoPlanejado;
+    baseTask.baselineId = baseline.id;
+    baseTask.baselineNumber = baseline.numero;
+    
+    baseTask.earlyStart = blTask.earlyStart ? new Date(blTask.earlyStart) : undefined;
+    baseTask.earlyFinish = blTask.earlyFinish ? new Date(blTask.earlyFinish) : undefined;
+    baseTask.lateStart = blTask.lateStart ? new Date(blTask.lateStart) : undefined;
+    baseTask.lateFinish = blTask.lateFinish ? new Date(blTask.lateFinish) : undefined;
+    baseTask.freeFloat = blTask.folgaLivre;
+  }
+  
+  if (baseline?.variance) {
+    const variance = baseline.variance;
+    baseTask.startVariance = variance.variacaoDiasInicio;
+    baseTask.finishVariance = variance.variacaoDiasFim;
+    baseTask.durationVariance = variance.variacaoDuracao;
+    baseTask.costVariance = variance.variacaoCusto;
+    baseTask.workVariance = variance.variacaoProgresso;
+  }
+  
+  if (activityCodes && activityCodes.length > 0) {
+    for (const code of activityCodes) {
+      if (!code.codeType || !code.codeValue) continue;
+      
+      const typeCodigo = code.codeType.codigo?.toUpperCase();
+      const value = code.codeValue.valor;
+      const desc = code.codeValue.descricao || value;
+      
+      if (!baseTask.activityCode) {
+        baseTask.activityCode = value;
+        baseTask.activityCodeType = code.codeType.nome;
+      }
+      
+      switch (typeCodigo) {
+        case 'DISC':
+          baseTask.discipline = desc;
+          break;
+        case 'AREA':
+          baseTask.area = desc;
+          break;
+        case 'FASE':
+          baseTask.phase = desc;
+          break;
+        case 'RESP':
+          baseTask.responsibleContractor = desc;
+          break;
+        case 'TIPO':
+          baseTask.workType = desc;
+          break;
+      }
+    }
+  }
+  
+  return baseTask;
 }
 
 export function ganttTaskToAtividade(

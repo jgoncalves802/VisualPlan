@@ -207,10 +207,23 @@ Status: Implementado em Dezembro 2025
 - Calculos EVM automaticos (CPI, SPI, EAC, VAC, CSI)
 - Suporte para contexto de projeto (EPS metadata)
 
-**Proximos Passos (Fase 2):**
-- Schema de banco de dados para baselines
-- Schema para activity codes
-- Backend services para EPS
+**Fase 2 - Backend Services (Dezembro 2025) - CONCLUIDA:**
+- Schema SQL para Activity Codes (docs/sql/activity-codes-schema.sql)
+- activityCodeService.ts com CRUD completo e RLS
+- useP6Data hook para agregação de dados P6
+- atividadeToGanttTaskWithP6 no adapter para integração completa
+- VisionGanttWrapper com suporte a empresaId para dados P6
+
+**Tabelas de Banco de Dados:**
+- `activity_code_types`: Tipos de códigos (Disciplina, Área, Fase, etc.)
+- `activity_code_values`: Valores hierárquicos para cada tipo
+- `activity_task_codes`: Associação de códigos às atividades
+- `baselines`: Múltiplas baselines por projeto (já existente)
+- `baseline_tasks`: Dados de tarefas em cada baseline (já existente)
+
+**Proximos Passos (Fase 3):**
+- Criar migrations Supabase para tabelas de Activity Codes
+- UI para gerenciamento de Activity Codes no Admin
 
 ### 8.2 Fase 2 - Recursos (Media Prioridade) - PLANEJADO
 1. Tipos de recursos (labor, material)

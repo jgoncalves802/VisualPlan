@@ -5,17 +5,21 @@ import {
   createGanttDataSync, 
   ganttTaskToAtividade,
   ganttDependencyToDependencia,
-  convertCalendarsToGantt
+  convertCalendarsToGantt,
+  atividadeToGanttTaskWithP6,
+  type P6DataContext
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
 import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto, TipoDependencia } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
 import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
 import { EditDependencyModal } from './EditDependencyModal';
+import { useP6Data } from '../../../hooks/useP6Data';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
   dependencias: DependenciaAtividade[];
   projetoId: string;
+  empresaId?: string;
   resources?: Resource[];
   allocations?: ResourceAllocation[];
   calendarios?: CalendarioProjeto[];
@@ -34,6 +38,7 @@ export function VisionGanttWrapper({
   atividades,
   dependencias,
   projetoId,
+  empresaId,
   resources = [],
   allocations = [],
   calendarios = [],
@@ -61,10 +66,46 @@ export function VisionGanttWrapper({
     toTask: null,
   });
   
-  // Convert external data to gantt format - used for initial conversion
+  // Load P6 data (baselines, activity codes, EPS/OBS) when empresaId is available
+  const p6Data = useP6Data(empresaId, projetoId, atividades);
+  
+  // Convert external data to gantt format with P6 enrichment
   const baseGanttData = useMemo(() => {
-    return createGanttDataSync(atividades, dependencias, resources, allocations);
-  }, [atividades, dependencias, resources, allocations]);
+    // Get base gantt data
+    const baseData = createGanttDataSync(atividades, dependencias, resources, allocations);
+    
+    // If we have P6 data, enrich tasks with baseline, activity codes, and EPS info
+    if (empresaId && !p6Data.loading && (p6Data.currentBaseline || p6Data.activityCodeTypes.length > 0)) {
+      const enrichedTasks = atividades.map(atividade => {
+        const activityP6 = p6Data.getActivityP6Data(atividade.id);
+        
+        const p6Context: P6DataContext = {
+          project: {
+            id: projetoId,
+            epsId: p6Data.projectContext.epsId,
+            epsName: p6Data.projectContext.epsName,
+            responsavel: p6Data.projectContext.projectManager,
+          },
+          baseline: p6Data.currentBaseline ? {
+            id: p6Data.currentBaseline.id,
+            numero: p6Data.currentBaseline.numero,
+            task: activityP6.baselineTask,
+            variance: activityP6.variance,
+          } : undefined,
+          activityCodes: activityP6.activityCodes,
+        };
+        
+        return atividadeToGanttTaskWithP6(atividade, p6Context);
+      });
+      
+      return {
+        ...baseData,
+        tasks: enrichedTasks,
+      };
+    }
+    
+    return baseData;
+  }, [atividades, dependencias, resources, allocations, empresaId, projetoId, p6Data]);
 
   // LOCAL TASK CACHE - This is the SINGLE SOURCE OF TRUTH
   // It's initialized from baseGanttData but ONLY updated by controller callbacks
