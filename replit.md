@@ -105,3 +105,14 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Local Task Cache**: VisionGanttWrapper maintains `localTasks` state that is only re-synced when task IDs change (add/remove)
     - **One-way Sync**: Changes emit to external cronogramaStore via callbacks but NEVER read back from it
     - **Race Condition Fix**: Eliminated bidirectional data flow that caused hierarchy changes to be immediately overwritten by stale props
+
+## Recent Changes (December 2025)
+
+*   **P6 Enterprise Columns System (December 1, 2025)**: Implemented comprehensive Primavera P6-style column system:
+    - **80+ Professional Columns**: Organized by category (Baselines, EVM, Activity Codes, Resources, Critical Path, Schedule)
+    - **TypeScript Types**: Extended Task interface with P6 fields (EPS, Baseline, EVM, ActivityCode, Resource)
+    - **New P6 Interfaces**: EPSNode, Baseline, BaselineTask, ActivityCodeType, ActivityCodeValue
+    - **EVM Calculations**: Automatic CPI, SPI, EAC, VAC, CSI calculations in adapter
+    - **Column Presets**: P6_COLUMN_PRESETS for different views (STANDARD, EVM_ANALYSIS, BASELINE_TRACKING, CRITICAL_PATH)
+    - **Adapter Enhancement**: Comprehensive AtividadeMock to P6 Task field mapping with project context support
+    - **Documentation**: Updated P6-COLUMNS-IMPLEMENTATION.md with Phase 1 completion status
