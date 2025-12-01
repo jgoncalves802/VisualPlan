@@ -137,14 +137,70 @@ export function vpAllocationToGanttAssignment(allocation: ResourceAllocation): A
   };
 }
 
+/**
+ * Calcula as datas de uma tarefa pai com base em suas filhas (rollup)
+ * Data início = menor data de início das filhas
+ * Data fim = maior data de término das filhas
+ * Duração = diferença em dias entre início e fim
+ * Progresso = média ponderada pelo tempo de duração das filhas
+ */
+function calculateParentDates(parent: Task, children: Task[]): void {
+  if (!children || children.length === 0) return;
+  
+  // Encontrar a data de início mais antiga
+  const minStartDate = children.reduce((min, child) => {
+    return child.startDate < min ? child.startDate : min;
+  }, children[0].startDate);
+  
+  // Encontrar a data de término mais recente
+  const maxEndDate = children.reduce((max, child) => {
+    return child.endDate > max ? child.endDate : max;
+  }, children[0].endDate);
+  
+  // Calcular duração em dias
+  const duration = Math.ceil(
+    (maxEndDate.getTime() - minStartDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  
+  // Calcular progresso ponderado pela duração das filhas
+  const totalDuration = children.reduce((sum, child) => sum + (child.duration || 1), 0);
+  const weightedProgress = children.reduce((sum, child) => {
+    const childDuration = child.duration || 1;
+    return sum + (child.progress * childDuration);
+  }, 0);
+  const progress = totalDuration > 0 ? Math.round(weightedProgress / totalDuration) : 0;
+  
+  // Atualizar parent
+  parent.startDate = minStartDate;
+  parent.endDate = maxEndDate;
+  parent.duration = duration;
+  parent.progress = progress;
+  
+  console.log(`[calculateParentDates] 📊 Rollup calculado para "${parent.name}":`,
+    `Início: ${minStartDate.toISOString().split('T')[0]},`,
+    `Fim: ${maxEndDate.toISOString().split('T')[0]},`,
+    `Duração: ${duration} dias,`,
+    `Progresso: ${progress}% (${children.length} filhas)`
+  );
+}
+
 export function convertAtividadesToTasks(atividades: AtividadeMock[]): Task[] {
+  console.log('[convertAtividadesToTasks] ========== CONVERSÃO DE ATIVIDADES PARA TASKS ==========');
+  console.log('[convertAtividadesToTasks] Total de atividades recebidas:', atividades.length);
+  console.log('[convertAtividadesToTasks] Atividades com parent_id:', atividades.filter(a => a.parent_id).length);
+  
+  // Criar todas as tasks primeiro
   const taskMap = new Map<string, Task>();
   
   atividades.forEach(atividade => {
     const task = atividadeToGanttTask(atividade);
     taskMap.set(task.id, task);
+    console.log(`[convertAtividadesToTasks] Task criada: ${task.name} (ID: ${task.id.substring(0, 8)}, parent: ${task.parentId?.substring(0, 8) || 'nenhum'})`);
   });
 
+  // Construir hierarquia (parent.children)
+  const parentsWithChildren = new Map<string, Task[]>();
+  
   atividades.forEach(atividade => {
     if (atividade.parent_id && taskMap.has(atividade.parent_id)) {
       const parent = taskMap.get(atividade.parent_id)!;
@@ -153,10 +209,35 @@ export function convertAtividadesToTasks(atividades: AtividadeMock[]): Task[] {
       if (!parent.children) parent.children = [];
       parent.children.push(child);
       child.level = (parent.level || 0) + 1;
+      
+      // Rastrear pais que têm filhos
+      if (!parentsWithChildren.has(parent.id)) {
+        parentsWithChildren.set(parent.id, []);
+      }
+      parentsWithChildren.get(parent.id)!.push(child);
+      
+      console.log(`[convertAtividadesToTasks] Hierarquia: ${child.name} (${child.id.substring(0, 8)}) é filho de ${parent.name} (${parent.id.substring(0, 8)})`);
     }
   });
 
-  return Array.from(taskMap.values()).filter(task => !task.parentId);
+  // 📊 ROLLUP: Calcular datas dos pais baseado nas filhas
+  console.log('[convertAtividadesToTasks] 📊 Calculando rollup de datas para', parentsWithChildren.size, 'pais...');
+  parentsWithChildren.forEach((children, parentId) => {
+    const parent = taskMap.get(parentId);
+    if (parent && children.length > 0) {
+      calculateParentDates(parent, children);
+    }
+  });
+
+  // CORREÇÃO: Retornar TODAS as tasks, não apenas as raiz
+  // O VisionGantt Controller precisa de todas as tasks em um array plano
+  const allTasks = Array.from(taskMap.values());
+  console.log('[convertAtividadesToTasks] Total de tasks retornadas:', allTasks.length);
+  console.log('[convertAtividadesToTasks] Tasks raiz:', allTasks.filter(t => !t.parentId).length);
+  console.log('[convertAtividadesToTasks] Tasks filhas:', allTasks.filter(t => t.parentId).length);
+  console.log('[convertAtividadesToTasks] ========== FIM DA CONVERSÃO ==========');
+  
+  return allTasks;
 }
 
 export function flattenTasksToAtividades(

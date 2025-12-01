@@ -142,39 +142,160 @@ export function VisionGanttWrapper({
 
   // Handle batch task changes from controller (for hierarchy operations like indent/outdent)
   const handleTasksChange = useCallback((tasks: Task[]) => {
-    console.log('[VisionGanttWrapper] handleTasksChange: batch of', tasks.length, 'tasks');
+    console.log('[VisionGanttWrapper] ==================== handleTasksChange START ====================');
+    console.log('[VisionGanttWrapper] Received tasks batch:', tasks.length);
+    console.log('[VisionGanttWrapper] Current atividadeMap size:', atividadeMap.size);
+    console.log('[VisionGanttWrapper] Task details:', tasks.map(t => ({
+      id: t.id.substring(0, 8),
+      name: t.name,
+      level: t.level,
+      parentId: t.parentId?.substring(0, 8),
+      isGroup: t.isGroup,
+      tipo: t.isMilestone ? 'Marco' : (t.isGroup ? 'Fase' : 'Tarefa')
+    })));
+    
+    // ROLLUP: Calcular datas dos pais baseado nas filhas
+    console.log('[VisionGanttWrapper] 📊 Iniciando rollup de datas para pais...');
+    const parentsToUpdate = new Map<string, Task[]>();
+    
+    // Agrupar filhas por pai
+    tasks.forEach(task => {
+      if (task.parentId) {
+        if (!parentsToUpdate.has(task.parentId)) {
+          parentsToUpdate.set(task.parentId, []);
+        }
+        parentsToUpdate.get(task.parentId)!.push(task);
+      }
+    });
+    
+    // Calcular datas para cada pai com filhas
+    parentsToUpdate.forEach((children, parentId) => {
+      const parent = tasks.find(t => t.id === parentId);
+      if (!parent || children.length === 0) return;
+      
+      // Data de início = menor data de início das filhas
+      const minStartDate = children.reduce((min, child) => {
+        return child.startDate < min ? child.startDate : min;
+      }, children[0].startDate);
+      
+      // Data de término = maior data de término das filhas
+      const maxEndDate = children.reduce((max, child) => {
+        return child.endDate > max ? child.endDate : max;
+      }, children[0].endDate);
+      
+      // Calcular duração
+      const duration = Math.ceil(
+        (maxEndDate.getTime() - minStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      
+      // Calcular progresso ponderado pela duração das filhas
+      const totalDuration = children.reduce((sum, child) => sum + (child.duration || 1), 0);
+      const weightedProgress = children.reduce((sum, child) => {
+        const childDuration = child.duration || 1;
+        return sum + (child.progress * childDuration);
+      }, 0);
+      const progress = totalDuration > 0 ? Math.round(weightedProgress / totalDuration) : 0;
+      
+      console.log(`[VisionGanttWrapper] 📊 Rollup para "${parent.name}":`,
+        `${minStartDate.toISOString().split('T')[0]} → ${maxEndDate.toISOString().split('T')[0]}`,
+        `(${duration} dias, progresso: ${progress}%, ${children.length} filhas)`
+      );
+      
+      // Atualizar o parent no array
+      parent.startDate = minStartDate;
+      parent.endDate = maxEndDate;
+      parent.duration = duration;
+      parent.progress = progress;
+      parent.isGroup = true; // Garantir que é um grupo
+    });
     
     // CRITICAL: Update local cache FIRST before syncing to external store
     // This ensures the controller always has the latest hierarchy data
-    setLocalTasks(prevTasks => {
-      const taskMap = new Map(tasks.map(t => [t.id, t]));
-      return prevTasks.map(t => taskMap.get(t.id) || t);
-    });
+    // We REPLACE the entire tasks array to ensure hierarchy changes are reflected
+    setLocalTasks(tasks);
+    console.log('[VisionGanttWrapper] ✅ Local tasks cache updated with', tasks.length, 'tasks');
+    console.log('[VisionGanttWrapper] Local tasks now include:', tasks.filter(t => t.parentId).length, 'children tasks');
     
-    if (!onAtividadeUpdate) return;
+    if (!onAtividadeUpdate) {
+      console.log('[VisionGanttWrapper] ⚠️  No onAtividadeUpdate callback, skipping sync');
+      return;
+    }
     
     // Sync each changed task to external store (one-way, won't cause reset)
+    let syncedCount = 0;
+    let notFoundCount = 0;
     for (const task of tasks) {
       const originalAtividade = atividadeMap.get(task.id);
-      if (!originalAtividade) continue;
+      if (!originalAtividade) {
+        console.log('[VisionGanttWrapper] ⚠️  Task NOT found in atividadeMap:', task.id.substring(0, 8), task.name);
+        notFoundCount++;
+        continue;
+      }
 
       const changes: Partial<AtividadeMock> = {};
       
+      // Detectar mudanças de parent
       if ((task.parentId ?? undefined) !== originalAtividade.parent_id) {
+        console.log('[VisionGanttWrapper] 📝 Parent changed for', task.name);
+        console.log('  FROM:', originalAtividade.parent_id || 'nenhum', '→ TO:', task.parentId?.substring(0, 8) || 'nenhum');
         changes.parent_id = task.parentId ?? undefined;
       }
+      
+      // Detectar mudanças de WBS
       if (task.wbs !== originalAtividade.edt) {
+        console.log('[VisionGanttWrapper] 📝 WBS changed for', task.name);
+        console.log('  FROM:', originalAtividade.edt, '→ TO:', task.wbs);
         changes.edt = task.wbs;
       }
+      
+      // Detectar mudanças de tipo
       if (Boolean(task.isGroup) !== (originalAtividade.tipo === 'Fase')) {
-        changes.tipo = task.isGroup ? 'Fase' : (task.isMilestone ? 'Marco' : 'Tarefa');
+        const newTipo = task.isGroup ? 'Fase' : (task.isMilestone ? 'Marco' : 'Tarefa');
+        console.log('[VisionGanttWrapper] 📝 Type changed for', task.name);
+        console.log('  FROM:', originalAtividade.tipo, '→ TO:', newTipo);
+        changes.tipo = newTipo;
+      }
+      
+      // Detectar mudanças de datas (especialmente após rollup)
+      const newStartDate = task.startDate.toISOString().split('T')[0];
+      const newEndDate = task.endDate.toISOString().split('T')[0];
+      
+      if (originalAtividade.data_inicio !== newStartDate) {
+        console.log('[VisionGanttWrapper] 📅 Start date changed for', task.name);
+        console.log('  FROM:', originalAtividade.data_inicio, '→ TO:', newStartDate);
+        changes.data_inicio = newStartDate;
+      }
+      
+      if (originalAtividade.data_fim !== newEndDate) {
+        console.log('[VisionGanttWrapper] 📅 End date changed for', task.name);
+        console.log('  FROM:', originalAtividade.data_fim, '→ TO:', newEndDate);
+        changes.data_fim = newEndDate;
+      }
+      
+      if (task.duration && originalAtividade.duracao_dias !== task.duration) {
+        console.log('[VisionGanttWrapper] ⏱️  Duration changed for', task.name);
+        console.log('  FROM:', originalAtividade.duracao_dias, 'dias → TO:', task.duration, 'dias');
+        changes.duracao_dias = task.duration;
+      }
+      
+      if (originalAtividade.progresso !== task.progress) {
+        console.log('[VisionGanttWrapper] 📈 Progress changed for', task.name);
+        console.log('  FROM:', originalAtividade.progresso, '% → TO:', task.progress, '%');
+        changes.progresso = task.progress;
       }
 
       if (Object.keys(changes).length > 0) {
         const updatedAtividade = ganttTaskToAtividade(task, projetoId, originalAtividade);
+        console.log('[VisionGanttWrapper] 💾 Syncing changes for', task.name, ':', changes);
         onAtividadeUpdate(updatedAtividade, changes);
+        syncedCount++;
       }
     }
+    console.log('[VisionGanttWrapper] ✅ Synced', syncedCount, 'tasks to external store');
+    if (notFoundCount > 0) {
+      console.warn('[VisionGanttWrapper] ⚠️ ', notFoundCount, 'tasks were not found in atividadeMap');
+    }
+    console.log('[VisionGanttWrapper] ==================== handleTasksChange END ====================');
   }, [atividadeMap, projetoId, onAtividadeUpdate]);
 
   const handleTaskClick = useCallback((task: Task) => {
