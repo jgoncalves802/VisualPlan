@@ -1,4 +1,4 @@
-# VisionPlan - Documentacao de Colunas Primavera P6
+ VisionPlan - Documentacao de Colunas Primavera P6
 
 ## Visao Geral
 
@@ -184,41 +184,21 @@ Diferentes de UDFs, sao codigos estruturados para filtragem e agrupamento.
 - **Responsavel**: Contratada A, Contratada B, Equipe Propria
 - **Tipo de Trabalho**: Fabricacao, Montagem, Teste
 
-## 8. Implementacao e Status
+## 8. Implementacao Sugerida
 
-### 8.1 Fase 1 - Fundamentos (Alta Prioridade) - **CONCLUIDA**
-Status: Implementado em Dezembro 2025
+### 8.1 Fase 1 - Fundamentos (Alta Prioridade)
+1. EPS estrutura basica
+2. Baselines com comparacao primaria
+3. Multiplos tipos de dependencia
+4. Activity Codes basicos
 
-**Tipos TypeScript Implementados:**
-- Task interface com todos os campos P6 (EPS, Baseline, EVM, ActivityCode, Resource)
-- EPSNode, Baseline, BaselineTask, ActivityCodeType, ActivityCodeValue interfaces
-- Resource interface extendida com campos P6
-
-**Colunas Implementadas (80+ colunas):**
-- BASELINE_COLUMNS: BL Start, BL Finish, Variance Start/Finish/Duration/Cost
-- EVM_COLUMNS: BCWS, BCWP, ACWP, BAC, EAC, ETC, VAC, CPI, SPI, CSI
-- ACTIVITY_CODE_COLUMNS: Activity Code, Discipline, Area, Phase, WBS Level
-- RESOURCE_COLUMNS: Resource Name, Role, Units, Type
-- CRITICAL_PATH_COLUMNS: Total Float, Free Float, Critical Flag, Early/Late dates
-- SCHEDULE_COLUMNS: Planned Start/Finish, Actual Start/Finish, Remaining Duration
-
-**Adapter Mapping:**
-- Mapeamento completo de AtividadeMock para campos P6
-- Calculos EVM automaticos (CPI, SPI, EAC, VAC, CSI)
-- Suporte para contexto de projeto (EPS metadata)
-
-**Proximos Passos (Fase 2):**
-- Schema de banco de dados para baselines
-- Schema para activity codes
-- Backend services para EPS
-
-### 8.2 Fase 2 - Recursos (Media Prioridade) - PLANEJADO
+### 8.2 Fase 2 - Recursos (Media Prioridade)
 1. Tipos de recursos (labor, material)
 2. Roles e competencias
 3. Calendarios por recurso
 4. Histograma de recursos
 
-### 8.3 Fase 3 - EVM e Avancados (Baixa Prioridade) - PLANEJADO
+### 8.3 Fase 3 - EVM e Avancados (Baixa Prioridade)
 1. Campos EVM completos
 2. Resource Curves
 3. UDFs multinivel

@@ -32,22 +32,120 @@ const PRIORITY_MAP: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
   'Crítica': 'critical',
 };
 
-export function atividadeToGanttTask(atividade: AtividadeMock): Task {
+export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: { 
+  id?: string; 
+  nome?: string; 
+  codigo?: string;
+  epsId?: string;
+  epsName?: string;
+  responsavel?: string;
+}): Task {
+  const wbsLevel = atividade.edt ? atividade.edt.split('.').length - 1 : 0;
+  
+  // Calculate variances if baseline data is present
+  const startDate = new Date(atividade.data_inicio);
+  const endDate = new Date(atividade.data_fim);
+  
+  // Calculate EVM metrics
+  const bcws = atividade.valor_planejado; // Planned Value
+  const acwp = atividade.custo_real; // Actual Cost
+  const bcwp = bcws ? (bcws * (atividade.progresso / 100)) : undefined; // Earned Value = PV * %Complete
+  const bac = atividade.custo_planejado; // Budget at Completion
+  
+  // Calculate performance indices if we have values
+  let cpi: number | undefined;
+  let spi: number | undefined;
+  let eac: number | undefined;
+  let etc: number | undefined;
+  let vac: number | undefined;
+  let costVariance: number | undefined;
+  
+  if (bcwp !== undefined && acwp !== undefined && acwp > 0) {
+    cpi = bcwp / acwp; // Cost Performance Index
+    costVariance = bcwp - acwp; // CV = EV - AC
+  }
+  if (bcwp !== undefined && bcws !== undefined && bcws > 0) {
+    spi = bcwp / bcws; // Schedule Performance Index
+  }
+  if (cpi !== undefined && bac !== undefined && cpi > 0) {
+    eac = bac / cpi; // Estimate at Completion
+    vac = bac - eac; // Variance at Completion
+    etc = acwp !== undefined ? eac - acwp : undefined; // Estimate to Complete
+  }
+  
   return {
     id: atividade.id,
     name: atividade.nome,
-    startDate: new Date(atividade.data_inicio),
-    endDate: new Date(atividade.data_fim),
+    startDate: startDate,
+    endDate: endDate,
     duration: atividade.duracao_dias,
     progress: atividade.progresso,
     status: STATUS_MAP_TO_GANTT[atividade.status] || 'not_started',
     parentId: atividade.parent_id || null,
     wbs: atividade.edt,
+    wbsLevel: wbsLevel,
     isGroup: atividade.tipo === 'Fase',
     isMilestone: atividade.tipo === 'Marco',
     description: atividade.descricao,
     priority: atividade.prioridade ? PRIORITY_MAP[atividade.prioridade] : undefined,
     expanded: true,
+    
+    // EPS/Project Fields (from context)
+    projectId: projectContext?.id || atividade.projeto_id,
+    projectName: projectContext?.nome,
+    projectCode: projectContext?.codigo || atividade.codigo,
+    projectManager: projectContext?.responsavel,
+    epsId: projectContext?.epsId,
+    epsName: projectContext?.epsName,
+    
+    // Critical Path Fields
+    isCritical: atividade.e_critica,
+    totalFloat: atividade.folga_total,
+    
+    // Calendar
+    calendarId: atividade.calendario_id,
+    
+    // Resource assignment from responsavel
+    resourceName: atividade.responsavel_nome,
+    
+    // Sector
+    sectorId: atividade.setor_id,
+    
+    // P6 Baseline Fields - Initialize from planned values when baseline is set
+    blStartDate: startDate, // Using current start as baseline when no explicit baseline
+    blFinishDate: endDate, // Using current end as baseline when no explicit baseline
+    blDuration: atividade.duracao_dias,
+    blCost: atividade.custo_planejado,
+    startVariance: 0, // No variance when no baseline comparison
+    finishVariance: 0,
+    durationVariance: 0,
+    costVariance: costVariance,
+    
+    // Cost Fields
+    plannedCost: atividade.custo_planejado,
+    actualCost: atividade.custo_real,
+    plannedValue: atividade.valor_planejado,
+    actualValue: atividade.valor_real,
+    unitCost: atividade.custo_unitario,
+    plannedQuantity: atividade.quantidade_planejada,
+    actualQuantity: atividade.quantidade_real,
+    unitOfMeasure: atividade.unidade_medida,
+    
+    // Duration fields
+    durationHours: atividade.duracao_horas,
+    durationUnit: atividade.unidade_tempo === 'HORAS' ? 'hours' : 'days',
+    
+    // EVM Fields - Calculated values
+    bcws: bcws, // Planned Value
+    acwp: acwp, // Actual Cost
+    bcwp: bcwp, // Earned Value
+    bac: bac, // Budget at Completion
+    eac: eac, // Estimate at Completion
+    etc: etc, // Estimate to Complete
+    vac: vac, // Variance at Completion
+    cpi: cpi, // Cost Performance Index
+    spi: spi, // Schedule Performance Index
+    csi: (cpi !== undefined && spi !== undefined) ? cpi * spi : undefined, // Cost Schedule Index
   };
 }
 

@@ -153,7 +153,7 @@ const renderDuration = (value: number, task: Task) => {
 };
 
 // Total Float renderer with critical path indicator
-const renderTotalFloat = (value: number, task: Task) => {
+const renderTotalFloat = (value: number, _task: Task) => {
   const floatValue = value ?? 0;
   const isCritical = floatValue <= 0;
   
@@ -289,7 +289,7 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     header: 'Pred.',
     width: 90,
     minWidth: 70,
-    renderer: (value: any, task: Task) => {
+    renderer: (_value: any, task: Task) => {
       const predecessorIds = (task as any).predecessors || [];
       if (!predecessorIds || predecessorIds.length === 0) {
         return React.createElement('span', { className: 'text-gray-400' }, '-');
@@ -313,7 +313,7 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     header: 'Succ.',
     width: 90,
     minWidth: 70,
-    renderer: (value: any, task: Task) => {
+    renderer: (_value: any, task: Task) => {
       const successorIds = (task as any).successors || [];
       if (!successorIds || successorIds.length === 0) {
         return React.createElement('span', { className: 'text-gray-400' }, '-');

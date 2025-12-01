@@ -24,6 +24,7 @@ export interface Task {
   level?: number;
   // WBS properties
   wbs?: string; // Work Breakdown Structure code (e.g., "1.2.3")
+  wbsLevel?: number; // Level in WBS hierarchy
   isGroup?: boolean; // MS Project style group header (MARCOS, EXECUÇÃO, etc.)
   // Resource assignment
   assignedResources?: string[]; // Array of resource IDs
@@ -34,6 +35,174 @@ export interface Task {
   // UI state
   isSelected?: boolean;
   isDragging?: boolean;
+  
+  // ============================================================================
+  // PRIMAVERA P6 FIELDS
+  // ============================================================================
+  
+  // Baseline Fields (Section 2)
+  blStartDate?: Date; // Baseline Start Date
+  blFinishDate?: Date; // Baseline Finish Date
+  blDuration?: number; // Baseline Duration (days)
+  blCost?: number; // Baseline Cost
+  blWork?: number; // Baseline Work (hours)
+  startVariance?: number; // Start Variance (days) = actualStart - blStart
+  finishVariance?: number; // Finish Variance (days) = actualFinish - blFinish
+  durationVariance?: number; // Duration Variance (days)
+  costVariance?: number; // Cost Variance
+  workVariance?: number; // Work Variance
+  
+  // Activity Codes (Section 7)
+  activityCode?: string; // Primary activity code value
+  activityCodeType?: string; // Activity code type (Discipline, Area, Phase)
+  discipline?: string; // Discipline code (Civil, Mechanical, Electrical)
+  area?: string; // Area/Location code
+  phase?: string; // Phase code
+  responsibleContractor?: string; // Responsible contractor
+  workType?: string; // Type of work (Fabrication, Assembly, Test)
+  
+  // Resource Fields (Section 3)
+  resourceName?: string; // Primary resource name
+  resourceRole?: string; // Resource role
+  resourceUnits?: number; // Resource units (%)
+  resourceType?: 'labor' | 'nonlabor' | 'material'; // Resource type
+  
+  // EVM Fields (Section 4)
+  bcws?: number; // Budget Cost Work Scheduled (PV - Planned Value)
+  bcwp?: number; // Budget Cost Work Performed (EV - Earned Value)
+  acwp?: number; // Actual Cost Work Performed (AC - Actual Cost)
+  bac?: number; // Budget at Completion
+  eac?: number; // Estimate at Completion = BAC / CPI
+  etc?: number; // Estimate to Complete = EAC - ACWP
+  vac?: number; // Variance at Completion = BAC - EAC
+  cpi?: number; // Cost Performance Index = BCWP / ACWP
+  spi?: number; // Schedule Performance Index = BCWP / BCWS
+  tcpi?: number; // To-Complete Performance Index
+  csi?: number; // Cost Schedule Index = CPI * SPI
+  evTechnique?: 'percent' | '0_100' | '50_50' | 'milestone' | 'duration' | 'physical' | 'weighted';
+  performancePctComplete?: number; // Performance % Complete based on EVM
+  
+  // Critical Path Fields
+  totalFloat?: number; // Total Float (days)
+  freeFloat?: number; // Free Float (days)
+  isCritical?: boolean; // Is on critical path
+  isNearCritical?: boolean; // Is near-critical (TF <= 5 days)
+  earlyStart?: Date; // Early Start Date
+  earlyFinish?: Date; // Early Finish Date
+  lateStart?: Date; // Late Start Date
+  lateFinish?: Date; // Late Finish Date
+  
+  // Constraint Fields
+  constraintType?: 'asap' | 'alap' | 'mso' | 'mfo' | 'snet' | 'snlt' | 'fnet' | 'fnlt';
+  constraintDate?: Date;
+  deadline?: Date;
+  
+  // Additional P6 Fields
+  calendarId?: string; // Calendar ID
+  cwpCode?: string; // Construction Work Package
+  iwpCode?: string; // Installation Work Package
+  actualStart?: Date; // Actual Start Date
+  actualFinish?: Date; // Actual Finish Date
+  remainingDuration?: number; // Remaining Duration
+  remainingWork?: number; // Remaining Work (hours)
+  actualWork?: number; // Actual Work (hours)
+  plannedWork?: number; // Planned Work (hours)
+  
+  // EPS (Enterprise Project Structure) Fields - Section 1
+  epsId?: string; // EPS Node ID
+  epsName?: string; // EPS Node Name
+  projectId?: string; // Project ID
+  projectName?: string; // Project Name
+  projectCode?: string; // Project Code (Codigo)
+  projectManager?: string; // Responsible Manager
+  
+  // Baseline Management (extended)
+  baselineId?: string; // Current baseline ID
+  baselineNumber?: number; // Baseline number (1, 2, 3...)
+  baselineType?: 'project' | 'user' | 'initial' | 'current';
+  
+  // Cost Fields
+  plannedCost?: number; // Custo Planejado
+  actualCost?: number; // Custo Real
+  plannedValue?: number; // Valor Planejado
+  actualValue?: number; // Valor Real
+  unitCost?: number; // Custo Unitário
+  plannedQuantity?: number; // Quantidade Planejada
+  actualQuantity?: number; // Quantidade Real
+  unitOfMeasure?: string; // Unidade de Medida (m², m³, un)
+  
+  // Duration fields
+  durationHours?: number; // Duração em horas
+  durationUnit?: 'hours' | 'days'; // Unidade de tempo
+  
+  // Sector/Department
+  sectorId?: string; // ID do Setor
+  sectorName?: string; // Nome do Setor
+}
+
+// ============================================================================
+// EPS (Enterprise Project Structure) TYPES
+// ============================================================================
+
+export interface EPSNode {
+  id: string;
+  name: string;
+  code?: string;
+  parentId?: string | null;
+  level: number;
+  ownerId?: string; // Responsible OBS node
+  children?: EPSNode[];
+}
+
+// ============================================================================
+// BASELINE TYPES
+// ============================================================================
+
+export interface Baseline {
+  id: string;
+  projectId: string;
+  name: string;
+  number: number; // Baseline number (1, 2, 3...)
+  type: 'project' | 'user' | 'initial' | 'current';
+  createdAt: Date;
+  createdBy?: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface BaselineTask {
+  id: string;
+  baselineId: string;
+  taskId: string;
+  startDate: Date;
+  finishDate: Date;
+  duration: number;
+  cost?: number;
+  work?: number;
+}
+
+// ============================================================================
+// ACTIVITY CODE TYPES
+// ============================================================================
+
+export interface ActivityCodeType {
+  id: string;
+  name: string;
+  description?: string;
+  scope: 'global' | 'project' | 'eps';
+  scopeId?: string; // Project or EPS ID if scoped
+  maxLength?: number;
+  isSecure?: boolean;
+}
+
+export interface ActivityCodeValue {
+  id: string;
+  typeId: string;
+  value: string;
+  description?: string;
+  parentId?: string | null;
+  color?: string;
+  sortOrder?: number;
 }
 
 // ============================================================================
@@ -52,6 +221,9 @@ export interface Dependency {
   toTaskId: string;
   type: DependencyType;
   lag?: number; // Lag in days (can be negative for lead time)
+  // P6 Additional Fields
+  lagType?: 'fixed' | 'variable'; // Lag type
+  driving?: boolean; // Is this dependency on the critical path
 }
 
 // ============================================================================
@@ -68,6 +240,24 @@ export interface Resource {
   costRate?: number; // Cost per hour
   costType?: 'hour' | 'day' | 'fixed'; // Cost calculation type
   totalCost?: number; // Total cost for resource
+  
+  // P6 Resource Fields (Section 3)
+  resourceType?: 'labor' | 'nonlabor' | 'material'; // Resource type
+  calendarId?: string; // Calendar ID for this resource
+  maxUnits?: number; // Maximum available units (%)
+  unitOfMeasure?: string; // Unit of measure (m3, Ton, Hr, Un)
+  unitAbbreviation?: string; // Unit abbreviation
+  
+  // Role Fields (Section 3.3)
+  roleId?: string; // Role identifier
+  roleName?: string; // Role name
+  roleRate?: number; // Standard cost rate for role
+  roleMaxUnits?: number; // Max units available for role
+  skills?: string[]; // Required competencies
+  
+  // Resource Curve (Section 3.2)
+  curveType?: 'uniform' | 'triangular' | 'bell' | 'front_loaded' | 'back_loaded';
+  curveData?: number[]; // Custom curve data points
 }
 
 export interface Assignment {

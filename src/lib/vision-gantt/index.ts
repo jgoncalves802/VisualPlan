@@ -53,7 +53,13 @@ export type {
   TaskStatus,
   DependencyType,
   TimelineRange,
-  TaskBarPosition
+  TaskBarPosition,
+  // P6 Types
+  EPSNode,
+  Baseline,
+  BaselineTask,
+  ActivityCodeType,
+  ActivityCodeValue
 } from './types';
 
 // Stores (for advanced state management)
@@ -107,7 +113,19 @@ export type {
 
 // Configuration
 export { VIEW_PRESETS, getViewPreset, getPixelsPerDay } from './config/view-presets';
-export { DEFAULT_COLUMNS } from './config/default-columns';
+export { DEFAULT_COLUMNS, EXTENDED_COLUMNS, COMPACT_COLUMNS } from './config/default-columns';
+
+// P6 Enterprise Columns
+export {
+  BASELINE_COLUMNS,
+  EVM_COLUMNS,
+  ACTIVITY_CODE_COLUMNS,
+  RESOURCE_COLUMNS,
+  CRITICAL_PATH_COLUMNS,
+  SCHEDULE_COLUMNS,
+  P6_COLUMN_PRESETS,
+  ALL_P6_COLUMNS
+} from './config/p6-columns';
 
 // Theme System
 export {
