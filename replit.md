@@ -116,3 +116,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Column Presets**: P6_COLUMN_PRESETS for different views (STANDARD, EVM_ANALYSIS, BASELINE_TRACKING, CRITICAL_PATH)
     - **Adapter Enhancement**: Comprehensive AtividadeMock to P6 Task field mapping with project context support
     - **Documentation**: Updated P6-COLUMNS-IMPLEMENTATION.md with Phase 1 completion status
+*   **P6 Backend Services (December 2025)**: Complete backend infrastructure for P6 features:
+    - **Activity Codes SQL Schema**: `docs/sql/activity-codes-schema.sql` with RLS policies for empresa/project scoping
+    - **activityCodeService.ts**: Full CRUD service for activity code types, values, and task assignments
+    - **useP6Data Hook**: Aggregates baselines, activity codes, and EPS/OBS context in single hook
+    - **VisionGanttWrapper P6 Integration**: Component now accepts `empresaId` prop to load and display P6 data
+    - **atividadeToGanttTaskWithP6**: Enhanced adapter function that enriches tasks with baseline variance and activity codes
