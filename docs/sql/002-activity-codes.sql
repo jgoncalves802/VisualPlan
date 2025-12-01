@@ -1,5 +1,6 @@
 -- ============================================================================
--- VisionPlan P6 Features - Supabase Migration Script
+-- VisionPlan P6 Features - Activity Codes Migration
+-- PREREQUISITE: Run 001-base-schema.sql first!
 -- Execute this script in your Supabase SQL Editor
 -- ============================================================================
 
