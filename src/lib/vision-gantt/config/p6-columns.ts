@@ -995,6 +995,116 @@ const formatDependencyInfo = (deps: DependencyInfo[] | undefined): React.ReactEl
   );
 };
 
+// Error Link validation function based on MS Project formula
+interface ErrorLinkContext {
+  isGroup?: boolean;
+  name?: string;
+  predecessors?: DependencyInfo[];
+  successors?: DependencyInfo[];
+  constraintType?: string;
+}
+
+type ErrorLinkStatus = 'ok' | 'warning' | 'error' | 'info';
+
+interface ErrorLinkResult {
+  message: string;
+  status: ErrorLinkStatus;
+}
+
+function validateErrorLink(task: ErrorLinkContext): ErrorLinkResult {
+  const { isGroup, name = '', predecessors = [], successors = [], constraintType } = task;
+  
+  // Parent tasks (Resumo) → "---"
+  if (isGroup) {
+    return { message: '---', status: 'info' };
+  }
+  
+  const taskName = name.trim();
+  const startsWithInicio = taskName.toLowerCase().startsWith('início') || taskName.toLowerCase().startsWith('inicio');
+  const startsWithTermino = taskName.toLowerCase().startsWith('término') || taskName.toLowerCase().startsWith('termino');
+  
+  const hasPredecessors = predecessors.length > 0;
+  const hasSuccessors = successors.length > 0;
+  
+  // Constraint type 0 means ASAP (no constraint) - any other value means has constraint
+  const hasConstraint = constraintType && constraintType !== 'asap';
+  
+  // Check for non-preferred link types (SF, SS, FF instead of FS)
+  const hasNonPreferredLinks = [...predecessors, ...successors].some(
+    dep => dep.type === 'SF' || dep.type === 'SS' || dep.type === 'FF'
+  );
+  
+  // Logic based on MS Project formula
+  if (!hasSuccessors && !startsWithTermino) {
+    // No successors and not an end task
+    if (!hasPredecessors && !startsWithInicio) {
+      // No predecessors and not a start task
+      if (hasConstraint) {
+        return { 
+          message: 'Incluir predecessora, sucessora e remover restrição.', 
+          status: 'error' 
+        };
+      }
+      return { 
+        message: 'Incluir predecessora e sucessora.', 
+        status: 'error' 
+      };
+    } else {
+      // Has predecessors or is a start task
+      if (hasConstraint && !startsWithInicio && !startsWithTermino) {
+        return { 
+          message: 'Incluir sucessora e remover restrição.', 
+          status: 'error' 
+        };
+      }
+      return { 
+        message: 'Incluir sucessora.', 
+        status: 'warning' 
+      };
+    }
+  } else {
+    // Has successors or is an end task
+    if (!hasPredecessors && !startsWithInicio) {
+      // No predecessors and not a start task
+      if (hasConstraint && !startsWithInicio && !startsWithTermino) {
+        return { 
+          message: 'Incluir predecessora e remover restrição.', 
+          status: 'error' 
+        };
+      }
+      return { 
+        message: 'Incluir predecessora.', 
+        status: 'warning' 
+      };
+    } else {
+      // Has predecessors or is a start task
+      if (hasConstraint && !startsWithInicio && !startsWithTermino) {
+        return { 
+          message: 'Remover restrição.', 
+          status: 'warning' 
+        };
+      }
+      if (hasNonPreferredLinks) {
+        return { 
+          message: 'Use preferencialmente ligações TI', 
+          status: 'info' 
+        };
+      }
+      return { 
+        message: 'OK!', 
+        status: 'ok' 
+      };
+    }
+  }
+}
+
+const ERROR_LINK_STYLES: Record<ErrorLinkStatus, { bg: string; text: string; icon: string }> = {
+  ok: { bg: '#D1FAE5', text: '#059669', icon: '✓' },
+  warning: { bg: '#FEF3C7', text: '#D97706', icon: '⚠' },
+  error: { bg: '#FEE2E2', text: '#DC2626', icon: '✗' },
+  info: { bg: '#E5E7EB', text: '#6B7280', icon: '—' }
+};
+
 export const DEPENDENCY_COLUMNS: ColumnConfig[] = [
   {
     field: 'predecessors',
@@ -1016,6 +1126,48 @@ export const DEPENDENCY_COLUMNS: ColumnConfig[] = [
   }
 ];
 
+// Error Link column - validates dependency errors
+export const ERROR_LINK_COLUMNS: ColumnConfig[] = [
+  {
+    field: 'errorLink',
+    header: 'Error Link',
+    width: 250,
+    minWidth: 150,
+    renderer: (_value: unknown, task?: Task) => {
+      if (!task) {
+        return React.createElement('span', { className: 'text-gray-400' }, '-');
+      }
+      
+      const result = validateErrorLink({
+        isGroup: task.isGroup,
+        name: task.name,
+        predecessors: task.predecessors,
+        successors: task.successors,
+        constraintType: task.constraintType
+      });
+      
+      const style = ERROR_LINK_STYLES[result.status];
+      
+      return React.createElement(
+        'div',
+        {
+          className: 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium',
+          style: {
+            backgroundColor: style.bg,
+            color: style.text,
+            whiteSpace: 'nowrap'
+          },
+          title: result.message
+        },
+        React.createElement('span', null, style.icon),
+        React.createElement('span', null, result.message)
+      );
+    },
+    sortable: true,
+    resizable: true
+  }
+];
+
 // ============================================================================
 // COLUMN PRESETS
 // ============================================================================
@@ -1027,7 +1179,8 @@ export const P6_COLUMN_PRESETS = {
   resources: RESOURCE_COLUMNS,
   criticalPath: CRITICAL_PATH_COLUMNS,
   schedule: SCHEDULE_COLUMNS,
-  dependencies: DEPENDENCY_COLUMNS
+  dependencies: DEPENDENCY_COLUMNS,
+  errorLink: ERROR_LINK_COLUMNS
 };
 
 export const ALL_P6_COLUMNS: ColumnConfig[] = [
@@ -1037,5 +1190,6 @@ export const ALL_P6_COLUMNS: ColumnConfig[] = [
   ...RESOURCE_COLUMNS,
   ...CRITICAL_PATH_COLUMNS,
   ...SCHEDULE_COLUMNS,
-  ...DEPENDENCY_COLUMNS
+  ...DEPENDENCY_COLUMNS,
+  ...ERROR_LINK_COLUMNS
 ];

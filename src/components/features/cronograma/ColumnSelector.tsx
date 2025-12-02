@@ -9,7 +9,8 @@ import {
   RESOURCE_COLUMNS,
   CRITICAL_PATH_COLUMNS,
   SCHEDULE_COLUMNS,
-  DEPENDENCY_COLUMNS
+  DEPENDENCY_COLUMNS,
+  ERROR_LINK_COLUMNS
 } from '../../../lib/vision-gantt/config/p6-columns';
 
 interface ColumnCategory {
@@ -76,6 +77,13 @@ const COLUMN_CATEGORIES: ColumnCategory[] = [
     icon: '🔗',
     columns: DEPENDENCY_COLUMNS,
     color: '#6366F1'
+  },
+  {
+    id: 'errorLink',
+    label: 'Validação de Links',
+    icon: '⚠️',
+    columns: ERROR_LINK_COLUMNS,
+    color: '#EF4444'
   }
 ];
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-VisionPlan is a professional construction project management platform (Plataforma Integrada de Gestão de Obras) built with React, TypeScript, and Vite. It provides integrated planning and management tools with 4D capabilities and the Last Planner System (LPS) methodology. The platform aims to revolutionize construction project management through advanced planning, real-time monitoring, and collaborative features, targeting a significant share of the construction tech market.
+VisionPlan is a professional construction project management platform built with React, TypeScript, and Vite. It offers integrated planning and management tools, including 4D capabilities and the Last Planner System (LPS) methodology. The platform aims to revolutionize construction project management through advanced planning, real-time monitoring, and collaborative features.
 
 ## User Preferences
 
@@ -12,127 +12,34 @@ The user prefers an iterative development approach. Major changes should be disc
 
 VisionPlan is a single-page application (SPA) with a modern frontend stack and a serverless backend.
 
-**Key Architectural Decisions:**
-
-*   **Frontend Framework**: React 18.2 with TypeScript 5.2 for robust, type-safe development.
-*   **Build Tool**: Vite 5.0 for fast development and optimized builds.
-*   **Styling**: Tailwind CSS 3.3 for utility-first styling and rapid UI development.
-*   **State Management**: Zustand 4.4 for a lightweight and flexible state management solution.
-*   **Routing**: React Router v6 for declarative navigation.
-*   **Backend**: Supabase for all backend services (Auth, Database, Storage, Real-time).
+*   **Frontend Framework**: React 18.2 with TypeScript 5.2.
+*   **Build Tool**: Vite 5.0.
+*   **Styling**: Tailwind CSS 3.3.
+*   **State Management**: Zustand 4.4.
+*   **Routing**: React Router v6.
+*   **Backend**: Supabase (Auth, Database, Storage, Real-time).
 *   **UI/UX Decisions**:
-    *   **Theme Customization**: A system allowing 12 customizable colors per client for branding.
+    *   **Theme Customization**: 12 customizable colors per client.
     *   **Responsive Design**: Optimized for mobile, tablet, and desktop.
-    *   **Component-based**: Utilizes a reusable UI component library (`src/components/ui/`) including `Toast`, `Modal`, `ConfirmDialog`, and `Button` for consistent design and enhanced user experience.
+    *   **Component-based**: Reusable UI component library (`src/components/ui/`).
 *   **Technical Implementations**:
-    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and VisionGantt for advanced scheduling.
-    *   **VisionGantt Library**: Custom Gantt library (`src/lib/vision-gantt/`) inspired by Bryntum Scheduler Pro with enterprise-grade features including:
-        - CalendarStore for working calendar management with holidays and exceptions
-        - Resource management with allocation tracking
-        - Full calendar integration via visionplan-adapter.ts converter
-        - Dynamic Critical Path Method (CPM) with automatic recalculation via `useCriticalPath` hook
-        - Near-critical path detection (total float ≤ 5 days per Primavera P6 standard)
-        - Constraint validation with visual violation indicators
-    *   **Resource Management**: Full resource allocation system with histogram visualization, resource types, calendars, and conflict detection.
-    *   **Baseline Tracking**: Support for project baselines with variance analysis (Primavera P6 model).
-    *   **Real-time Updates**: Achieved via WebSockets through Supabase.
-    *   **Multi-tenancy**: Implemented through a robust company system (`empresas` table) with Row Level Security (RLS) for data isolation.
-    *   **User Management**: Comprehensive user, profile, and permission management including Governance Layers (PROPONENTE, FISCALIZACAO, CONTRATADA) and fine-grained Access Profiles.
-    *   **Organizational Structures**: Support for Enterprise Project Structure (EPS) based on Primavera P6 model and Organizational Breakdown Structure (OBS) with hierarchical nodes.
-    *   **Hierarchy Levels and Organizational Units**: Configurable vertical hierarchy levels and departmental organizational units to define project and company structures.
-    *   **Admin Panel**: A centralized dashboard (`AdminPage.tsx`) with role-based access for managing users, companies, themes, access profiles, and organizational structures.
-*   **Project Structure**:
-    ```
-    visionplan/
-    ├── src/                    # Source code
-    │   ├── components/        # React components
-    │   ├── pages/            # Page components
-    │   ├── stores/           # Zustand state stores
-    │   ├── services/         # API services
-    │   ├── hooks/            # Custom React hooks
-    │   ├── utils/            # Utility functions
-    │   ├── types/            # TypeScript types
-    │   ├── routes/           # Route configuration
-    │   └── styles/           # Global styles
-    ├── docs/                 # Documentation
-    ├── public/              # Static assets
-    └── dist/                # Production build output
-    ```
+    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and VisionGantt.
+    *   **VisionGantt Library**: Custom Gantt library (`src/lib/vision-gantt/`) with enterprise features, including CalendarStore, resource management, critical path method (CPM) with near-critical path detection, constraint validation, and P6-style column system.
+    *   **Resource Management**: Full resource allocation with histogram visualization and conflict detection.
+    *   **Baseline Tracking**: Project baselines with variance analysis (Primavera P6 model).
+    *   **Real-time Updates**: Via WebSockets through Supabase.
+    *   **Multi-tenancy**: Implemented through a company system (`empresas` table) with Row Level Security (RLS).
+    *   **User Management**: Comprehensive user, profile, and permission management, including Governance Layers and Access Profiles.
+    *   **Organizational Structures**: Enterprise Project Structure (EPS) and Organizational Breakdown Structure (OBS) with hierarchical nodes.
+    *   **Admin Panel**: Centralized dashboard (`AdminPage.tsx`) for managing users, companies, themes, access profiles, and organizational structures.
+    *   **Event-Sourced Controller Architecture**: Unidirectional data flow for Gantt chart state management using `useGanttController` hook to prevent race conditions and ensure data consistency.
+    *   **P6 Enterprise Columns System**: Over 80 professional columns organized by category (Baselines, EVM, Activity Codes, Resources, Critical Path, Schedule) with TypeScript types and EVM calculations.
+    *   **Predecessor/Successor Columns**: P6-style dependency columns displaying lag with color-coded badges and visual lag on arrows.
+    *   **Error Link Column**: MS Project-style dependency validation column with status indicators and error messages for missing dependencies, constraint conflicts, and non-preferred link types.
 
 ## External Dependencies
 
-*   **Supabase**: Provides PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
+*   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
 *   **Recharts**: For dynamic and interactive charts.
-*   **React Three Fiber**: For 3D visualization capabilities.
-*   **VisionGantt** (internal): Custom Gantt chart library with MS Project/Primavera P6 grade features.
-
-## Recent Changes (November 2025)
-
-*   **Resizable Splitter Between Grid and Timeline**: Replaced fixed scroll divider with draggable splitter for adjusting grid/timeline proportions. Position is persisted in localStorage.
-*   **Alt+Scroll Zoom**: Added zoom functionality when holding Alt key and scrolling mouse wheel over the timeline. Cycles through presets: year → quarter → month → week → day.
-*   **Adjustable Columns with Persistence**: Column widths are saved to localStorage and restored on page load. Columns are prioritized over timeline width when resizing.
-*   **Keyboard Shortcuts Configuration Page**: Added new "Atalhos de Teclado" tab in Settings page with:
-    - Editable shortcuts for all actions
-    - Category grouping (Navigation, Selection, Editing, View, General)
-    - Enable/disable individual shortcuts
-    - Reset to defaults functionality
-    - All preferences persisted via Zustand with localStorage
-*   **MS Project-Style Keyboard Shortcuts**: Implemented professional keyboard navigation:
-    - **Right-click context menu**: Task actions modal now opens on right-click (like MS Project/Excel)
-    - **Left-click selection**: Click to select a single task
-    - **Shift+Arrow Up/Down**: Multi-select tasks for batch operations
-    - **Alt+Shift+Arrow Right**: Indent task (make subtask of task above)
-    - **Alt+Shift+Arrow Left**: Outdent task (move to parent level)
-*   **Task Hierarchy Management**: Added `indentTask`, `outdentTask`, `indentTasks`, `outdentTasks` methods to TaskStore for managing task hierarchies with automatic WBS regeneration. Indent logic follows MS Project/P6 behavior: tasks become children of the closest task above at same or higher level, preserving existing hierarchies.
-*   **Invisible Splitter**: Replaced visible scroll divider with invisible splitter between grid and timeline. Only shows on hover (subtle blue indicator when dragging).
-*   **Settings Navigation**: Added Configuracoes link in sidebar menu with Settings icon, routing to full ConfiguracoesPage with Tema and Atalhos tabs.
-*   **P6 Columns Documentation**: Created `docs/P6-COLUMNS-IMPLEMENTATION.md` with detailed specification for Primavera P6-style columns including EPS structure, baselines, resources, EVM, and UDFs for future implementation.
-*   **EditDependencyModal**: Created component (`src/components/features/cronograma/EditDependencyModal.tsx`) allowing users to click on dependency arrows to edit dependency type (FS/SS/FF/SF) and lag. Features visual type selection, validated lag input (-365 to 365 days), and delete functionality.
-*   **Dependency Click Handler**: Integrated onDependencyClick handler throughout the component chain (DependencyArrow → GanttTimeline → GanttChart → VisionGanttWrapper) enabling interactive dependency editing.
-*   **Dynamic Critical Path System**: Implemented `useCriticalPath` hook with automatic recalculation when tasks or dependencies change. Includes near-critical path detection (total float ≤ 5 days) with distinct orange visual styling.
-*   **Visual Critical Path Updates**: All Gantt components (TaskBar, DependencyArrow, GanttTimeline, GanttChart) now reactively display critical (red), near-critical (orange), and normal (blue) states.
-*   **Theme Enhancements**: Added `nearCriticalActivity` colors to all three themes (P6 Classic, Dark, Construction).
-*   **VisionGantt-only architecture**: Removed DHTMLX Gantt dual-engine architecture, CronogramaPage now uses VisionGantt exclusively.
-*   **Calendar integration**: Added full calendar conversion from VisionPlan to VisionGantt CalendarStore.
-*   **Resource and baseline hooks**: Created useResources.ts and useBaselines.ts for proper state management.
-*   **Improved Dependency Arrow Rendering**: Enhanced dependency arrows with orthogonal routing (SVAR-style) with proper spacing and elegant arrowheads. Dependencies now follow 90-degree paths for cleaner visualization.
-*   **Enhanced Milestone Visualization**: Milestones now render as larger, more prominent diamond shapes (70% of bar height) with improved centering and visibility.
-*   **Robust Indent/Outdent Synchronization**: Fixed indent/outdent propagation to broadcast ALL tasks after hierarchy changes. This ensures complete synchronization between TaskStore and external VisionPlan stores, including WBS, parentId, isGroup, and level changes for all ancestors and descendants.
-*   **Improved Change Detection**: Enhanced `detectTaskChanges` in visionplan-adapter.ts to properly detect parentId changes (with null/undefined normalization) and tipo transitions (Marco/Fase/Tarefa).
-*   **Event-Sourced Controller Architecture (November 30, 2025)**: Implemented new unidirectional data flow architecture to permanently fix the indent/outdent hierarchy reset issue:
-    - **GanttChartV2**: New component that uses internal controller as single source of truth
-    - **useGanttController hook**: Manages all task state internally with lazy initialization
-    - **Local Task Cache**: VisionGanttWrapper maintains `localTasks` state that is only re-synced when task IDs change (add/remove)
-    - **One-way Sync**: Changes emit to external cronogramaStore via callbacks but NEVER read back from it
-    - **Race Condition Fix**: Eliminated bidirectional data flow that caused hierarchy changes to be immediately overwritten by stale props
-
-## Recent Changes (December 2025)
-
-*   **P6 Enterprise Columns System (December 1, 2025)**: Implemented comprehensive Primavera P6-style column system:
-    - **80+ Professional Columns**: Organized by category (Baselines, EVM, Activity Codes, Resources, Critical Path, Schedule)
-    - **TypeScript Types**: Extended Task interface with P6 fields (EPS, Baseline, EVM, ActivityCode, Resource)
-    - **New P6 Interfaces**: EPSNode, Baseline, BaselineTask, ActivityCodeType, ActivityCodeValue
-    - **EVM Calculations**: Automatic CPI, SPI, EAC, VAC, CSI calculations in adapter
-    - **Column Presets**: P6_COLUMN_PRESETS for different views (STANDARD, EVM_ANALYSIS, BASELINE_TRACKING, CRITICAL_PATH)
-    - **Adapter Enhancement**: Comprehensive AtividadeMock to P6 Task field mapping with project context support
-    - **Documentation**: Updated P6-COLUMNS-IMPLEMENTATION.md with Phase 1 completion status
-*   **P6 Backend Services (December 2025)**: Complete backend infrastructure for P6 features:
-    - **Activity Codes SQL Schema**: `docs/sql/activity-codes-schema.sql` with RLS policies for empresa/project scoping
-    - **activityCodeService.ts**: Full CRUD service for activity code types, values, and task assignments
-    - **useP6Data Hook**: Aggregates baselines, activity codes, and EPS/OBS context in single hook with baseline switching
-    - **VisionGanttWrapper P6 Integration**: Component now accepts `empresaId` prop to load and display P6 data
-    - **atividadeToGanttTaskWithP6**: Enhanced adapter function that enriches tasks with baseline variance and activity codes
-*   **P6 UI Components (December 2025)**: User interface for P6 features:
-    - **ColumnSelector**: Dynamic column selection dropdown (`src/components/features/cronograma/ColumnSelector.tsx`) organized by P6 categories (Baseline, EVM, Activity Codes, Resources, Critical Path, Schedule) with localStorage persistence
-    - **BaselineSelector**: Dropdown selector (`src/components/features/cronograma/BaselineSelector.tsx`) for choosing project baselines with primary baseline indicator and interactive baseline switching via `setCurrentBaselineById`
-    - **AdminActivityCodesPage**: Full CRUD admin interface (`src/pages/AdminActivityCodesPage.tsx`) for managing Activity Code Types and hierarchical Values with drag-reorder support
-    - **Supabase Migration Script**: Complete SQL migration (`docs/sql/supabase-migration.sql`) for activity_code_types, activity_code_values, and activity_task_codes tables with enterprise RLS policies
-*   **Predecessor/Successor Columns (December 2, 2025)**: Implemented P6-style dependency columns with lag representation:
-    - **DependencyInfo Type**: New interface in Task type for storing predecessor/successor relationships with taskId, taskCode, taskName, type (FS/SS/FF/SF), lag, and lagUnit
-    - **DEPENDENCY_COLUMNS**: New column configuration in `p6-columns.ts` with Predecessores and Sucessores columns
-    - **Formatted Display**: Dependencies shown as color-coded badges with format TASK_CODE + TYPE + LAG + UNIT (e.g., "ATIV-1FS+2d", "ATIV-3SS-1h")
-    - **Color Coding**: FS=blue, SS=green, FF=yellow, SF=pink for visual distinction
-    - **Lag Units**: Support for minutes (mi), hours (h), days (d), months (mo), years (y)
-    - **Visual Lag on Arrows**: Dependency arrows now display lag labels with type indicator (e.g., "FS+2d") positioned on the arrow path
-    - **ColumnSelector Update**: Added "Dependências" category with Predecessores and Sucessores columns
-    - **Adapter Enhancement**: `visionplan-adapter.ts` now populates predecessors/successors from dependencies data
+*   **React Three Fiber**: For 3D visualization.
+*   **VisionGantt** (internal): Custom Gantt chart library.
