@@ -17,6 +17,7 @@ import { TaskModal } from '../components/features/cronograma/TaskModal';
 import { DependencyModal } from '../components/features/cronograma/DependencyModal';
 import { CronogramaStats } from '../components/features/cronograma/CronogramaStats';
 import { AtividadeActionsModal } from '../components/features/cronograma/AtividadeActionsModal';
+import { ManageDependenciesModal } from '../components/features/cronograma/ManageDependenciesModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
@@ -40,6 +41,7 @@ export const CronogramaPage: React.FC = () => {
     atualizarAtividade,
     excluirAtividade,
     adicionarDependencia,
+    atualizarDependencia,
     excluirDependencia,
     calcularCaminhoCritico,
   } = useCronograma(projetoId || 'proj-1');
@@ -62,6 +64,8 @@ export const CronogramaPage: React.FC = () => {
   const [atividadeParaAcoes, setAtividadeParaAcoes] = useState<any | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+  const [manageDepsModalOpen, setManageDepsModalOpen] = useState(false);
+  const [manageDepsAtividadeId, setManageDepsAtividadeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -90,6 +94,12 @@ export const CronogramaPage: React.FC = () => {
   const handleAddRestricaoFromAtividade = (atividadeId: string) => {
     setRestricaoModalAtividadeId(atividadeId);
     setRestricaoModalOpen(true);
+    setActivityActionsModalOpen(false);
+  };
+
+  const handleManageDependencies = (atividadeId: string) => {
+    setManageDepsAtividadeId(atividadeId);
+    setManageDepsModalOpen(true);
     setActivityActionsModalOpen(false);
   };
 
@@ -304,10 +314,27 @@ export const CronogramaPage: React.FC = () => {
           }}
           onAddRestricao={handleAddRestricaoFromAtividade}
           onEditAtividade={handleEditarAtividade}
+          onManageDependencies={handleManageDependencies}
           onViewDetails={(atividadeId) => {
             console.log('Ver detalhes da atividade:', atividadeId);
           }}
         />
+
+        {manageDepsAtividadeId && (
+          <ManageDependenciesModal
+            isOpen={manageDepsModalOpen}
+            onClose={() => {
+              setManageDepsModalOpen(false);
+              setManageDepsAtividadeId(null);
+            }}
+            atividadeId={manageDepsAtividadeId}
+            atividades={todasAtividades}
+            dependencias={dependencias}
+            onAddDependencia={adicionarDependencia}
+            onUpdateDependencia={atualizarDependencia}
+            onRemoveDependencia={excluirDependencia}
+          />
+        )}
 
         <RestricaoModal
           restricao={null}
@@ -391,10 +418,27 @@ export const CronogramaPage: React.FC = () => {
         }}
         onAddRestricao={handleAddRestricaoFromAtividade}
         onEditAtividade={handleEditarAtividade}
+        onManageDependencies={handleManageDependencies}
         onViewDetails={(atividadeId) => {
           console.log('Ver detalhes da atividade:', atividadeId);
         }}
       />
+
+      {manageDepsAtividadeId && (
+        <ManageDependenciesModal
+          isOpen={manageDepsModalOpen}
+          onClose={() => {
+            setManageDepsModalOpen(false);
+            setManageDepsAtividadeId(null);
+          }}
+          atividadeId={manageDepsAtividadeId}
+          atividades={todasAtividades}
+          dependencias={dependencias}
+          onAddDependencia={adicionarDependencia}
+          onUpdateDependencia={atualizarDependencia}
+          onRemoveDependencia={excluirDependencia}
+        />
+      )}
 
       <RestricaoModal
         restricao={null}

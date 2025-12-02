@@ -32,6 +32,7 @@ export const useCronograma = (projetoId: string) => {
     atualizarAtividade,
     excluirAtividade,
     adicionarDependencia,
+    atualizarDependencia,
     excluirDependencia,
     calcularCaminhoCritico,
     setVisualizacao,
@@ -300,6 +301,7 @@ export const useCronograma = (projetoId: string) => {
 
     // Actions - CRUD Dependências
     adicionarDependencia,
+    atualizarDependencia,
     excluirDependencia,
 
     // Actions - Caminho Crítico

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { AtividadeMock } from '../../../types/cronograma';
-import { X, AlertTriangle, Edit2, FileText, MoreVertical } from 'lucide-react';
+import { X, AlertTriangle, Edit2, FileText, Link2 } from 'lucide-react';
 
 interface AtividadeActionsModalProps {
   atividade: AtividadeMock | null;
@@ -14,6 +14,7 @@ interface AtividadeActionsModalProps {
   onAddRestricao?: (atividadeId: string) => void;
   onEditAtividade?: (atividadeId: string) => void;
   onViewDetails?: (atividadeId: string) => void;
+  onManageDependencies?: (atividadeId: string) => void;
 }
 
 export const AtividadeActionsModal: React.FC<AtividadeActionsModalProps> = ({
@@ -23,6 +24,7 @@ export const AtividadeActionsModal: React.FC<AtividadeActionsModalProps> = ({
   onAddRestricao,
   onEditAtividade,
   onViewDetails,
+  onManageDependencies,
 }) => {
   if (!isOpen || !atividade) return null;
 
@@ -43,6 +45,13 @@ export const AtividadeActionsModal: React.FC<AtividadeActionsModalProps> = ({
   const handleViewDetails = () => {
     if (onViewDetails) {
       onViewDetails(atividade.id);
+    }
+    onClose();
+  };
+
+  const handleManageDependencies = () => {
+    if (onManageDependencies) {
+      onManageDependencies(atividade.id);
     }
     onClose();
   };
@@ -101,6 +110,14 @@ export const AtividadeActionsModal: React.FC<AtividadeActionsModalProps> = ({
             >
               <Edit2 size={20} />
               <span className="font-medium">Editar Atividade</span>
+            </button>
+
+            <button
+              onClick={handleManageDependencies}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <Link2 size={20} />
+              <span className="font-medium">Gerenciar Dependências</span>
             </button>
 
             <button

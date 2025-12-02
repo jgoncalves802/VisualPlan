@@ -11,6 +11,7 @@ import {
   FiltrosCronograma,
   AtividadeMock,
   DependenciaAtividade,
+  TipoDependencia,
   UnidadeTempo,
   ConfiguracoesProjeto,
   FormatoData,
@@ -319,6 +320,36 @@ export const useCronogramaStore = create<CronogramaState>()(
           }));
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao adicionar dependência';
+          set({ erro: mensagem, isLoading: false });
+          throw error;
+        }
+      },
+
+      /**
+       * Atualiza uma dependência existente (tipo e lag)
+       */
+      atualizarDependencia: async (id: string, updates: { tipo?: TipoDependencia; lag_dias?: number }) => {
+        set({ isLoading: true, erro: null });
+
+        try {
+          // Atualiza localmente primeiro para resposta imediata
+          set((state) => ({
+            dependencias: state.dependencias.map((d) =>
+              d.id === id
+                ? {
+                    ...d,
+                    tipo: updates.tipo ?? d.tipo,
+                    lag_dias: updates.lag_dias ?? d.lag_dias,
+                  }
+                : d
+            ),
+            isLoading: false,
+          }));
+          
+          // TODO: Persistir no backend quando service estiver disponível
+          // await cronogramaService.updateDependencia(id, updates);
+        } catch (error) {
+          const mensagem = error instanceof Error ? error.message : 'Erro ao atualizar dependência';
           set({ erro: mensagem, isLoading: false });
           throw error;
         }
