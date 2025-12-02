@@ -131,15 +131,15 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
     // Sector
     sectorId: atividade.setor_id,
     
-    // P6 Baseline Fields - Initialize from planned values when baseline is set
-    blStartDate: startDate, // Using current start as baseline when no explicit baseline
-    blFinishDate: endDate, // Using current end as baseline when no explicit baseline
-    blDuration: atividade.duracao_dias,
-    blCost: atividade.custo_planejado,
-    startVariance: 0, // No variance when no baseline comparison
-    finishVariance: 0,
-    durationVariance: 0,
-    costVariance: costVariance,
+    // P6 Baseline Fields - Empty when no baseline is set
+    blStartDate: undefined,
+    blFinishDate: undefined,
+    blDuration: undefined,
+    blCost: undefined,
+    startVariance: undefined,
+    finishVariance: undefined,
+    durationVariance: undefined,
+    costVariance: undefined,
     
     // Cost Fields
     plannedCost: atividade.custo_planejado,

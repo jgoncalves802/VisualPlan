@@ -16,6 +16,7 @@ import { EditDependencyModal } from './EditDependencyModal';
 import { useP6Data } from '../../../hooks/useP6Data';
 import { ColumnSelector } from './ColumnSelector';
 import { BaselineSelector } from './BaselineSelector';
+import { SaveBaselineButton } from './SaveBaselineButton';
 import { DEFAULT_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
 
 interface VisionGanttWrapperProps {
@@ -481,6 +482,16 @@ export function VisionGanttWrapper({
         </div>
         
         <div className="flex items-center gap-3">
+          {empresaId && (
+            <SaveBaselineButton
+              empresaId={empresaId}
+              projetoId={projetoId}
+              atividades={atividades}
+              dependencias={dependencias}
+              onBaselineSaved={() => p6Data.refreshBaselines()}
+            />
+          )}
+          
           <BaselineSelector
             baselines={p6Data.baselines.map(b => ({
               id: b.id,
