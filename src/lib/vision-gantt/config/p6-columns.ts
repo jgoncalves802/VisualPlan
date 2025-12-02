@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import type { ColumnConfig, Task } from '../types';
+import type { ColumnConfig, Task, DependencyInfo } from '../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -943,6 +943,80 @@ export const SCHEDULE_COLUMNS: ColumnConfig[] = [
 ];
 
 // ============================================================================
+// DEPENDENCY COLUMNS (Predecessors/Successors)
+// ============================================================================
+
+const LAG_UNIT_LABELS: Record<string, string> = {
+  'mi': 'mi',  // minutos
+  'h': 'h',    // horas
+  'd': 'd',    // dias
+  'mo': 'mo',  // meses
+  'y': 'y'     // anos
+};
+
+const formatDependencyInfo = (deps: DependencyInfo[] | undefined): React.ReactElement => {
+  if (!deps || deps.length === 0) {
+    return React.createElement('span', { className: 'text-gray-400' }, '-');
+  }
+  
+  const formattedDeps = deps.map((dep, index) => {
+    const identifier = dep.taskCode || dep.taskId;
+    const lagSign = dep.lag >= 0 ? '+' : '';
+    const lagValue = dep.lag !== 0 ? `${lagSign}${dep.lag}${LAG_UNIT_LABELS[dep.lagUnit] || 'd'}` : '';
+    const depString = `${identifier}${dep.type}${lagValue}`;
+    
+    return React.createElement(
+      'span',
+      { 
+        key: index,
+        className: 'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono',
+        style: { 
+          backgroundColor: dep.type === 'FS' ? '#DBEAFE' : 
+                          dep.type === 'SS' ? '#D1FAE5' : 
+                          dep.type === 'FF' ? '#FEF3C7' : '#FCE7F3',
+          color: dep.type === 'FS' ? '#1D4ED8' : 
+                 dep.type === 'SS' ? '#059669' : 
+                 dep.type === 'FF' ? '#D97706' : '#BE185D',
+          marginRight: index < deps.length - 1 ? '4px' : '0'
+        },
+        title: dep.taskName || identifier
+      },
+      depString
+    );
+  });
+  
+  return React.createElement(
+    'div',
+    { 
+      className: 'flex flex-wrap gap-1 items-center',
+      style: { maxWidth: '100%', overflow: 'hidden' }
+    },
+    ...formattedDeps
+  );
+};
+
+export const DEPENDENCY_COLUMNS: ColumnConfig[] = [
+  {
+    field: 'predecessors',
+    header: 'Predecessores',
+    width: 180,
+    minWidth: 120,
+    renderer: (value: DependencyInfo[]) => formatDependencyInfo(value),
+    sortable: false,
+    resizable: true
+  },
+  {
+    field: 'successors',
+    header: 'Sucessores',
+    width: 180,
+    minWidth: 120,
+    renderer: (value: DependencyInfo[]) => formatDependencyInfo(value),
+    sortable: false,
+    resizable: true
+  }
+];
+
+// ============================================================================
 // COLUMN PRESETS
 // ============================================================================
 
@@ -952,7 +1026,8 @@ export const P6_COLUMN_PRESETS = {
   activityCodes: ACTIVITY_CODE_COLUMNS,
   resources: RESOURCE_COLUMNS,
   criticalPath: CRITICAL_PATH_COLUMNS,
-  schedule: SCHEDULE_COLUMNS
+  schedule: SCHEDULE_COLUMNS,
+  dependencies: DEPENDENCY_COLUMNS
 };
 
 export const ALL_P6_COLUMNS: ColumnConfig[] = [
@@ -961,5 +1036,6 @@ export const ALL_P6_COLUMNS: ColumnConfig[] = [
   ...ACTIVITY_CODE_COLUMNS,
   ...RESOURCE_COLUMNS,
   ...CRITICAL_PATH_COLUMNS,
-  ...SCHEDULE_COLUMNS
+  ...SCHEDULE_COLUMNS,
+  ...DEPENDENCY_COLUMNS
 ];

@@ -1,4 +1,4 @@
-import type { Task, Dependency, Resource, Assignment, TaskStatus, DependencyType } from '../types';
+import type { Task, Dependency, Resource, Assignment, TaskStatus, DependencyType, DependencyInfo } from '../types';
 import type { WorkingCalendar, WorkingDay, Holiday, CalendarException } from '../types/advanced-features';
 import type { AtividadeMock, DependenciaAtividade, TipoDependencia, CalendarioProjeto, DiaTrabalho } from '../../../types/cronograma';
 import type { Resource as VPResource, ResourceAllocation } from '../../../services/resourceService';
@@ -543,6 +543,28 @@ export interface GanttDataSync {
   conflictTaskIds: string[];
 }
 
+// Helper to convert dependency type to DependencyInfo type format
+function convertDependencyType(tipo: TipoDependencia | string): 'FS' | 'SS' | 'FF' | 'SF' {
+  const typeMap: Record<string, 'FS' | 'SS' | 'FF' | 'SF'> = {
+    'TI': 'FS',  // Término-Início (Finish-Start)
+    'II': 'SS',  // Início-Início (Start-Start)
+    'TT': 'FF',  // Término-Término (Finish-Finish)
+    'IT': 'SF',  // Início-Término (Start-Finish)
+    'FS': 'FS',
+    'SS': 'SS',
+    'FF': 'FF',
+    'SF': 'SF',
+  };
+  return typeMap[tipo] || 'FS';
+}
+
+// Helper to determine lag unit based on value (default to days)
+function determineLagUnit(_lagDias: number): 'mi' | 'h' | 'd' | 'mo' | 'y' {
+  // For now, all lags are in days since that's what the database stores
+  // In future, could expand to support other units based on _lagDias magnitude
+  return 'd';
+}
+
 export function createGanttDataSync(
   atividades: AtividadeMock[],
   dependencias: DependenciaAtividade[],
@@ -553,6 +575,58 @@ export function createGanttDataSync(
   const dependencies = convertDependenciesToGantt(dependencias);
   const { resources: ganttResources, assignments } = convertResourcesAndAllocations(resources, allocations);
   
+  // Create lookup maps for tasks
+  const taskById = new Map<string, AtividadeMock>();
+  atividades.forEach(a => taskById.set(a.id, a));
+  
+  // Build predecessors and successors for each task
+  const predecessorsMap = new Map<string, DependencyInfo[]>();
+  const successorsMap = new Map<string, DependencyInfo[]>();
+  
+  for (const dep of dependencias) {
+    const fromTask = taskById.get(dep.atividade_origem_id);
+    const toTask = taskById.get(dep.atividade_destino_id);
+    
+    if (fromTask && toTask) {
+      // Add predecessor to the destination task (toTask has fromTask as predecessor)
+      const predecessorInfo: DependencyInfo = {
+        taskId: dep.atividade_origem_id,
+        taskCode: fromTask.codigo || fromTask.edt || dep.atividade_origem_id,
+        taskName: fromTask.nome,
+        type: convertDependencyType(dep.tipo),
+        lag: dep.lag_dias || 0,
+        lagUnit: determineLagUnit(dep.lag_dias || 0),
+      };
+      
+      if (!predecessorsMap.has(dep.atividade_destino_id)) {
+        predecessorsMap.set(dep.atividade_destino_id, []);
+      }
+      predecessorsMap.get(dep.atividade_destino_id)!.push(predecessorInfo);
+      
+      // Add successor to the origin task (fromTask has toTask as successor)
+      const successorInfo: DependencyInfo = {
+        taskId: dep.atividade_destino_id,
+        taskCode: toTask.codigo || toTask.edt || dep.atividade_destino_id,
+        taskName: toTask.nome,
+        type: convertDependencyType(dep.tipo),
+        lag: dep.lag_dias || 0,
+        lagUnit: determineLagUnit(dep.lag_dias || 0),
+      };
+      
+      if (!successorsMap.has(dep.atividade_origem_id)) {
+        successorsMap.set(dep.atividade_origem_id, []);
+      }
+      successorsMap.get(dep.atividade_origem_id)!.push(successorInfo);
+    }
+  }
+  
+  // Add predecessors and successors to tasks
+  const tasksWithDependencies = tasks.map(task => ({
+    ...task,
+    predecessors: predecessorsMap.get(task.id) || [],
+    successors: successorsMap.get(task.id) || [],
+  }));
+  
   const criticalPathIds = atividades
     .filter(a => a.e_critica)
     .map(a => a.id);
@@ -560,7 +634,7 @@ export function createGanttDataSync(
   const conflictTaskIds: string[] = [];
 
   return {
-    tasks,
+    tasks: tasksWithDependencies,
     dependencies,
     resources: ganttResources,
     assignments,

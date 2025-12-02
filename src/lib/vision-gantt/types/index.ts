@@ -138,6 +138,20 @@ export interface Task {
   // Sector/Department
   sectorId?: string; // ID do Setor
   sectorName?: string; // Nome do Setor
+  
+  // Dependency Fields (Predecessors/Successors)
+  predecessors?: DependencyInfo[]; // Array of predecessor dependencies
+  successors?: DependencyInfo[]; // Array of successor dependencies
+}
+
+// Dependency info for predecessor/successor display
+export interface DependencyInfo {
+  taskId: string;
+  taskCode?: string; // Activity code or WBS
+  taskName?: string;
+  type: 'FS' | 'SS' | 'FF' | 'SF'; // Finish-Start, Start-Start, etc.
+  lag: number; // Lag value (can be negative)
+  lagUnit: 'mi' | 'h' | 'd' | 'mo' | 'y'; // minutes, hours, days, months, years
 }
 
 // ============================================================================

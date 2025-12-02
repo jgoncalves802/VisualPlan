@@ -203,6 +203,7 @@ export const CronogramaPage: React.FC = () => {
                   atividades={todasAtividades}
                   dependencias={dependencias}
                   projetoId={projetoId || 'proj-1'}
+                  empresaId={usuario?.empresaId}
                   resources={resources}
                   allocations={allocations}
                   calendarios={calendarios}

@@ -210,27 +210,52 @@ export function DependencyArrow({
         style={{ transition: 'fill 0.15s ease' }}
       />
       
-      {dependency.lag && dependency.lag !== 0 && isHovered && (
-        <g className="gantt-dependency-lag">
+      {dependency.lag !== undefined && dependency.lag !== 0 && (
+        <g className="gantt-dependency-lag" style={{ opacity: isHovered ? 1 : 0.8 }}>
           <rect
-            x={(fromX + toX) / 2 - 14}
+            x={(fromX + toX) / 2 - 20}
+            y={(fromY + toY) / 2 + taskHeight / 2 - 9}
+            width={40}
+            height={18}
+            rx={4}
+            fill={isCritical ? '#DC2626' : isNearCritical ? '#F59E0B' : '#1F2937'}
+            fillOpacity={0.95}
+          />
+          <text
+            x={(fromX + toX) / 2}
+            y={(fromY + toY) / 2 + taskHeight / 2 + 4}
+            fontSize="10"
+            fontWeight="600"
+            fill="white"
+            textAnchor="middle"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            {dependency.type}{dependency.lag > 0 ? '+' : ''}{dependency.lag}d
+          </text>
+        </g>
+      )}
+      
+      {isHovered && dependency.lag === 0 && (
+        <g className="gantt-dependency-type-label">
+          <rect
+            x={(fromX + toX) / 2 - 12}
             y={(fromY + toY) / 2 + taskHeight / 2 - 8}
-            width={28}
+            width={24}
             height={16}
             rx={3}
-            fill="#1F2937"
+            fill="#374151"
             fillOpacity={0.9}
           />
           <text
             x={(fromX + toX) / 2}
             y={(fromY + toY) / 2 + taskHeight / 2 + 4}
             fontSize="9"
-            fontWeight="500"
+            fontWeight="600"
             fill="white"
             textAnchor="middle"
             fontFamily="system-ui"
           >
-            {dependency.lag > 0 ? '+' : ''}{dependency.lag}d
+            {dependency.type}
           </text>
         </g>
       )}

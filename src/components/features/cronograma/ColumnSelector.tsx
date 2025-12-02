@@ -8,7 +8,8 @@ import {
   ACTIVITY_CODE_COLUMNS,
   RESOURCE_COLUMNS,
   CRITICAL_PATH_COLUMNS,
-  SCHEDULE_COLUMNS
+  SCHEDULE_COLUMNS,
+  DEPENDENCY_COLUMNS
 } from '../../../lib/vision-gantt/config/p6-columns';
 
 interface ColumnCategory {
@@ -68,6 +69,13 @@ const COLUMN_CATEGORIES: ColumnCategory[] = [
     icon: '📅',
     columns: SCHEDULE_COLUMNS,
     color: '#0891B2'
+  },
+  {
+    id: 'dependencies',
+    label: 'Dependências',
+    icon: '🔗',
+    columns: DEPENDENCY_COLUMNS,
+    color: '#6366F1'
   }
 ];
 
