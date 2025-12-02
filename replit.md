@@ -127,3 +127,12 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **BaselineSelector**: Dropdown selector (`src/components/features/cronograma/BaselineSelector.tsx`) for choosing project baselines with primary baseline indicator and interactive baseline switching via `setCurrentBaselineById`
     - **AdminActivityCodesPage**: Full CRUD admin interface (`src/pages/AdminActivityCodesPage.tsx`) for managing Activity Code Types and hierarchical Values with drag-reorder support
     - **Supabase Migration Script**: Complete SQL migration (`docs/sql/supabase-migration.sql`) for activity_code_types, activity_code_values, and activity_task_codes tables with enterprise RLS policies
+*   **Predecessor/Successor Columns (December 2, 2025)**: Implemented P6-style dependency columns with lag representation:
+    - **DependencyInfo Type**: New interface in Task type for storing predecessor/successor relationships with taskId, taskCode, taskName, type (FS/SS/FF/SF), lag, and lagUnit
+    - **DEPENDENCY_COLUMNS**: New column configuration in `p6-columns.ts` with Predecessores and Sucessores columns
+    - **Formatted Display**: Dependencies shown as color-coded badges with format TASK_CODE + TYPE + LAG + UNIT (e.g., "ATIV-1FS+2d", "ATIV-3SS-1h")
+    - **Color Coding**: FS=blue, SS=green, FF=yellow, SF=pink for visual distinction
+    - **Lag Units**: Support for minutes (mi), hours (h), days (d), months (mo), years (y)
+    - **Visual Lag on Arrows**: Dependency arrows now display lag labels with type indicator (e.g., "FS+2d") positioned on the arrow path
+    - **ColumnSelector Update**: Added "Dependências" category with Predecessores and Sucessores columns
+    - **Adapter Enhancement**: `visionplan-adapter.ts` now populates predecessors/successors from dependencies data
