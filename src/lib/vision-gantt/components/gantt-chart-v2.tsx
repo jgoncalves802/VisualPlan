@@ -39,6 +39,7 @@ export interface GanttChartV2Props extends GanttConfig {
   projectName?: string;
   onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
   onTasksChange?: (tasks: Task[]) => void;
+  onCellDoubleClick?: (task: Task, columnField: string) => void;
 }
 
 export function GanttChartV2({
@@ -64,6 +65,7 @@ export function GanttChartV2({
   onViewPresetChange,
   onDependencyClick,
   onTasksChange,
+  onCellDoubleClick,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -561,6 +563,7 @@ export function GanttChartV2({
             onTaskContextMenu={handleTaskContextMenu}
             onToggleExpand={handleToggleExpand}
             onWBSUpdate={handleWBSUpdate}
+            onCellDoubleClick={onCellDoubleClick}
           />
         </div>
         

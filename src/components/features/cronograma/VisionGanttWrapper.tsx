@@ -32,6 +32,7 @@ interface VisionGanttWrapperProps {
   onDependenciaUpdate?: (depId: string, updates: { tipo: TipoDependencia; lag_dias: number }) => Promise<void>;
   onDependenciaDelete?: (depId: string) => void;
   onAtividadeClick?: (atividade: AtividadeMock) => void;
+  onManageDependencies?: (atividadeId: string) => void;
   height?: number;
   gridWidth?: number;
   initialViewPreset?: ViewPreset;
@@ -51,6 +52,7 @@ export function VisionGanttWrapper({
   onDependenciaUpdate,
   onDependenciaDelete,
   onAtividadeClick,
+  onManageDependencies,
   height = 600,
   gridWidth = 500,
   initialViewPreset = 'month',
@@ -397,6 +399,12 @@ export function VisionGanttWrapper({
     await Promise.resolve(onDependenciaDelete(dependencyId));
   }, [onDependenciaDelete]);
 
+  const handleCellDoubleClick = useCallback((task: Task, columnField: string) => {
+    if ((columnField === 'predecessors' || columnField === 'successors') && onManageDependencies) {
+      onManageDependencies(task.id);
+    }
+  }, [onManageDependencies]);
+
   const criticalCount = criticalPath.criticalPathIds.length;
   const nearCriticalCount = criticalPath.nearCriticalPathIds.length;
   const delayedCount = atividades.filter(a => {
@@ -543,6 +551,7 @@ export function VisionGanttWrapper({
         onTaskClick={handleTaskClick}
         onDependencyCreate={handleDependencyCreate}
         onDependencyClick={handleDependencyClick}
+        onCellDoubleClick={handleCellDoubleClick}
         onViewPresetChange={setViewPreset}
         criticalPathIds={criticalPath.criticalPathIds}
         nearCriticalPathIds={criticalPath.nearCriticalPathIds}

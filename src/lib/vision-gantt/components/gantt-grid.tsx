@@ -26,6 +26,7 @@ interface GanttGridProps {
   onTaskSelect?: (task: Task, event?: React.MouseEvent) => void;
   onTaskContextMenu?: (task: Task, event: React.MouseEvent) => void;
   onToggleExpand?: (taskId: string) => void;
+  onCellDoubleClick?: (task: Task, columnField: string) => void;
   selectedTaskId?: string;
   selectedTaskIds?: string[];
   onColumnResize?: (columnIndex: number, newWidth: number) => void;
@@ -45,6 +46,7 @@ export function GanttGrid({
   onTaskSelect,
   onTaskContextMenu,
   onToggleExpand,
+  onCellDoubleClick,
   selectedTaskId,
   selectedTaskIds = [],
   onColumnResize,
@@ -251,6 +253,7 @@ export function GanttGrid({
                 const columnWidth = getColumnWidth(colIndex);
                 const isWBSColumn = column?.field === 'wbs';
                 const isLastColumn = colIndex === columns.length - 1;
+                const isDependencyColumn = column?.field === 'predecessors' || column?.field === 'successors';
 
                 return (
                   <div
@@ -263,8 +266,16 @@ export function GanttGrid({
                       paddingRight: '10px',
                       borderRight: isLastColumn ? 'none' : `1px solid ${isGroup ? 'rgba(255,255,255,0.15)' : gridColors.border}`,
                       fontWeight: isGroup ? 600 : theme.typography.gridLabel.fontWeight,
-                      fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize
+                      fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize,
+                      cursor: isDependencyColumn && !isGroup ? 'pointer' : 'inherit'
                     }}
+                    onDoubleClick={(e) => {
+                      if (isDependencyColumn && !isGroup && onCellDoubleClick) {
+                        e.stopPropagation();
+                        onCellDoubleClick(task, column.field as string);
+                      }
+                    }}
+                    title={isDependencyColumn && !isGroup ? 'Duplo clique para gerenciar dependências' : undefined}
                   >
                     {isNameColumn && isGroup && (
                       <button

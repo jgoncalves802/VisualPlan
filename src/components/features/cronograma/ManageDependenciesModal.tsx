@@ -5,18 +5,18 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Search, Plus, Trash2, Link2, ArrowRight, ArrowLeft, Clock, AlertCircle } from 'lucide-react';
-import { TipoDependencia } from '../../../types/cronograma';
-import type { Task, Dependency, DependencyType } from '../../../lib/vision-gantt/types';
+import { TipoDependencia, AtividadeMock, DependenciaAtividade } from '../../../types/cronograma';
+import type { DependencyType } from '../../../lib/vision-gantt/types';
 
 interface ManageDependenciesModalProps {
   open: boolean;
   onClose: () => void;
-  task: Task | null;
-  allTasks: Task[];
-  dependencies: Dependency[];
-  onAddDependency: (fromTaskId: string, toTaskId: string, type: DependencyType, lag: number) => Promise<void>;
-  onUpdateDependency: (dependencyId: string, updates: { tipo: TipoDependencia; lag_dias: number }) => Promise<void>;
-  onDeleteDependency: (dependencyId: string) => Promise<void>;
+  atividadeId: string;
+  atividades: AtividadeMock[];
+  dependencias: DependenciaAtividade[];
+  onAddDependencia: (dependencia: Omit<DependenciaAtividade, 'id'>) => Promise<void>;
+  onUpdateDependencia: (dependencyId: string, updates: { tipo: TipoDependencia; lag_dias: number }) => Promise<void>;
+  onRemoveDependencia: (dependencyId: string) => Promise<void>;
 }
 
 type TabType = 'predecessors' | 'successors';
@@ -69,12 +69,12 @@ const TYPE_COLORS: Record<DependencyType, { bg: string; text: string; border: st
 export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = ({
   open,
   onClose,
-  task,
-  allTasks,
-  dependencies,
-  onAddDependency,
-  onUpdateDependency,
-  onDeleteDependency,
+  atividadeId,
+  atividades,
+  dependencias,
+  onAddDependencia,
+  onUpdateDependencia,
+  onRemoveDependencia,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('predecessors');
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,65 +88,71 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
     lagUnit: 'd'
   });
 
-  // Reset state when modal opens/closes or task changes
+  // Get current atividade
+  const atividade = useMemo(() => {
+    return atividades.find(a => a.id === atividadeId) || null;
+  }, [atividades, atividadeId]);
+
+  // Reset state when modal opens/closes or atividade changes
   useEffect(() => {
-    if (open && task) {
+    if (open && atividadeId) {
       setSearchTerm('');
       setError(null);
       setSelectedTaskId(null);
       setFormData({ taskId: '', type: 'FS', lag: 0, lagUnit: 'd' });
     }
-  }, [open, task]);
+  }, [open, atividadeId]);
 
   // Get current predecessors and successors
+  // atividade_origem_id = predecessora, atividade_destino_id = sucessora
   const currentPredecessors = useMemo(() => {
-    if (!task) return [];
-    return dependencies.filter(d => d.toTaskId === task.id);
-  }, [dependencies, task]);
+    if (!atividadeId) return [];
+    return dependencias.filter(d => d.atividade_destino_id === atividadeId);
+  }, [dependencias, atividadeId]);
 
   const currentSuccessors = useMemo(() => {
-    if (!task) return [];
-    return dependencies.filter(d => d.fromTaskId === task.id);
-  }, [dependencies, task]);
+    if (!atividadeId) return [];
+    return dependencias.filter(d => d.atividade_origem_id === atividadeId);
+  }, [dependencias, atividadeId]);
 
-  // Get available tasks (exclude current task, parent tasks, and already linked tasks)
+  // Get available atividades (exclude current, parent tasks, and already linked)
   const availableTasks = useMemo(() => {
-    if (!task) return [];
+    if (!atividadeId) return [];
     
     const linkedTaskIds = new Set<string>();
     
     if (activeTab === 'predecessors') {
-      currentPredecessors.forEach(d => linkedTaskIds.add(d.fromTaskId));
+      currentPredecessors.forEach(d => linkedTaskIds.add(d.atividade_origem_id));
     } else {
-      currentSuccessors.forEach(d => linkedTaskIds.add(d.toTaskId));
+      currentSuccessors.forEach(d => linkedTaskIds.add(d.atividade_destino_id));
     }
     
-    return allTasks.filter(t => {
-      // Exclude current task
-      if (t.id === task.id) return false;
+    return atividades.filter(a => {
+      // Exclude current atividade
+      if (a.id === atividadeId) return false;
       // Exclude parent tasks (Fase)
-      if (t.isGroup) return false;
+      if (a.tipo === 'Fase') return false;
       // Exclude already linked tasks
-      if (linkedTaskIds.has(t.id)) return false;
+      if (linkedTaskIds.has(a.id)) return false;
       return true;
     });
-  }, [allTasks, task, activeTab, currentPredecessors, currentSuccessors]);
+  }, [atividades, atividadeId, activeTab, currentPredecessors, currentSuccessors]);
 
   // Filter tasks by search term
   const filteredTasks = useMemo(() => {
     if (!searchTerm.trim()) return availableTasks;
     
     const term = searchTerm.toLowerCase();
-    return availableTasks.filter(t => {
-      const code = (t.wbs || t.projectCode || t.id).toLowerCase();
-      const name = t.name.toLowerCase();
+    return availableTasks.filter(a => {
+      const code = (a.codigo || a.edt || a.id).toLowerCase();
+      const name = a.nome.toLowerCase();
       return code.includes(term) || name.includes(term);
     });
   }, [availableTasks, searchTerm]);
 
-  const getTaskById = (taskId: string) => allTasks.find(t => t.id === taskId);
+  const getAtividadeById = (id: string) => atividades.find(a => a.id === id);
 
-  const getTaskDisplayCode = (t: Task) => t.wbs || t.projectCode || t.id;
+  const getAtividadeDisplayCode = (a: AtividadeMock) => a.codigo || a.edt || a.id;
 
   const handleSelectTask = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -154,19 +160,20 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
   };
 
   const handleAddDependency = async () => {
-    if (!task || !selectedTaskId) return;
+    if (!atividadeId || !selectedTaskId) return;
     
     setIsSubmitting(true);
     setError(null);
     
     try {
-      if (activeTab === 'predecessors') {
-        // Adding a predecessor: fromTask = selected, toTask = current
-        await onAddDependency(selectedTaskId, task.id, formData.type, formData.lag);
-      } else {
-        // Adding a successor: fromTask = current, toTask = selected
-        await onAddDependency(task.id, selectedTaskId, formData.type, formData.lag);
-      }
+      const novaDependencia: Omit<DependenciaAtividade, 'id'> = {
+        atividade_origem_id: activeTab === 'predecessors' ? selectedTaskId : atividadeId,
+        atividade_destino_id: activeTab === 'predecessors' ? atividadeId : selectedTaskId,
+        tipo: formData.type as TipoDependencia,
+        lag_dias: formData.lag,
+      };
+      
+      await onAddDependencia(novaDependencia);
       
       // Reset form
       setSelectedTaskId(null);
@@ -187,7 +194,7 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
     setError(null);
     
     try {
-      await onDeleteDependency(depId);
+      await onRemoveDependencia(depId);
     } catch (err) {
       console.error('Erro ao excluir dependência:', err);
       setError(err instanceof Error ? err.message : 'Erro ao excluir dependência');
@@ -201,10 +208,10 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
     setError(null);
     
     try {
-      const dep = dependencies.find(d => d.id === depId);
-      await onUpdateDependency(depId, { 
+      const dep = dependencias.find(d => d.id === depId);
+      await onUpdateDependencia(depId, { 
         tipo: newType as TipoDependencia, 
-        lag_dias: dep?.lag || 0 
+        lag_dias: dep?.lag_dias || 0 
       });
     } catch (err) {
       console.error('Erro ao atualizar tipo:', err);
@@ -219,9 +226,9 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
     setError(null);
     
     try {
-      const dep = dependencies.find(d => d.id === depId);
-      await onUpdateDependency(depId, { 
-        tipo: (dep?.type || 'FS') as TipoDependencia, 
+      const dep = dependencias.find(d => d.id === depId);
+      await onUpdateDependencia(depId, { 
+        tipo: (dep?.tipo || 'TI') as TipoDependencia, 
         lag_dias: newLag 
       });
     } catch (err) {
@@ -232,7 +239,7 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
     }
   };
 
-  if (!open || !task) return null;
+  if (!open || !atividade) return null;
 
   const currentDeps = activeTab === 'predecessors' ? currentPredecessors : currentSuccessors;
 
@@ -249,7 +256,7 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
               <div>
                 <h2 className="text-lg font-semibold">Gerenciar Dependências</h2>
                 <p className="text-indigo-200 text-sm">
-                  {getTaskDisplayCode(task)} - {task.name}
+                  {getAtividadeDisplayCode(atividade)} - {atividade.nome}
                 </p>
               </div>
             </div>
@@ -326,31 +333,31 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {filteredTasks.map((t) => (
+                  {filteredTasks.map((a) => (
                     <button
-                      key={t.id}
-                      onClick={() => handleSelectTask(t.id)}
+                      key={a.id}
+                      onClick={() => handleSelectTask(a.id)}
                       className={`w-full text-left p-3 rounded-lg transition-all ${
-                        selectedTaskId === t.id
+                        selectedTaskId === a.id
                           ? 'bg-indigo-100 border-2 border-indigo-400'
                           : 'bg-white border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-0.5 rounded text-xs font-mono ${
-                          selectedTaskId === t.id ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-100 text-gray-600'
+                          selectedTaskId === a.id ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {getTaskDisplayCode(t)}
+                          {getAtividadeDisplayCode(a)}
                         </span>
-                        {t.isCritical && (
+                        {a.e_critica && (
                           <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">
                             Crítica
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-800 mt-1 truncate">{t.name}</p>
+                      <p className="text-sm text-gray-800 mt-1 truncate">{a.nome}</p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {t.startDate?.toLocaleDateString('pt-BR')} - {t.endDate?.toLocaleDateString('pt-BR')}
+                        {new Date(a.data_inicio).toLocaleDateString('pt-BR')} - {new Date(a.data_fim).toLocaleDateString('pt-BR')}
                       </p>
                     </button>
                   ))}
@@ -431,12 +438,14 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
               ) : (
                 <div className="space-y-2">
                   {currentDeps.map((dep) => {
-                    const linkedTask = getTaskById(
-                      activeTab === 'predecessors' ? dep.fromTaskId : dep.toTaskId
+                    const linkedAtividade = getAtividadeById(
+                      activeTab === 'predecessors' ? dep.atividade_origem_id : dep.atividade_destino_id
                     );
-                    if (!linkedTask) return null;
+                    if (!linkedAtividade) return null;
                     
-                    const typeColors = TYPE_COLORS[dep.type as DependencyType] || TYPE_COLORS['FS'];
+                    const tipoMap: Record<string, DependencyType> = { 'TI': 'FS', 'II': 'SS', 'TT': 'FF', 'IT': 'SF' };
+                    const tipoGantt = tipoMap[dep.tipo] || 'FS';
+                    const typeColors = TYPE_COLORS[tipoGantt] || TYPE_COLORS['FS'];
                     
                     return (
                       <div
@@ -448,15 +457,15 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-mono">
-                                {getTaskDisplayCode(linkedTask)}
+                                {getAtividadeDisplayCode(linkedAtividade)}
                               </span>
-                              {linkedTask.isCritical && (
+                              {linkedAtividade.e_critica && (
                                 <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">
                                   Crítica
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-800 mt-1 truncate">{linkedTask.name}</p>
+                            <p className="text-sm text-gray-800 mt-1 truncate">{linkedAtividade.nome}</p>
                           </div>
                           <button
                             onClick={() => handleDeleteDependency(dep.id)}
@@ -471,7 +480,7 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
                         {/* Type and Lag */}
                         <div className="flex items-center gap-2">
                           <select
-                            value={dep.type}
+                            value={tipoGantt}
                             onChange={(e) => handleUpdateDependencyType(dep.id, e.target.value as DependencyType)}
                             disabled={isSubmitting}
                             className={`px-2 py-1 rounded text-xs font-medium border ${typeColors.bg} ${typeColors.text} ${typeColors.border}`}
@@ -487,7 +496,7 @@ export const ManageDependenciesModal: React.FC<ManageDependenciesModalProps> = (
                             <Clock className="w-3 h-3 text-gray-400" />
                             <input
                               type="number"
-                              value={dep.lag || 0}
+                              value={dep.lag_dias || 0}
                               onChange={(e) => handleUpdateDependencyLag(dep.id, parseInt(e.target.value) || 0)}
                               disabled={isSubmitting}
                               className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center"

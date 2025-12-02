@@ -227,6 +227,7 @@ export const CronogramaPage: React.FC = () => {
                     await excluirDependencia(depId);
                   }}
                   onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
+                  onManageDependencies={handleManageDependencies}
                   height={600}
                   gridWidth={500}
                 />
@@ -322,7 +323,7 @@ export const CronogramaPage: React.FC = () => {
 
         {manageDepsAtividadeId && (
           <ManageDependenciesModal
-            isOpen={manageDepsModalOpen}
+            open={manageDepsModalOpen}
             onClose={() => {
               setManageDepsModalOpen(false);
               setManageDepsAtividadeId(null);
@@ -426,7 +427,7 @@ export const CronogramaPage: React.FC = () => {
 
       {manageDepsAtividadeId && (
         <ManageDependenciesModal
-          isOpen={manageDepsModalOpen}
+          open={manageDepsModalOpen}
           onClose={() => {
             setManageDepsModalOpen(false);
             setManageDepsAtividadeId(null);
