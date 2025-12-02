@@ -20,6 +20,230 @@ import {
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
 
+/**
+ * Aplica auto-scheduling: recalcula datas das atividades com base nas dependências
+ * Implementa PDM (Precedence Diagram Method) com suporte a lag para todos os tipos de dependência
+ * 
+ * Baseado no algoritmo de Forward Pass do CPM (Critical Path Method)
+ * 
+ * Modelo de datas INCLUSIVAS:
+ * - Uma atividade de 2024-01-01 a 2024-01-01 tem duração de 1 dia
+ * - Uma atividade de 2024-01-01 a 2024-01-02 tem duração de 2 dias
+ * - Fórmula: duração = (end - start) / ONE_DAY + 1
+ * - end = start + (duration - 1) dias
+ */
+function applyAutoScheduling(
+  atividades: AtividadeMock[],
+  dependencias: DependenciaAtividade[]
+): AtividadeMock[] {
+  // Detecta ciclos e ordena topologicamente
+  const sortResult = topologicalSortAtividades(atividades, dependencias);
+  
+  // Se há ciclos, não aplica auto-scheduling para evitar loop infinito
+  if (sortResult.hasCycle) {
+    console.warn('[AutoScheduling] Ciclo detectado nas dependências. Auto-scheduling não aplicado.');
+    return atividades;
+  }
+
+  const atividadeMap = new Map(atividades.map(a => [a.id, { ...a }]));
+  const MIN_DATE = new Date(-8640000000000000);
+  const ONE_DAY_MS = 1000 * 60 * 60 * 24;
+
+  sortResult.sorted.forEach(atividadeId => {
+    const atividade = atividadeMap.get(atividadeId);
+    if (!atividade) return;
+
+    // Encontra todas as dependências onde esta atividade é a sucessora
+    const predecessorDeps = dependencias.filter(d => d.atividade_destino_id === atividadeId);
+    
+    if (predecessorDeps.length === 0) return; // Sem predecessoras, mantém datas originais
+
+    // Calcula duração em dias (modelo INCLUSIVO: end - start + 1)
+    const originalStart = new Date(atividade.data_inicio);
+    const originalEnd = new Date(atividade.data_fim);
+    const diffDays = Math.round((originalEnd.getTime() - originalStart.getTime()) / ONE_DAY_MS);
+    const duracao = Math.max(1, diffDays + 1); // Duração inclusiva (mínimo 1 dia)
+    
+    let calculatedEarlyStart = new Date(MIN_DATE);
+    let calculatedEarlyFinish = new Date(MIN_DATE);
+    let hasStartConstraint = false;
+    let hasFinishConstraint = false;
+
+    predecessorDeps.forEach(dep => {
+      const predAtividade = atividadeMap.get(dep.atividade_origem_id);
+      if (!predAtividade) return;
+
+      const lag = dep.lag_dias ?? 0;
+      const tipo = dep.tipo ?? TipoDependencia.FS;
+
+      const predStart = new Date(predAtividade.data_inicio);
+      const predEnd = new Date(predAtividade.data_fim);
+
+      // Fórmulas PDM alinhadas com critical-path-utils.ts (referência comprovada)
+      // FS: successor.start >= predecessor.finish + lag
+      // SS: successor.start >= predecessor.start + lag  
+      // FF: successor.finish >= predecessor.finish + lag
+      // SF: successor.finish >= predecessor.start + lag
+      switch (tipo) {
+        case TipoDependencia.FS: { // Finish-to-Start
+          const constrainedStart = addDaysToDate(predEnd, lag);
+          if (constrainedStart > calculatedEarlyStart) {
+            calculatedEarlyStart = constrainedStart;
+            hasStartConstraint = true;
+          }
+          break;
+        }
+        case TipoDependencia.SS: { // Start-to-Start
+          const constrainedStart = addDaysToDate(predStart, lag);
+          if (constrainedStart > calculatedEarlyStart) {
+            calculatedEarlyStart = constrainedStart;
+            hasStartConstraint = true;
+          }
+          break;
+        }
+        case TipoDependencia.FF: { // Finish-to-Finish
+          const constrainedFinish = addDaysToDate(predEnd, lag);
+          if (constrainedFinish > calculatedEarlyFinish) {
+            calculatedEarlyFinish = constrainedFinish;
+            hasFinishConstraint = true;
+          }
+          break;
+        }
+        case TipoDependencia.SF: { // Start-to-Finish
+          const constrainedFinish = addDaysToDate(predStart, lag);
+          if (constrainedFinish > calculatedEarlyFinish) {
+            calculatedEarlyFinish = constrainedFinish;
+            hasFinishConstraint = true;
+          }
+          break;
+        }
+      }
+    });
+
+    // Resolução de restrições: satisfaz AMBAS as restrições de início e término
+    // Prioriza a restrição mais restritiva e garante que a duração seja preservada ou estendida se necessário
+    
+    let newStartDate: Date;
+    let newEndDate: Date;
+    
+    if (hasStartConstraint && hasFinishConstraint) {
+      // Temos ambas as restrições - precisa satisfazer as duas
+      // Calcula o início derivado da restrição de término
+      const finishBasedStart = addDaysToDate(calculatedEarlyFinish, -(duracao - 1));
+      
+      // Usa o maior início (satisfaz ambas as restrições de início)
+      newStartDate = calculatedEarlyStart > finishBasedStart ? calculatedEarlyStart : finishBasedStart;
+      
+      // Calcula o término baseado no novo início
+      const startBasedEnd = addDaysToDate(newStartDate, duracao - 1);
+      
+      // Usa o maior término (satisfaz a restrição de término)
+      newEndDate = startBasedEnd > calculatedEarlyFinish ? startBasedEnd : calculatedEarlyFinish;
+      
+      // Atualiza a atividade
+      atividade.data_inicio = formatDateToISO(newStartDate);
+      atividade.data_fim = formatDateToISO(newEndDate);
+      
+      // Recalcula a duração se foi estendida para satisfazer ambas as restrições
+      const newDuration = Math.round((newEndDate.getTime() - newStartDate.getTime()) / ONE_DAY_MS) + 1;
+      atividade.duracao_dias = newDuration;
+      
+    } else if (hasStartConstraint) {
+      // Apenas restrição de início - término é calculado a partir do início
+      newStartDate = calculatedEarlyStart;
+      newEndDate = addDaysToDate(newStartDate, duracao - 1);
+      
+      atividade.data_inicio = formatDateToISO(newStartDate);
+      atividade.data_fim = formatDateToISO(newEndDate);
+      atividade.duracao_dias = duracao;
+      
+    } else if (hasFinishConstraint) {
+      // Apenas restrição de término - início é calculado a partir do término
+      newEndDate = calculatedEarlyFinish;
+      newStartDate = addDaysToDate(newEndDate, -(duracao - 1));
+      
+      atividade.data_inicio = formatDateToISO(newStartDate);
+      atividade.data_fim = formatDateToISO(newEndDate);
+      atividade.duracao_dias = duracao;
+    }
+    // Se não há restrições, mantém as datas originais
+  });
+
+  return Array.from(atividadeMap.values());
+}
+
+interface TopologicalSortResult {
+  sorted: string[];
+  hasCycle: boolean;
+}
+
+/**
+ * Ordena atividades topologicamente para processamento correto de dependências
+ * Detecta ciclos explicitamente e retorna flag indicando se há ciclo
+ */
+function topologicalSortAtividades(
+  atividades: AtividadeMock[],
+  dependencias: DependenciaAtividade[]
+): TopologicalSortResult {
+  const result: string[] = [];
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+  let hasCycle = false;
+
+  const visit = (atividadeId: string): boolean => {
+    if (visited.has(atividadeId)) return true;
+    if (visiting.has(atividadeId)) {
+      // Ciclo detectado!
+      hasCycle = true;
+      return false;
+    }
+
+    visiting.add(atividadeId);
+
+    // Processa predecessores primeiro
+    const predecessors = dependencias
+      .filter(d => d.atividade_destino_id === atividadeId)
+      .map(d => d.atividade_origem_id);
+    
+    for (const predId of predecessors) {
+      if (!visit(predId)) {
+        // Propaga detecção de ciclo
+        return false;
+      }
+    }
+
+    visiting.delete(atividadeId);
+    visited.add(atividadeId);
+    result.push(atividadeId);
+    return true;
+  };
+
+  for (const a of atividades) {
+    if (!visit(a.id) && hasCycle) {
+      // Ciclo detectado, retorna resultado parcial com flag
+      return { sorted: result, hasCycle: true };
+    }
+  }
+
+  return { sorted: result, hasCycle: false };
+}
+
+/**
+ * Adiciona dias a uma data
+ */
+function addDaysToDate(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+/**
+ * Formata data para ISO string (YYYY-MM-DD)
+ */
+function formatDateToISO(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 const initialFilters: FiltrosCronograma = {
   busca: '',
   status: [],
@@ -123,12 +347,12 @@ const initialConfiguracoes: ConfiguracoesProjeto = {
   largura_grid: 360,
   altura_linha: 32,
   colunas: [
-    { field: 'text', label: 'Nome', width: 200, align: 'left', tree: true },
-    { field: 'edt', label: 'EDT', width: 80, align: 'left', tree: false },
-    { field: 'start_date', label: 'Início', width: 100, align: 'center', tree: false },
-    { field: 'end_date', label: 'Fim', width: 100, align: 'center', tree: false },
-    { field: 'duration', label: 'Duração', width: 80, align: 'center', tree: false },
-    { field: 'progress', label: 'Progresso', width: 80, align: 'center', tree: false },
+    { id: 'text', titulo: 'Nome', largura: 200, alinhar: 'left', habilitada: true },
+    { id: 'edt', titulo: 'EDT', largura: 80, alinhar: 'left', habilitada: true },
+    { id: 'start_date', titulo: 'Início', largura: 100, alinhar: 'center', habilitada: true },
+    { id: 'end_date', titulo: 'Fim', largura: 100, alinhar: 'center', habilitada: true },
+    { id: 'duration', titulo: 'Duração', largura: 80, alinhar: 'center', habilitada: true },
+    { id: 'progress', titulo: 'Progresso', largura: 80, alinhar: 'center', habilitada: true },
   ],
   
   // Configurações de Comportamento
@@ -171,7 +395,7 @@ const initialConfiguracoes: ConfiguracoesProjeto = {
 
 export const useCronogramaStore = create<CronogramaState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // ========================================================================
       // ESTADO INICIAL
       // ========================================================================
@@ -307,17 +531,32 @@ export const useCronogramaStore = create<CronogramaState>()(
       },
 
       /**
-       * Adiciona uma nova dependência
+       * Adiciona uma nova dependência e aplica auto-scheduling
        */
       adicionarDependencia: async (dependencia) => {
         set({ isLoading: true, erro: null });
 
         try {
           const novaDependencia = await cronogramaService.createDependencia(dependencia);
-          set((state) => ({
-            dependencias: [...state.dependencias, novaDependencia],
-            isLoading: false,
-          }));
+          
+          set((state) => {
+            const novasDependencias = [...state.dependencias, novaDependencia];
+            
+            // Aplica auto-scheduling se configurado
+            if (state.configuracoes.habilitar_auto_scheduling) {
+              const atividadesAtualizadas = applyAutoScheduling(state.atividades, novasDependencias);
+              return {
+                dependencias: novasDependencias,
+                atividades: atividadesAtualizadas,
+                isLoading: false,
+              };
+            }
+            
+            return {
+              dependencias: novasDependencias,
+              isLoading: false,
+            };
+          });
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao adicionar dependência';
           set({ erro: mensagem, isLoading: false });
@@ -326,15 +565,15 @@ export const useCronogramaStore = create<CronogramaState>()(
       },
 
       /**
-       * Atualiza uma dependência existente (tipo e lag)
+       * Atualiza uma dependência existente (tipo e lag) e aplica auto-scheduling
        */
       atualizarDependencia: async (id: string, updates: { tipo?: TipoDependencia; lag_dias?: number }) => {
         set({ isLoading: true, erro: null });
 
         try {
           // Atualiza localmente primeiro para resposta imediata
-          set((state) => ({
-            dependencias: state.dependencias.map((d) =>
+          set((state) => {
+            const dependenciasAtualizadas = state.dependencias.map((d) =>
               d.id === id
                 ? {
                     ...d,
@@ -342,9 +581,23 @@ export const useCronogramaStore = create<CronogramaState>()(
                     lag_dias: updates.lag_dias ?? d.lag_dias,
                   }
                 : d
-            ),
-            isLoading: false,
-          }));
+            );
+            
+            // Aplica auto-scheduling se configurado
+            if (state.configuracoes.habilitar_auto_scheduling) {
+              const atividadesAtualizadas = applyAutoScheduling(state.atividades, dependenciasAtualizadas);
+              return {
+                dependencias: dependenciasAtualizadas,
+                atividades: atividadesAtualizadas,
+                isLoading: false,
+              };
+            }
+            
+            return {
+              dependencias: dependenciasAtualizadas,
+              isLoading: false,
+            };
+          });
           
           // TODO: Persistir no backend quando service estiver disponível
           // await cronogramaService.updateDependencia(id, updates);
