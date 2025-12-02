@@ -583,49 +583,83 @@ export function createGanttDataSync(
   const predecessorsMap = new Map<string, DependencyInfo[]>();
   const successorsMap = new Map<string, DependencyInfo[]>();
   
+  // Identify parent tasks (Fase/summary tasks) - they cannot have predecessors or successors
+  const parentTaskIds = new Set<string>();
+  atividades.forEach(a => {
+    if (a.tipo === 'Fase') {
+      parentTaskIds.add(a.id);
+    }
+  });
+  
+  // Sort tasks by date to identify first and last leaf tasks
+  const leafTasks = atividades.filter(a => a.tipo !== 'Fase');
+  const sortedLeafTasks = [...leafTasks].sort((a, b) => 
+    new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime()
+  );
+  const firstTaskId = sortedLeafTasks.length > 0 ? sortedLeafTasks[0].id : null;
+  
+  const sortedByEndDate = [...leafTasks].sort((a, b) => 
+    new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime()
+  );
+  const lastTaskId = sortedByEndDate.length > 0 ? sortedByEndDate[0].id : null;
+  
   for (const dep of dependencias) {
     const fromTask = taskById.get(dep.atividade_origem_id);
     const toTask = taskById.get(dep.atividade_destino_id);
     
     if (fromTask && toTask) {
-      // Add predecessor to the destination task (toTask has fromTask as predecessor)
-      const predecessorInfo: DependencyInfo = {
-        taskId: dep.atividade_origem_id,
-        taskCode: fromTask.codigo || fromTask.edt || dep.atividade_origem_id,
-        taskName: fromTask.nome,
-        type: convertDependencyType(dep.tipo),
-        lag: dep.lag_dias || 0,
-        lagUnit: determineLagUnit(dep.lag_dias || 0),
-      };
+      // Skip if either task is a parent task (Fase)
+      const fromIsParent = parentTaskIds.has(dep.atividade_origem_id);
+      const toIsParent = parentTaskIds.has(dep.atividade_destino_id);
       
-      if (!predecessorsMap.has(dep.atividade_destino_id)) {
-        predecessorsMap.set(dep.atividade_destino_id, []);
+      // Add predecessor to the destination task (toTask has fromTask as predecessor)
+      // Skip if destination is a parent task or is the first task
+      if (!toIsParent && dep.atividade_destino_id !== firstTaskId) {
+        const predecessorInfo: DependencyInfo = {
+          taskId: dep.atividade_origem_id,
+          taskCode: fromTask.codigo || fromTask.edt || dep.atividade_origem_id,
+          taskName: fromTask.nome,
+          type: convertDependencyType(dep.tipo),
+          lag: dep.lag_dias || 0,
+          lagUnit: determineLagUnit(dep.lag_dias || 0),
+        };
+        
+        if (!predecessorsMap.has(dep.atividade_destino_id)) {
+          predecessorsMap.set(dep.atividade_destino_id, []);
+        }
+        predecessorsMap.get(dep.atividade_destino_id)!.push(predecessorInfo);
       }
-      predecessorsMap.get(dep.atividade_destino_id)!.push(predecessorInfo);
       
       // Add successor to the origin task (fromTask has toTask as successor)
-      const successorInfo: DependencyInfo = {
-        taskId: dep.atividade_destino_id,
-        taskCode: toTask.codigo || toTask.edt || dep.atividade_destino_id,
-        taskName: toTask.nome,
-        type: convertDependencyType(dep.tipo),
-        lag: dep.lag_dias || 0,
-        lagUnit: determineLagUnit(dep.lag_dias || 0),
-      };
-      
-      if (!successorsMap.has(dep.atividade_origem_id)) {
-        successorsMap.set(dep.atividade_origem_id, []);
+      // Skip if origin is a parent task or is the last task
+      if (!fromIsParent && dep.atividade_origem_id !== lastTaskId) {
+        const successorInfo: DependencyInfo = {
+          taskId: dep.atividade_destino_id,
+          taskCode: toTask.codigo || toTask.edt || dep.atividade_destino_id,
+          taskName: toTask.nome,
+          type: convertDependencyType(dep.tipo),
+          lag: dep.lag_dias || 0,
+          lagUnit: determineLagUnit(dep.lag_dias || 0),
+        };
+        
+        if (!successorsMap.has(dep.atividade_origem_id)) {
+          successorsMap.set(dep.atividade_origem_id, []);
+        }
+        successorsMap.get(dep.atividade_origem_id)!.push(successorInfo);
       }
-      successorsMap.get(dep.atividade_origem_id)!.push(successorInfo);
     }
   }
   
   // Add predecessors and successors to tasks
-  const tasksWithDependencies = tasks.map(task => ({
-    ...task,
-    predecessors: predecessorsMap.get(task.id) || [],
-    successors: successorsMap.get(task.id) || [],
-  }));
+  // Parent tasks always get empty arrays
+  const tasksWithDependencies = tasks.map(task => {
+    const isParent = parentTaskIds.has(task.id);
+    return {
+      ...task,
+      predecessors: isParent ? [] : (predecessorsMap.get(task.id) || []),
+      successors: isParent ? [] : (successorsMap.get(task.id) || []),
+    };
+  });
   
   const criticalPathIds = atividades
     .filter(a => a.e_critica)
