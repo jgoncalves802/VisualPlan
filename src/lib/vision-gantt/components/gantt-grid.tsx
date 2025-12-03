@@ -309,15 +309,25 @@ export function GanttGrid({
                       fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize,
                       cursor: canEdit ? 'text' : (isDependencyColumn && !isGroup ? 'pointer' : 'inherit')
                     }}
-                    onDoubleClick={(e) => {
+                    onClick={(e) => {
                       e.stopPropagation();
-                      if (isDependencyColumn && !isGroup && onCellDoubleClick) {
-                        onCellDoubleClick(task, fieldName);
-                      } else if (canEdit) {
+                      // Single click on dependency columns starts inline editing
+                      if (isDependencyColumn && !isGroup && enableInlineEdit) {
                         handleStartEdit(task.id, fieldName, editorType);
                       }
                     }}
-                    title={canEdit ? 'Duplo clique para editar' : (isDependencyColumn && !isGroup ? 'Duplo clique para gerenciar dependências' : undefined)}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      // Double click on dependency columns opens modal
+                      if (isDependencyColumn && !isGroup && onCellDoubleClick) {
+                        // Cancel any inline editing first
+                        handleCancelEdit();
+                        onCellDoubleClick(task, fieldName);
+                      } else if (canEdit && !isDependencyColumn) {
+                        handleStartEdit(task.id, fieldName, editorType);
+                      }
+                    }}
+                    title={isDependencyColumn && !isGroup ? 'Clique para editar, duplo clique para gerenciar dependências' : (canEdit ? 'Duplo clique para editar' : undefined)}
                   >
                     {isNameColumn && isGroup && (
                       <button

@@ -624,6 +624,7 @@ export function getColumnEditorType(field: string): ColumnEditorType {
     case 'wbs':
     case 'id':
     case 'rowNumber':
+    case 'edt':
       return 'readonly';
     default:
       return 'text';
