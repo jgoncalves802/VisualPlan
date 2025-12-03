@@ -23,6 +23,12 @@ import { usePanDrag } from '../hooks/use-pan-drag';
 import { getPixelsPerDay, getViewPreset, VIEW_PRESETS } from '../config/view-presets';
 import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
+import { 
+  computeEndFromDuration, 
+  computeWorkingDuration,
+  snapToWorkingDay,
+  getDefaultCalendar 
+} from '../utils/calendar-utils';
 import { Settings2, Layers, ChevronDown, Flag, AlertTriangle } from 'lucide-react';
 
 export interface GanttChartProps extends GanttConfig {
@@ -458,6 +464,13 @@ export function GanttChart({
       // Skip if value is null/undefined
       if (value === null || value === undefined) return;
       
+      // Get the task's calendar or use default
+      const taskCalendarId = task.calendarId;
+      const taskCalendar = taskCalendarId 
+        ? _calendars.find(c => c.id === taskCalendarId) 
+        : null;
+      const calendar = taskCalendar || getDefaultCalendar();
+      
       let updates: Partial<Task> = {};
       
       // Handle different field types
@@ -469,32 +482,82 @@ export function GanttChart({
           break;
           
         case 'duration':
-          // Duration change - recalculate end date using INCLUSIVE model
-          // end = start + (duration - 1) days
-          if (typeof value === 'number' && value >= 1 && task.startDate) {
-            const newEndDate = new Date(task.startDate);
-            newEndDate.setDate(newEndDate.getDate() + value - 1);
-            updates = { duration: value, endDate: newEndDate };
+          // Duration change - now supports units (value can be number or {value, unit, days})
+          // Uses calendar-aware scheduling and preserves fractional days for sub-day units
+          if (task.startDate) {
+            let durationInDays: number;
+            let durationValue: number | undefined;
+            let durationUnit: 'm' | 'h' | 'd' | 'w' | undefined;
+            
+            if (typeof value === 'object' && value !== null && 'days' in value) {
+              // New format with units: { value: number, unit: 'm'|'h'|'d'|'w', days: number }
+              // Preserve fractional days for sub-day units (min, hours)
+              durationInDays = Math.max(0.01, value.days); // Allow fractional, min 0.01
+              durationValue = value.value;
+              durationUnit = value.unit;
+            } else if (typeof value === 'number' && value > 0) {
+              // Legacy format: just a number (days)
+              durationInDays = value;
+              durationValue = value;
+              durationUnit = 'd';
+            } else {
+              break;
+            }
+            
+            // Use calendar-aware end date calculation
+            // For sub-day durations, still snap start but compute end proportionally
+            const snappedStart = snapToWorkingDay(task.startDate, calendar, 'next');
+            const wholeDays = Math.ceil(durationInDays); // At least 1 calendar day
+            const newEndDate = computeEndFromDuration(snappedStart, wholeDays, calendar);
+            
+            updates = { 
+              duration: durationInDays, // Preserve fractional for sub-day units
+              durationValue: durationValue,
+              durationUnit: durationUnit,
+              startDate: snappedStart,
+              endDate: newEndDate
+            };
           }
           break;
           
         case 'startDate':
-          // Start date change - preserve duration
+          // Start date change - snap to working day, preserve duration
           if (value instanceof Date) {
+            const snappedStart = snapToWorkingDay(value, calendar, 'next');
             const duration = task.duration ?? 1;
-            const newEndDate = new Date(value);
-            newEndDate.setDate(newEndDate.getDate() + duration - 1);
-            updates = { startDate: value, endDate: newEndDate };
+            const newEndDate = computeEndFromDuration(snappedStart, duration, calendar);
+            updates = { startDate: snappedStart, endDate: newEndDate };
           }
           break;
           
         case 'endDate':
-          // End date change - recalculate duration
+          // End date change - snap to working day, recalculate duration
           if (value instanceof Date && task.startDate) {
-            const diffTime = value.getTime() - task.startDate.getTime();
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            const newDuration = Math.max(1, diffDays + 1); // Inclusive model
-            updates = { endDate: value, duration: newDuration };
+            const snappedEnd = snapToWorkingDay(value, calendar, 'prev');
+            const snappedStart = snapToWorkingDay(task.startDate, calendar, 'next');
+            
+            // Guard: If snapped end is before or equal to snapped start, reject the edit
+            // Activities must have at least 1 working day of duration
+            if (snappedEnd <= snappedStart) {
+              console.warn('[GanttChart] End date must be after start date, rejecting edit');
+              return;
+            }
+            
+            const newDuration = computeWorkingDuration(snappedStart, snappedEnd, calendar);
+            
+            // If duration is 0 or negative, reject the edit
+            if (newDuration < 1) {
+              console.warn('[GanttChart] Computed duration is less than 1, rejecting edit');
+              return;
+            }
+            
+            updates = { 
+              startDate: snappedStart, 
+              endDate: snappedEnd, 
+              duration: newDuration,
+              durationValue: newDuration,
+              durationUnit: 'd'
+            };
           }
           break;
           
@@ -511,6 +574,31 @@ export function GanttChart({
           // Dependencies - these should trigger the dependency modal instead
           console.log('[GanttChart] Dependency edit not handled inline:', field, value);
           return;
+          
+        case 'calendarId':
+        case 'calendar':
+          // Calendar assignment - update calendarId and recalculate dates based on new calendar
+          if (typeof value === 'string') {
+            const newCalendarId = value || undefined;
+            const newCalendar = newCalendarId 
+              ? _calendars.find(c => c.id === newCalendarId)
+              : null;
+            const calendarToUse = newCalendar || getDefaultCalendar();
+            
+            // Recalculate end date with new calendar if we have start date and duration
+            if (task.startDate && task.duration) {
+              const snappedStart = snapToWorkingDay(task.startDate, calendarToUse, 'next');
+              const newEndDate = computeEndFromDuration(snappedStart, task.duration, calendarToUse);
+              updates = { 
+                calendarId: newCalendarId, 
+                startDate: snappedStart, 
+                endDate: newEndDate 
+              };
+            } else {
+              updates = { calendarId: newCalendarId };
+            }
+          }
+          break;
           
         default:
           // For any unmapped fields, log a warning
@@ -529,7 +617,7 @@ export function GanttChart({
         }
       }
     },
-    [taskStore, flatTasks, onTaskUpdate]
+    [taskStore, flatTasks, onTaskUpdate, _calendars]
   );
 
   const handleViewPresetChange = useCallback(
@@ -787,6 +875,7 @@ export function GanttChart({
             onWBSUpdate={handleWBSUpdate}
             criticalPathIds={criticalPathIds}
             enableInlineEdit={true}
+            calendars={_calendars.map(c => ({ id: c.id, name: c.name }))}
           />
         </div>
 

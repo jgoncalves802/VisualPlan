@@ -386,3 +386,115 @@ export function getDefaultCalendar(): WorkingCalendar {
   };
 }
 
+/**
+ * Calculate end date from start date + working days duration
+ * Uses inclusive model: duration of 1 day means start = end
+ */
+export function computeEndFromDuration(
+  startDate: Date,
+  durationWorkingDays: number,
+  calendar: WorkingCalendar
+): Date {
+  if (durationWorkingDays <= 0) {
+    return startDate;
+  }
+  
+  // Snap start to a working day if needed
+  let currentDate = isWorkingDay(startDate, calendar) 
+    ? new Date(startDate)
+    : getNextWorkingDay(startDate, calendar);
+  
+  // Add (duration - 1) working days (inclusive model)
+  let remainingDays = durationWorkingDays - 1;
+  while (remainingDays > 0) {
+    currentDate = addDays(currentDate, 1);
+    if (isWorkingDay(currentDate, calendar)) {
+      remainingDays--;
+    }
+  }
+  
+  return currentDate;
+}
+
+/**
+ * Calculate working days duration between two dates (inclusive)
+ */
+export function computeWorkingDuration(
+  startDate: Date,
+  endDate: Date,
+  calendar: WorkingCalendar
+): number {
+  if (endDate < startDate) {
+    return 0;
+  }
+  
+  let count = 0;
+  let current = new Date(startDate);
+  
+  while (current <= endDate) {
+    if (isWorkingDay(current, calendar)) {
+      count++;
+    }
+    current = addDays(current, 1);
+  }
+  
+  return Math.max(1, count);
+}
+
+/**
+ * Snap a date to the nearest working day
+ * direction: 'next' finds next working day, 'prev' finds previous, 'nearest' finds closest
+ */
+export function snapToWorkingDay(
+  date: Date,
+  calendar: WorkingCalendar,
+  direction: 'next' | 'prev' | 'nearest' = 'next'
+): Date {
+  if (isWorkingDay(date, calendar)) {
+    return date;
+  }
+  
+  if (direction === 'next') {
+    return getNextWorkingDay(date, calendar);
+  } else if (direction === 'prev') {
+    return getPreviousWorkingDay(date, calendar);
+  } else {
+    // Find nearest
+    const next = getNextWorkingDay(date, calendar);
+    const prev = getPreviousWorkingDay(date, calendar);
+    const diffToNext = differenceInDays(next, date);
+    const diffToPrev = differenceInDays(date, prev);
+    return diffToNext <= diffToPrev ? next : prev;
+  }
+}
+
+/**
+ * Compute start date from end date - working days duration (backward scheduling)
+ * Uses inclusive model: duration of 1 day means start = end
+ */
+export function computeStartFromDuration(
+  endDate: Date,
+  durationWorkingDays: number,
+  calendar: WorkingCalendar
+): Date {
+  if (durationWorkingDays <= 0) {
+    return endDate;
+  }
+  
+  // Snap end to a working day if needed
+  let currentDate = isWorkingDay(endDate, calendar)
+    ? new Date(endDate)
+    : getPreviousWorkingDay(endDate, calendar);
+  
+  // Subtract (duration - 1) working days (inclusive model)
+  let remainingDays = durationWorkingDays - 1;
+  while (remainingDays > 0) {
+    currentDate = addDays(currentDate, -1);
+    if (isWorkingDay(currentDate, calendar)) {
+      remainingDays--;
+    }
+  }
+  
+  return currentDate;
+}
+

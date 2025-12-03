@@ -340,6 +340,28 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     maxWidth: 250,
     sortable: false,
     resizable: true
+  },
+  {
+    field: 'calendarId',
+    header: 'Calendar',
+    width: 130,
+    minWidth: 100,
+    maxWidth: 200,
+    renderer: (value: any, _task: Task) => {
+      if (!value) {
+        return React.createElement('span', { className: 'text-gray-400 text-xs' }, 'Default');
+      }
+      return React.createElement(
+        'span',
+        { 
+          className: 'text-xs font-medium text-gray-700',
+          title: `Calendar ID: ${value}`
+        },
+        value
+      );
+    },
+    sortable: true,
+    resizable: true
   }
 ];
 

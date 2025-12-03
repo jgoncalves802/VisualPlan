@@ -10,12 +10,16 @@
 
 export type TaskStatus = 'not_started' | 'in_progress' | 'completed' | 'on_hold';
 
+export type DurationUnit = 'm' | 'h' | 'd' | 'w'; // minutes, hours, days, weeks
+
 export interface Task {
   id: string;
   name: string;
   startDate: Date;
   endDate: Date;
-  duration?: number; // in days
+  duration?: number; // in days (converted from durationValue using durationUnit)
+  durationValue?: number; // raw value in the specified unit
+  durationUnit?: DurationUnit; // unit for duration display
   progress: number; // 0-100
   status: TaskStatus;
   parentId?: string | null;
@@ -131,9 +135,8 @@ export interface Task {
   actualQuantity?: number; // Quantidade Real
   unitOfMeasure?: string; // Unidade de Medida (m², m³, un)
   
-  // Duration fields
+  // Duration fields (legacy - use durationValue + durationUnit at the top instead)
   durationHours?: number; // Duração em horas
-  durationUnit?: 'hours' | 'days'; // Unidade de tempo
   
   // Sector/Department
   sectorId?: string; // ID do Setor

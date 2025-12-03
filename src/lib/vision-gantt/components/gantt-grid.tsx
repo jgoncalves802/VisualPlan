@@ -24,6 +24,11 @@ interface EditingCell {
   field: string;
 }
 
+interface CalendarOption {
+  id: string;
+  name: string;
+}
+
 interface GanttGridProps {
   tasks: Task[];
   columns: ColumnConfig[];
@@ -44,6 +49,7 @@ interface GanttGridProps {
   onResourceUpdate?: (taskId: string, assignments: ResourceAssignment[]) => void;
   criticalPathIds?: string[];
   enableInlineEdit?: boolean;
+  calendars?: CalendarOption[];
 }
 
 export function GanttGrid({
@@ -65,7 +71,8 @@ export function GanttGrid({
   allocations = [],
   onResourceUpdate,
   criticalPathIds = [],
-  enableInlineEdit = true
+  enableInlineEdit = true,
+  calendars = []
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
   const { theme } = useGanttTheme();
@@ -369,6 +376,7 @@ export function GanttGrid({
                         editorType={editorType}
                         onCommit={handleCommitEdit}
                         onCancel={handleCancelEdit}
+                        calendars={calendars}
                       />
                     ) : isWBSColumn ? (
                       <EditableWBSCell 

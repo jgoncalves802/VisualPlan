@@ -22,6 +22,94 @@ const parseValidDate = (val: string | null | undefined): Date | undefined => {
   return isNaN(date.getTime()) ? undefined : date;
 };
 
+// Duration unit types and utilities
+export type DurationUnit = 'm' | 'h' | 'd' | 'w';
+
+export interface ParsedDuration {
+  value: number;
+  unit: DurationUnit;
+}
+
+// Conversion factors to days
+const UNIT_TO_DAYS: Record<DurationUnit, number> = {
+  'm': 1 / (8 * 60),  // 1 minute = 1/(8*60) of a work day (8 hour day)
+  'h': 1 / 8,         // 1 hour = 1/8 of a work day
+  'd': 1,             // 1 day = 1 day
+  'w': 5,             // 1 week = 5 work days
+};
+
+const UNIT_LABELS: Record<DurationUnit, string> = {
+  'm': 'min',
+  'h': 'h',
+  'd': 'd',
+  'w': 'sem',
+};
+
+const UNIT_FULL_LABELS: Record<DurationUnit, string> = {
+  'm': 'minutos',
+  'h': 'horas',
+  'd': 'dias',
+  'w': 'semanas',
+};
+
+/**
+ * Parse a duration string with unit (e.g., "7d", "4h", "2w", "30m")
+ * If no unit is specified, defaults to days
+ */
+export function parseDurationString(input: string): ParsedDuration | null {
+  if (!input || input.trim() === '') return null;
+  
+  const normalized = input.trim().toLowerCase().replace(/\s+/g, '');
+  
+  // Match number followed by optional unit
+  const match = normalized.match(/^(\d+(?:\.\d+)?)\s*([mhdwsem]*)$/);
+  if (!match) return null;
+  
+  const value = parseFloat(match[1]);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  
+  let unit: DurationUnit = 'd'; // default to days
+  
+  const unitStr = match[2];
+  if (unitStr) {
+    // Handle various unit formats
+    if (unitStr === 'm' || unitStr === 'min') {
+      unit = 'm';
+    } else if (unitStr === 'h') {
+      unit = 'h';
+    } else if (unitStr === 'd') {
+      unit = 'd';
+    } else if (unitStr === 'w' || unitStr === 's' || unitStr === 'sem') {
+      unit = 'w';
+    }
+  }
+  
+  return { value, unit };
+}
+
+/**
+ * Convert duration with unit to days
+ */
+export function durationToDays(duration: ParsedDuration): number {
+  return duration.value * UNIT_TO_DAYS[duration.unit];
+}
+
+/**
+ * Format duration for display
+ */
+export function formatDuration(value: number, unit: DurationUnit = 'd'): string {
+  // Round to reasonable precision
+  const rounded = Math.round(value * 100) / 100;
+  return `${rounded}${unit}`;
+}
+
+/**
+ * Get full label for a duration unit
+ */
+export function getDurationUnitLabel(unit: DurationUnit, full: boolean = false): string {
+  return full ? UNIT_FULL_LABELS[unit] : UNIT_LABELS[unit];
+}
+
 interface BaseEditorProps {
   task: Task;
   value: any;
@@ -204,9 +292,13 @@ export function EditableDateCell({ task, value, onCommit, onCancel, field }: Bas
 }
 
 export function EditableDurationCell({ task, value, onCommit, onCancel, field }: BaseEditorProps) {
-  const parsed = parseFiniteNumber(value);
-  const originalValue = Math.max(1, Math.round(parsed ?? 1));
-  const [editValue, setEditValue] = useState(originalValue.toString());
+  // Get existing duration value and unit from task
+  const taskDuration = parseFiniteNumber(value) ?? parseFiniteNumber((task as any).duration) ?? 1;
+  const taskUnit: DurationUnit = (task as any).durationUnit || 'd';
+  const originalValue = Math.max(0.01, taskDuration);
+  
+  // Format initial display value with unit
+  const [editValue, setEditValue] = useState(formatDuration(originalValue, taskUnit));
   const cancelledRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -217,14 +309,32 @@ export function EditableDurationCell({ task, value, onCommit, onCancel, field }:
 
   const handleCommit = () => {
     if (cancelledRef.current) return;
-    const parsedValue = parseFiniteNumber(editValue);
-    if (parsedValue === undefined) {
+    
+    // Parse the input string with unit
+    const parsed = parseDurationString(editValue);
+    if (!parsed) {
+      // Try parsing as plain number (defaults to current unit or days)
+      const numValue = parseFiniteNumber(editValue);
+      if (numValue !== undefined && numValue > 0) {
+        const durationInDays = numValue * UNIT_TO_DAYS[taskUnit];
+        if (Math.abs(durationInDays - durationToDays({ value: originalValue, unit: taskUnit })) > 0.001) {
+          onCommit(task.id, field, { value: numValue, unit: taskUnit, days: durationInDays });
+        } else {
+          onCancel();
+        }
+        return;
+      }
       onCancel();
       return;
     }
-    const duration = Math.max(1, Math.round(parsedValue));
-    if (duration !== originalValue) {
-      onCommit(task.id, field, duration);
+    
+    const durationInDays = durationToDays(parsed);
+    const originalInDays = durationToDays({ value: originalValue, unit: taskUnit });
+    
+    // Check if value actually changed
+    if (Math.abs(durationInDays - originalInDays) > 0.001 || parsed.unit !== taskUnit) {
+      // Commit the duration with unit info
+      onCommit(task.id, field, { value: parsed.value, unit: parsed.unit, days: durationInDays });
     } else {
       onCancel();
     }
@@ -245,21 +355,20 @@ export function EditableDurationCell({ task, value, onCommit, onCancel, field }:
     <div className="flex items-center gap-1 w-full">
       <input
         ref={inputRef}
-        type="number"
-        min="1"
+        type="text"
         value={editValue}
         onChange={(e) => setEditValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleCommit}
+        placeholder="7d, 4h, 2w, 30m"
         className="flex-1 h-full px-2 py-1 text-sm border border-blue-500 rounded outline-none"
         style={{
           backgroundColor: '#FFFFFF',
           color: '#1F2937',
           fontSize: '12px',
-          width: '60px'
+          width: '70px'
         }}
       />
-      <span className="text-xs text-gray-500">dias</span>
     </div>
   );
 }
@@ -388,6 +497,85 @@ export function EditableDependencyCell({
   );
 }
 
+interface CalendarOption {
+  id: string;
+  name: string;
+}
+
+interface CalendarEditorProps extends BaseEditorProps {
+  calendars?: CalendarOption[];
+}
+
+export function EditableCalendarCell({ 
+  task, 
+  value, 
+  onCommit, 
+  onCancel, 
+  field,
+  calendars = []
+}: CalendarEditorProps) {
+  const originalValue = value?.toString() ?? '';
+  const [editValue, setEditValue] = useState(originalValue);
+  const cancelledRef = useRef(false);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    selectRef.current?.focus();
+  }, []);
+
+  const handleCommit = useCallback(() => {
+    if (cancelledRef.current) return;
+    if (editValue !== originalValue) {
+      onCommit(task.id, field, editValue);
+    } else {
+      onCancel();
+    }
+  }, [editValue, originalValue, task.id, field, onCommit, onCancel]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newValue = e.target.value;
+    setEditValue(newValue);
+    // Auto-commit on selection change
+    if (newValue !== originalValue) {
+      onCommit(task.id, field, newValue);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCommit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelledRef.current = true;
+      onCancel();
+    }
+  };
+
+  return (
+    <select
+      ref={selectRef}
+      value={editValue}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      onBlur={handleCommit}
+      className="w-full h-full px-2 py-1 text-sm border border-blue-500 rounded outline-none"
+      style={{
+        backgroundColor: '#FFFFFF',
+        color: '#1F2937',
+        fontSize: '12px'
+      }}
+    >
+      <option value="">Calendário Padrão</option>
+      {calendars.map(cal => (
+        <option key={cal.id} value={cal.id}>
+          {cal.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function InlineEditorCell({
   task,
   value,
@@ -502,7 +690,7 @@ export function InlineEditorCell({
   );
 }
 
-export type ColumnEditorType = 'text' | 'number' | 'date' | 'duration' | 'percent' | 'predecessor' | 'successor' | 'readonly';
+export type ColumnEditorType = 'text' | 'number' | 'date' | 'duration' | 'percent' | 'predecessor' | 'successor' | 'calendar' | 'readonly';
 
 interface InlineEditCellProps {
   task: Task;
@@ -511,6 +699,7 @@ interface InlineEditCellProps {
   editorType: ColumnEditorType;
   onCommit: (taskId: string, field: string, value: any) => void;
   onCancel: () => void;
+  calendars?: CalendarOption[];
 }
 
 export function InlineEditCell({
@@ -519,7 +708,8 @@ export function InlineEditCell({
   value,
   editorType,
   onCommit,
-  onCancel
+  onCancel,
+  calendars = []
 }: InlineEditCellProps) {
   switch (editorType) {
     case 'text':
@@ -584,6 +774,17 @@ export function InlineEditCell({
           depType={editorType}
         />
       );
+    case 'calendar':
+      return (
+        <EditableCalendarCell
+          task={task}
+          value={value}
+          field={field}
+          onCommit={onCommit}
+          onCancel={onCancel}
+          calendars={calendars}
+        />
+      );
     default:
       return (
         <span className="truncate flex-1" style={{ lineHeight: '1.5' }}>
@@ -621,6 +822,9 @@ export function getColumnEditorType(field: string): ColumnEditorType {
       return 'predecessor';
     case 'successors':
       return 'successor';
+    case 'calendarId':
+    case 'calendar':
+      return 'calendar';
     case 'wbs':
     case 'id':
     case 'rowNumber':
