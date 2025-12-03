@@ -468,19 +468,37 @@ export const useCronogramaStore = create<CronogramaState>()(
       },
 
       /**
-       * Atualiza uma atividade existente
+       * Atualiza uma atividade existente e aplica auto-scheduling
        */
       atualizarAtividade: async (id: string, dados: Partial<AtividadeMock>) => {
         set({ isLoading: true, erro: null });
 
         try {
           const atividadeAtualizada = await cronogramaService.updateAtividade(id, dados);
-          set((state) => ({
-            atividades: state.atividades.map((a) =>
+          
+          set((state) => {
+            const atividadesAtualizadas = state.atividades.map((a) =>
               a.id === id ? atividadeAtualizada : a
-            ),
-            isLoading: false,
-          }));
+            );
+            
+            // Aplica auto-scheduling se configurado e se houve mudança de datas/duração
+            const hasDateChange = dados.data_inicio !== undefined || 
+                                  dados.data_fim !== undefined || 
+                                  dados.duracao_dias !== undefined;
+            
+            if (hasDateChange && state.configuracoes.habilitar_auto_scheduling) {
+              const atividadesRecalculadas = applyAutoScheduling(atividadesAtualizadas, state.dependencias);
+              return {
+                atividades: atividadesRecalculadas,
+                isLoading: false,
+              };
+            }
+            
+            return {
+              atividades: atividadesAtualizadas,
+              isLoading: false,
+            };
+          });
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao atualizar atividade';
           set({ erro: mensagem, isLoading: false });

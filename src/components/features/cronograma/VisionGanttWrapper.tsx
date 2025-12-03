@@ -157,6 +157,17 @@ export function VisionGanttWrapper({
     // Build changes object manually
     const changes: Partial<AtividadeMock> = {};
     
+    // Check text field changes
+    if (task.name !== originalAtividade.nome) {
+      changes.nome = task.name;
+    }
+    if (task.notes !== undefined && task.notes !== originalAtividade.notas) {
+      changes.notas = task.notes;
+    }
+    if (task.description !== undefined && task.description !== originalAtividade.descricao) {
+      changes.descricao = task.description;
+    }
+    
     // Check hierarchy changes
     if ((task.parentId ?? undefined) !== originalAtividade.parent_id) {
       changes.parent_id = task.parentId ?? undefined;
@@ -176,9 +187,22 @@ export function VisionGanttWrapper({
       changes.data_fim = task.endDate.toISOString().split('T')[0];
     }
     
+    // Check duration changes
+    if (task.duration !== undefined && task.duration !== originalAtividade.duracao_dias) {
+      changes.duracao_dias = task.duration;
+    }
+    
     // Check progress
     if (task.progress !== originalAtividade.progresso) {
       changes.progresso = task.progress ?? 0;
+    }
+    
+    // Check cost fields
+    if (task.cost !== undefined && task.cost !== originalAtividade.custo_previsto) {
+      changes.custo_previsto = task.cost;
+    }
+    if (task.actualCost !== undefined && task.actualCost !== originalAtividade.custo_real) {
+      changes.custo_real = task.actualCost;
     }
 
     if (Object.keys(changes).length > 0) {

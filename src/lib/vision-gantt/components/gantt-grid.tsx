@@ -1,8 +1,9 @@
 /**
  * GanttGrid - Primavera P6 Professional Style with Theme Support
+ * Supports inline editing for text, dates, numbers, duration, progress, and dependencies
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
 import { ChevronRight, ChevronDown } from 'lucide-react';
@@ -10,11 +11,17 @@ import { useColumnResize } from '../hooks/use-column-resize';
 import { EditableWBSCell } from './editable-wbs-cell';
 import { EditableResourceCell } from './editable-resource-cell';
 import { useGanttTheme } from '../context/theme-context';
+import { getColumnEditorType, InlineEditCell, type ColumnEditorType } from './inline-editors';
 
 interface ResourceAssignment {
   resourceId: string;
   resourceName: string;
   units: number;
+}
+
+interface EditingCell {
+  taskId: string;
+  field: string;
 }
 
 interface GanttGridProps {
@@ -27,6 +34,7 @@ interface GanttGridProps {
   onTaskContextMenu?: (task: Task, event: React.MouseEvent) => void;
   onToggleExpand?: (taskId: string) => void;
   onCellDoubleClick?: (task: Task, columnField: string) => void;
+  onCellEdit?: (taskId: string, field: string, value: any) => void;
   selectedTaskId?: string;
   selectedTaskIds?: string[];
   onColumnResize?: (columnIndex: number, newWidth: number) => void;
@@ -35,6 +43,7 @@ interface GanttGridProps {
   allocations?: ResourceAllocation[];
   onResourceUpdate?: (taskId: string, assignments: ResourceAssignment[]) => void;
   criticalPathIds?: string[];
+  enableInlineEdit?: boolean;
 }
 
 export function GanttGrid({
@@ -47,6 +56,7 @@ export function GanttGrid({
   onTaskContextMenu,
   onToggleExpand,
   onCellDoubleClick,
+  onCellEdit,
   selectedTaskId,
   selectedTaskIds = [],
   onColumnResize,
@@ -54,13 +64,17 @@ export function GanttGrid({
   resources = [],
   allocations = [],
   onResourceUpdate,
-  criticalPathIds = []
+  criticalPathIds = [],
+  enableInlineEdit = true
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
   const { theme } = useGanttTheme();
   const colors = theme.colors;
   const gridColors = colors.grid;
   const headerColors = colors.header;
+  
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const cancelledRef = useRef(false);
 
   const {
     resizeState,
@@ -69,6 +83,28 @@ export function GanttGrid({
     handleResizeEnd,
     getColumnWidth
   } = useColumnResize({ columns, onColumnResize });
+  
+  const handleStartEdit = useCallback((taskId: string, field: string, editorType: ColumnEditorType) => {
+    if (!enableInlineEdit || editorType === 'readonly') return;
+    cancelledRef.current = false;
+    setEditingCell({ taskId, field });
+  }, [enableInlineEdit]);
+  
+  const handleCommitEdit = useCallback((taskId: string, field: string, value: any) => {
+    if (cancelledRef.current) {
+      setEditingCell(null);
+      return;
+    }
+    setEditingCell(null);
+    if (onCellEdit && value !== null && value !== undefined) {
+      onCellEdit(taskId, field, value);
+    }
+  }, [onCellEdit]);
+  
+  const handleCancelEdit = useCallback(() => {
+    cancelledRef.current = true;
+    setEditingCell(null);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => handleResizeMove(e.clientX);
@@ -254,10 +290,14 @@ export function GanttGrid({
                 const isWBSColumn = column?.field === 'wbs';
                 const isLastColumn = colIndex === columns.length - 1;
                 const isDependencyColumn = column?.field === 'predecessors' || column?.field === 'successors';
+                const fieldName = column?.field as string;
+                const editorType = getColumnEditorType(fieldName);
+                const isEditing = editingCell?.taskId === task?.id && editingCell?.field === fieldName;
+                const canEdit = enableInlineEdit && !isGroup && editorType !== 'readonly';
 
                 return (
                   <div
-                    key={`${task?.id}-${column?.field?.toString()}` ?? `cell-${rowIndex}-${colIndex}`}
+                    key={`${task?.id}-${fieldName}`}
                     className="flex items-center"
                     style={{
                       width: columnWidth,
@@ -267,15 +307,17 @@ export function GanttGrid({
                       borderRight: isLastColumn ? 'none' : `1px solid ${isGroup ? 'rgba(255,255,255,0.15)' : gridColors.border}`,
                       fontWeight: isGroup ? 600 : theme.typography.gridLabel.fontWeight,
                       fontSize: isGroup ? '11px' : theme.typography.gridLabel.fontSize,
-                      cursor: isDependencyColumn && !isGroup ? 'pointer' : 'inherit'
+                      cursor: canEdit ? 'text' : (isDependencyColumn && !isGroup ? 'pointer' : 'inherit')
                     }}
                     onDoubleClick={(e) => {
+                      e.stopPropagation();
                       if (isDependencyColumn && !isGroup && onCellDoubleClick) {
-                        e.stopPropagation();
-                        onCellDoubleClick(task, column.field as string);
+                        onCellDoubleClick(task, fieldName);
+                      } else if (canEdit) {
+                        handleStartEdit(task.id, fieldName, editorType);
                       }
                     }}
-                    title={isDependencyColumn && !isGroup ? 'Duplo clique para gerenciar dependências' : undefined}
+                    title={canEdit ? 'Duplo clique para editar' : (isDependencyColumn && !isGroup ? 'Duplo clique para gerenciar dependências' : undefined)}
                   >
                     {isNameColumn && isGroup && (
                       <button
@@ -309,7 +351,16 @@ export function GanttGrid({
                       </span>
                     )}
 
-                    {isWBSColumn ? (
+                    {isEditing ? (
+                      <InlineEditCell
+                        task={task}
+                        field={fieldName}
+                        value={(task as any)?.[fieldName]}
+                        editorType={editorType}
+                        onCommit={handleCommitEdit}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : isWBSColumn ? (
                       <EditableWBSCell 
                         task={task}
                         value={(task as any)?.[column.field]}

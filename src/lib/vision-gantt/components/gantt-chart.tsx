@@ -19,6 +19,7 @@ import { useTimelineRange } from '../hooks/use-timeline-range';
 import { useSplitter } from '../hooks/use-splitter';
 import { useZoomWheel } from '../hooks/use-zoom-wheel';
 import { useColumnResize } from '../hooks/use-column-resize';
+import { usePanDrag } from '../hooks/use-pan-drag';
 import { getPixelsPerDay, getViewPreset, VIEW_PRESETS } from '../config/view-presets';
 import { DEFAULT_COLUMNS } from '../config/default-columns';
 import { flattenTasks } from '../utils';
@@ -446,6 +447,90 @@ export function GanttChart({
     },
     [taskStore]
   );
+  
+  const handleCellEdit = useCallback(
+    (taskId: string, field: string, value: any) => {
+      console.log('[GanttChart] Cell edit:', taskId, field, value);
+      
+      const task = flatTasks.find(t => t.id === taskId);
+      if (!task) return;
+      
+      // Skip if value is null/undefined
+      if (value === null || value === undefined) return;
+      
+      let updates: Partial<Task> = {};
+      
+      // Handle different field types
+      switch (field) {
+        case 'name':
+        case 'notes':
+        case 'description':
+          updates = { [field]: value };
+          break;
+          
+        case 'duration':
+          // Duration change - recalculate end date using INCLUSIVE model
+          // end = start + (duration - 1) days
+          if (typeof value === 'number' && value >= 1 && task.startDate) {
+            const newEndDate = new Date(task.startDate);
+            newEndDate.setDate(newEndDate.getDate() + value - 1);
+            updates = { duration: value, endDate: newEndDate };
+          }
+          break;
+          
+        case 'startDate':
+          // Start date change - preserve duration
+          if (value instanceof Date) {
+            const duration = task.duration ?? 1;
+            const newEndDate = new Date(value);
+            newEndDate.setDate(newEndDate.getDate() + duration - 1);
+            updates = { startDate: value, endDate: newEndDate };
+          }
+          break;
+          
+        case 'endDate':
+          // End date change - recalculate duration
+          if (value instanceof Date && task.startDate) {
+            const diffTime = value.getTime() - task.startDate.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            const newDuration = Math.max(1, diffDays + 1); // Inclusive model
+            updates = { endDate: value, duration: newDuration };
+          }
+          break;
+          
+        case 'progress':
+          // Progress - clamp to 0-100
+          if (typeof value === 'number') {
+            const progress = Math.max(0, Math.min(100, value));
+            updates = { progress };
+          }
+          break;
+          
+        case 'predecessors':
+        case 'successors':
+          // Dependencies - these should trigger the dependency modal instead
+          console.log('[GanttChart] Dependency edit not handled inline:', field, value);
+          return;
+          
+        default:
+          // For any unmapped fields, log a warning
+          console.warn('[GanttChart] Unhandled field in cell edit:', field);
+          return;
+      }
+      
+      // Apply updates if any
+      if (Object.keys(updates).length > 0) {
+        taskStore.updateTask(taskId, updates);
+        
+        // Also notify VisionGanttWrapper via onTaskUpdate for auto-scheduling
+        if (onTaskUpdate) {
+          const updatedTask = { ...task, ...updates };
+          onTaskUpdate(updatedTask);
+        }
+      }
+    },
+    [taskStore, flatTasks, onTaskUpdate]
+  );
 
   const handleViewPresetChange = useCallback(
     (preset: ViewPreset) => {
@@ -460,6 +545,13 @@ export function GanttChart({
     currentPreset: viewPreset,
     onPresetChange: handleViewPresetChange,
     enabled: true
+  });
+
+  const { isPanning } = usePanDrag({
+    enabled: !dragState.isDragging && !resizeState.isResizing,
+    gridScrollRef,
+    timelineScrollRef,
+    containerRef: timelineContainerRef
   });
 
   const handleTimeScaleConfigSave = useCallback(
@@ -689,10 +781,12 @@ export function GanttChart({
             onTaskSelect={handleTaskSelect}
             onTaskContextMenu={handleTaskContextMenu}
             onToggleExpand={handleToggleExpand}
+            onCellEdit={handleCellEdit}
             selectedTaskId={selectedTaskId}
             selectedTaskIds={selectedTaskIds}
             onWBSUpdate={handleWBSUpdate}
             criticalPathIds={criticalPathIds}
+            enableInlineEdit={true}
           />
         </div>
 
@@ -746,12 +840,12 @@ export function GanttChart({
               conflictTaskIds={conflictTaskIds}
             />
           </div>
-          {/* Alt+Scroll zoom hint tooltip */}
+          {/* Zoom/Pan hint tooltip */}
           <div 
             className="absolute bottom-2 right-2 px-2 py-1 rounded text-xs bg-gray-800/70 text-white opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
             style={{ backdropFilter: 'blur(4px)' }}
           >
-            Alt + Scroll para zoom
+            {isPanning ? 'Arrastando...' : 'Alt + Scroll = Zoom | Botão do meio = Pan | Shift + Clique = Pan'}
           </div>
         </div>
       </div>
