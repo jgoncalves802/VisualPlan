@@ -3,7 +3,7 @@
  * Supports inline editing for text, dates, numbers, duration, progress, and dependencies
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
 import { ChevronRight, ChevronDown } from 'lucide-react';
@@ -50,6 +50,7 @@ interface GanttGridProps {
   criticalPathIds?: string[];
   enableInlineEdit?: boolean;
   calendars?: CalendarOption[];
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 }
 
 export function GanttGrid({
@@ -72,7 +73,8 @@ export function GanttGrid({
   onResourceUpdate,
   criticalPathIds = [],
   enableInlineEdit = true,
-  calendars = []
+  calendars = [],
+  onKeyDown
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
   const { theme } = useGanttTheme();
@@ -287,6 +289,12 @@ export function GanttGrid({
               onMouseLeave={(e) => {
                 if (!isSelected && !isGroup) {
                   e.currentTarget.style.backgroundColor = rowStyle.backgroundColor as string;
+                }
+              }}
+              onKeyDown={(e) => {
+                // Forward keyboard events to parent for Shift+Arrow indent/outdent
+                if (onKeyDown) {
+                  onKeyDown(e);
                 }
               }}
             >

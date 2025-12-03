@@ -939,6 +939,30 @@ export const SCHEDULE_COLUMNS: ColumnConfig[] = [
     },
     sortable: true,
     resizable: true
+  },
+  {
+    field: 'calendarId',
+    header: 'Calendário',
+    width: 130,
+    minWidth: 100,
+    maxWidth: 200,
+    renderer: (value: string | undefined) => {
+      if (!value) {
+        return React.createElement('span', { className: 'text-gray-400 text-xs' }, 'Padrão');
+      }
+      return React.createElement(
+        'span',
+        { 
+          className: 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+          style: { backgroundColor: '#E0E7FF', color: '#4338CA' },
+          title: `ID: ${value}`
+        },
+        React.createElement('span', { className: 'mr-1' }, '📅'),
+        value
+      );
+    },
+    sortable: true,
+    resizable: true
   }
 ];
 

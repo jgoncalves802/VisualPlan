@@ -876,6 +876,7 @@ export function GanttChart({
             criticalPathIds={criticalPathIds}
             enableInlineEdit={true}
             calendars={_calendars.map(c => ({ id: c.id, name: c.name }))}
+            onKeyDown={handleKeyDown}
           />
         </div>
 
