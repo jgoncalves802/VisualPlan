@@ -266,6 +266,17 @@ export function GanttGrid({
                 transition: 'background-color 0.1s ease',
                 outline: 'none'
               }}
+              onMouseDownCapture={(e) => {
+                // Capture phase: Focus the row BEFORE any cell stopPropagation
+                // This ensures keyboard events work for Shift+Arrow indent/outdent
+                // BUT skip if clicking on an inline editor (input, select, etc)
+                const target = e.target as HTMLElement;
+                const isInteractiveElement = target.closest('input, select, textarea, button, [contenteditable="true"]');
+                if (isInteractiveElement) return;
+                
+                const row = e.currentTarget;
+                requestAnimationFrame(() => row.focus());
+              }}
               onClick={(e) => {
                 if (onTaskSelect) {
                   onTaskSelect(task, e);
