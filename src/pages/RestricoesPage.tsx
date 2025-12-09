@@ -209,7 +209,7 @@ export const RestricoesPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="flex flex-col h-full -m-6">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
