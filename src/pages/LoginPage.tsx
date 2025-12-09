@@ -6,6 +6,8 @@ import { CamadaGovernanca, PerfilAcesso } from '../types';
 import { Building2, Mail, Lock, LogIn } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
+const isDevelopment = import.meta.env.DEV;
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -16,10 +18,33 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleDevLogin = () => {
+    const devUsuario = {
+      id: '577dc497-7e83-46df-ba35-e082ee5ee7ca',
+      nome: 'Administrador',
+      email: 'admin@visionplan.com',
+      ativo: true,
+      empresaId: 'empresa-001',
+      camadaGovernanca: 'ESTRATEGICO' as CamadaGovernanca,
+      perfilAcesso: 'ADMINISTRADOR' as PerfilAcesso,
+      avatarUrl: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    login(devUsuario, 'dev-token');
+    navigate('/dashboard');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (isDevelopment && email === 'admin@visionplan.com' && senha === 'admin123') {
+      handleDevLogin();
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
