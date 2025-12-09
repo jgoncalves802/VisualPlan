@@ -12,16 +12,12 @@ import {
   TipoAtividadeLPS,
 } from '../types/lps';
 
-// Datas de exemplo (baseadas nas fotos)
-const hoje = new Date();
-const dataInicio = new Date(2024, 10, 10); // 10/11/2024
-const dataFim = new Date(2024, 11, 1); // 01/12/2024
-
 /**
- * Atividades mockadas do LPS
+ * Atividades mockadas do LPS com IDs predefinidos para permitir vinculação
  */
-export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
+export const atividadesMockLPS: AtividadeLPS[] = [
   {
+    id: 'lps-ativ-001',
     codigo: 'ATV-001',
     nome: 'Limpeza Operacional (Prédio JHMA)',
     descricao: 'Limpeza operacional do prédio JHMA',
@@ -36,6 +32,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Limpeza', 'Operacional'],
   },
   {
+    id: 'lps-ativ-002',
     codigo: 'ATV-002',
     nome: 'Parada MC117 e MC101',
     descricao: 'Parada dos equipamentos MC117 e MC101',
@@ -50,6 +47,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Parada', 'Equipamentos'],
   },
   {
+    id: 'lps-ativ-003',
     codigo: 'ATV-003',
     nome: 'Escala Operacional (Liberação de APR)',
     descricao: 'Escala operacional para liberação de APR',
@@ -64,6 +62,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Escala', 'APR'],
   },
   {
+    id: 'lps-ativ-004',
     codigo: 'ATV-004',
     nome: 'DDS Geral',
     descricao: 'Dialogo Diário de Segurança Geral',
@@ -78,6 +77,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['DDS', 'Segurança'],
   },
   {
+    id: 'lps-ativ-005',
     codigo: 'ATV-005',
     nome: 'Montagem',
     descricao: 'Montagem de equipamentos',
@@ -91,6 +91,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Montagem'],
   },
   {
+    id: 'lps-ativ-006',
     codigo: 'ATV-006',
     nome: 'Revisão',
     descricao: 'Revisão de equipamentos',
@@ -104,6 +105,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Revisão'],
   },
   {
+    id: 'lps-ativ-007',
     codigo: 'ATV-007',
     nome: 'Desmontagem',
     descricao: 'Desmontagem de equipamentos',
@@ -117,6 +119,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Desmontagem'],
   },
   {
+    id: 'lps-ativ-008',
     codigo: 'ATV-008',
     nome: 'Retirada',
     descricao: 'Retirada de materiais',
@@ -130,6 +133,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Retirada', 'Materiais'],
   },
   {
+    id: 'lps-ativ-009',
     codigo: 'ATV-009',
     nome: 'Limpeza',
     descricao: 'Limpeza de área',
@@ -143,6 +147,7 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
     tags: ['Limpeza'],
   },
   {
+    id: 'lps-ativ-010',
     codigo: 'ATV-010',
     nome: 'Operação Assistida',
     descricao: 'Operação assistida de equipamentos',
@@ -158,37 +163,43 @@ export const atividadesMockLPS: Omit<AtividadeLPS, 'id'>[] = [
 ];
 
 /**
- * Restrições mockadas do LPS
+ * Restrições mockadas do LPS vinculadas às atividades
  */
-export const restricoesMockLPS: Omit<RestricaoLPS, 'id'>[] = [
+export const restricoesMockLPS: RestricaoLPS[] = [
   {
-    descricao: 'Limpeza Operacional (Prédio JHMA)',
+    id: 'lps-rest-001',
+    descricao: 'Liberação de acesso ao prédio JHMA',
     tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Vitória',
     apoio: 'Pedro C.',
-    data_conclusao_planejada: new Date(2024, 10, 14),
-    data_conclusao: new Date(2024, 10, 14),
-    data_criacao: new Date(2024, 10, 10),
+    atividade_id: 'lps-ativ-001',
+    data_conclusao_planejada: new Date(2024, 10, 10),
+    data_conclusao: new Date(2024, 10, 10),
+    data_criacao: new Date(2024, 10, 8),
     status: 'CONCLUIDA',
     prioridade: 'ALTA',
     historico: [],
   },
   {
-    descricao: 'Parada MC117 e MC101',
+    id: 'lps-rest-002',
+    descricao: 'Parada MC117 e MC101 - Aprovação da gerência',
     tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Rafael E.',
     apoio: 'Pedro C.',
-    data_conclusao_planejada: new Date(2024, 10, 16),
+    atividade_id: 'lps-ativ-002',
+    data_conclusao_planejada: new Date(2024, 10, 14),
     data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
+    status: 'PENDENTE',
     prioridade: 'ALTA',
     historico: [],
   },
   {
-    descricao: 'Escala Operacional (Liberação de APR)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    id: 'lps-rest-003',
+    descricao: 'Liberação de APR para escala operacional',
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Evaldo/Kennedy',
     apoio: 'Ronaldo',
+    atividade_id: 'lps-ativ-003',
     data_conclusao_planejada: new Date(2024, 10, 11),
     data_criacao: new Date(2024, 10, 10),
     status: 'PENDENTE',
@@ -196,134 +207,124 @@ export const restricoesMockLPS: Omit<RestricaoLPS, 'id'>[] = [
     historico: [],
   },
   {
-    descricao: 'Definir antecipação da parada',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    id: 'lps-rest-004',
+    descricao: 'Definição de antecipação da parada',
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Ronaldo',
     apoio: 'Ronaldo',
+    atividade_id: 'lps-ativ-002',
     data_conclusao_planejada: new Date(2024, 10, 10),
-    data_criacao: new Date(2024, 10, 10),
+    data_conclusao: new Date(2024, 10, 10),
+    data_criacao: new Date(2024, 10, 8),
     status: 'CONCLUIDA',
     prioridade: 'ALTA',
     historico: [],
   },
   {
-    descricao: 'Consolidar matriz de riscos',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    id: 'lps-rest-005',
+    descricao: 'Consolidação da matriz de riscos',
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Max',
     apoio: 'Gustavo R.',
+    atividade_id: 'lps-ativ-002',
     data_conclusao_planejada: new Date(2024, 10, 10),
-    data_criacao: new Date(2024, 10, 10),
+    data_conclusao: new Date(2024, 10, 10),
+    data_criacao: new Date(2024, 10, 8),
     status: 'CONCLUIDA',
     prioridade: 'ALTA',
     historico: [],
   },
   {
+    id: 'lps-rest-006',
     descricao: 'Mobilização dos recursos e conteiro',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Shayane',
     apoio: 'Junior',
-    data_conclusao_planejada: new Date(2024, 10, 10),
+    atividade_id: 'lps-ativ-005',
+    data_conclusao_planejada: new Date(2024, 10, 15),
     data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
+    status: 'PENDENTE',
     prioridade: 'MEDIA',
     historico: [],
   },
   {
+    id: 'lps-rest-007',
     descricao: 'Consolidar cronograma + PTO',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Pedro C.',
     apoio: 'Pedro C.',
+    atividade_id: 'lps-ativ-002',
     data_conclusao_planejada: new Date(2024, 10, 10),
-    data_criacao: new Date(2024, 10, 10),
+    data_conclusao: new Date(2024, 10, 10),
+    data_criacao: new Date(2024, 10, 8),
     status: 'CONCLUIDA',
     prioridade: 'ALTA',
     historico: [],
   },
   {
+    id: 'lps-rest-008',
     descricao: 'Consolidar jornada de trabalho (Turnos)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Julio',
     apoio: 'Junior',
+    atividade_id: 'lps-ativ-003',
     data_conclusao_planejada: new Date(2024, 10, 10),
+    data_conclusao: new Date(2024, 10, 10),
+    data_criacao: new Date(2024, 10, 8),
+    status: 'CONCLUIDA',
+    prioridade: 'MEDIA',
+    historico: [],
+  },
+  {
+    id: 'lps-rest-009',
+    descricao: 'Agendar DDS Geral (14/11)',
+    tipo: TipoRestricao.RESTRICAO,
+    responsavel: 'Daniela',
+    apoio: 'Pedro C.',
+    atividade_id: 'lps-ativ-004',
+    data_conclusao_planejada: new Date(2024, 10, 12),
+    data_conclusao: new Date(2024, 10, 12),
     data_criacao: new Date(2024, 10, 10),
     status: 'CONCLUIDA',
     prioridade: 'MEDIA',
     historico: [],
   },
   {
-    descricao: 'Planejar limpezas operacionais (JHMA)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
-    responsavel: 'Pedro C.',
-    apoio: 'Ronaldo',
-    data_conclusao_planejada: new Date(2024, 10, 10),
+    id: 'lps-rest-010',
+    descricao: 'Validar plano de rigger',
+    tipo: TipoRestricao.RESTRICAO,
+    responsavel: 'Victor S.',
+    apoio: 'Daniela',
+    atividade_id: 'lps-ativ-005',
+    data_conclusao_planejada: new Date(2024, 10, 16),
     data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
-    prioridade: 'MEDIA',
-    historico: [],
-  },
-  {
-    descricao: 'Definir estratégia de bloqueio (Lógica)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
-    responsavel: 'Douglas',
-    apoio: 'Ronaldo',
-    data_conclusao_planejada: new Date(2024, 10, 10),
-    data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
+    status: 'ATRASADA',
     prioridade: 'ALTA',
     historico: [],
   },
   {
-    descricao: 'Agendar DDS Geral (14/11)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
-    responsavel: 'Daniela',
-    apoio: 'Pedro C.',
-    data_conclusao_planejada: new Date(2024, 10, 12),
-    data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
-    prioridade: 'MEDIA',
-    historico: [],
-  },
-  {
-    descricao: 'Validar plano de rigger',
-    tipo: TipoRestricao.SEM_RESTRICAO,
-    responsavel: 'Victor S.',
-    apoio: 'Daniela',
-    data_conclusao_planejada: new Date(2024, 10, 11),
-    data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
-    prioridade: 'MEDIA',
-    historico: [],
-  },
-  {
+    id: 'lps-rest-011',
     descricao: 'Validar projetos de andaime',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Daniela',
     apoio: 'Ronaldo',
-    data_conclusao_planejada: new Date(2024, 10, 12),
+    atividade_id: 'lps-ativ-007',
+    data_conclusao_planejada: new Date(2024, 10, 24),
     data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
+    status: 'PENDENTE',
     prioridade: 'MEDIA',
     historico: [],
   },
   {
-    descricao: 'Providenciar contingências p/ chuva (hora/turno/p.i)',
-    tipo: TipoRestricao.SEM_RESTRICAO,
+    id: 'lps-rest-012',
+    descricao: 'Providenciar contingências p/ chuva',
+    tipo: TipoRestricao.RESTRICAO,
     responsavel: 'Daniela',
     apoio: 'Pedro',
-    data_conclusao_planejada: new Date(2024, 10, 13),
+    atividade_id: 'lps-ativ-006',
+    data_conclusao_planejada: new Date(2024, 10, 20),
     data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
-    prioridade: 'MEDIA',
-    historico: [],
-  },
-  {
-    descricao: 'Providenciar carboxímetro no conteiro 503',
-    tipo: TipoRestricao.SEM_RESTRICAO,
-    responsavel: 'Shayane',
-    apoio: 'Junior',
-    data_conclusao_planejada: new Date(2024, 10, 11),
-    data_criacao: new Date(2024, 10, 10),
-    status: 'CONCLUIDA',
+    status: 'PENDENTE',
     prioridade: 'MEDIA',
     historico: [],
   },
@@ -332,117 +333,50 @@ export const restricoesMockLPS: Omit<RestricaoLPS, 'id'>[] = [
 /**
  * Anotações mockadas do LPS
  */
-export const anotacoesMockLPS: Omit<AnotacaoLPS, 'id'>[] = [
+export const anotacoesMockLPS: AnotacaoLPS[] = [
   {
-    descricao: 'Limpeza Operacional (Prédio JHMA)',
+    id: 'lps-anot-001',
+    descricao: 'Limpeza Operacional (Prédio JHMA) - Atenção aos horários',
     data_criacao: new Date(2024, 10, 10),
     responsavel: 'Vitória',
+    atividade_id: 'lps-ativ-001',
     tags: ['Limpeza', 'Operacional'],
   },
   {
-    descricao: 'Parada MC117 e MC101',
+    id: 'lps-anot-002',
+    descricao: 'Parada MC117 e MC101 - Verificar disponibilidade',
     data_criacao: new Date(2024, 10, 10),
     responsavel: 'Rafael E.',
+    atividade_id: 'lps-ativ-002',
     tags: ['Parada', 'Equipamentos'],
   },
   {
-    descricao: 'Escala Operacional (Liberação de APR)',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Evaldo/Kennedy',
-    tags: ['Escala', 'APR'],
-  },
-  {
-    descricao: 'Definir antecipação da parada',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Ronaldo',
-    tags: ['Antecipação', 'Parada'],
-  },
-  {
-    descricao: 'Consolidar matriz de riscos',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Max',
-    tags: ['Riscos', 'Matriz'],
-  },
-  {
-    descricao: 'Mobilização dos recursos e conteiro',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Shayane',
-    tags: ['Recursos', 'Mobilização'],
-  },
-  {
-    descricao: 'Consolidar cronograma + PTO',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Pedro C.',
-    tags: ['Cronograma', 'PTO'],
-  },
-  {
-    descricao: 'Consolidar jornada de trabalho (Turnos)',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Julio',
-    tags: ['Jornada', 'Turnos'],
-  },
-  {
-    descricao: 'Planejar limpezas operacionais (JHMA)',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Pedro C.',
-    tags: ['Limpeza', 'Operacional'],
-  },
-  {
-    descricao: 'Definir estratégia de bloqueio (Lógica)',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Douglas',
-    tags: ['Bloqueio', 'Lógica'],
-  },
-  {
-    descricao: 'Agendar DDS Geral (14/11)',
+    id: 'lps-anot-003',
+    descricao: 'DDS Geral previsto para 14/11 às 08:00',
     data_criacao: new Date(2024, 10, 10),
     responsavel: 'Daniela',
+    atividade_id: 'lps-ativ-004',
     tags: ['DDS', 'Segurança'],
-  },
-  {
-    descricao: 'Validar plano de rigger',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Victor S.',
-    tags: ['Rigger', 'Validação'],
-  },
-  {
-    descricao: 'Validar projetos de andaime',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Daniela',
-    tags: ['Andaime', 'Validação'],
-  },
-  {
-    descricao: 'Providenciar contingências p/ chuva (hora/turno/p.i)',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Daniela',
-    tags: ['Contingência', 'Chuva'],
-  },
-  {
-    descricao: 'Providenciar carboxímetro no conteiro 503',
-    data_criacao: new Date(2024, 10, 10),
-    responsavel: 'Shayane',
-    tags: ['Carboxímetro', 'Equipamento'],
   },
 ];
 
 /**
- * Retornar atividades mockadas (sem IDs, serão gerados pelo store)
+ * Retornar atividades mockadas (com IDs predefinidos)
  */
-export const getAtividadesMockLPS = (): Omit<AtividadeLPS, 'id'>[] => {
-  return atividadesMockLPS;
+export const getAtividadesMockLPS = (): AtividadeLPS[] => {
+  return atividadesMockLPS.map(atividade => ({ ...atividade }));
 };
 
 /**
- * Retornar restrições mockadas (sem IDs, serão gerados pelo store)
+ * Retornar restrições mockadas (com IDs predefinidos)
  */
-export const getRestricoesMockLPS = (): Omit<RestricaoLPS, 'id'>[] => {
-  return restricoesMockLPS;
+export const getRestricoesMockLPS = (): RestricaoLPS[] => {
+  return restricoesMockLPS.map(restricao => ({ ...restricao }));
 };
 
 /**
- * Retornar anotações mockadas (sem IDs, serão gerados pelo store)
+ * Retornar anotações mockadas (com IDs predefinidos)
  */
-export const getAnotacoesMockLPS = (): Omit<AnotacaoLPS, 'id'>[] => {
-  return anotacoesMockLPS;
+export const getAnotacoesMockLPS = (): AnotacaoLPS[] => {
+  return anotacoesMockLPS.map(anotacao => ({ ...anotacao }));
 };
-

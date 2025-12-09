@@ -12,12 +12,14 @@ interface ActivityCardProps {
   atividade: AtividadeLPS;
   onClick?: () => void;
   cor?: string;
+  restricoesCount?: number;
 }
 
 export const ActivityCard: React.FC<ActivityCardProps> = ({
   atividade,
   onClick,
-  cor = 'bg-yellow-200 border-yellow-400',
+  cor = 'bg-green-200 border-green-500',
+  restricoesCount = 0,
 }) => {
   // Handler para iniciar drag
   const handleDragStart = (e: React.DragEvent) => {
@@ -126,6 +128,13 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
       {/* Indicador de tipo crítico */}
       {atividade.tipo === TipoAtividadeLPS.CRITICA && (
         <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+      )}
+
+      {/* Badge de restrições pendentes */}
+      {restricoesCount > 0 && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+          {restricoesCount}
+        </div>
       )}
     </div>
   );

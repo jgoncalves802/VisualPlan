@@ -3,7 +3,7 @@
  * Visualização de planejamento em formato de calendário com post-its
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,31 +12,28 @@ import { AnotacoesSection } from '../components/features/lps/AnotacoesSection';
 import { RestricoesSection } from '../components/features/lps/RestricoesSection';
 import { ActivityActionsModal } from '../components/features/lps/ActivityActionsModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
+import { LPSA3PrintViewer } from '../components/features/lps/LPSA3PrintViewer';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import {
   AtividadeLPS,
   RestricaoLPS,
-  AnotacaoLPS,
   StatusAtividadeLPS,
   CategoriaAtividade,
-  TipoRestricao,
   TipoAtividadeLPS,
 } from '../types/lps';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar,
   RefreshCw,
   Download,
   Settings,
-  Filter,
 } from 'lucide-react';
 
 export const LPSPage: React.FC = () => {
   const { projetoId } = useParams<{ projetoId?: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const projetoIdParam = projetoId || searchParams.get('projeto') || 'proj-1';
 
   // Store LPS
@@ -50,8 +47,6 @@ export const LPSPage: React.FC = () => {
     error,
     setPeriodo,
     addAtividade,
-    updateAtividade,
-    deleteAtividade,
     moveAtividade,
     addRestricao,
     updateRestricao,
@@ -79,6 +74,7 @@ export const LPSPage: React.FC = () => {
   const [selectedActivity, setSelectedActivity] = useState<AtividadeLPS | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+  const [printViewerOpen, setPrintViewerOpen] = useState(false);
 
   // Carregar atividades do cronograma
   useEffect(() => {
@@ -109,30 +105,34 @@ export const LPSPage: React.FC = () => {
     const jaInicializado = dataInicioZero.getTime() === dataInicial.getTime() && atividades.length > 0;
     
     if (!jaInicializado && atividades.length === 0 && restricoes.length === 0 && anotacoes.length === 0) {
-      // Importar dados mockados
       import('../mocks/lpsMocks').then((module) => {
         const atividadesMock = module.getAtividadesMockLPS();
         const restricoesMock = module.getRestricoesMockLPS();
         const anotacoesMock = module.getAnotacoesMockLPS();
 
-        // Adicionar atividades ao store
         atividadesMock.forEach((atividade) => {
-          addAtividade(atividade);
+          const { id, ...rest } = atividade;
+          useLPSStore.setState((state) => ({
+            atividades: [...state.atividades, { ...rest, id }],
+          }));
         });
 
-        // Adicionar restrições ao store
         restricoesMock.forEach((restricao) => {
-          addRestricao(restricao);
+          const { id, ...rest } = restricao;
+          useLPSStore.setState((state) => ({
+            restricoes: [...state.restricoes, { ...rest, id }],
+          }));
         });
 
-        // Adicionar anotações ao store
         anotacoesMock.forEach((anotacao) => {
-          addAnotacao(anotacao);
+          const { id, ...rest } = anotacao;
+          useLPSStore.setState((state) => ({
+            anotacoes: [...state.anotacoes, { ...rest, id }],
+          }));
         });
 
-        // Definir período inicial (baseado nas fotos: 10/11 a 01/12)
-        const inicio = new Date(2024, 10, 10); // 10/11/2024
-        const fim = new Date(2024, 11, 1); // 01/12/2024
+        const inicio = new Date(2024, 10, 10);
+        const fim = new Date(2024, 11, 1);
         inicio.setHours(0, 0, 0, 0);
         fim.setHours(23, 59, 59, 999);
         setPeriodo(inicio, fim);
@@ -324,10 +324,12 @@ export const LPSPage: React.FC = () => {
               <span className="text-sm">Sincronizar Recursos</span>
             </button>
             <button
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 flex items-center gap-2"
+              onClick={() => setPrintViewerOpen(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2"
+              title="Imprimir em formato A3 para exposição na obra"
             >
               <Download size={16} />
-              <span className="text-sm">Exportar</span>
+              <span className="text-sm">Imprimir A3</span>
             </button>
             <button
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 flex items-center gap-2"
@@ -426,6 +428,7 @@ export const LPSPage: React.FC = () => {
             dataInicio={dataInicio}
             dataFim={dataFim}
             atividades={atividades}
+            restricoes={restricoes}
             onActivityMove={handleActivityMove}
             onActivityClick={handleActivityClick}
             mostrarFinsDeSemana={mostrarFinsDeSemana}
@@ -475,6 +478,7 @@ export const LPSPage: React.FC = () => {
       {/* Modal de Ações da Atividade */}
       <ActivityActionsModal
         atividade={selectedActivity}
+        restricoes={restricoes}
         isOpen={activityActionsModalOpen}
         onClose={() => {
           setActivityActionsModalOpen(false);
@@ -483,11 +487,15 @@ export const LPSPage: React.FC = () => {
         onAddRestricao={handleAddRestricaoFromActivity}
         onEditAtividade={(atividadeId) => {
           console.log('Editar atividade:', atividadeId);
-          // TODO: Implementar edição de atividade
         }}
         onViewDetails={(atividadeId) => {
           console.log('Ver detalhes da atividade:', atividadeId);
-          // TODO: Implementar visualização de detalhes
+        }}
+        onEditRestricao={(restricao) => {
+          setSelectedActivity(null);
+          setActivityActionsModalOpen(false);
+          setRestricaoModalAtividadeId(restricao.atividade_id);
+          setRestricaoModalOpen(true);
         }}
       />
 
@@ -524,6 +532,17 @@ export const LPSPage: React.FC = () => {
             responsavel: usuario?.id,
           });
         }}
+      />
+
+      {/* Visualizador de Impressão A3 */}
+      <LPSA3PrintViewer
+        isOpen={printViewerOpen}
+        onClose={() => setPrintViewerOpen(false)}
+        atividades={atividades}
+        restricoes={restricoes}
+        dataInicio={dataInicio}
+        dataFim={dataFim}
+        projetoNome="VisionPlan - Planejamento Puxado"
       />
     </div>
   );

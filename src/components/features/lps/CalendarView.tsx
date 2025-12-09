@@ -6,13 +6,14 @@
 import React, { useMemo } from 'react';
 import { format, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AtividadeLPS, CategoriaAtividade } from '../../../types/lps';
+import { AtividadeLPS, RestricaoLPS } from '../../../types/lps';
 import { ActivityCard } from './ActivityCard';
 
 interface CalendarViewProps {
   dataInicio: Date;
   dataFim: Date;
   atividades: AtividadeLPS[];
+  restricoes?: RestricaoLPS[];
   onActivityMove?: (atividadeId: string, novaData: Date) => void;
   onActivityClick?: (atividade: AtividadeLPS) => void;
   mostrarFinsDeSemana?: boolean;
@@ -22,6 +23,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   dataInicio,
   dataFim,
   atividades,
+  restricoes = [],
   onActivityMove,
   onActivityClick,
   mostrarFinsDeSemana = true,
@@ -92,21 +94,29 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return format(data, 'EEE', { locale: ptBR });
   };
 
-  // Obter cor da categoria (cores baseadas nas fotos)
-  const getCorCategoria = (categoria: CategoriaAtividade): string => {
-    switch (categoria) {
-      case CategoriaAtividade.PRINCIPAL:
-        // Amarelo (post-its principais)
-        return 'bg-yellow-200 border-yellow-400 hover:bg-yellow-300';
-      case CategoriaAtividade.SECUNDARIA:
-        // Rosa (post-its secundários)
-        return 'bg-pink-200 border-pink-400 hover:bg-pink-300';
-      case CategoriaAtividade.ESPECIAL:
-        // Branco (post-its especiais como "Operação Assistida")
-        return 'bg-white border-gray-400 hover:bg-gray-50';
-      default:
-        return 'bg-yellow-200 border-yellow-400 hover:bg-yellow-300';
+  const getRestricoesAtividade = useMemo(() => {
+    const map: Record<string, RestricaoLPS[]> = {};
+    restricoes.forEach((r) => {
+      if (r.atividade_id) {
+        if (!map[r.atividade_id]) {
+          map[r.atividade_id] = [];
+        }
+        map[r.atividade_id].push(r);
+      }
+    });
+    return map;
+  }, [restricoes]);
+
+  const getCorCategoria = (atividade: AtividadeLPS): string => {
+    const restricoesAtividade = getRestricoesAtividade[atividade.id] || [];
+    const temRestricoesPendentes = restricoesAtividade.some(
+      (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+    );
+    
+    if (temRestricoesPendentes) {
+      return 'bg-yellow-200 border-yellow-400 hover:bg-yellow-300';
     }
+    return 'bg-green-200 border-green-500 hover:bg-green-300';
   };
 
   // Handler para drop de atividade
@@ -164,12 +174,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       Arraste atividades aqui
                     </div>
                   ) : (
-                    atividadesDoDia.map((atividade, index) => (
+                    atividadesDoDia.map((atividade) => (
                       <ActivityCard
                         key={atividade.id}
                         atividade={atividade}
                         onClick={() => onActivityClick?.(atividade)}
-                        cor={getCorCategoria(atividade.categoria)}
+                        cor={getCorCategoria(atividade)}
+                        restricoesCount={(getRestricoesAtividade[atividade.id] || []).filter(
+                          (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+                        ).length}
                       />
                     ))
                   )}

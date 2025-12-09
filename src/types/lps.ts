@@ -74,6 +74,21 @@ export enum CategoriaAtividade {
 // ============================================================================
 
 /**
+ * Histórico de conclusão de uma atividade
+ */
+export interface AtividadeHistoricoConclusao {
+  id: string;
+  atividade_id: string;
+  status_anterior: StatusAtividadeLPS;
+  status_novo: StatusAtividadeLPS;
+  data_alteracao: Date;
+  responsavel?: string;
+  responsavel_id?: string;
+  motivo?: string;
+  ppc?: number; // Porcentagem Planejada Concluída
+}
+
+/**
  * Atividade no LPS (post-it no calendário)
  */
 export interface AtividadeLPS {
@@ -100,6 +115,9 @@ export interface AtividadeLPS {
   cor?: string; // Cor personalizada
   tags?: string[];
   observacoes?: string;
+  data_conclusao?: Date; // Data real de conclusão
+  data_conclusao_planejada?: Date; // Data planejada de conclusão
+  historico_conclusao?: AtividadeHistoricoConclusao[]; // Histórico de mudanças de status
 }
 
 /**

@@ -10,13 +10,12 @@ import {
   AnotacaoLPS,
   PlanejamentoLPS,
   StatusAtividadeLPS,
-  CategoriaAtividade,
   TipoRestricao,
   TipoRestricaoDetalhado,
-  TipoResponsabilidade,
   RestricaoHistorico,
   RestricaoEvidencia,
   RestricaoAndamento,
+  AtividadeHistoricoConclusao,
 } from '../types/lps';
 
 interface LPSState {
@@ -54,6 +53,8 @@ interface LPSState {
   podeConcluirRestricao: (restricaoId: string, userId: string) => boolean;
   syncComCronograma: (projetoId: string) => Promise<void>;
   syncComRecursos: (projetoId: string) => Promise<void>;
+  concluirAtividade: (id: string, userId: string, motivo?: string) => void;
+  atualizarStatusAtividadeComHistorico: (id: string, novoStatus: StatusAtividadeLPS, userId: string, motivo?: string) => void;
 }
 
 // Gerar ID único
@@ -510,13 +511,71 @@ export const useLPSStore = create<LPSState>()(
       syncComRecursos: async (projetoId: string) => {
         set({ loading: true, error: null });
         try {
-          // TODO: Implementar sincronização com dados de recursos
-          // Por enquanto, apenas simular
           console.log('Sincronizando com recursos do projeto:', projetoId);
           set({ loading: false });
         } catch (error: any) {
           set({ loading: false, error: error.message || 'Erro ao sincronizar com recursos' });
         }
+      },
+
+      concluirAtividade: (id, userId, motivo) => {
+        const state = get();
+        const atividade = state.atividades.find((a) => a.id === id);
+        if (!atividade) return;
+
+        const novoHistorico: AtividadeHistoricoConclusao = {
+          id: generateId(),
+          atividade_id: id,
+          status_anterior: atividade.status,
+          status_novo: StatusAtividadeLPS.CONCLUIDA,
+          data_alteracao: new Date(),
+          responsavel_id: userId,
+          motivo,
+        };
+
+        set((state) => ({
+          atividades: state.atividades.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  status: StatusAtividadeLPS.CONCLUIDA,
+                  data_conclusao: new Date(),
+                  historico_conclusao: [...(a.historico_conclusao || []), novoHistorico],
+                }
+              : a
+          ),
+        }));
+      },
+
+      atualizarStatusAtividadeComHistorico: (id, novoStatus, userId, motivo) => {
+        const state = get();
+        const atividade = state.atividades.find((a) => a.id === id);
+        if (!atividade || atividade.status === novoStatus) return;
+
+        const novoHistorico: AtividadeHistoricoConclusao = {
+          id: generateId(),
+          atividade_id: id,
+          status_anterior: atividade.status,
+          status_novo: novoStatus,
+          data_alteracao: new Date(),
+          responsavel_id: userId,
+          motivo,
+        };
+
+        const atualizacoes: Partial<AtividadeLPS> = {
+          status: novoStatus,
+          historico_conclusao: [...(atividade.historico_conclusao || []), novoHistorico],
+        };
+
+        if (novoStatus === StatusAtividadeLPS.CONCLUIDA) {
+          atualizacoes.data_conclusao = new Date();
+        }
+
+        set((state) => ({
+          atividades: state.atividades.map((a) =>
+            a.id === id ? { ...a, ...atualizacoes } : a
+          ),
+        }));
       },
     };
     },
