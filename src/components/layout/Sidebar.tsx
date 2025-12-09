@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Target,
+  ClipboardList,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -34,6 +36,18 @@ const menuItems: MenuItem[] = [
     label: 'Dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
     path: '/dashboard',
+  },
+  {
+    id: 'indicadores',
+    label: 'Indicadores',
+    icon: <Target className="w-5 h-5" />,
+    path: '/indicadores',
+  },
+  {
+    id: 'acoes',
+    label: 'Plano de Ação 5W2H',
+    icon: <ClipboardList className="w-5 h-5" />,
+    path: '/acoes',
   },
   {
     id: 'wbs',
