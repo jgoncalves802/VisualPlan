@@ -10,6 +10,10 @@ export enum TipoItemKanban {
   ATIVIDADE_LPS = 'ATIVIDADE_LPS',
   RESTRICAO = 'RESTRICAO',
   ACAO_TRATATIVA = 'ACAO_TRATATIVA',
+  ACAO_5W2H = 'ACAO_5W2H',
+  AUDITORIA = 'AUDITORIA',
+  MUDANCA = 'MUDANCA',
+  PDCA = 'PDCA',
 }
 
 export enum PrioridadeKanban {
@@ -45,10 +49,18 @@ export interface ItemKanban {
   origemAtividade?: any;
   origemAtividadeLPS?: any;
   origemRestricao?: any;
+  origemAcao5W2H?: any;
+  origemAuditoria?: any;
+  origemMudanca?: any;
+  origemPDCA?: any;
   
   atividadeId?: string;
   restricaoId?: string;
   projetoId?: string;
+  acaoId?: string;
+  auditoriaId?: string;
+  mudancaId?: string;
+  pdcaId?: string;
   
   evidencias?: EvidenciaKanban[];
   quantidadeEvidencias?: number;

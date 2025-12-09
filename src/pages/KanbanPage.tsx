@@ -16,7 +16,11 @@ import {
   Calendar,
   Tag,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  ClipboardList,
+  FileCheck,
+  GitBranch,
+  RefreshCw,
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
@@ -27,7 +31,7 @@ import {
   TipoItemKanban, 
   StatusKanban, 
   PrioridadeKanban,
-  FiltrosKanban 
+  FiltrosKanban,
 } from '../types/kanban';
 import { StatusAtividade } from '../types';
 import { StatusAtividadeLPS } from '../types/lps';
@@ -491,6 +495,14 @@ const KanbanPage: React.FC = () => {
         return <PlayCircle size={14} className="text-purple-500" />;
       case TipoItemKanban.RESTRICAO:
         return <AlertCircle size={14} className="text-red-500" />;
+      case TipoItemKanban.ACAO_5W2H:
+        return <ClipboardList size={14} className="text-orange-500" />;
+      case TipoItemKanban.AUDITORIA:
+        return <FileCheck size={14} className="text-teal-500" />;
+      case TipoItemKanban.MUDANCA:
+        return <GitBranch size={14} className="text-indigo-500" />;
+      case TipoItemKanban.PDCA:
+        return <RefreshCw size={14} className="text-green-500" />;
       default:
         return <Tag size={14} className="text-gray-500" />;
     }
@@ -501,9 +513,17 @@ const KanbanPage: React.FC = () => {
       case TipoItemKanban.ATIVIDADE_CRONOGRAMA:
         return 'Atividade Gantt';
       case TipoItemKanban.ATIVIDADE_LPS:
-        return 'Atividade Lps';
+        return 'Atividade LPS';
       case TipoItemKanban.RESTRICAO:
-        return 'Restricao';
+        return 'Restrição';
+      case TipoItemKanban.ACAO_5W2H:
+        return 'Ação 5W2H';
+      case TipoItemKanban.AUDITORIA:
+        return 'Auditoria';
+      case TipoItemKanban.MUDANCA:
+        return 'Mudança';
+      case TipoItemKanban.PDCA:
+        return 'Ciclo PDCA';
       default:
         return 'Item';
     }
