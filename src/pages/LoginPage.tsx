@@ -16,6 +16,23 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleDemoLogin = () => {
+    const demoUsuario = {
+      id: 'demo-user-001',
+      nome: 'Usuário Demo',
+      email: 'demo@visionplan.com.br',
+      ativo: true,
+      empresaId: 'empresa-demo-001',
+      camadaGovernanca: 'ESTRATEGICO' as CamadaGovernanca,
+      perfilAcesso: 'ADMINISTRADOR' as PerfilAcesso,
+      avatarUrl: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    login(demoUsuario, 'demo-token');
+    navigate('/dashboard');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -181,6 +198,23 @@ const LoginPage: React.FC = () => {
                   <span>Entrar</span>
                 </>
               )}
+            </button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t theme-border-primary"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 theme-bg-card theme-text-secondary">ou</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              className="w-full flex items-center justify-center space-x-2 py-3 border-2 border-dashed theme-border-primary rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <span className="theme-text-secondary">Acessar Modo Demonstração</span>
             </button>
           </form>
 
