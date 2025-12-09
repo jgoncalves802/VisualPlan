@@ -19,6 +19,12 @@ import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
 import { RestricoesPage } from './pages/RestricoesPage';
+import AnaliseIshikawaPage from './pages/AnaliseIshikawaPage';
+import ReunioesPage from './pages/ReunioesPage';
+import PortfolioPage from './pages/PortfolioPage';
+import Acoes5W2HPage from './pages/Acoes5W2HPage';
+import AuditoriaPage from './pages/AuditoriaPage';
+import GestaoMudancaPage from './pages/GestaoMudancaPage';
 import './styles/global.css';
 
 const ProtectedAppLayout: React.FC = () => {
@@ -61,14 +67,20 @@ function App() {
           <Route element={<ProtectedAppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/kanban" element={<KanbanPage />} />
-            <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
             <Route path="/wbs" element={<WBSPage />} />
+            <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
             <Route path="/gantt" element={<Navigate to="/cronograma/proj-1" replace />} />
+            <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/lps" element={<LPSPage />} />
             <Route path="/lps/:projetoId" element={<LPSPage />} />
             <Route path="/restricoes" element={<RestricoesPage />} />
             <Route path="/restricoes/:projetoId" element={<RestricoesPage />} />
+            <Route path="/acoes" element={<Acoes5W2HPage />} />
+            <Route path="/auditorias" element={<AuditoriaPage />} />
+            <Route path="/mudancas" element={<GestaoMudancaPage />} />
+            <Route path="/analise-ishikawa" element={<AnaliseIshikawaPage />} />
+            <Route path="/reunioes" element={<ReunioesPage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/bim" element={
               <div className="p-6 text-center py-12">
                 <h2 className="text-2xl font-bold theme-text mb-4">BIM / 4D Viewer</h2>
