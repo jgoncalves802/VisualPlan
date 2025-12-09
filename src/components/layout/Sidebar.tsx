@@ -15,6 +15,7 @@ import {
   Target,
   ClipboardList,
   FileCheck,
+  GitBranch,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -55,6 +56,12 @@ const menuItems: MenuItem[] = [
     label: 'Auditorias',
     icon: <FileCheck className="w-5 h-5" />,
     path: '/auditorias',
+  },
+  {
+    id: 'mudancas',
+    label: 'Gestão da Mudança',
+    icon: <GitBranch className="w-5 h-5" />,
+    path: '/mudancas',
   },
   {
     id: 'wbs',

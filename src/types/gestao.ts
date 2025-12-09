@@ -67,10 +67,26 @@ export enum FasePDCA {
 
 export enum StatusMudanca {
   RASCUNHO = 'RASCUNHO',
-  ANALISE = 'ANALISE',
+  SUBMETIDA = 'SUBMETIDA',
+  EM_ANALISE = 'EM_ANALISE',
   APROVADA = 'APROVADA',
   REJEITADA = 'REJEITADA',
   IMPLEMENTADA = 'IMPLEMENTADA',
+}
+
+export enum TipoMudanca {
+  ESCOPO = 'ESCOPO',
+  PRAZO = 'PRAZO',
+  CUSTO = 'CUSTO',
+  QUALIDADE = 'QUALIDADE',
+  RECURSO = 'RECURSO',
+}
+
+export enum ImpactoMudanca {
+  BAIXO = 'BAIXO',
+  MEDIO = 'MEDIO',
+  ALTO = 'ALTO',
+  CRITICO = 'CRITICO',
 }
 
 export enum TipoReuniao {
@@ -261,27 +277,54 @@ export interface LicaoAprendida {
 // INTERFACES - GESTÃO DA MUDANÇA
 // ============================================================================
 
+export interface AprovadorMudanca {
+  id: string;
+  nome: string;
+  cargo?: string;
+  status: 'PENDENTE' | 'APROVADO' | 'REJEITADO';
+  dataDecisao?: Date;
+  comentario?: string;
+}
+
+export interface HistoricoMudanca {
+  id: string;
+  data: Date;
+  usuario: string;
+  acao: string;
+  detalhes?: string;
+}
+
 export interface SolicitacaoMudanca {
   id: string;
   codigo: string;
   titulo: string;
   descricao: string;
   justificativa?: string;
+  tipoMudanca: TipoMudanca;
+  prioridade: PrioridadeAcao;
   solicitante: string;
   solicitanteId?: string;
   dataSolicitacao: Date;
   status: StatusMudanca;
+  projetoId: string;
+  projetoNome?: string;
   impactoCronograma?: number;
   impactoCusto?: number;
   impactoQualidade?: string;
   impactoRisco?: string;
+  recursosNecessarios?: string;
+  riscos?: string[];
+  impactoEstimado: ImpactoMudanca;
   baselineAfetada?: string;
   atividadesNovas?: number;
   atividadesRemovidas?: number;
+  aprovadores?: AprovadorMudanca[];
   aprovador?: string;
   aprovadorId?: string;
   dataAprovacao?: Date;
   observacoesAprovacao?: string;
+  anexos?: string[];
+  historico?: HistoricoMudanca[];
   acoes5w2h?: string[];
 }
 
