@@ -8,6 +8,8 @@ import {
   User,
   Palette,
   ChevronDown,
+  Settings,
+  Eye,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
@@ -18,10 +20,12 @@ import { PerfilAcesso } from '../../types';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { presentationMode, togglePresentationMode, sidebarOpen } = useUIStore();
+  const { presentationMode, togglePresentationMode, sidebarOpen, adminMode, toggleAdminMode } = useUIStore();
   const { usuario, logout } = useAuthStore();
   const { isDarkMode, toggleDarkMode } = useThemeStore();
   const { notifications, unreadCount, markAsRead } = useNotificationStore();
+  
+  const isAdmin = usuario?.perfilAcesso === PerfilAcesso.ADMIN;
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -77,6 +81,38 @@ export const Header: React.FC = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Admin Mode Toggle - Only for Admins */}
+            {isAdmin && (
+              <button
+                onClick={toggleAdminMode}
+                className={classNames(
+                  'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors',
+                  adminMode 
+                    ? 'bg-primary text-white' 
+                    : 'hover:bg-secondary-100'
+                )}
+                style={adminMode ? { backgroundColor: 'var(--color-primary)' } : {}}
+                title={adminMode ? 'Visualizar Aplicação' : 'Gestão da Aplicação'}
+              >
+                {adminMode ? (
+                  <>
+                    <Eye className="w-5 h-5" />
+                    <span className="text-sm font-medium">Visualizar App</span>
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-5 h-5" style={{ color: 'var(--color-text-secondary)' }} />
+                    <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Gestão</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Separator */}
+            {isAdmin && (
+              <div className="h-6 w-px bg-secondary-200" style={{ backgroundColor: 'var(--color-secondary-200)' }} />
+            )}
+
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
