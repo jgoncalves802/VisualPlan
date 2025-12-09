@@ -8,7 +8,6 @@ import {
   Calendar, 
   AlertTriangle, 
   Box,
-  FileText,
   Network,
   ClipboardCheck,
   GitBranch,
@@ -17,104 +16,69 @@ import {
   Briefcase,
   ListChecks,
   BarChart3,
+  FileText,
 } from 'lucide-react';
+
+const allRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD'];
+const managementRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD'];
+const executiveRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO'];
 
 export const AppLayout: React.FC = () => {
   const { tema } = useTemaStore();
 
-  const menuItems = [
-    { 
-      icon: LayoutDashboard, 
-      label: 'Dashboard', 
-      path: '/dashboard',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD']
+  const menuGroups = [
+    {
+      id: 'visao',
+      label: 'Visão Geral',
+      items: [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: allRoles },
+        { icon: Network, label: 'WBS', path: '/wbs', roles: managementRoles },
+        { icon: Briefcase, label: 'Portfolio', path: '/portfolio', roles: executiveRoles },
+      ]
     },
-    { 
-      icon: Network, 
-      label: 'WBS', 
-      path: '/wbs',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
+    {
+      id: 'planejamento',
+      label: 'Planejamento',
+      items: [
+        { icon: Calendar, label: 'Cronograma', path: '/cronograma/proj-1', roles: managementRoles },
+        { icon: FileText, label: 'LPS', path: '/lps', roles: managementRoles },
+        { icon: Box, label: 'BIM / 4D', path: '/bim', roles: managementRoles },
+      ]
     },
-    { 
-      icon: Calendar, 
-      label: 'Cronograma', 
-      path: '/cronograma/proj-1',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
+    {
+      id: 'execucao',
+      label: 'Execução',
+      items: [
+        { icon: KanbanSquare, label: 'Kanban', path: '/kanban', roles: allRoles },
+        { icon: AlertTriangle, label: 'Restrições', path: '/restricoes', roles: managementRoles },
+        { icon: ListChecks, label: 'Ações 5W2H', path: '/acoes', roles: managementRoles },
+      ]
     },
-    { 
-      icon: KanbanSquare, 
-      label: 'Kanban', 
-      path: '/kanban',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD']
+    {
+      id: 'gestao',
+      label: 'Gestão & Controle',
+      items: [
+        { icon: ClipboardCheck, label: 'Auditorias', path: '/auditorias', roles: managementRoles },
+        { icon: GitBranch, label: 'Mudanças', path: '/mudancas', roles: managementRoles },
+        { icon: Users, label: 'Reuniões', path: '/reunioes', roles: managementRoles },
+      ]
     },
-    { 
-      icon: FileText, 
-      label: 'LPS', 
-      path: '/lps',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD'],
-      separator: true,
-    },
-    { 
-      icon: AlertTriangle, 
-      label: 'Restrições', 
-      path: '/restricoes',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
-    },
-    { 
-      icon: ListChecks, 
-      label: 'Ações 5W2H', 
-      path: '/acoes',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
-    },
-    { 
-      icon: ClipboardCheck, 
-      label: 'Auditorias', 
-      path: '/auditorias',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
-    },
-    { 
-      icon: GitBranch, 
-      label: 'Mudanças', 
-      path: '/mudancas',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD'],
-      separator: true,
-    },
-    { 
-      icon: Fish, 
-      label: 'Ishikawa', 
-      path: '/analise-ishikawa',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
-    },
-    { 
-      icon: Users, 
-      label: 'Reuniões', 
-      path: '/reunioes',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
-    },
-    { 
-      icon: Briefcase, 
-      label: 'Portfolio', 
-      path: '/portfolio',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO'],
-      separator: true,
-    },
-    { 
-      icon: Box, 
-      label: 'BIM / 4D', 
-      path: '/bim',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA']
-    },
-    { 
-      icon: BarChart3, 
-      label: 'Relatórios', 
-      path: '/relatorios',
-      roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
+    {
+      id: 'analise',
+      label: 'Análise & Melhoria',
+      items: [
+        { icon: Fish, label: 'Ishikawa', path: '/analise-ishikawa', roles: managementRoles },
+        { icon: BarChart3, label: 'Relatórios', path: '/relatorios', roles: managementRoles },
+      ]
     },
   ];
+
+  const menuItems = menuGroups.flatMap(g => g.items);
 
   return (
     <LayoutShell
       menuItems={menuItems}
+      menuGroups={menuGroups}
       title="VisionPlan"
       logoLetter="V"
       logoColor={tema.primary}
