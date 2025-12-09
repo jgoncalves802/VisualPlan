@@ -7,7 +7,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { format, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AtividadeLPS, RestricaoLPS, StatusAtividadeLPS } from '../../../types/lps';
+import { AtividadeLPS, RestricaoLPS } from '../../../types/lps';
 import { X, Printer, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LPSA3PrintViewerProps {
@@ -157,21 +157,6 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
       return { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' };
     }
     return { bg: '#D1FAE5', border: '#10B981', text: '#065F46' };
-  };
-
-  const getStatusColor = (status: StatusAtividadeLPS) => {
-    switch (status) {
-      case StatusAtividadeLPS.CONCLUIDA:
-        return '#10B981';
-      case StatusAtividadeLPS.EM_ANDAMENTO:
-        return '#3B82F6';
-      case StatusAtividadeLPS.ATRASADA:
-        return '#EF4444';
-      case StatusAtividadeLPS.BLOQUEADA:
-        return '#6B7280';
-      default:
-        return '#9CA3AF';
-    }
   };
 
   const handlePrint = () => {
@@ -432,22 +417,53 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
             }
             
             .activity-card {
-              padding: 2mm;
+              padding: 2.5mm;
               border-radius: 4px;
-              border-left: 3px solid;
+              border: 1.5px solid;
               font-size: 8pt;
               page-break-inside: avoid;
+            }
+
+            .activity-code {
+              font-size: 7pt;
+              font-weight: bold;
+              color: #047857;
+              margin-bottom: 1mm;
             }
             
             .activity-name {
               font-weight: 600;
               margin-bottom: 1mm;
               line-height: 1.2;
+              font-size: 8pt;
             }
             
             .activity-resp {
               font-size: 7pt;
+              color: #4B5563;
+              margin-bottom: 0.5mm;
+            }
+
+            .activity-dates {
+              font-size: 7pt;
               color: #6B7280;
+              margin-bottom: 1mm;
+            }
+
+            .activity-tags {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 1mm;
+              margin-top: 1mm;
+            }
+
+            .activity-tag {
+              font-size: 6pt;
+              padding: 0.5mm 1.5mm;
+              background: white;
+              border: 0.5px solid #9CA3AF;
+              border-radius: 2px;
+              color: #374151;
             }
             
             .activity-restrictions {
@@ -556,31 +572,57 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
       (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
     );
 
+    const dataInicio = parseDate(atividade.data_inicio);
+    const dataFim = parseDate(atividade.data_fim);
+
     return (
       <div
         key={atividade.id}
-        className="rounded p-2 text-xs"
+        className="rounded-lg p-2.5 text-xs border"
         style={{
           backgroundColor: cores.bg,
-          borderLeft: `3px solid ${cores.border}`,
+          borderColor: cores.border,
           color: cores.text,
         }}
       >
-        <div className="flex items-start justify-between">
-          <div className="font-semibold text-sm leading-tight flex-1">
-            {atividade.nome}
+        {/* Código */}
+        {atividade.codigo && (
+          <div className="text-xs font-bold text-green-700 mb-1">
+            {atividade.codigo}
           </div>
-          <div
-            className="w-2 h-2 rounded-full ml-1 flex-shrink-0"
-            style={{ backgroundColor: getStatusColor(atividade.status) }}
-            title={atividade.status}
-          />
+        )}
+        
+        {/* Nome */}
+        <div className="font-semibold text-sm leading-tight line-clamp-2 mb-1">
+          {atividade.nome}
         </div>
+        
+        {/* Responsável */}
         {atividade.responsavel && (
-          <div className="text-xs opacity-75 mt-1">
+          <div className="text-xs text-gray-600 mb-0.5">
             Resp: {atividade.responsavel}
           </div>
         )}
+        
+        {/* Datas */}
+        {dataInicio && dataFim && (
+          <div className="text-xs text-gray-500 mb-1">
+            {format(dataInicio, 'dd/MM', { locale: ptBR })} - {format(dataFim, 'dd/MM', { locale: ptBR })}
+          </div>
+        )}
+        
+        {/* Tags */}
+        {atividade.tags && atividade.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-1">
+            {atividade.tags.slice(0, 2).map((tag, idx) => (
+              <span key={idx} className="px-1.5 py-0.5 bg-white border border-gray-400 rounded text-xs text-gray-700">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {/* Restrições */}
         {showRestrictions && restricoesPendentes.length > 0 && (
           <div className="mt-1 pt-1 border-t border-dashed border-yellow-400">
             <div className="text-xs font-medium text-amber-700 mb-1">
@@ -872,13 +914,28 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
                               color: cores.text,
                             }}
                           >
+                            {atividade.codigo && (
+                              <div className="activity-code">{atividade.codigo}</div>
+                            )}
                             <div className="activity-name">{atividade.nome}</div>
                             {atividade.responsavel && (
                               <div className="activity-resp">Resp: {atividade.responsavel}</div>
                             )}
+                            {atividade.data_inicio && atividade.data_fim && (
+                              <div className="activity-dates">
+                                {format(parseDate(atividade.data_inicio)!, 'dd/MM', { locale: ptBR })} - {format(parseDate(atividade.data_fim)!, 'dd/MM', { locale: ptBR })}
+                              </div>
+                            )}
+                            {atividade.tags && atividade.tags.length > 0 && (
+                              <div className="activity-tags">
+                                {atividade.tags.slice(0, 2).map((tag, idx) => (
+                                  <span key={idx} className="activity-tag">{tag}</span>
+                                ))}
+                              </div>
+                            )}
                             {restricoesPendentes.length > 0 && (
                               <div className="activity-restrictions">
-                                {restricoesPendentes.slice(0, 3).map((rest) => (
+                                {restricoesPendentes.slice(0, 2).map((rest) => (
                                   <div key={rest.id} className="restriction-item">
                                     <span className="restriction-bullet">•</span>
                                     <span>{rest.descricao}</span>
