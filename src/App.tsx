@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import { useTemaStore } from './stores/temaStore';
+import { PerfilAcesso } from './types';
 import { ToastProvider } from './components/ui';
-import Layout from './components/layout/Layout';
+import { AppLayout } from './components/layout/AppLayout';
+import { AdminLayout } from './components/layout/AdminLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import KanbanPage from './pages/KanbanPage';
@@ -17,20 +19,19 @@ import { CronogramaPage } from './pages/CronogramaPage';
 import { WBSPage } from './pages/WBSPage';
 import { LPSPage } from './pages/LPSPage';
 import { RestricoesPage } from './pages/RestricoesPage';
-import { PerfilAcesso } from './types';
 import './styles/global.css';
 
-const ProtectedLayout: React.FC = () => {
+const ProtectedAppLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  return <Layout />;
+  return <AppLayout />;
 };
 
-const AdminLayout: React.FC = () => {
+const ProtectedAdminLayout: React.FC = () => {
   const { isAuthenticated, usuario } = useAuthStore();
   
   if (!isAuthenticated) {
@@ -41,7 +42,7 @@ const AdminLayout: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  return <Outlet />;
+  return <AdminLayout />;
 };
 
 function App() {
@@ -57,7 +58,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          <Route element={<ProtectedLayout />}>
+          <Route element={<ProtectedAppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/kanban" element={<KanbanPage />} />
@@ -69,26 +70,26 @@ function App() {
             <Route path="/restricoes" element={<RestricoesPage />} />
             <Route path="/restricoes/:projetoId" element={<RestricoesPage />} />
             <Route path="/bim" element={
-              <div className="text-center py-12">
+              <div className="p-6 text-center py-12">
                 <h2 className="text-2xl font-bold theme-text mb-4">BIM / 4D Viewer</h2>
                 <p className="theme-text-secondary">Módulo em desenvolvimento...</p>
               </div>
             } />
             <Route path="/relatorios" element={
-              <div className="text-center py-12">
+              <div className="p-6 text-center py-12">
                 <h2 className="text-2xl font-bold theme-text mb-4">Relatórios</h2>
                 <p className="theme-text-secondary">Módulo em desenvolvimento...</p>
               </div>
             } />
+          </Route>
 
-            <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
-              <Route path="/admin/empresas" element={<AdminEmpresasPage />} />
-              <Route path="/admin/temas" element={<AdminTemasPage />} />
-              <Route path="/admin/perfis" element={<AdminPerfisPage />} />
-              <Route path="/admin/eps" element={<AdminEPSPage />} />
-            </Route>
+          <Route element={<ProtectedAdminLayout />}>
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
+            <Route path="/admin/empresas" element={<AdminEmpresasPage />} />
+            <Route path="/admin/temas" element={<AdminTemasPage />} />
+            <Route path="/admin/perfis" element={<AdminPerfisPage />} />
+            <Route path="/admin/eps" element={<AdminEPSPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
