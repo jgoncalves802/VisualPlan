@@ -7,7 +7,6 @@ import {
   KanbanSquare, 
   Calendar, 
   AlertTriangle, 
-  Box,
   Network,
   ClipboardCheck,
   GitBranch,
@@ -42,7 +41,6 @@ export const AppLayout: React.FC = () => {
       items: [
         { icon: Calendar, label: 'Cronograma', path: '/cronograma/proj-1', roles: managementRoles },
         { icon: FileText, label: 'LPS', path: '/lps', roles: managementRoles },
-        { icon: Box, label: 'BIM / 4D', path: '/bim', roles: managementRoles },
       ]
     },
     {
