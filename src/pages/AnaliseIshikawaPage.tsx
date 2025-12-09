@@ -52,6 +52,15 @@ const CATEGORY_DESCRIPTIONS: Record<CategoriaIshikawa, string> = {
   [CategoriaIshikawa.MEIO_AMBIENTE]: 'Clima, licenças, fatores externos',
 };
 
+const CATEGORY_COLORS: Record<CategoriaIshikawa, string> = {
+  [CategoriaIshikawa.METODO]: '#8B5CF6',
+  [CategoriaIshikawa.MAO_DE_OBRA]: '#3B82F6',
+  [CategoriaIshikawa.MATERIAL]: '#10B981',
+  [CategoriaIshikawa.MAQUINA]: '#F59E0B',
+  [CategoriaIshikawa.MEDIDA]: '#EC4899',
+  [CategoriaIshikawa.MEIO_AMBIENTE]: '#06B6D4',
+};
+
 const STATUS_COLORS: Record<StatusRestricaoIshikawa, string> = {
   [StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO]: '#22C55E',
   [StatusRestricaoIshikawa.EM_EXECUCAO]: '#3B82F6',
@@ -180,7 +189,6 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
   restrictions,
   dadosCategoria
 }) => {
-  const { tema } = useTemaStore();
   
   if (!isOpen || !category || !dadosCategoria) return null;
 
@@ -195,7 +203,7 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b" style={{ backgroundColor: '#f97316' }}>
+        <div className="flex items-center justify-between p-4 border-b" style={{ backgroundColor: CATEGORY_COLORS[category] }}>
           <div>
             <h2 className="text-xl font-bold text-white">{CATEGORY_LABELS[category]}</h2>
             <p className="text-sm text-white opacity-80">{CATEGORY_DESCRIPTIONS[category]}</p>
@@ -264,33 +272,29 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-gray-500">{rest.codigo}</span>
                     {rest.reincidente && (
-                      <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">Reincidente</span>
+                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">Reincidente</span>
                     )}
                     {rest.impactoCaminhoCritico && (
-                      <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">Caminho Crítico</span>
+                      <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">Crítico</span>
                     )}
                   </div>
                   <p className="text-sm text-gray-800 mt-1">{rest.descricao}</p>
-                  <p className="text-xs text-gray-500 mt-1">{rest.atividadeNome}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <span
-                      className="px-2 py-1 rounded-full text-xs font-medium"
-                      style={{ backgroundColor: `${STATUS_COLORS[rest.status]}20`, color: STATUS_COLORS[rest.status] }}
-                    >
-                      {STATUS_LABELS[rest.status]}
-                    </span>
-                    {rest.diasAtraso > 0 && (
-                      <p className="text-xs text-red-600 mt-1">{rest.diasAtraso} dias atraso</p>
-                    )}
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span>{rest.atividadeNome}</span>
+                    <span>•</span>
+                    <span>{rest.responsavel}</span>
                   </div>
-                  <button
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                    style={{ backgroundColor: tema.primary, color: 'white' }}
+                </div>
+                <div className="text-right">
+                  <span
+                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{ backgroundColor: `${STATUS_COLORS[rest.status]}20`, color: STATUS_COLORS[rest.status] }}
                   >
-                    5W2H
-                  </button>
+                    {STATUS_LABELS[rest.status]}
+                  </span>
+                  {rest.diasAtraso > 0 && (
+                    <p className="text-xs text-red-600 mt-1">{rest.diasAtraso} dias atraso</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -307,128 +311,135 @@ interface IshikawaDiagramProps {
   totalRestricoes: number;
 }
 
-const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({ dadosPorCategoria, onCategoryClick, totalRestricoes }) => {
+const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
+  dadosPorCategoria,
+  onCategoryClick,
+  totalRestricoes
+}) => {
   const [hoveredCategory, setHoveredCategory] = useState<CategoriaIshikawa | null>(null);
+  const { tema } = useTemaStore();
   
-  const getCategoryData = (cat: CategoriaIshikawa): DadosIshikawa | undefined => {
-    return dadosPorCategoria.find(d => d.categoria === cat);
-  };
+  const isDarkMode = tema.background === '#1a1a2e' || tema.background === '#0f172a';
+  
+  const topCategories = [CategoriaIshikawa.METODO, CategoriaIshikawa.MATERIAL, CategoriaIshikawa.MAQUINA];
+  const bottomCategories = [CategoriaIshikawa.MAO_DE_OBRA, CategoriaIshikawa.MEDIDA, CategoriaIshikawa.MEIO_AMBIENTE];
+  
+  const getCategoryData = (cat: CategoriaIshikawa) => dadosPorCategoria.find(d => d.categoria === cat);
 
-  const getCategoryColor = (dados: DadosIshikawa | undefined): string => {
-    if (!dados) return '#6B7280';
-    if (dados.vencidas > 0) return STATUS_COLORS[StatusRestricaoIshikawa.VENCIDA];
-    if (dados.atrasadas > 0) return STATUS_COLORS[StatusRestricaoIshikawa.ATRASADA];
-    if (dados.emExecucao > 0) return STATUS_COLORS[StatusRestricaoIshikawa.EM_EXECUCAO];
-    if (dados.noPrazo > 0) return STATUS_COLORS[StatusRestricaoIshikawa.NO_PRAZO];
-    return STATUS_COLORS[StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO];
-  };
-
-  const topCategories = [CategoriaIshikawa.METODO, CategoriaIshikawa.MAO_DE_OBRA, CategoriaIshikawa.MATERIAL];
-  const bottomCategories = [CategoriaIshikawa.MEDIDA, CategoriaIshikawa.MEIO_AMBIENTE, CategoriaIshikawa.MAQUINA];
-
-  const renderCategoryNode = (category: CategoriaIshikawa, x: number, y: number, isTop: boolean) => {
+  const renderBranch = (
+    category: CategoriaIshikawa,
+    startX: number,
+    endX: number,
+    spineY: number,
+    isTop: boolean
+  ) => {
     const dados = getCategoryData(category);
-    const color = getCategoryColor(dados);
     const isHovered = hoveredCategory === category;
-
+    const color = CATEGORY_COLORS[category];
+    const branchEndY = isTop ? spineY - 100 : spineY + 100;
+    const problemPercent = dados ? dados.percentualProblemas : 0;
+    
     return (
-      <g
+      <g 
         key={category}
+        className="cursor-pointer transition-all duration-200"
         onClick={() => onCategoryClick(category)}
         onMouseEnter={() => setHoveredCategory(category)}
         onMouseLeave={() => setHoveredCategory(null)}
-        style={{ cursor: 'pointer' }}
+        style={{ transform: isHovered ? 'scale(1.02)' : 'scale(1)', transformOrigin: 'center' }}
       >
         <line
-          x1={x}
-          y1={isTop ? y + 35 : y - 35}
-          x2={x + 80}
-          y2={200}
-          stroke="white"
-          strokeWidth={isHovered ? 3 : 2}
-          markerEnd="url(#arrowhead)"
+          x1={startX}
+          y1={spineY}
+          x2={endX}
+          y2={branchEndY}
+          stroke={isHovered ? color : isDarkMode ? '#94a3b8' : '#64748b'}
+          strokeWidth={isHovered ? 4 : 3}
+          strokeLinecap="round"
         />
         
-        {dados?.restricoes.slice(0, 3).map((_, idx) => {
-          const subX = x + 15 + idx * 20;
-          const subY = isTop ? y + 25 - idx * 8 : y - 25 + idx * 8;
-          return (
-            <line
-              key={idx}
-              x1={subX}
-              y1={subY}
-              x2={subX + 15}
-              y2={isTop ? subY + 12 : subY - 12}
-              stroke="white"
-              strokeWidth={1}
-              opacity={0.6}
-            />
-          );
-        })}
-        
-        <rect
-          x={x - 60}
-          y={y - 20}
-          width={120}
-          height={40}
-          rx={6}
-          fill={isHovered ? '#ea580c' : '#f97316'}
-          stroke={isHovered ? 'white' : 'transparent'}
-          strokeWidth={2}
-          filter={isHovered ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))' : 'none'}
-        />
-        
-        <text
-          x={x}
-          y={y - 2}
-          textAnchor="middle"
-          fill="white"
-          fontSize={10}
-          fontWeight="bold"
-        >
-          {CATEGORY_LABELS[category]}
-        </text>
-        <text
-          x={x}
-          y={y + 12}
-          textAnchor="middle"
-          fill="white"
-          fontSize={12}
-          fontWeight="bold"
-        >
-          {dados?.total || 0}
-        </text>
-        
-        <circle
-          cx={x + 50}
-          cy={y - 10}
-          r={8}
-          fill={color}
-          stroke="white"
-          strokeWidth={2}
-        />
+        <g transform={`translate(${endX}, ${branchEndY})`}>
+          <rect
+            x={-70}
+            y={isTop ? -60 : 0}
+            width={140}
+            height={60}
+            rx={8}
+            fill={color}
+            stroke={isHovered ? 'white' : 'transparent'}
+            strokeWidth={2}
+            filter={isHovered ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'}
+          />
+          
+          <text
+            x={0}
+            y={isTop ? -40 : 20}
+            textAnchor="middle"
+            fill="white"
+            fontSize={11}
+            fontWeight="600"
+          >
+            {CATEGORY_LABELS[category]}
+          </text>
+          
+          <text
+            x={0}
+            y={isTop ? -20 : 40}
+            textAnchor="middle"
+            fill="white"
+            fontSize={20}
+            fontWeight="bold"
+          >
+            {dados?.total || 0}
+          </text>
+          
+          {problemPercent > 0 && (
+            <g transform={`translate(50, ${isTop ? -55 : 5})`}>
+              <circle
+                r={12}
+                fill={problemPercent > 50 ? '#EF4444' : problemPercent > 25 ? '#F97316' : '#EAB308'}
+                stroke="white"
+                strokeWidth={2}
+              />
+              <text
+                textAnchor="middle"
+                y={4}
+                fill="white"
+                fontSize={8}
+                fontWeight="bold"
+              >
+                {Math.round(problemPercent)}%
+              </text>
+            </g>
+          )}
+        </g>
         
         {isHovered && dados && (
-          <g>
+          <g transform={`translate(${endX}, ${branchEndY + (isTop ? -75 : 75)})`}>
             <rect
-              x={x - 80}
-              y={isTop ? y - 100 : y + 30}
+              x={-80}
+              y={isTop ? -50 : -10}
               width={160}
               height={60}
-              rx={4}
-              fill="white"
-              stroke="#e5e7eb"
+              rx={6}
+              fill={isDarkMode ? '#1e293b' : 'white'}
+              stroke={isDarkMode ? '#334155' : '#e5e7eb'}
+              strokeWidth={1}
+              filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"
             />
-            <text x={x - 70} y={isTop ? y - 80 : y + 50} fontSize={9} fill="#374151">
+            <text x={-70} y={isTop ? -30 : 10} fontSize={10} fill="#22C55E" fontWeight="500">
               Concluídas: {dados.concluidas}
             </text>
-            <text x={x - 70} y={isTop ? y - 68 : y + 62} fontSize={9} fill="#374151">
+            <text x={-70} y={isTop ? -16 : 24} fontSize={10} fill="#3B82F6" fontWeight="500">
               Em Execução: {dados.emExecucao}
             </text>
-            <text x={x - 70} y={isTop ? y - 56 : y + 74} fontSize={9} fill="#374151">
+            <text x={-70} y={isTop ? -2 : 38} fontSize={10} fill="#F97316" fontWeight="500">
               Atrasadas: {dados.atrasadas}
             </text>
-            <text x={x - 70} y={isTop ? y - 44 : y + 86} fontSize={9} fill="#374151">
+            <text x={20} y={isTop ? -30 : 10} fontSize={10} fill="#EAB308" fontWeight="500">
+              No Prazo: {dados.noPrazo}
+            </text>
+            <text x={20} y={isTop ? -16 : 24} fontSize={10} fill="#EF4444" fontWeight="500">
               Vencidas: {dados.vencidas}
             </text>
           </g>
@@ -438,40 +449,120 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({ dadosPorCategoria, on
   };
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: '#1e3a5f' }}>
+    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc' }}>
       <svg viewBox="0 0 900 400" className="w-full h-full">
         <defs>
+          <linearGradient id="spineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={isDarkMode ? '#475569' : '#94a3b8'} />
+            <stop offset="100%" stopColor="#DC2626" />
+          </linearGradient>
           <marker
             id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="12"
+            markerHeight="8"
+            refX="10"
+            refY="4"
             orient="auto"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill="white" />
+            <polygon points="0 0, 12 4, 0 8" fill="#DC2626" />
           </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
         
-        <line x1={50} y1={200} x2={750} y2={200} stroke="white" strokeWidth={4} markerEnd="url(#arrowhead)" />
+        <line 
+          x1={60} 
+          y1={200} 
+          x2={720} 
+          y2={200} 
+          stroke="url(#spineGradient)" 
+          strokeWidth={6} 
+          markerEnd="url(#arrowhead)"
+          strokeLinecap="round"
+        />
         
-        {renderCategoryNode(topCategories[0], 150, 80, true)}
-        {renderCategoryNode(topCategories[1], 350, 60, true)}
-        {renderCategoryNode(topCategories[2], 550, 80, true)}
+        {topCategories.map((cat, i) => {
+          const startX = 150 + i * 200;
+          return renderBranch(cat, startX, startX, 200, true);
+        })}
         
-        {renderCategoryNode(bottomCategories[0], 150, 320, false)}
-        {renderCategoryNode(bottomCategories[1], 350, 340, false)}
-        {renderCategoryNode(bottomCategories[2], 550, 320, false)}
+        {bottomCategories.map((cat, i) => {
+          const startX = 150 + i * 200;
+          return renderBranch(cat, startX, startX, 200, false);
+        })}
         
-        <g>
-          <rect x={760} y={160} width={120} height={80} rx={8} fill="#dc2626" stroke="white" strokeWidth={2} />
-          <text x={820} y={190} textAnchor="middle" fill="white" fontSize={11} fontWeight="bold">PROBLEMA/EFEITO</text>
-          <text x={820} y={210} textAnchor="middle" fill="white" fontSize={10}>Total Restrições</text>
-          <text x={820} y={230} textAnchor="middle" fill="white" fontSize={18} fontWeight="bold">{totalRestricoes}</text>
+        <g transform="translate(780, 200)">
+          <rect
+            x={0}
+            y={-50}
+            width={110}
+            height={100}
+            rx={12}
+            fill="#DC2626"
+            filter="drop-shadow(0 4px 12px rgba(220, 38, 38, 0.4))"
+          />
+          <text
+            x={55}
+            y={-20}
+            textAnchor="middle"
+            fill="white"
+            fontSize={10}
+            fontWeight="600"
+          >
+            PROBLEMA
+          </text>
+          <text
+            x={55}
+            y={0}
+            textAnchor="middle"
+            fill="white"
+            fontSize={10}
+            fontWeight="600"
+          >
+            EFEITO
+          </text>
+          <line x1={20} y1={12} x2={90} y2={12} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+          <text
+            x={55}
+            y={35}
+            textAnchor="middle"
+            fill="white"
+            fontSize={28}
+            fontWeight="bold"
+          >
+            {totalRestricoes}
+          </text>
         </g>
         
-        <ellipse cx={50} cy={200} rx={30} ry={50} fill="none" stroke="white" strokeWidth={2} />
-        <line x1={50} y1={150} x2={50} y2={250} stroke="white" strokeWidth={1} />
+        <g transform="translate(30, 200)">
+          <ellipse
+            cx={0}
+            cy={0}
+            rx={20}
+            ry={35}
+            fill="none"
+            stroke={isDarkMode ? '#475569' : '#94a3b8'}
+            strokeWidth={3}
+          />
+          <line x1={0} y1={-35} x2={0} y2={35} stroke={isDarkMode ? '#475569' : '#94a3b8'} strokeWidth={2} />
+          <line x1={-15} y1={0} x2={15} y2={0} stroke={isDarkMode ? '#475569' : '#94a3b8'} strokeWidth={2} />
+        </g>
+        
+        <text
+          x={450}
+          y={385}
+          textAnchor="middle"
+          fill={isDarkMode ? '#64748b' : '#94a3b8'}
+          fontSize={11}
+          fontStyle="italic"
+        >
+          Clique em uma categoria para ver detalhes
+        </text>
       </svg>
     </div>
   );
@@ -565,6 +656,7 @@ const AnaliseIshikawaPage: React.FC = () => {
         categoria: CATEGORY_LABELS[d.categoria],
         quantidade: d.total,
         acumulado: total > 0 ? Math.round((cumulative / total) * 100) : 0,
+        fill: CATEGORY_COLORS[d.categoria],
       };
     });
   }, [dadosPorCategoria]);
@@ -603,6 +695,8 @@ const AnaliseIshikawaPage: React.FC = () => {
     ? filteredRestrictions.filter(r => r.categoria === selectedCategory)
     : [];
 
+  const isDarkMode = tema.background === '#1a1a2e' || tema.background === '#0f172a';
+
   return (
     <div className="p-6 space-y-6 min-h-screen" style={{ backgroundColor: tema.background }}>
       <div>
@@ -610,11 +704,11 @@ const AnaliseIshikawaPage: React.FC = () => {
           Análise Ishikawa - Causa e Efeito
         </h1>
         <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-          Análise de Restrições por Categoria (Metodologia Kaizen)
+          Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border p-4" style={{ borderColor: tema.border }}>
+      <div className="rounded-xl shadow-sm border p-4" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-medium mb-1" style={{ color: tema.textSecondary }}>EPS</label>
@@ -626,7 +720,7 @@ const AnaliseIshikawaPage: React.FC = () => {
                 setSelectedActivity('');
               }}
               className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border }}
+              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
             >
               <option value="">Todos os EPS</option>
               {mockEPS.map(eps => (
@@ -644,7 +738,7 @@ const AnaliseIshikawaPage: React.FC = () => {
                 setSelectedActivity('');
               }}
               className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border }}
+              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
               disabled={!selectedEPS}
             >
               <option value="">Todos os WBS</option>
@@ -660,7 +754,7 @@ const AnaliseIshikawaPage: React.FC = () => {
               value={selectedActivity}
               onChange={(e) => setSelectedActivity(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border }}
+              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
               disabled={!selectedWBS}
             >
               <option value="">Todas as Atividades</option>
@@ -677,7 +771,7 @@ const AnaliseIshikawaPage: React.FC = () => {
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border }}
+              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
             />
           </div>
           
@@ -688,7 +782,7 @@ const AnaliseIshikawaPage: React.FC = () => {
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border }}
+              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
             />
           </div>
         </div>
@@ -757,10 +851,10 @@ const AnaliseIshikawaPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: tema.border }}>
+        <div className="lg:col-span-3 rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
           <div className="p-4 border-b" style={{ borderColor: tema.border }}>
             <h2 className="text-lg font-bold" style={{ color: tema.text }}>Diagrama Ishikawa - 6M</h2>
-            <p className="text-xs" style={{ color: tema.textSecondary }}>Clique em uma categoria para ver detalhes</p>
+            <p className="text-xs" style={{ color: tema.textSecondary }}>Método, Mão de Obra, Material, Máquina, Medida, Meio Ambiente</p>
           </div>
           <div className="p-4" style={{ height: 420 }}>
             <IshikawaDiagram
@@ -772,37 +866,53 @@ const AnaliseIshikawaPage: React.FC = () => {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: tema.border }}>
+          <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
             <div className="p-4 border-b" style={{ borderColor: tema.border }}>
-              <h2 className="text-lg font-bold" style={{ color: tema.text }}>Pareto - Categorias de Restrições</h2>
+              <h2 className="text-lg font-bold" style={{ color: tema.text }}>Pareto - Categorias</h2>
             </div>
             <div className="p-4" style={{ height: 200 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={paretoData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="categoria" tick={{ fontSize: 9 }} angle={-15} textAnchor="end" height={50} />
-                  <YAxis yAxisId="left" orientation="left" />
-                  <YAxis yAxisId="right" orientation="right" unit="%" domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
+                  <XAxis dataKey="categoria" tick={{ fontSize: 9, fill: tema.textSecondary }} angle={-15} textAnchor="end" height={50} />
+                  <YAxis yAxisId="left" orientation="left" tick={{ fill: tema.textSecondary }} />
+                  <YAxis yAxisId="right" orientation="right" unit="%" domain={[0, 100]} tick={{ fill: tema.textSecondary }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: tema.surface, 
+                      borderColor: tema.border,
+                      color: tema.text 
+                    }} 
+                  />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="quantidade" fill="#f97316" name="Quantidade" radius={[4, 4, 0, 0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="acumulado" stroke="#3b82f6" strokeWidth={2} name="Acumulado %" dot={{ fill: '#3b82f6' }} />
+                  <Bar yAxisId="left" dataKey="quantidade" name="Quantidade" radius={[4, 4, 0, 0]}>
+                    {paretoData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                  <Line yAxisId="right" type="monotone" dataKey="acumulado" stroke="#6366f1" strokeWidth={2} name="Acumulado %" dot={{ fill: '#6366f1' }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: tema.border }}>
+          <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
             <div className="p-4 border-b" style={{ borderColor: tema.border }}>
               <h2 className="text-lg font-bold" style={{ color: tema.text }}>Tendência Mensal</h2>
             </div>
             <div className="p-4" style={{ height: 200 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 10 }} />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
+                  <XAxis dataKey="mes" tick={{ fontSize: 10, fill: tema.textSecondary }} />
+                  <YAxis tick={{ fill: tema.textSecondary }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: tema.surface, 
+                      borderColor: tema.border,
+                      color: tema.text 
+                    }} 
+                  />
                   <Legend />
                   <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} name="Total" dot={{ fill: '#6366f1' }} />
                   <Line type="monotone" dataKey="concluidas" stroke="#22c55e" strokeWidth={2} name="Concluídas" dot={{ fill: '#22c55e' }} />
@@ -814,67 +924,54 @@ const AnaliseIshikawaPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: tema.border }}>
+      <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
         <button
           onClick={() => setTableExpanded(!tableExpanded)}
           className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+          style={{ backgroundColor: isDarkMode ? 'transparent' : undefined }}
         >
           <div className="flex items-center gap-3">
             <FileText size={20} style={{ color: tema.primary }} />
             <h2 className="text-lg font-bold" style={{ color: tema.text }}>
-              Restrições Filtradas ({sortedRestrictions.length})
+              Ranking de Restrições por Impacto ({sortedRestrictions.length})
             </h2>
-            <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${tema.primary}20`, color: tema.primary }}>
-              Ordenado por Score de Impacto
-            </span>
           </div>
-          {tableExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {tableExpanded ? <ChevronUp size={20} style={{ color: tema.textSecondary }} /> : <ChevronDown size={20} style={{ color: tema.textSecondary }} />}
         </button>
         
         {tableExpanded && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-t" style={{ backgroundColor: tema.background }}>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Código</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Descrição</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Categoria</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Status</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Atividade</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Data Prevista</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Dias Atraso</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Impacto</th>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: tema.textSecondary }}>Ações</th>
+              <thead style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f9fafb' }}>
+                <tr>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Código</th>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Descrição</th>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Categoria</th>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Status</th>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Atividade</th>
+                  <th className="text-left p-3 font-medium" style={{ color: tema.textSecondary }}>Responsável</th>
+                  <th className="text-center p-3 font-medium" style={{ color: tema.textSecondary }}>Score</th>
+                  <th className="text-center p-3 font-medium" style={{ color: tema.textSecondary }}>Flags</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedRestrictions.map((rest) => (
-                  <tr
-                    key={rest.id}
+                {sortedRestrictions.slice(0, 15).map((rest, idx) => (
+                  <tr 
+                    key={rest.id} 
                     className="border-t hover:bg-gray-50 transition-colors"
-                    style={{
-                      borderLeftWidth: 4,
-                      borderLeftColor: STATUS_COLORS[rest.status],
-                    }}
+                    style={{ borderColor: tema.border, backgroundColor: isDarkMode && idx % 2 === 0 ? '#1e293b' : 'transparent' }}
                   >
-                    <td className="py-3 px-4 font-mono text-xs">{rest.codigo}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="max-w-[200px] truncate">{rest.descricao}</span>
-                        {rest.reincidente && (
-                          <RefreshCw size={12} className="text-purple-500 flex-shrink-0" />
-                        )}
-                        {rest.impactoCaminhoCritico && (
-                          <AlertTriangle size={12} className="text-red-500 flex-shrink-0" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: '#f9731620', color: '#f97316' }}>
+                    <td className="p-3 font-mono text-xs" style={{ color: tema.textSecondary }}>{rest.codigo}</td>
+                    <td className="p-3 max-w-xs truncate" style={{ color: tema.text }}>{rest.descricao}</td>
+                    <td className="p-3">
+                      <span 
+                        className="px-2 py-1 rounded text-xs font-medium text-white"
+                        style={{ backgroundColor: CATEGORY_COLORS[rest.categoria] }}
+                      >
                         {CATEGORY_LABELS[rest.categoria]}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-3">
                       <span
                         className="px-2 py-1 rounded-full text-xs font-medium"
                         style={{ backgroundColor: `${STATUS_COLORS[rest.status]}20`, color: STATUS_COLORS[rest.status] }}
@@ -882,45 +979,36 @@ const AnaliseIshikawaPage: React.FC = () => {
                         {STATUS_LABELS[rest.status]}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-xs" style={{ color: tema.textSecondary }}>{rest.atividadeNome}</td>
-                    <td className="py-3 px-4 text-xs">{rest.dataPrevista.toLocaleDateString('pt-BR')}</td>
-                    <td className="py-3 px-4">
-                      {rest.diasAtraso > 0 ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                          {rest.diasAtraso} dias
-                        </span>
-                      ) : (
-                        <span className="text-xs" style={{ color: tema.textSecondary }}>-</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          rest.scoreImpacto >= 50 ? 'bg-red-100 text-red-700' :
-                          rest.scoreImpacto >= 30 ? 'bg-orange-100 text-orange-700' :
-                          'bg-green-100 text-green-700'
+                    <td className="p-3 text-xs" style={{ color: tema.textSecondary }}>{rest.atividadeNome}</td>
+                    <td className="p-3 text-xs" style={{ color: tema.textSecondary }}>{rest.responsavel}</td>
+                    <td className="p-3 text-center">
+                      <span 
+                        className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold text-white ${
+                          rest.scoreImpacto >= 50 ? 'bg-red-500' : rest.scoreImpacto >= 30 ? 'bg-orange-500' : 'bg-yellow-500'
                         }`}
                       >
                         {rest.scoreImpacto}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <button
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
-                        style={{ backgroundColor: tema.primary, color: 'white' }}
-                      >
-                        Gerar Ação 5W2H
-                      </button>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        {rest.impactoCaminhoCritico && (
+                          <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded" title="Caminho Crítico">CC</span>
+                        )}
+                        {rest.reincidente && (
+                          <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded" title="Reincidente">R</span>
+                        )}
+                        {rest.diasAtraso > 0 && (
+                          <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-xs rounded" title={`${rest.diasAtraso} dias de atraso`}>
+                            {rest.diasAtraso}d
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {sortedRestrictions.length === 0 && (
-              <div className="text-center py-12">
-                <p style={{ color: tema.textSecondary }}>Nenhuma restrição encontrada com os filtros aplicados.</p>
-              </div>
-            )}
           </div>
         )}
       </div>
