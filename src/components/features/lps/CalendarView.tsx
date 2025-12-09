@@ -134,11 +134,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Calendário com scroll horizontal */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
-        <div className="flex min-w-full h-full">
-          {datas.map((data, index) => {
+    <div className="flex flex-col h-full bg-white overflow-hidden">
+      {/* Calendário com scroll */}
+      <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="flex min-w-max">
+          {datas.map((data) => {
             const key = format(data, 'yyyy-MM-dd');
             const atividadesDoDia = atividadesPorData[key] || [];
             const diaSemana = getDiaSemana(data);
@@ -147,14 +147,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             return (
               <div
                 key={key}
-                className="flex-shrink-0 w-48 border-r border-gray-200 flex flex-col"
-                style={{ minHeight: '100%' }}
+                className="flex-shrink-0 w-48 border-r border-gray-200 flex flex-col bg-white"
                 onDrop={(e) => handleDrop(e, data)}
                 onDragOver={handleDragOver}
               >
                 {/* Header da coluna (data e dia da semana) */}
                 <div
-                  className={`px-2 py-2 border-b border-gray-300 text-center font-semibold ${
+                  className={`px-2 py-2 border-b border-gray-300 text-center font-semibold sticky top-0 z-10 ${
                     isFimDeSemana ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-900'
                   }`}
                 >
@@ -163,12 +162,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 </div>
 
                 {/* Área de atividades (post-its) */}
-                <div 
-                  className="flex-1 p-2 space-y-2 overflow-y-auto bg-white"
-                  style={{ 
-                    minHeight: 'calc(100vh - 250px)',
-                  }}
-                >
+                <div className="flex-1 p-2 space-y-2 bg-white min-h-[300px]">
                   {atividadesDoDia.length === 0 ? (
                     <div className="text-center text-gray-400 text-xs py-8 opacity-50">
                       Arraste atividades aqui
