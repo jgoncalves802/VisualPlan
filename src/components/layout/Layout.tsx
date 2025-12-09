@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useTemaStore } from '../../stores/temaStore';
+import { useUIStore } from '../../stores/uiStore';
+import { PerfilAcesso } from '../../types';
 import { 
   LayoutDashboard, 
   KanbanSquare, 
@@ -13,7 +15,9 @@ import {
   X,
   Bell,
   User,
-  Network
+  Network,
+  Settings,
+  Eye
 } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 
@@ -25,7 +29,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { usuario, logout } = useAuthStore();
   const { tema } = useTemaStore();
+  const { adminMode, toggleAdminMode } = useUIStore();
   const location = useLocation();
+  
+  const isAdmin = usuario?.perfilAcesso === PerfilAcesso.ADMIN;
 
   const menuItems = [
     { 
@@ -184,6 +191,37 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </button>
             
             <div className="flex items-center space-x-4 ml-auto">
+              {/* Admin Mode Toggle - Only for Admins */}
+              {isAdmin && (
+                <button
+                  onClick={toggleAdminMode}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    adminMode 
+                      ? 'text-white' 
+                      : 'hover:bg-gray-100 theme-text-secondary'
+                  }`}
+                  style={adminMode ? { backgroundColor: tema.primary } : {}}
+                  title={adminMode ? 'Visualizar Aplicação' : 'Gestão da Aplicação'}
+                >
+                  {adminMode ? (
+                    <>
+                      <Eye size={20} />
+                      <span className="text-sm font-medium">Visualizar App</span>
+                    </>
+                  ) : (
+                    <>
+                      <Settings size={20} />
+                      <span className="text-sm font-medium">Gestão</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Separator */}
+              {isAdmin && (
+                <div className="h-6 w-px bg-gray-300" />
+              )}
+
               {/* Notifications */}
               <button className="relative p-2 rounded-lg hover:bg-gray-100">
                 <Bell size={20} />
