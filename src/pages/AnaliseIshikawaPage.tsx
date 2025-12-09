@@ -820,76 +820,74 @@ const AnaliseIshikawaPage: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
+      <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
+        <div className="p-4 border-b" style={{ borderColor: tema.border }}>
+          <h2 className="text-lg font-bold" style={{ color: tema.text }}>Diagrama Ishikawa - 6M</h2>
+          <p className="text-xs" style={{ color: tema.textSecondary }}>Método, Mão de Obra, Material, Máquina, Medida, Meio Ambiente</p>
+        </div>
+        <div className="p-4" style={{ height: 480 }}>
+          <IshikawaDiagram
+            dadosPorCategoria={dadosPorCategoria}
+            onCategoryClick={handleCategoryClick}
+            totalRestricoes={filteredRestrictions.length}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
           <div className="p-4 border-b" style={{ borderColor: tema.border }}>
-            <h2 className="text-lg font-bold" style={{ color: tema.text }}>Diagrama Ishikawa - 6M</h2>
-            <p className="text-xs" style={{ color: tema.textSecondary }}>Método, Mão de Obra, Material, Máquina, Medida, Meio Ambiente</p>
+            <h2 className="text-lg font-bold" style={{ color: tema.text }}>Pareto - Categorias</h2>
           </div>
-          <div className="p-4" style={{ height: 420 }}>
-            <IshikawaDiagram
-              dadosPorCategoria={dadosPorCategoria}
-              onCategoryClick={handleCategoryClick}
-              totalRestricoes={filteredRestrictions.length}
-            />
+          <div className="p-4" style={{ height: 250 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={paretoData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
+                <XAxis dataKey="categoria" tick={{ fontSize: 10, fill: tema.textSecondary }} angle={-15} textAnchor="end" height={50} />
+                <YAxis yAxisId="left" orientation="left" tick={{ fill: tema.textSecondary }} />
+                <YAxis yAxisId="right" orientation="right" unit="%" domain={[0, 100]} tick={{ fill: tema.textSecondary }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: tema.surface, 
+                    borderColor: tema.border,
+                    color: tema.text 
+                  }} 
+                />
+                <Legend />
+                <Bar yAxisId="left" dataKey="quantidade" name="Quantidade" radius={[4, 4, 0, 0]}>
+                  {paretoData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+                <Line yAxisId="right" type="monotone" dataKey="acumulado" stroke="#6366f1" strokeWidth={2} name="Acumulado %" dot={{ fill: '#6366f1' }} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
-            <div className="p-4 border-b" style={{ borderColor: tema.border }}>
-              <h2 className="text-lg font-bold" style={{ color: tema.text }}>Pareto - Categorias</h2>
-            </div>
-            <div className="p-4" style={{ height: 200 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={paretoData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
-                  <XAxis dataKey="categoria" tick={{ fontSize: 9, fill: tema.textSecondary }} angle={-15} textAnchor="end" height={50} />
-                  <YAxis yAxisId="left" orientation="left" tick={{ fill: tema.textSecondary }} />
-                  <YAxis yAxisId="right" orientation="right" unit="%" domain={[0, 100]} tick={{ fill: tema.textSecondary }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: tema.surface, 
-                      borderColor: tema.border,
-                      color: tema.text 
-                    }} 
-                  />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="quantidade" name="Quantidade" radius={[4, 4, 0, 0]}>
-                    {paretoData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                  <Line yAxisId="right" type="monotone" dataKey="acumulado" stroke="#6366f1" strokeWidth={2} name="Acumulado %" dot={{ fill: '#6366f1' }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
+        <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
+          <div className="p-4 border-b" style={{ borderColor: tema.border }}>
+            <h2 className="text-lg font-bold" style={{ color: tema.text }}>Tendência Mensal</h2>
           </div>
-
-          <div className="rounded-xl shadow-sm border overflow-hidden" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
-            <div className="p-4 border-b" style={{ borderColor: tema.border }}>
-              <h2 className="text-lg font-bold" style={{ color: tema.text }}>Tendência Mensal</h2>
-            </div>
-            <div className="p-4" style={{ height: 200 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
-                  <XAxis dataKey="mes" tick={{ fontSize: 10, fill: tema.textSecondary }} />
-                  <YAxis tick={{ fill: tema.textSecondary }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: tema.surface, 
-                      borderColor: tema.border,
-                      color: tema.text 
-                    }} 
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} name="Total" dot={{ fill: '#6366f1' }} />
-                  <Line type="monotone" dataKey="concluidas" stroke="#22c55e" strokeWidth={2} name="Concluídas" dot={{ fill: '#22c55e' }} />
-                  <Line type="monotone" dataKey="atrasadas" stroke="#ef4444" strokeWidth={2} name="Atrasadas" dot={{ fill: '#ef4444' }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="p-4" style={{ height: 250 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e5e7eb'} />
+                <XAxis dataKey="mes" tick={{ fontSize: 10, fill: tema.textSecondary }} />
+                <YAxis tick={{ fill: tema.textSecondary }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: tema.surface, 
+                    borderColor: tema.border,
+                    color: tema.text 
+                  }} 
+                />
+                <Legend />
+                <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} name="Total" dot={{ fill: '#6366f1' }} />
+                <Line type="monotone" dataKey="concluidas" stroke="#22c55e" strokeWidth={2} name="Concluídas" dot={{ fill: '#22c55e' }} />
+                <Line type="monotone" dataKey="atrasadas" stroke="#ef4444" strokeWidth={2} name="Atrasadas" dot={{ fill: '#ef4444' }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
