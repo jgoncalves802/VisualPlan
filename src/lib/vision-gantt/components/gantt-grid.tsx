@@ -267,22 +267,27 @@ export function GanttGrid({
                 outline: 'none'
               }}
               onMouseDownCapture={(e) => {
-                // Capture phase: Focus the row BEFORE any cell stopPropagation
+                // Capture phase: Select task and focus row BEFORE any cell stopPropagation
                 // This ensures keyboard events work for Shift+Arrow indent/outdent
                 // BUT skip if clicking on an inline editor (input, select, etc)
                 const target = e.target as HTMLElement;
                 const isInteractiveElement = target.closest('input, select, textarea, button, [contenteditable="true"]');
                 if (isInteractiveElement) return;
                 
-                const row = e.currentTarget;
-                requestAnimationFrame(() => row.focus());
-              }}
-              onClick={(e) => {
+                // Select task during capture phase so selectedTaskId is set for keyboard events
+                // Pass the event so modifier keys (shift/ctrl) work for multi-selection
                 if (onTaskSelect) {
                   onTaskSelect(task, e);
                 } else {
                   onTaskClick?.(task);
                 }
+                
+                const row = e.currentTarget;
+                requestAnimationFrame(() => row.focus());
+              }}
+              onClick={() => {
+                // Selection now happens in onMouseDownCapture, but keep this for backwards compat
+                // Don't re-select if already handled
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
