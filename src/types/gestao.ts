@@ -112,6 +112,73 @@ export enum StatusSemaforo {
 }
 
 // ============================================================================
+// ISHIKAWA / KAIZEN
+// ============================================================================
+
+export enum CategoriaIshikawa {
+  METODO = 'METODO',
+  MAO_DE_OBRA = 'MAO_DE_OBRA',
+  MATERIAL = 'MATERIAL',
+  MAQUINA = 'MAQUINA',
+  MEDIDA = 'MEDIDA',
+  MEIO_AMBIENTE = 'MEIO_AMBIENTE',
+}
+
+export enum StatusRestricaoIshikawa {
+  CONCLUIDA_NO_PRAZO = 'CONCLUIDA_NO_PRAZO',
+  EM_EXECUCAO = 'EM_EXECUCAO',
+  NO_PRAZO = 'NO_PRAZO',
+  ATRASADA = 'ATRASADA',
+  VENCIDA = 'VENCIDA',
+}
+
+export interface RestricaoIshikawa {
+  id: string;
+  codigo: string;
+  descricao: string;
+  categoria: CategoriaIshikawa;
+  status: StatusRestricaoIshikawa;
+  atividadeId?: string;
+  atividadeNome?: string;
+  wbsId?: string;
+  wbsNome?: string;
+  epsId?: string;
+  epsNome?: string;
+  dataCriacao: Date;
+  dataPrevista: Date;
+  dataConclusao?: Date;
+  responsavel?: string;
+  impactoCaminhoCritico: boolean;
+  duracaoAtividadeImpactada: number;
+  diasAtraso: number;
+  scoreImpacto: number;
+  reincidente: boolean;
+}
+
+export interface KPIKaizen {
+  tmr: number; // Tempo Médio Remoção (dias)
+  trc: number; // Taxa Restrições Críticas (%)
+  irp: number; // Índice Reincidência (%)
+  eficacia: number; // Eficácia Tratativa (%)
+  totalRestricoes: number;
+  restricoesConcluidas: number;
+  restricoesAtrasadas: number;
+  restricoesVencidas: number;
+}
+
+export interface DadosIshikawa {
+  categoria: CategoriaIshikawa;
+  total: number;
+  concluidas: number;
+  emExecucao: number;
+  noPrazo: number;
+  atrasadas: number;
+  vencidas: number;
+  percentualProblemas: number;
+  restricoes: RestricaoIshikawa[];
+}
+
+// ============================================================================
 // INTERFACES - INDICADORES
 // ============================================================================
 

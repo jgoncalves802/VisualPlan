@@ -20,6 +20,7 @@ import AdminActivityCodesPage from '../pages/AdminActivityCodesPage';
 import { SVARTestPage } from '../pages/SVARTestPage';
 import AuditoriaPage from '../pages/AuditoriaPage';
 import GestaoMudancaPage from '../pages/GestaoMudancaPage';
+import AnaliseIshikawaPage from '../pages/AnaliseIshikawaPage';
 import { useAuthStore } from '../stores/authStore';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,6 +84,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="kanban" element={<KanbanPage />} />
           <Route path="auditorias" element={<AuditoriaPage />} />
           <Route path="mudancas" element={<GestaoMudancaPage />} />
+          <Route path="analise-ishikawa" element={<AnaliseIshikawaPage />} />
           <Route path="bim" element={<PlaceholderPage title="BIM 4D" />} />
           <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
           <Route path="configuracoes" element={<ConfiguracoesPage />} />
