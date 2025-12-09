@@ -16,6 +16,9 @@ import {
   ClipboardList,
   FileCheck,
   GitBranch,
+  Fish,
+  Users,
+  Briefcase,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -62,6 +65,24 @@ const menuItems: MenuItem[] = [
     label: 'Gestão da Mudança',
     icon: <GitBranch className="w-5 h-5" />,
     path: '/mudancas',
+  },
+  {
+    id: 'ishikawa',
+    label: 'Análise Ishikawa',
+    icon: <Fish className="w-5 h-5" />,
+    path: '/analise-ishikawa',
+  },
+  {
+    id: 'reunioes',
+    label: 'Reuniões',
+    icon: <Users className="w-5 h-5" />,
+    path: '/reunioes',
+  },
+  {
+    id: 'portfolio',
+    label: 'Portfólio',
+    icon: <Briefcase className="w-5 h-5" />,
+    path: '/portfolio',
   },
   {
     id: 'wbs',
