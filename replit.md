@@ -36,6 +36,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **P6 Enterprise Columns System**: Over 80 professional columns organized by category (Baselines, EVM, Activity Codes, Resources, Critical Path, Schedule) with TypeScript types and EVM calculations.
     *   **Predecessor/Successor Columns**: P6-style dependency columns displaying lag with color-coded badges and visual lag on arrows.
     *   **Error Link Column**: MS Project-style dependency validation column with status indicators and error messages for missing dependencies, constraint conflicts, and non-preferred link types.
+    *   **Ishikawa Analysis (Kaizen)**: Interactive fishbone diagram with 6M categories adapted for construction (Método, Mão de Obra, Material, Medida, Meio Ambiente, Máquina), hierarchical filters (EPS/WBS/Activity), Pareto chart, trend analysis, and KPI cards (TMR, TRC, IRP, Eficácia).
+    *   **Reuniões Matrix**: Calendar-based meeting management with auto-generated agendas based on restrictions, KPIs, and 5W2H actions. Supports meeting minutes and history.
+    *   **Portfolio Prioritization**: Multi-criteria scoring matrix with bubble chart visualization, radar chart comparison, and weighted ranking (ROI, Strategic Alignment, Urgency, Complexity, Resources, Risk).
 
 ## External Dependencies
 
