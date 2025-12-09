@@ -294,7 +294,7 @@ export const LPSPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full -m-6">
+    <div className="flex flex-col h-full w-full bg-gray-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">

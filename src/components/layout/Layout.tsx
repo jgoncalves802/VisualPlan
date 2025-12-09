@@ -301,7 +301,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <div className="p-6 h-[calc(100vh-73px)] overflow-y-auto">
+        <div className="h-[calc(100vh-73px)] overflow-y-auto overflow-x-hidden">
           {children || <Outlet />}
         </div>
       </main>
