@@ -24,6 +24,8 @@ import {
   PieChart,
   Pie
 } from 'recharts';
+import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useTemaStore } from '../stores/temaStore';
 import {
   CategoriaIshikawa,
@@ -33,6 +35,7 @@ import {
   DadosIshikawa
 } from '../types/gestao';
 import KPICard from '../components/ui/KPICard';
+import TimeNavigator, { TimeViewMode } from '../components/ui/TimeNavigator';
 
 const CATEGORY_LABELS: Record<CategoriaIshikawa, string> = {
   [CategoriaIshikawa.METODO]: 'MÉTODO',
@@ -542,12 +545,20 @@ const AnaliseIshikawaPage: React.FC = () => {
   const { tema } = useTemaStore();
   const [restrictions] = useState<RestricaoIshikawa[]>(generateMockRestrictions());
   
+  const [periodoAtual, setPeriodoAtual] = useState(() => {
+    const hoje = new Date();
+    const inicio = startOfWeek(hoje, { locale: ptBR });
+    const fim = endOfWeek(hoje, { locale: ptBR });
+    inicio.setHours(0, 0, 0, 0);
+    fim.setHours(23, 59, 59, 999);
+    return { inicio, fim };
+  });
+  const [timeViewMode, setTimeViewMode] = useState<TimeViewMode>('semana');
+  
   const [selectedEPS, setSelectedEPS] = useState<string>('');
   const [selectedWBS, setSelectedWBS] = useState<string>('');
   const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [statusFilters, setStatusFilters] = useState<StatusRestricaoIshikawa[]>([]);
-  const [dateFrom, setDateFrom] = useState<string>('');
-  const [dateTo, setDateTo] = useState<string>('');
   const [tableExpanded, setTableExpanded] = useState(true);
   
   const [selectedCategory, setSelectedCategory] = useState<CategoriaIshikawa | null>(null);
@@ -562,11 +573,10 @@ const AnaliseIshikawaPage: React.FC = () => {
       if (selectedWBS && r.wbsId !== selectedWBS) return false;
       if (selectedActivity && r.atividadeId !== selectedActivity) return false;
       if (statusFilters.length > 0 && !statusFilters.includes(r.status)) return false;
-      if (dateFrom && new Date(r.dataPrevista) < new Date(dateFrom)) return false;
-      if (dateTo && new Date(r.dataPrevista) > new Date(dateTo)) return false;
+      if (!isWithinInterval(r.dataPrevista, { start: periodoAtual.inicio, end: periodoAtual.fim })) return false;
       return true;
     });
-  }, [restrictions, selectedEPS, selectedWBS, selectedActivity, statusFilters, dateFrom, dateTo]);
+  }, [restrictions, selectedEPS, selectedWBS, selectedActivity, statusFilters, periodoAtual]);
 
   const dadosPorCategoria = useMemo((): DadosIshikawa[] => {
     const categories = Object.values(CategoriaIshikawa);
@@ -641,8 +651,13 @@ const AnaliseIshikawaPage: React.FC = () => {
     setSelectedWBS('');
     setSelectedActivity('');
     setStatusFilters([]);
-    setDateFrom('');
-    setDateTo('');
+    const hoje = new Date();
+    const inicio = startOfWeek(hoje, { locale: ptBR });
+    const fim = endOfWeek(hoje, { locale: ptBR });
+    inicio.setHours(0, 0, 0, 0);
+    fim.setHours(23, 59, 59, 999);
+    setPeriodoAtual({ inicio, fim });
+    setTimeViewMode('semana');
   };
 
   const toggleStatusFilter = (status: StatusRestricaoIshikawa) => {
@@ -677,6 +692,13 @@ const AnaliseIshikawaPage: React.FC = () => {
           Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
         </p>
       </div>
+
+      <TimeNavigator
+        periodo={periodoAtual}
+        onPeriodoChange={setPeriodoAtual}
+        viewMode={timeViewMode}
+        onViewModeChange={setTimeViewMode}
+      />
 
       <div className="rounded-xl shadow-sm border p-4" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
         <div className="flex flex-wrap items-center gap-4">
@@ -734,27 +756,6 @@ const AnaliseIshikawaPage: React.FC = () => {
             </select>
           </div>
           
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium mb-1" style={{ color: tema.textSecondary }}>Data Início</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
-            />
-          </div>
-          
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium mb-1" style={{ color: tema.textSecondary }}>Data Fim</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
-            />
-          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: tema.border }}>
