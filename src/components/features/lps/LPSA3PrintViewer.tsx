@@ -1,13 +1,14 @@
 /**
  * LPSA3PrintViewer - Visualizador para impressão em formato A3
  * Exibe cronograma de atividades e restrições para expor na frente da obra
+ * Suporta paginação vertical para overflow de atividades com marcas de continuação
  */
 
 import React, { useMemo, useRef, useState } from 'react';
 import { format, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AtividadeLPS, RestricaoLPS, StatusAtividadeLPS } from '../../../types/lps';
-import { X, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Printer, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LPSA3PrintViewerProps {
   isOpen: boolean;
@@ -19,12 +20,31 @@ interface LPSA3PrintViewerProps {
   projetoNome?: string;
 }
 
+interface DaySlice {
+  dia: Date;
+  atividades: AtividadeLPS[];
+  hasMore: boolean;
+  hasPrevious: boolean;
+}
+
 interface PageData {
   weekStart: Date;
   weekEnd: Date;
-  days: Date[];
-  pageNumber: number;
+  weekNumber: number;
+  pageIndexInWeek: number;
+  totalPagesInWeek: number;
+  daySlices: DaySlice[];
+  globalPageNumber: number;
 }
+
+const LAYOUT_CONSTANTS = {
+  CARD_HEIGHT_ESTIMATE: 60,
+  CARD_WITH_RESTRICTIONS_HEIGHT: 90,
+  GAP_BETWEEN_CARDS: 8,
+  HEADER_HEIGHT: 50,
+  AVAILABLE_HEIGHT_MM: 180,
+  MAX_CARDS_PER_DAY_PER_PAGE: 5,
+};
 
 export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
   isOpen,
@@ -44,32 +64,6 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
     if (typeof date === 'string') return new Date(date);
     return new Date();
   };
-
-  const pages: PageData[] = useMemo(() => {
-    const result: PageData[] = [];
-    let weekStart = startOfWeek(parseDate(dataInicio), { locale: ptBR });
-    const finalDate = parseDate(dataFim);
-    let pageNumber = 1;
-
-    while (weekStart <= finalDate) {
-      const weekEnd = endOfWeek(weekStart, { locale: ptBR });
-      const days = eachDayOfInterval({ start: weekStart, end: weekEnd }).filter(
-        (day) => day.getDay() !== 0 && day.getDay() !== 6
-      );
-
-      if (days.length > 0) {
-        result.push({
-          weekStart,
-          weekEnd,
-          days,
-          pageNumber,
-        });
-        pageNumber++;
-      }
-      weekStart = addWeeks(weekStart, 1);
-    }
-    return result;
-  }, [dataInicio, dataFim]);
 
   const getRestricoesAtividade = useMemo(() => {
     const map: Record<string, RestricaoLPS[]> = {};
@@ -92,6 +86,66 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
       return isSameDay(dataAtribuida, dia);
     });
   };
+
+  const pages: PageData[] = useMemo(() => {
+    const result: PageData[] = [];
+    let weekStart = startOfWeek(parseDate(dataInicio), { locale: ptBR });
+    const finalDate = parseDate(dataFim);
+    let globalPageNumber = 1;
+    let weekNumber = 1;
+
+    while (weekStart <= finalDate) {
+      const weekEnd = endOfWeek(weekStart, { locale: ptBR });
+      const days = eachDayOfInterval({ start: weekStart, end: weekEnd }).filter(
+        (day) => day.getDay() !== 0 && day.getDay() !== 6
+      );
+
+      if (days.length > 0) {
+        const maxCardsPerDay = LAYOUT_CONSTANTS.MAX_CARDS_PER_DAY_PER_PAGE;
+        
+        const actividadesPorDia = days.map(dia => ({
+          dia,
+          atividades: getAtividadesPorDia(dia)
+        }));
+        
+        const maxAtividadesEmDia = Math.max(
+          ...actividadesPorDia.map(d => d.atividades.length),
+          1
+        );
+        
+        const totalPagesForWeek = Math.ceil(maxAtividadesEmDia / maxCardsPerDay);
+
+        for (let pageIndex = 0; pageIndex < totalPagesForWeek; pageIndex++) {
+          const startIdx = pageIndex * maxCardsPerDay;
+          const endIdx = startIdx + maxCardsPerDay;
+
+          const daySlices: DaySlice[] = actividadesPorDia.map(({ dia, atividades: atividadesDia }) => {
+            const slicedAtividades = atividadesDia.slice(startIdx, endIdx);
+            return {
+              dia,
+              atividades: slicedAtividades,
+              hasMore: atividadesDia.length > endIdx,
+              hasPrevious: startIdx > 0 && atividadesDia.length > startIdx,
+            };
+          });
+
+          result.push({
+            weekStart,
+            weekEnd,
+            weekNumber,
+            pageIndexInWeek: pageIndex,
+            totalPagesInWeek: totalPagesForWeek,
+            daySlices,
+            globalPageNumber,
+          });
+          globalPageNumber++;
+        }
+        weekNumber++;
+      }
+      weekStart = addWeeks(weekStart, 1);
+    }
+    return result;
+  }, [dataInicio, dataFim, atividades]);
 
   const getCorAtividade = (atividade: AtividadeLPS) => {
     const restricoesAtiv = getRestricoesAtividade[atividade.id] || [];
@@ -135,7 +189,7 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
           <style>
             @page {
               size: A3 landscape;
-              margin: 15mm;
+              margin: 10mm;
             }
             
             * {
@@ -153,35 +207,103 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
             
             .page {
               width: 100%;
-              height: 100%;
+              height: 267mm;
               page-break-after: always;
-              padding: 10mm;
+              padding: 8mm;
               border: 2px solid #3B82F6;
               border-radius: 8px;
               margin-bottom: 10mm;
+              position: relative;
+              display: flex;
+              flex-direction: column;
             }
             
             .page:last-child {
               page-break-after: auto;
+            }
+
+            .alignment-marks {
+              position: absolute;
+              width: 100%;
+              height: 100%;
+              pointer-events: none;
+            }
+
+            .alignment-mark {
+              position: absolute;
+              background: #9CA3AF;
+            }
+
+            .alignment-mark-left {
+              left: -5mm;
+              width: 3mm;
+              height: 1mm;
+            }
+
+            .alignment-mark-right {
+              right: -5mm;
+              width: 3mm;
+              height: 1mm;
+            }
+
+            .alignment-mark-top {
+              top: 50mm;
+            }
+
+            .alignment-mark-bottom {
+              bottom: 50mm;
+            }
+
+            .continuation-band-top {
+              background: linear-gradient(180deg, #E5E7EB 0%, transparent 100%);
+              padding: 2mm 4mm;
+              margin-bottom: 3mm;
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 2mm;
+              font-size: 9pt;
+              color: #6B7280;
+            }
+
+            .continuation-band-bottom {
+              background: linear-gradient(0deg, #E5E7EB 0%, transparent 100%);
+              padding: 2mm 4mm;
+              margin-top: 3mm;
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 2mm;
+              font-size: 9pt;
+              color: #6B7280;
+            }
+
+            .continuation-arrow {
+              font-size: 12pt;
+              font-weight: bold;
+              color: #3B82F6;
             }
             
             .header {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              padding-bottom: 8mm;
+              padding-bottom: 6mm;
               border-bottom: 2px solid #3B82F6;
-              margin-bottom: 8mm;
+              margin-bottom: 4mm;
+              flex-shrink: 0;
             }
             
             .header-title {
-              font-size: 18pt;
+              font-size: 16pt;
               font-weight: bold;
               color: #1E40AF;
             }
             
             .header-subtitle {
-              font-size: 12pt;
+              font-size: 11pt;
               color: #6B7280;
             }
             
@@ -196,12 +318,24 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
               font-size: 10pt;
               color: #9CA3AF;
             }
+
+            .page-indicator {
+              background: #3B82F6;
+              color: white;
+              padding: 1mm 3mm;
+              border-radius: 4px;
+              font-size: 9pt;
+              font-weight: bold;
+              display: inline-block;
+              margin-top: 1mm;
+            }
             
             .calendar-grid {
               display: grid;
               grid-template-columns: repeat(5, 1fr);
-              gap: 4mm;
-              height: calc(100% - 30mm);
+              gap: 3mm;
+              flex: 1;
+              min-height: 0;
             }
             
             .day-column {
@@ -210,39 +344,99 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
               overflow: hidden;
               display: flex;
               flex-direction: column;
+              position: relative;
+            }
+
+            .day-column.has-continuation-top::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 3mm;
+              background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
+              z-index: 1;
+            }
+
+            .day-column.has-continuation-bottom::after {
+              content: '';
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 3mm;
+              background: linear-gradient(0deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
+              z-index: 1;
             }
             
             .day-header {
               background: #3B82F6;
               color: white;
-              padding: 3mm;
+              padding: 2mm;
               text-align: center;
               font-weight: bold;
+              flex-shrink: 0;
             }
             
             .day-date {
-              font-size: 14pt;
+              font-size: 12pt;
             }
             
             .day-name {
-              font-size: 9pt;
+              font-size: 8pt;
               text-transform: uppercase;
               opacity: 0.9;
+            }
+
+            .day-continuation-indicator {
+              font-size: 8pt;
+              background: rgba(255,255,255,0.3);
+              padding: 0.5mm 2mm;
+              border-radius: 2mm;
+              margin-top: 1mm;
             }
             
             .day-content {
               flex: 1;
               padding: 2mm;
-              overflow: hidden;
               background: #F9FAFB;
+              display: flex;
+              flex-direction: column;
+              gap: 2mm;
+            }
+
+            .continuation-indicator-top {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 1mm;
+              padding: 1mm;
+              background: #DBEAFE;
+              border-radius: 2mm;
+              font-size: 7pt;
+              color: #1E40AF;
+              margin-bottom: 1mm;
+            }
+
+            .continuation-indicator-bottom {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 1mm;
+              padding: 1mm;
+              background: #DBEAFE;
+              border-radius: 2mm;
+              font-size: 7pt;
+              color: #1E40AF;
+              margin-top: auto;
             }
             
             .activity-card {
               padding: 2mm;
               border-radius: 4px;
-              margin-bottom: 2mm;
               border-left: 3px solid;
               font-size: 8pt;
+              page-break-inside: avoid;
             }
             
             .activity-name {
@@ -279,10 +473,11 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
             .legend {
               display: flex;
               justify-content: center;
-              gap: 8mm;
-              padding-top: 4mm;
+              gap: 6mm;
+              padding-top: 3mm;
               border-top: 1px solid #E5E7EB;
-              margin-top: 4mm;
+              margin-top: 3mm;
+              flex-shrink: 0;
             }
             
             .legend-item {
@@ -302,14 +497,37 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
               text-align: center;
               font-size: 8pt;
               color: #9CA3AF;
-              margin-top: 4mm;
+              margin-top: 3mm;
+              flex-shrink: 0;
+            }
+
+            .join-guide {
+              position: absolute;
+              bottom: 2mm;
+              left: 50%;
+              transform: translateX(-50%);
+              display: flex;
+              align-items: center;
+              gap: 2mm;
+              background: #F3F4F6;
+              padding: 1mm 3mm;
+              border-radius: 3mm;
+              font-size: 7pt;
+              color: #6B7280;
+            }
+
+            .scissors-icon {
+              font-size: 10pt;
             }
 
             @media print {
               .page {
                 page-break-after: always;
-                height: auto;
-                min-height: 250mm;
+                height: 267mm;
+              }
+
+              .no-print {
+                display: none !important;
               }
             }
           </style>
@@ -331,6 +549,60 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
 
   const currentPageData = pages[currentPage];
 
+  const renderActivityCard = (atividade: AtividadeLPS, showRestrictions = true) => {
+    const cores = getCorAtividade(atividade);
+    const restricoesAtiv = getRestricoesAtividade[atividade.id] || [];
+    const restricoesPendentes = restricoesAtiv.filter(
+      (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+    );
+
+    return (
+      <div
+        key={atividade.id}
+        className="rounded p-2 text-xs"
+        style={{
+          backgroundColor: cores.bg,
+          borderLeft: `3px solid ${cores.border}`,
+          color: cores.text,
+        }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="font-semibold text-sm leading-tight flex-1">
+            {atividade.nome}
+          </div>
+          <div
+            className="w-2 h-2 rounded-full ml-1 flex-shrink-0"
+            style={{ backgroundColor: getStatusColor(atividade.status) }}
+            title={atividade.status}
+          />
+        </div>
+        {atividade.responsavel && (
+          <div className="text-xs opacity-75 mt-1">
+            Resp: {atividade.responsavel}
+          </div>
+        )}
+        {showRestrictions && restricoesPendentes.length > 0 && (
+          <div className="mt-1 pt-1 border-t border-dashed border-yellow-400">
+            <div className="text-xs font-medium text-amber-700 mb-1">
+              Restrições ({restricoesPendentes.length}):
+            </div>
+            {restricoesPendentes.slice(0, 2).map((rest) => (
+              <div key={rest.id} className="flex items-start gap-1 text-xs text-amber-600">
+                <span className="text-amber-500 font-bold">•</span>
+                <span className="line-clamp-1">{rest.descricao}</span>
+              </div>
+            ))}
+            {restricoesPendentes.length > 2 && (
+              <div className="text-xs text-amber-500 italic">
+                +{restricoesPendentes.length - 2} mais...
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-[95vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
@@ -338,7 +610,7 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
         <div className="bg-blue-600 text-white px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold">Visualizador de Impressão A3</h2>
-            <p className="text-sm text-blue-200">Formato otimizado para exposição na frente da obra</p>
+            <p className="text-sm text-blue-200">Formato otimizado para exposição na frente da obra (com paginação para junção)</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-blue-700 rounded-lg px-3 py-2">
@@ -349,7 +621,7 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
               >
                 <ChevronLeft size={20} />
               </button>
-              <span className="text-sm font-medium min-w-[80px] text-center">
+              <span className="text-sm font-medium min-w-[100px] text-center">
                 Página {currentPage + 1} de {pages.length}
               </span>
               <button
@@ -381,6 +653,15 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
           <div className="bg-white shadow-lg rounded-lg overflow-hidden mx-auto" style={{ aspectRatio: '420/297', maxWidth: '1400px' }}>
             {currentPageData && (
               <div className="h-full p-6 flex flex-col border-2 border-blue-500 rounded-lg">
+                {/* Continuation Band Top */}
+                {currentPageData.pageIndexInWeek > 0 && (
+                  <div className="bg-gradient-to-b from-gray-200 to-transparent p-2 mb-2 rounded flex items-center justify-center gap-2 text-gray-600 text-sm">
+                    <ChevronUp size={16} className="text-blue-600" />
+                    <span>Continua da página {currentPageData.globalPageNumber - 1} (Semana {currentPageData.weekNumber} - Parte {currentPageData.pageIndexInWeek}/{currentPageData.totalPagesInWeek})</span>
+                    <ChevronUp size={16} className="text-blue-600" />
+                  </div>
+                )}
+
                 {/* Page Header */}
                 <div className="flex justify-between items-center pb-4 border-b-2 border-blue-500 mb-4">
                   <div>
@@ -389,91 +670,79 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold text-gray-700">
-                      Semana: {format(currentPageData.weekStart, "dd/MM", { locale: ptBR })} - {format(currentPageData.weekEnd, "dd/MM/yyyy", { locale: ptBR })}
+                      Semana {currentPageData.weekNumber}: {format(currentPageData.weekStart, "dd/MM", { locale: ptBR })} - {format(currentPageData.weekEnd, "dd/MM/yyyy", { locale: ptBR })}
                     </p>
-                    <p className="text-sm text-gray-400">
-                      Página {currentPageData.pageNumber} de {pages.length}
-                    </p>
+                    <div className="flex items-center justify-end gap-2 mt-1">
+                      <span className="text-sm text-gray-400">
+                        Página {currentPageData.globalPageNumber} de {pages.length}
+                      </span>
+                      {currentPageData.totalPagesInWeek > 1 && (
+                        <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                          Parte {currentPageData.pageIndexInWeek + 1}/{currentPageData.totalPagesInWeek}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Calendar Grid */}
                 <div className="flex-1 grid grid-cols-5 gap-3">
-                  {currentPageData.days.map((dia) => {
-                    const atividadesDia = getAtividadesPorDia(dia);
-                    return (
-                      <div key={dia.toISOString()} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-                        <div className="bg-blue-600 text-white py-2 px-3 text-center">
-                          <div className="text-xl font-bold">{format(dia, 'dd/MM')}</div>
-                          <div className="text-xs uppercase opacity-90">
-                            {format(dia, 'EEEE', { locale: ptBR })}
+                  {currentPageData.daySlices.map((daySlice) => (
+                    <div 
+                      key={daySlice.dia.toISOString()} 
+                      className={`border border-gray-200 rounded-lg overflow-hidden flex flex-col relative
+                        ${daySlice.hasPrevious ? 'border-t-blue-400 border-t-2' : ''}
+                        ${daySlice.hasMore ? 'border-b-blue-400 border-b-2' : ''}
+                      `}
+                    >
+                      <div className="bg-blue-600 text-white py-2 px-3 text-center">
+                        <div className="text-xl font-bold">{format(daySlice.dia, 'dd/MM')}</div>
+                        <div className="text-xs uppercase opacity-90">
+                          {format(daySlice.dia, 'EEEE', { locale: ptBR })}
+                        </div>
+                        {(daySlice.hasPrevious || daySlice.hasMore) && (
+                          <div className="text-xs bg-white/20 rounded px-2 py-0.5 mt-1">
+                            {daySlice.hasPrevious && !daySlice.hasMore && '↑ Continua acima'}
+                            {!daySlice.hasPrevious && daySlice.hasMore && '↓ Continua abaixo'}
+                            {daySlice.hasPrevious && daySlice.hasMore && '↕ Continua'}
                           </div>
-                        </div>
-                        <div className="flex-1 p-2 bg-gray-50 overflow-y-auto space-y-2">
-                          {atividadesDia.length === 0 ? (
-                            <div className="text-center text-gray-400 text-xs py-4">
-                              Sem atividades
-                            </div>
-                          ) : (
-                            atividadesDia.map((atividade) => {
-                              const cores = getCorAtividade(atividade);
-                              const restricoesAtiv = getRestricoesAtividade[atividade.id] || [];
-                              const restricoesPendentes = restricoesAtiv.filter(
-                                (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
-                              );
-                              
-                              return (
-                                <div
-                                  key={atividade.id}
-                                  className="rounded p-2 text-xs"
-                                  style={{
-                                    backgroundColor: cores.bg,
-                                    borderLeft: `3px solid ${cores.border}`,
-                                    color: cores.text,
-                                  }}
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div className="font-semibold text-sm leading-tight flex-1">
-                                      {atividade.nome}
-                                    </div>
-                                    <div
-                                      className="w-2 h-2 rounded-full ml-1 flex-shrink-0"
-                                      style={{ backgroundColor: getStatusColor(atividade.status) }}
-                                      title={atividade.status}
-                                    />
-                                  </div>
-                                  {atividade.responsavel && (
-                                    <div className="text-xs opacity-75 mt-1">
-                                      Resp: {atividade.responsavel}
-                                    </div>
-                                  )}
-                                  {restricoesPendentes.length > 0 && (
-                                    <div className="mt-1 pt-1 border-t border-dashed border-yellow-400">
-                                      <div className="text-xs font-medium text-amber-700 mb-1">
-                                        Restrições ({restricoesPendentes.length}):
-                                      </div>
-                                      {restricoesPendentes.slice(0, 2).map((rest) => (
-                                        <div key={rest.id} className="flex items-start gap-1 text-xs text-amber-600">
-                                          <span className="text-amber-500 font-bold">•</span>
-                                          <span className="line-clamp-1">{rest.descricao}</span>
-                                        </div>
-                                      ))}
-                                      {restricoesPendentes.length > 2 && (
-                                        <div className="text-xs text-amber-500 italic">
-                                          +{restricoesPendentes.length - 2} mais...
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
+                      <div className="flex-1 p-2 bg-gray-50 overflow-y-auto space-y-2 flex flex-col">
+                        {daySlice.hasPrevious && (
+                          <div className="flex items-center justify-center gap-1 p-1 bg-blue-100 rounded text-xs text-blue-700">
+                            <ChevronUp size={12} />
+                            <span>Ver página anterior</span>
+                          </div>
+                        )}
+                        
+                        {daySlice.atividades.length === 0 && !daySlice.hasPrevious ? (
+                          <div className="text-center text-gray-400 text-xs py-4 flex-1 flex items-center justify-center">
+                            Sem atividades
+                          </div>
+                        ) : (
+                          daySlice.atividades.map((atividade) => renderActivityCard(atividade))
+                        )}
+
+                        {daySlice.hasMore && (
+                          <div className="flex items-center justify-center gap-1 p-1 bg-blue-100 rounded text-xs text-blue-700 mt-auto">
+                            <ChevronDown size={12} />
+                            <span>Ver próxima página</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Continuation Band Bottom */}
+                {currentPageData.pageIndexInWeek < currentPageData.totalPagesInWeek - 1 && (
+                  <div className="bg-gradient-to-t from-gray-200 to-transparent p-2 mt-2 rounded flex items-center justify-center gap-2 text-gray-600 text-sm">
+                    <ChevronDown size={16} className="text-blue-600" />
+                    <span>Continua na página {currentPageData.globalPageNumber + 1} (Semana {currentPageData.weekNumber} - Parte {currentPageData.pageIndexInWeek + 2}/{currentPageData.totalPagesInWeek})</span>
+                    <ChevronDown size={16} className="text-blue-600" />
+                  </div>
+                )}
 
                 {/* Legend */}
                 <div className="flex justify-center gap-6 pt-3 mt-3 border-t border-gray-200">
@@ -497,11 +766,23 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
                     <div className="w-2 h-2 rounded-full bg-red-500" />
                     <span>Atrasada</span>
                   </div>
+                  {currentPageData.totalPagesInWeek > 1 && (
+                    <>
+                      <div className="w-px h-4 bg-gray-300" />
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="w-4 h-4 rounded border-2 border-blue-400 bg-blue-50" />
+                        <span>Juntar páginas</span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Footer */}
                 <div className="text-center text-xs text-gray-400 mt-2">
                   Gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} • VisionPlan v2.2
+                  {currentPageData.totalPagesInWeek > 1 && (
+                    <span className="ml-2">• ✂️ Recorte nas bordas azuis para juntar folhas</span>
+                  )}
                 </div>
               </div>
             )}
@@ -511,7 +792,24 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
         {/* Hidden print content */}
         <div ref={printRef} className="hidden">
           {pages.map((page) => (
-            <div key={page.pageNumber} className="page">
+            <div key={page.globalPageNumber} className="page">
+              {/* Alignment marks for joining pages */}
+              <div className="alignment-marks">
+                <div className="alignment-mark alignment-mark-left alignment-mark-top"></div>
+                <div className="alignment-mark alignment-mark-right alignment-mark-top"></div>
+                <div className="alignment-mark alignment-mark-left alignment-mark-bottom"></div>
+                <div className="alignment-mark alignment-mark-right alignment-mark-bottom"></div>
+              </div>
+
+              {/* Continuation band top */}
+              {page.pageIndexInWeek > 0 && (
+                <div className="continuation-band-top">
+                  <span className="continuation-arrow">▲</span>
+                  <span>Continua da página {page.globalPageNumber - 1} (Semana {page.weekNumber} - Parte {page.pageIndexInWeek}/{page.totalPagesInWeek})</span>
+                  <span className="continuation-arrow">▲</span>
+                </div>
+              )}
+
               <div className="header">
                 <div>
                   <div className="header-title">{projetoNome}</div>
@@ -519,61 +817,98 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
                 </div>
                 <div>
                   <div className="header-date">
-                    Semana: {format(page.weekStart, "dd/MM", { locale: ptBR })} - {format(page.weekEnd, "dd/MM/yyyy", { locale: ptBR })}
+                    Semana {page.weekNumber}: {format(page.weekStart, "dd/MM", { locale: ptBR })} - {format(page.weekEnd, "dd/MM/yyyy", { locale: ptBR })}
                   </div>
-                  <div className="header-page">Página {page.pageNumber} de {pages.length}</div>
+                  <div className="header-page">
+                    Página {page.globalPageNumber} de {pages.length}
+                    {page.totalPagesInWeek > 1 && (
+                      <span className="page-indicator" style={{ marginLeft: '8px' }}>
+                        Parte {page.pageIndexInWeek + 1}/{page.totalPagesInWeek}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="calendar-grid">
-                {page.days.map((dia) => {
-                  const atividadesDia = getAtividadesPorDia(dia);
-                  return (
-                    <div key={dia.toISOString()} className="day-column">
-                      <div className="day-header">
-                        <div className="day-date">{format(dia, 'dd/MM')}</div>
-                        <div className="day-name">{format(dia, 'EEEE', { locale: ptBR })}</div>
-                      </div>
-                      <div className="day-content">
-                        {atividadesDia.map((atividade) => {
-                          const cores = getCorAtividade(atividade);
-                          const restricoesAtiv = getRestricoesAtividade[atividade.id] || [];
-                          const restricoesPendentes = restricoesAtiv.filter(
-                            (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
-                          );
-
-                          return (
-                            <div
-                              key={atividade.id}
-                              className="activity-card"
-                              style={{
-                                backgroundColor: cores.bg,
-                                borderColor: cores.border,
-                                color: cores.text,
-                              }}
-                            >
-                              <div className="activity-name">{atividade.nome}</div>
-                              {atividade.responsavel && (
-                                <div className="activity-resp">Resp: {atividade.responsavel}</div>
-                              )}
-                              {restricoesPendentes.length > 0 && (
-                                <div className="activity-restrictions">
-                                  {restricoesPendentes.slice(0, 3).map((rest) => (
-                                    <div key={rest.id} className="restriction-item">
-                                      <span className="restriction-bullet">•</span>
-                                      <span>{rest.descricao}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                {page.daySlices.map((daySlice) => (
+                  <div 
+                    key={daySlice.dia.toISOString()} 
+                    className={`day-column ${daySlice.hasPrevious ? 'has-continuation-top' : ''} ${daySlice.hasMore ? 'has-continuation-bottom' : ''}`}
+                  >
+                    <div className="day-header">
+                      <div className="day-date">{format(daySlice.dia, 'dd/MM')}</div>
+                      <div className="day-name">{format(daySlice.dia, 'EEEE', { locale: ptBR })}</div>
+                      {(daySlice.hasPrevious || daySlice.hasMore) && (
+                        <div className="day-continuation-indicator">
+                          {daySlice.hasPrevious && !daySlice.hasMore && '↑'}
+                          {!daySlice.hasPrevious && daySlice.hasMore && '↓'}
+                          {daySlice.hasPrevious && daySlice.hasMore && '↕'}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
+                    <div className="day-content">
+                      {daySlice.hasPrevious && (
+                        <div className="continuation-indicator-top">
+                          <span>▲</span>
+                          <span>Ver página anterior</span>
+                        </div>
+                      )}
+
+                      {daySlice.atividades.map((atividade) => {
+                        const cores = getCorAtividade(atividade);
+                        const restricoesAtiv = getRestricoesAtividade[atividade.id] || [];
+                        const restricoesPendentes = restricoesAtiv.filter(
+                          (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+                        );
+
+                        return (
+                          <div
+                            key={atividade.id}
+                            className="activity-card"
+                            style={{
+                              backgroundColor: cores.bg,
+                              borderColor: cores.border,
+                              color: cores.text,
+                            }}
+                          >
+                            <div className="activity-name">{atividade.nome}</div>
+                            {atividade.responsavel && (
+                              <div className="activity-resp">Resp: {atividade.responsavel}</div>
+                            )}
+                            {restricoesPendentes.length > 0 && (
+                              <div className="activity-restrictions">
+                                {restricoesPendentes.slice(0, 3).map((rest) => (
+                                  <div key={rest.id} className="restriction-item">
+                                    <span className="restriction-bullet">•</span>
+                                    <span>{rest.descricao}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {daySlice.hasMore && (
+                        <div className="continuation-indicator-bottom">
+                          <span>▼</span>
+                          <span>Ver próxima página</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              {/* Continuation band bottom */}
+              {page.pageIndexInWeek < page.totalPagesInWeek - 1 && (
+                <div className="continuation-band-bottom">
+                  <span className="continuation-arrow">▼</span>
+                  <span>Continua na página {page.globalPageNumber + 1} (Semana {page.weekNumber} - Parte {page.pageIndexInWeek + 2}/{page.totalPagesInWeek})</span>
+                  <span className="continuation-arrow">▼</span>
+                </div>
+              )}
 
               <div className="legend">
                 <div className="legend-item">
@@ -584,11 +919,28 @@ export const LPSA3PrintViewer: React.FC<LPSA3PrintViewerProps> = ({
                   <div className="legend-color" style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B' }} />
                   <span>Com restrições</span>
                 </div>
+                {page.totalPagesInWeek > 1 && (
+                  <div className="legend-item">
+                    <div className="legend-color" style={{ backgroundColor: '#DBEAFE', border: '2px solid #3B82F6' }} />
+                    <span>Juntar páginas na borda azul</span>
+                  </div>
+                )}
               </div>
 
               <div className="footer">
                 Gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} • VisionPlan v2.2
+                {page.totalPagesInWeek > 1 && (
+                  <span> • ✂️ Recorte e junte nas bordas para montar semana completa</span>
+                )}
               </div>
+
+              {/* Join guide for multi-page weeks */}
+              {page.pageIndexInWeek < page.totalPagesInWeek - 1 && (
+                <div className="join-guide">
+                  <span className="scissors-icon">✂️</span>
+                  <span>Junte com a página {page.globalPageNumber + 1}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
