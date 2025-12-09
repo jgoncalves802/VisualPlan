@@ -321,11 +321,7 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
   
   const isDarkMode = tema.background === '#1a1a2e' || tema.background === '#0f172a';
   
-  const spineColor = '#1e3a8a';
-  const boneColor = '#1e3a8a';
-  const causeColor = '#FEF08A';
-  const subCauseColor = '#FCA5A5';
-  const categoryLabelColor = '#22C55E';
+  const spineColor = isDarkMode ? '#64748b' : '#374151';
   
   const topCategories = [
     { cat: CategoriaIshikawa.METODO, label: 'Método' },
@@ -333,69 +329,12 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
     { cat: CategoriaIshikawa.MAQUINA, label: 'Máquina' },
   ];
   const bottomCategories = [
-    { cat: CategoriaIshikawa.MAO_DE_OBRA, label: 'Mão de obra' },
-    { cat: CategoriaIshikawa.MEIO_AMBIENTE, label: 'Meio ambiente' },
-    { cat: CategoriaIshikawa.MEDIDA, label: 'Medição' },
+    { cat: CategoriaIshikawa.MAO_DE_OBRA, label: 'Mão de Obra' },
+    { cat: CategoriaIshikawa.MEIO_AMBIENTE, label: 'Meio Ambiente' },
+    { cat: CategoriaIshikawa.MEDIDA, label: 'Medida' },
   ];
   
   const getCategoryData = (cat: CategoriaIshikawa) => dadosPorCategoria.find(d => d.categoria === cat);
-
-  const renderCauseBox = (x: number, y: number, width: number, height: number, isPrimary: boolean) => (
-    <rect
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      fill={isPrimary ? causeColor : subCauseColor}
-      stroke={isDarkMode ? '#374151' : '#9ca3af'}
-      strokeWidth={0.5}
-      rx={2}
-    />
-  );
-
-  const renderSubBones = (baseX: number, baseY: number, isTop: boolean, count: number) => {
-    const bones = [];
-    const boneSpacing = 28;
-    const boneLength = 70;
-    const angle = isTop ? -45 : 45;
-    const angleRad = (angle * Math.PI) / 180;
-    
-    for (let i = 0; i < count; i++) {
-      const startX = baseX - (i * boneSpacing);
-      const startY = baseY;
-      const endX = startX - Math.cos(angleRad) * boneLength;
-      const endY = startY + Math.sin(angleRad) * boneLength;
-      
-      const causeX = endX - 55;
-      const subCauseX = causeX - 30;
-      const subCause2X = subCauseX - 25;
-      
-      bones.push(
-        <g key={`bone-${i}`}>
-          <line
-            x1={startX}
-            y1={startY}
-            x2={endX}
-            y2={endY}
-            stroke={boneColor}
-            strokeWidth={2}
-          />
-          <line
-            x1={endX}
-            y1={endY}
-            x2={causeX}
-            y2={endY}
-            stroke={boneColor}
-            strokeWidth={1.5}
-          />
-          {renderCauseBox(causeX - 45, endY - 10, 45, 20, true)}
-          {renderCauseBox(subCauseX - 22, endY - 8, 22, 16, false)}
-          {i < count - 1 && renderCauseBox(subCause2X - 18, endY - 6, 18, 12, false)}
-        </g>
-      );
-    }
-    return bones;
-  };
 
   const renderBranch = (
     category: CategoriaIshikawa,
@@ -406,17 +345,17 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
   ) => {
     const dados = getCategoryData(category);
     const isHovered = hoveredCategory === category;
-    const boneLength = 120;
-    const angle = isTop ? -55 : 55;
+    const categoryColor = CATEGORY_COLORS[category];
+    
+    const mainBoneLength = 140;
+    const angle = isTop ? -50 : 50;
     const angleRad = (angle * Math.PI) / 180;
     
-    const endX = spineX - Math.cos(angleRad) * boneLength;
-    const endY = spineY + Math.sin(angleRad) * boneLength;
+    const endX = spineX - Math.cos(angleRad) * mainBoneLength;
+    const endY = spineY + Math.sin(angleRad) * mainBoneLength;
     
-    const labelX = endX - 40;
-    const labelY = isTop ? endY - 25 : endY + 25;
-    
-    const causeCount = Math.min(dados?.total || 3, 4);
+    const labelX = isTop ? endX - 50 : endX - 50;
+    const labelY = isTop ? endY - 20 : endY + 20;
     
     return (
       <g 
@@ -431,29 +370,28 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
           y1={spineY}
           x2={endX}
           y2={endY}
-          stroke={boneColor}
-          strokeWidth={isHovered ? 4 : 3}
+          stroke={isHovered ? categoryColor : spineColor}
+          strokeWidth={isHovered ? 5 : 4}
+          strokeLinecap="round"
         />
-        
-        {renderSubBones(endX, endY, isTop, causeCount)}
         
         <g transform={`translate(${labelX}, ${labelY})`}>
           <rect
-            x={-50}
-            y={-12}
-            width={100}
-            height={24}
-            rx={12}
-            fill={categoryLabelColor}
-            stroke={isHovered ? '#15803d' : 'transparent'}
+            x={-55}
+            y={-14}
+            width={110}
+            height={28}
+            rx={14}
+            fill={categoryColor}
+            stroke={isHovered ? 'white' : 'transparent'}
             strokeWidth={2}
-            filter={isHovered ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'}
+            filter={isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'}
           />
           <text
             x={0}
             y={5}
             textAnchor="middle"
-            fill="#000"
+            fill="white"
             fontSize={12}
             fontWeight="600"
           >
@@ -462,18 +400,19 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
         </g>
         
         {dados && (
-          <g transform={`translate(${labelX + 60}, ${labelY})`}>
+          <g transform={`translate(${labelX + 70}, ${labelY})`}>
             <circle
-              r={14}
-              fill={dados.vencidas > 0 || dados.atrasadas > 0 ? '#EF4444' : '#3B82F6'}
+              r={16}
+              fill={dados.vencidas > 0 || dados.atrasadas > 0 ? '#EF4444' : categoryColor}
               stroke="white"
               strokeWidth={2}
+              filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
             />
             <text
               textAnchor="middle"
               y={5}
               fill="white"
-              fontSize={11}
+              fontSize={12}
               fontWeight="bold"
             >
               {dados.total}
@@ -482,31 +421,31 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
         )}
         
         {isHovered && dados && (
-          <g transform={`translate(${labelX}, ${isTop ? labelY - 80 : labelY + 50})`}>
+          <g transform={`translate(${labelX}, ${isTop ? labelY - 85 : labelY + 55})`}>
             <rect
-              x={-70}
+              x={-75}
               y={-5}
-              width={140}
-              height={65}
-              rx={6}
+              width={150}
+              height={70}
+              rx={8}
               fill={isDarkMode ? '#1e293b' : 'white'}
-              stroke={isDarkMode ? '#334155' : '#d1d5db'}
-              strokeWidth={1}
-              filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))"
+              stroke={categoryColor}
+              strokeWidth={2}
+              filter="drop-shadow(0 4px 12px rgba(0,0,0,0.2))"
             />
-            <text x={-60} y={12} fontSize={10} fill="#22C55E" fontWeight="500">
+            <text x={-65} y={14} fontSize={11} fill="#22C55E" fontWeight="500">
               Concluídas: {dados.concluidas}
             </text>
-            <text x={-60} y={26} fontSize={10} fill="#3B82F6" fontWeight="500">
+            <text x={-65} y={30} fontSize={11} fill="#3B82F6" fontWeight="500">
               Em Execução: {dados.emExecucao}
             </text>
-            <text x={-60} y={40} fontSize={10} fill="#EAB308" fontWeight="500">
+            <text x={-65} y={46} fontSize={11} fill="#EAB308" fontWeight="500">
               No Prazo: {dados.noPrazo}
             </text>
-            <text x={20} y={12} fontSize={10} fill="#F97316" fontWeight="500">
+            <text x={25} y={14} fontSize={11} fill="#F97316" fontWeight="500">
               Atrasadas: {dados.atrasadas}
             </text>
-            <text x={20} y={26} fontSize={10} fill="#EF4444" fontWeight="500">
+            <text x={25} y={30} fontSize={11} fill="#EF4444" fontWeight="500">
               Vencidas: {dados.vencidas}
             </text>
           </g>
@@ -516,94 +455,83 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
   };
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1e293b' : '#e8f0f8' }}>
-      <svg viewBox="0 0 1000 450" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0f172a' : '#f1f5f9' }}>
+      <svg viewBox="0 0 950 400" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
         <defs>
           <marker
             id="arrowhead"
-            markerWidth="15"
-            markerHeight="10"
-            refX="14"
-            refY="5"
+            markerWidth="12"
+            markerHeight="8"
+            refX="10"
+            refY="4"
             orient="auto"
           >
-            <polygon points="0 0, 15 5, 0 10" fill={spineColor} />
+            <polygon points="0 0, 12 4, 0 8" fill="#DC2626" />
           </marker>
         </defs>
         
         <line 
           x1={50} 
-          y1={225} 
-          x2={850} 
-          y2={225} 
+          y1={200} 
+          x2={780} 
+          y2={200} 
           stroke={spineColor}
-          strokeWidth={5}
+          strokeWidth={6}
           markerEnd="url(#arrowhead)"
+          strokeLinecap="round"
         />
         
         {topCategories.map(({ cat, label }, i) => {
-          const spineX = 200 + i * 250;
-          return renderBranch(cat, label, spineX, 225, true);
+          const spineX = 180 + i * 220;
+          return renderBranch(cat, label, spineX, 200, true);
         })}
         
         {bottomCategories.map(({ cat, label }, i) => {
-          const spineX = 200 + i * 250;
-          return renderBranch(cat, label, spineX, 225, false);
+          const spineX = 180 + i * 220;
+          return renderBranch(cat, label, spineX, 200, false);
         })}
         
-        <g transform="translate(870, 225)">
+        <g transform="translate(800, 200)">
           <rect
             x={0}
-            y={-35}
-            width={110}
-            height={70}
-            rx={4}
+            y={-40}
+            width={130}
+            height={80}
+            rx={8}
             fill="#DC2626"
-            stroke="#b91c1c"
-            strokeWidth={2}
+            filter="drop-shadow(0 4px 12px rgba(220, 38, 38, 0.4))"
           />
           <text
-            x={55}
-            y={-5}
+            x={65}
+            y={-10}
             textAnchor="middle"
             fill="white"
-            fontSize={14}
-            fontWeight="bold"
+            fontSize={13}
+            fontWeight="600"
           >
-            [Problema]
+            PROBLEMA
           </text>
           <text
-            x={55}
-            y={18}
+            x={65}
+            y={25}
             textAnchor="middle"
             fill="white"
-            fontSize={22}
+            fontSize={26}
             fontWeight="bold"
           >
             {totalRestricoes}
           </text>
         </g>
         
-        <g transform="translate(120, 50)">
-          <rect x={0} y={0} width={40} height={16} fill={causeColor} stroke="#9ca3af" strokeWidth={0.5} rx={2} />
-          <text x={45} y={12} fontSize={10} fill={isDarkMode ? '#94a3b8' : '#4b5563'}>Causa (1º Porquê)</text>
-          
-          <rect x={130} y={0} width={28} height={14} fill={subCauseColor} stroke="#9ca3af" strokeWidth={0.5} rx={2} />
-          <text x={163} y={11} fontSize={10} fill={isDarkMode ? '#94a3b8' : '#4b5563'}>Sub-causa (2º Porquê)</text>
-          
-          <rect x={290} y={0} width={70} height={18} fill={categoryLabelColor} rx={9} />
-          <text x={325} y={13} textAnchor="middle" fontSize={10} fill="#000" fontWeight="500">Categoria</text>
-        </g>
-        
         <text
-          x={500}
-          y={435}
+          x={475}
+          y={385}
           textAnchor="middle"
-          fill={isDarkMode ? '#64748b' : '#6b7280'}
+          fill={isDarkMode ? '#64748b' : '#94a3b8'}
           fontSize={11}
           fontStyle="italic"
         >
-          Clique em uma categoria para ver detalhes das restrições
+          Clique em uma categoria para ver detalhes
         </text>
       </svg>
     </div>
