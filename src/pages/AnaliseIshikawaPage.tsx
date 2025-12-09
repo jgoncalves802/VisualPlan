@@ -321,125 +321,192 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
   
   const isDarkMode = tema.background === '#1a1a2e' || tema.background === '#0f172a';
   
-  const topCategories = [CategoriaIshikawa.METODO, CategoriaIshikawa.MATERIAL, CategoriaIshikawa.MAQUINA];
-  const bottomCategories = [CategoriaIshikawa.MAO_DE_OBRA, CategoriaIshikawa.MEDIDA, CategoriaIshikawa.MEIO_AMBIENTE];
+  const spineColor = '#1e3a8a';
+  const boneColor = '#1e3a8a';
+  const causeColor = '#FEF08A';
+  const subCauseColor = '#FCA5A5';
+  const categoryLabelColor = '#22C55E';
+  
+  const topCategories = [
+    { cat: CategoriaIshikawa.METODO, label: 'Método' },
+    { cat: CategoriaIshikawa.MATERIAL, label: 'Material' },
+    { cat: CategoriaIshikawa.MAQUINA, label: 'Máquina' },
+  ];
+  const bottomCategories = [
+    { cat: CategoriaIshikawa.MAO_DE_OBRA, label: 'Mão de obra' },
+    { cat: CategoriaIshikawa.MEIO_AMBIENTE, label: 'Meio ambiente' },
+    { cat: CategoriaIshikawa.MEDIDA, label: 'Medição' },
+  ];
   
   const getCategoryData = (cat: CategoriaIshikawa) => dadosPorCategoria.find(d => d.categoria === cat);
 
+  const renderCauseBox = (x: number, y: number, width: number, height: number, isPrimary: boolean) => (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={isPrimary ? causeColor : subCauseColor}
+      stroke={isDarkMode ? '#374151' : '#9ca3af'}
+      strokeWidth={0.5}
+      rx={2}
+    />
+  );
+
+  const renderSubBones = (baseX: number, baseY: number, isTop: boolean, count: number) => {
+    const bones = [];
+    const boneSpacing = 28;
+    const boneLength = 70;
+    const angle = isTop ? -45 : 45;
+    const angleRad = (angle * Math.PI) / 180;
+    
+    for (let i = 0; i < count; i++) {
+      const startX = baseX - (i * boneSpacing);
+      const startY = baseY;
+      const endX = startX - Math.cos(angleRad) * boneLength;
+      const endY = startY + Math.sin(angleRad) * boneLength;
+      
+      const causeX = endX - 55;
+      const subCauseX = causeX - 30;
+      const subCause2X = subCauseX - 25;
+      
+      bones.push(
+        <g key={`bone-${i}`}>
+          <line
+            x1={startX}
+            y1={startY}
+            x2={endX}
+            y2={endY}
+            stroke={boneColor}
+            strokeWidth={2}
+          />
+          <line
+            x1={endX}
+            y1={endY}
+            x2={causeX}
+            y2={endY}
+            stroke={boneColor}
+            strokeWidth={1.5}
+          />
+          {renderCauseBox(causeX - 45, endY - 10, 45, 20, true)}
+          {renderCauseBox(subCauseX - 22, endY - 8, 22, 16, false)}
+          {i < count - 1 && renderCauseBox(subCause2X - 18, endY - 6, 18, 12, false)}
+        </g>
+      );
+    }
+    return bones;
+  };
+
   const renderBranch = (
     category: CategoriaIshikawa,
-    startX: number,
-    endX: number,
+    label: string,
+    spineX: number,
     spineY: number,
     isTop: boolean
   ) => {
     const dados = getCategoryData(category);
     const isHovered = hoveredCategory === category;
-    const color = CATEGORY_COLORS[category];
-    const branchEndY = isTop ? spineY - 100 : spineY + 100;
-    const problemPercent = dados ? dados.percentualProblemas : 0;
+    const boneLength = 120;
+    const angle = isTop ? -55 : 55;
+    const angleRad = (angle * Math.PI) / 180;
+    
+    const endX = spineX - Math.cos(angleRad) * boneLength;
+    const endY = spineY + Math.sin(angleRad) * boneLength;
+    
+    const labelX = endX - 40;
+    const labelY = isTop ? endY - 25 : endY + 25;
+    
+    const causeCount = Math.min(dados?.total || 3, 4);
     
     return (
       <g 
         key={category}
-        className="cursor-pointer transition-all duration-200"
+        className="cursor-pointer"
         onClick={() => onCategoryClick(category)}
         onMouseEnter={() => setHoveredCategory(category)}
         onMouseLeave={() => setHoveredCategory(null)}
-        style={{ transform: isHovered ? 'scale(1.02)' : 'scale(1)', transformOrigin: 'center' }}
       >
         <line
-          x1={startX}
+          x1={spineX}
           y1={spineY}
           x2={endX}
-          y2={branchEndY}
-          stroke={isHovered ? color : isDarkMode ? '#94a3b8' : '#64748b'}
+          y2={endY}
+          stroke={boneColor}
           strokeWidth={isHovered ? 4 : 3}
-          strokeLinecap="round"
         />
         
-        <g transform={`translate(${endX}, ${branchEndY})`}>
+        {renderSubBones(endX, endY, isTop, causeCount)}
+        
+        <g transform={`translate(${labelX}, ${labelY})`}>
           <rect
-            x={-70}
-            y={isTop ? -60 : 0}
-            width={140}
-            height={60}
-            rx={8}
-            fill={color}
-            stroke={isHovered ? 'white' : 'transparent'}
+            x={-50}
+            y={-12}
+            width={100}
+            height={24}
+            rx={12}
+            fill={categoryLabelColor}
+            stroke={isHovered ? '#15803d' : 'transparent'}
             strokeWidth={2}
-            filter={isHovered ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'}
+            filter={isHovered ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'}
           />
-          
           <text
             x={0}
-            y={isTop ? -40 : 20}
+            y={5}
             textAnchor="middle"
-            fill="white"
-            fontSize={11}
+            fill="#000"
+            fontSize={12}
             fontWeight="600"
           >
-            {CATEGORY_LABELS[category]}
+            {label}
           </text>
-          
-          <text
-            x={0}
-            y={isTop ? -20 : 40}
-            textAnchor="middle"
-            fill="white"
-            fontSize={20}
-            fontWeight="bold"
-          >
-            {dados?.total || 0}
-          </text>
-          
-          {problemPercent > 0 && (
-            <g transform={`translate(50, ${isTop ? -55 : 5})`}>
-              <circle
-                r={12}
-                fill={problemPercent > 50 ? '#EF4444' : problemPercent > 25 ? '#F97316' : '#EAB308'}
-                stroke="white"
-                strokeWidth={2}
-              />
-              <text
-                textAnchor="middle"
-                y={4}
-                fill="white"
-                fontSize={8}
-                fontWeight="bold"
-              >
-                {Math.round(problemPercent)}%
-              </text>
-            </g>
-          )}
         </g>
         
+        {dados && (
+          <g transform={`translate(${labelX + 60}, ${labelY})`}>
+            <circle
+              r={14}
+              fill={dados.vencidas > 0 || dados.atrasadas > 0 ? '#EF4444' : '#3B82F6'}
+              stroke="white"
+              strokeWidth={2}
+            />
+            <text
+              textAnchor="middle"
+              y={5}
+              fill="white"
+              fontSize={11}
+              fontWeight="bold"
+            >
+              {dados.total}
+            </text>
+          </g>
+        )}
+        
         {isHovered && dados && (
-          <g transform={`translate(${endX}, ${branchEndY + (isTop ? -75 : 75)})`}>
+          <g transform={`translate(${labelX}, ${isTop ? labelY - 80 : labelY + 50})`}>
             <rect
-              x={-80}
-              y={isTop ? -50 : -10}
-              width={160}
-              height={60}
+              x={-70}
+              y={-5}
+              width={140}
+              height={65}
               rx={6}
               fill={isDarkMode ? '#1e293b' : 'white'}
-              stroke={isDarkMode ? '#334155' : '#e5e7eb'}
+              stroke={isDarkMode ? '#334155' : '#d1d5db'}
               strokeWidth={1}
-              filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"
+              filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))"
             />
-            <text x={-70} y={isTop ? -30 : 10} fontSize={10} fill="#22C55E" fontWeight="500">
+            <text x={-60} y={12} fontSize={10} fill="#22C55E" fontWeight="500">
               Concluídas: {dados.concluidas}
             </text>
-            <text x={-70} y={isTop ? -16 : 24} fontSize={10} fill="#3B82F6" fontWeight="500">
+            <text x={-60} y={26} fontSize={10} fill="#3B82F6" fontWeight="500">
               Em Execução: {dados.emExecucao}
             </text>
-            <text x={-70} y={isTop ? -2 : 38} fontSize={10} fill="#F97316" fontWeight="500">
-              Atrasadas: {dados.atrasadas}
-            </text>
-            <text x={20} y={isTop ? -30 : 10} fontSize={10} fill="#EAB308" fontWeight="500">
+            <text x={-60} y={40} fontSize={10} fill="#EAB308" fontWeight="500">
               No Prazo: {dados.noPrazo}
             </text>
-            <text x={20} y={isTop ? -16 : 24} fontSize={10} fill="#EF4444" fontWeight="500">
+            <text x={20} y={12} fontSize={10} fill="#F97316" fontWeight="500">
+              Atrasadas: {dados.atrasadas}
+            </text>
+            <text x={20} y={26} fontSize={10} fill="#EF4444" fontWeight="500">
               Vencidas: {dados.vencidas}
             </text>
           </g>
@@ -449,119 +516,94 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
   };
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc' }}>
-      <svg viewBox="0 0 900 400" className="w-full h-full">
+    <div className="w-full h-full rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1e293b' : '#e8f0f8' }}>
+      <svg viewBox="0 0 1000 450" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <linearGradient id="spineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={isDarkMode ? '#475569' : '#94a3b8'} />
-            <stop offset="100%" stopColor="#DC2626" />
-          </linearGradient>
           <marker
             id="arrowhead"
-            markerWidth="12"
-            markerHeight="8"
-            refX="10"
-            refY="4"
+            markerWidth="15"
+            markerHeight="10"
+            refX="14"
+            refY="5"
             orient="auto"
           >
-            <polygon points="0 0, 12 4, 0 8" fill="#DC2626" />
+            <polygon points="0 0, 15 5, 0 10" fill={spineColor} />
           </marker>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
         </defs>
         
         <line 
-          x1={60} 
-          y1={200} 
-          x2={720} 
-          y2={200} 
-          stroke="url(#spineGradient)" 
-          strokeWidth={6} 
+          x1={50} 
+          y1={225} 
+          x2={850} 
+          y2={225} 
+          stroke={spineColor}
+          strokeWidth={5}
           markerEnd="url(#arrowhead)"
-          strokeLinecap="round"
         />
         
-        {topCategories.map((cat, i) => {
-          const startX = 150 + i * 200;
-          return renderBranch(cat, startX, startX, 200, true);
+        {topCategories.map(({ cat, label }, i) => {
+          const spineX = 200 + i * 250;
+          return renderBranch(cat, label, spineX, 225, true);
         })}
         
-        {bottomCategories.map((cat, i) => {
-          const startX = 150 + i * 200;
-          return renderBranch(cat, startX, startX, 200, false);
+        {bottomCategories.map(({ cat, label }, i) => {
+          const spineX = 200 + i * 250;
+          return renderBranch(cat, label, spineX, 225, false);
         })}
         
-        <g transform="translate(780, 200)">
+        <g transform="translate(870, 225)">
           <rect
             x={0}
-            y={-50}
+            y={-35}
             width={110}
-            height={100}
-            rx={12}
+            height={70}
+            rx={4}
             fill="#DC2626"
-            filter="drop-shadow(0 4px 12px rgba(220, 38, 38, 0.4))"
+            stroke="#b91c1c"
+            strokeWidth={2}
           />
           <text
             x={55}
-            y={-20}
+            y={-5}
             textAnchor="middle"
             fill="white"
-            fontSize={10}
-            fontWeight="600"
+            fontSize={14}
+            fontWeight="bold"
           >
-            PROBLEMA
+            [Problema]
           </text>
           <text
             x={55}
-            y={0}
+            y={18}
             textAnchor="middle"
             fill="white"
-            fontSize={10}
-            fontWeight="600"
-          >
-            EFEITO
-          </text>
-          <line x1={20} y1={12} x2={90} y2={12} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-          <text
-            x={55}
-            y={35}
-            textAnchor="middle"
-            fill="white"
-            fontSize={28}
+            fontSize={22}
             fontWeight="bold"
           >
             {totalRestricoes}
           </text>
         </g>
         
-        <g transform="translate(30, 200)">
-          <ellipse
-            cx={0}
-            cy={0}
-            rx={20}
-            ry={35}
-            fill="none"
-            stroke={isDarkMode ? '#475569' : '#94a3b8'}
-            strokeWidth={3}
-          />
-          <line x1={0} y1={-35} x2={0} y2={35} stroke={isDarkMode ? '#475569' : '#94a3b8'} strokeWidth={2} />
-          <line x1={-15} y1={0} x2={15} y2={0} stroke={isDarkMode ? '#475569' : '#94a3b8'} strokeWidth={2} />
+        <g transform="translate(120, 50)">
+          <rect x={0} y={0} width={40} height={16} fill={causeColor} stroke="#9ca3af" strokeWidth={0.5} rx={2} />
+          <text x={45} y={12} fontSize={10} fill={isDarkMode ? '#94a3b8' : '#4b5563'}>Causa (1º Porquê)</text>
+          
+          <rect x={130} y={0} width={28} height={14} fill={subCauseColor} stroke="#9ca3af" strokeWidth={0.5} rx={2} />
+          <text x={163} y={11} fontSize={10} fill={isDarkMode ? '#94a3b8' : '#4b5563'}>Sub-causa (2º Porquê)</text>
+          
+          <rect x={290} y={0} width={70} height={18} fill={categoryLabelColor} rx={9} />
+          <text x={325} y={13} textAnchor="middle" fontSize={10} fill="#000" fontWeight="500">Categoria</text>
         </g>
         
         <text
-          x={450}
-          y={385}
+          x={500}
+          y={435}
           textAnchor="middle"
-          fill={isDarkMode ? '#64748b' : '#94a3b8'}
+          fill={isDarkMode ? '#64748b' : '#6b7280'}
           fontSize={11}
           fontStyle="italic"
         >
-          Clique em uma categoria para ver detalhes
+          Clique em uma categoria para ver detalhes das restrições
         </text>
       </svg>
     </div>
