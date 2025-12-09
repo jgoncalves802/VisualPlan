@@ -552,3 +552,72 @@ export function getIconeOrigem(origem: OrigemCard): string {
     default: return 'file';
   }
 }
+
+// ============================================================================
+// PORTFOLIO PRIORITIZATION
+// ============================================================================
+
+export enum StatusProjeto {
+  NO_PRAZO = 'NO_PRAZO',
+  EM_RISCO = 'EM_RISCO',
+  CRITICO = 'CRITICO',
+}
+
+export interface CriterioPriorizacao {
+  id: string;
+  nome: string;
+  descricao?: string;
+  peso: number;
+  inverso: boolean;
+}
+
+export interface ScoreCriterio {
+  criterioId: string;
+  score: number;
+  justificativa?: string;
+  dataAtualizacao?: Date;
+}
+
+export interface HistoricoScore {
+  id: string;
+  criterioId: string;
+  scoreAnterior: number;
+  scoreNovo: number;
+  data: Date;
+  usuario: string;
+  justificativa?: string;
+}
+
+export interface ProjetoPrioritizado {
+  id: string;
+  nome: string;
+  descricao?: string;
+  gerente: string;
+  gerenteId?: string;
+  orcamento: number;
+  dataInicio: Date;
+  dataFim?: Date;
+  status: StatusProjeto;
+  scores: ScoreCriterio[];
+  scoreTotal?: number;
+  valorEstrategico?: number;
+  roiEsperado?: number;
+  historicoScores?: HistoricoScore[];
+  observacoes?: string;
+}
+
+export function getCorStatusProjeto(status: StatusProjeto): string {
+  switch (status) {
+    case StatusProjeto.NO_PRAZO: return '#22C55E';
+    case StatusProjeto.EM_RISCO: return '#EAB308';
+    case StatusProjeto.CRITICO: return '#EF4444';
+  }
+}
+
+export function getLabelStatusProjeto(status: StatusProjeto): string {
+  switch (status) {
+    case StatusProjeto.NO_PRAZO: return 'No Prazo';
+    case StatusProjeto.EM_RISCO: return 'Em Risco';
+    case StatusProjeto.CRITICO: return 'Crítico';
+  }
+}
