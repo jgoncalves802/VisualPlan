@@ -14,6 +14,7 @@ import {
   LogOut,
   Target,
   ClipboardList,
+  FileCheck,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -48,6 +49,12 @@ const menuItems: MenuItem[] = [
     label: 'Plano de Ação 5W2H',
     icon: <ClipboardList className="w-5 h-5" />,
     path: '/acoes',
+  },
+  {
+    id: 'auditorias',
+    label: 'Auditorias',
+    icon: <FileCheck className="w-5 h-5" />,
+    path: '/auditorias',
   },
   {
     id: 'wbs',

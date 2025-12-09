@@ -44,6 +44,20 @@ export enum StatusItemAuditoria {
   PENDENTE = 'PENDENTE',
 }
 
+export enum SeveridadeNaoConformidade {
+  MENOR = 'MENOR',
+  MAIOR = 'MAIOR',
+  CRITICA = 'CRITICA',
+}
+
+export enum CategoriaChecklist {
+  SEGURANCA = 'SEGURANCA',
+  QUALIDADE = 'QUALIDADE',
+  AMBIENTAL = 'AMBIENTAL',
+  DOCUMENTACAO = 'DOCUMENTACAO',
+  INSTALACOES = 'INSTALACOES',
+}
+
 export enum FasePDCA {
   PLAN = 'PLAN',
   DO = 'DO',
@@ -147,14 +161,32 @@ export interface Acao5W2H {
 // INTERFACES - AUDITORIA
 // ============================================================================
 
+export interface ItemChecklist {
+  id: string;
+  descricao: string;
+  obrigatorio: boolean;
+}
+
+export interface ChecklistTemplate {
+  id: string;
+  nome: string;
+  categoria: CategoriaChecklist;
+  itens: ItemChecklist[];
+  versao: string;
+  dataCriacao: Date;
+  dataAtualizacao?: Date;
+}
+
 export interface ItemAuditoria {
   id: string;
   auditoriaId: string;
+  itemChecklistId: string;
   ordem: number;
   pergunta: string;
   status: StatusItemAuditoria;
+  severidade?: SeveridadeNaoConformidade;
   observacao?: string;
-  evidencia?: string;
+  evidencias?: string[];
   acaoCorretiva?: string;
   acao5w2hId?: string;
 }
@@ -164,6 +196,10 @@ export interface Auditoria {
   codigo: string;
   titulo: string;
   descricao?: string;
+  checklistId: string;
+  checklistNome?: string;
+  projetoId: string;
+  projetoNome?: string;
   tipo: string;
   responsavel: string;
   responsavelId?: string;
@@ -171,6 +207,7 @@ export interface Auditoria {
   status: StatusAuditoria;
   itens: ItemAuditoria[];
   percentualConformidade?: number;
+  naoConformidades?: number;
   acoesGeradas?: string[];
   observacoesGerais?: string;
   dataCriacao: Date;
