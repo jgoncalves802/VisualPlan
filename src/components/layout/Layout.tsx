@@ -17,9 +17,14 @@ import {
   User,
   Network,
   Settings,
-  Eye
+  Eye,
+  Users,
+  Building2,
+  Palette,
+  Shield,
+  Database
 } from 'lucide-react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -31,10 +36,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { tema } = useTemaStore();
   const { adminMode, toggleAdminMode } = useUIStore();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const isAdmin = usuario?.perfilAcesso === PerfilAcesso.ADMIN;
 
-  const menuItems = [
+  const appMenuItems = [
     { 
       icon: LayoutDashboard, 
       label: 'Dashboard', 
@@ -85,9 +91,65 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
   ];
 
+  const adminMenuItems = [
+    { 
+      icon: LayoutDashboard, 
+      label: 'Painel Admin', 
+      path: '/admin',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Users, 
+      label: 'Usuários', 
+      path: '/admin/usuarios',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Building2, 
+      label: 'Empresas', 
+      path: '/admin/empresas',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Shield, 
+      label: 'Perfis de Acesso', 
+      path: '/admin/perfis',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Palette, 
+      label: 'Temas', 
+      path: '/admin/temas',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Database, 
+      label: 'Estrutura EPS/OBS', 
+      path: '/admin/estrutura',
+      roles: ['ADMIN']
+    },
+    { 
+      icon: Settings, 
+      label: 'Configurações', 
+      path: '/admin/configuracoes',
+      roles: ['ADMIN']
+    },
+  ];
+
+  const menuItems = isAdmin && adminMode ? adminMenuItems : appMenuItems;
+
   const filteredMenuItems = menuItems.filter(item => 
     usuario && item.roles.includes(usuario.perfilAcesso)
   );
+
+  const handleToggleAdminMode = () => {
+    toggleAdminMode();
+    if (!adminMode) {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen flex theme-bg-background">
@@ -108,11 +170,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex items-center space-x-2">
                 <div 
                   className="w-10 h-10 rounded-lg theme-bg-primary flex items-center justify-center"
-                  style={{ backgroundColor: tema.primary }}
+                  style={{ backgroundColor: adminMode ? '#6366f1' : tema.primary }}
                 >
-                  <span className="text-white font-bold text-xl">V</span>
+                  <span className="text-white font-bold text-xl">{adminMode ? 'A' : 'V'}</span>
                 </div>
-                <span className="font-bold text-xl theme-text">VisionPlan</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-lg theme-text">
+                    {adminMode ? 'Admin' : 'VisionPlan'}
+                  </span>
+                  {adminMode && (
+                    <span className="text-xs text-indigo-600 font-medium">Gestão do Sistema</span>
+                  )}
+                </div>
               </div>
             )}
             <button
@@ -194,7 +263,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Admin Mode Toggle - Only for Admins */}
               {isAdmin && (
                 <button
-                  onClick={toggleAdminMode}
+                  onClick={handleToggleAdminMode}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                     adminMode 
                       ? 'text-white' 
