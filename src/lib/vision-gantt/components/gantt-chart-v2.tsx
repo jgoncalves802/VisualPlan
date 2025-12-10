@@ -619,6 +619,10 @@ export function GanttChartV2({
             onInsertRow={onInsertRow}
             enableRowDragDrop={enableRowDragDrop}
             showInsertButtons={showInsertButtons}
+            enableInlineEdit={true}
+            onCellEdit={(taskId, field, value) => {
+              controller.updateTask(taskId, { [field]: value });
+            }}
           />
         </div>
         

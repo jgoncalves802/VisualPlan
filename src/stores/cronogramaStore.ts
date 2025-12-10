@@ -34,6 +34,35 @@ import {
 } from '../services/cronogramaCacheService';
 
 /**
+ * Generates Primavera P6-style activity codes (A1010, A1020, etc.)
+ * Codes increment by 10, never recycle deleted codes
+ * First code is A1010, then A1020, A1030, etc.
+ */
+function generateNextActivityCode(existingCodes: (string | undefined | null)[]): string {
+  const prefix = 'A';
+  const increment = 10;
+  const startSuffix = 1000; // Seed value - first code will be 1000 + 10 = 1010
+  let maxSuffix = startSuffix;
+  
+  for (const code of existingCodes) {
+    if (code && typeof code === 'string' && code.startsWith(prefix)) {
+      const match = code.match(/(\d+)$/);
+      if (match) {
+        const suffix = parseInt(match[1], 10);
+        if (suffix > maxSuffix) {
+          maxSuffix = suffix;
+        }
+      }
+    }
+  }
+  
+  // Next code = max + increment
+  // If no existing codes: 1000 + 10 = 1010 (first code)
+  // If max is 1010: 1010 + 10 = 1020 (second code)
+  return `${prefix}${maxSuffix + increment}`;
+}
+
+/**
  * Converts EPS/WBS nodes to AtividadeMock format for display in Gantt chart
  * WBS nodes are read-only summary tasks that organize activities
  */
@@ -568,11 +597,19 @@ export const useCronogramaStore = create<CronogramaState>()(
         const template = getActivityTemplate();
         const tempId = generateTempId();
         
+        // Generate automatic activity code (A1010, A1020, etc.)
+        const currentState = useCronogramaStore.getState();
+        const existingCodes = currentState.atividades
+          .filter(a => !a.id.startsWith('wbs-') && !a.id.startsWith('eps-'))
+          .map(a => a.codigo);
+        const nextCode = generateNextActivityCode(existingCodes);
+        
         // Create optimistic activity with temp ID (instant)
         const now = new Date().toISOString();
         const atividadeOtimista: AtividadeMock = {
           // Spread user data first, then apply defaults for missing fields
           projeto_id: atividade.projeto_id || '',
+          codigo: atividade.codigo || nextCode,
           nome: atividade.nome || template.nome,
           tipo: atividade.tipo || template.tipo,
           data_inicio: atividade.data_inicio || now.split('T')[0],
@@ -598,8 +635,14 @@ export const useCronogramaStore = create<CronogramaState>()(
         addActivityToCache(atividade.projeto_id || '', atividadeOtimista);
         
         // Persist to database in background
+        // Include generated code in the payload for persistence
+        const atividadeComCodigo = {
+          ...atividade,
+          codigo: atividade.codigo || nextCode,
+        };
+        
         try {
-          const novaAtividade = await cronogramaService.createAtividade(atividade);
+          const novaAtividade = await cronogramaService.createAtividade(atividadeComCodigo);
           
           // Replace temp ID with real ID
           set((state) => ({

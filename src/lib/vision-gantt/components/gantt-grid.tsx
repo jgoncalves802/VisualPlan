@@ -504,7 +504,8 @@ export function GanttGrid({
               
               {columns.map((column, colIndex) => {
                 const isNameColumn = column?.field === 'name';
-                const indent = isNameColumn ? level * 20 + 10 : 10;
+                // ONLY apply indent to name column - other columns stay aligned
+                const indent = isNameColumn ? (level * 20 + 10) : 10;
                 const columnWidth = getColumnWidth(colIndex);
                 const isWBSColumn = column?.field === 'wbs';
                 const isLastColumn = colIndex === columns.length - 1;
