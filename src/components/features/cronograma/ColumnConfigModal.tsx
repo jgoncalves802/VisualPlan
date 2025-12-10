@@ -40,7 +40,7 @@ interface ColumnCategory {
 }
 
 const COLUMN_CATEGORIES: ColumnCategory[] = [
-  { id: 'general', name: 'Geral', icon: '📋', columns: [] },
+  { id: 'general', name: 'Geral', icon: '📋', columns: P6_COLUMN_PRESETS.general },
   { id: 'schedule', name: 'Cronograma', icon: '📅', columns: P6_COLUMN_PRESETS.schedule },
   { id: 'baseline', name: 'Baseline', icon: '📊', columns: P6_COLUMN_PRESETS.baseline },
   { id: 'evm', name: 'EVM', icon: '💰', columns: P6_COLUMN_PRESETS.evm },
@@ -302,11 +302,6 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
     const category = COLUMN_CATEGORIES.find(c => c.id === categoryId);
     if (!category) return [];
     
-    if (categoryId === 'general') {
-      const p6Fields = new Set(ALL_P6_COLUMNS.map(c => c.field));
-      return localAvailableColumns.filter(c => !p6Fields.has(c.field));
-    }
-    
     return category.columns.filter(c => 
       localAvailableColumns.some(ac => ac.field === c.field)
     );
@@ -319,7 +314,7 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
       col.header.toLowerCase().includes(searchTerm.toLowerCase()) ||
       col.field.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  })).filter(cat => cat.columns.length > 0 || (searchTerm === '' && cat.id === 'general'));
+  })).filter(cat => cat.columns.length > 0);
 
   if (!isOpen) return null;
 

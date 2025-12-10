@@ -1193,10 +1193,304 @@ export const ERROR_LINK_COLUMNS: ColumnConfig[] = [
 ];
 
 // ============================================================================
+// GENERAL COLUMNS (Basic columns from default-columns)
+// ============================================================================
+
+// Status icon renderer with P6-style colors
+const renderStatusIcon = (status: string) => {
+  const statusConfig: Record<string, { color: string; bgColor: string; label: string; icon: string }> = {
+    not_started: { color: '#6B7280', bgColor: '#F3F4F6', label: 'Não Iniciada', icon: '○' },
+    in_progress: { color: '#2563EB', bgColor: '#DBEAFE', label: 'Em Progresso', icon: '◐' },
+    completed: { color: '#059669', bgColor: '#D1FAE5', label: 'Concluída', icon: '●' },
+    on_hold: { color: '#D97706', bgColor: '#FEF3C7', label: 'Em Espera', icon: '◉' },
+    Planejada: { color: '#6B7280', bgColor: '#F3F4F6', label: 'Planejada', icon: '○' },
+    'Em Andamento': { color: '#2563EB', bgColor: '#DBEAFE', label: 'Em Andamento', icon: '◐' },
+    Concluída: { color: '#059669', bgColor: '#D1FAE5', label: 'Concluída', icon: '●' },
+    Atrasada: { color: '#DC2626', bgColor: '#FEE2E2', label: 'Atrasada', icon: '◉' },
+  };
+
+  const config = statusConfig[status] || statusConfig.not_started;
+  
+  return React.createElement(
+    'div',
+    { className: 'flex items-center gap-1.5', title: config.label },
+    React.createElement(
+      'span',
+      {
+        className: 'inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold',
+        style: { color: config.color, backgroundColor: config.bgColor }
+      },
+      config.icon
+    ),
+    React.createElement(
+      'span',
+      { className: 'text-xs font-medium truncate', style: { color: config.color } },
+      config.label
+    )
+  );
+};
+
+// Progress bar renderer P6-style
+const renderProgressBar = (value: number, task: Task) => {
+  const progress = value ?? 0;
+  const isCritical = (task as any).isCritical === true;
+  
+  return React.createElement(
+    'div',
+    { className: 'flex items-center gap-2 w-full' },
+    React.createElement(
+      'div',
+      { 
+        className: 'flex-1 h-2.5 rounded-full overflow-hidden',
+        style: { backgroundColor: '#E5E7EB' }
+      },
+      React.createElement(
+        'div',
+        {
+          className: 'h-full rounded-full transition-all duration-300',
+          style: { 
+            width: `${progress}%`,
+            backgroundColor: progress === 100 ? '#059669' : isCritical ? '#DC2626' : '#3B82F6'
+          }
+        }
+      )
+    ),
+    React.createElement(
+      'span',
+      { 
+        className: 'text-xs font-semibold min-w-[36px] text-right',
+        style: { color: progress === 100 ? '#059669' : progress > 0 ? '#3B82F6' : '#9CA3AF' }
+      },
+      `${progress}%`
+    )
+  );
+};
+
+// Duration renderer with unit badge
+const renderDurationBadge = (value: number, task: Task) => {
+  if (!value && value !== 0) return React.createElement('span', { className: 'text-gray-400' }, '-');
+  
+  const isMilestone = (task as any).isMilestone === true || value === 0;
+  
+  return React.createElement(
+    'div',
+    { className: 'flex items-center gap-1' },
+    isMilestone
+      ? React.createElement(
+          'span',
+          { 
+            className: 'inline-flex items-center px-2 py-0.5 rounded text-xs font-bold',
+            style: { backgroundColor: '#FEF3C7', color: '#D97706' }
+          },
+          '◆ Marco'
+        )
+      : React.createElement(
+          React.Fragment,
+          null,
+          React.createElement('span', { className: 'font-semibold text-gray-800' }, value),
+          React.createElement(
+            'span',
+            { 
+              className: 'text-xs px-1.5 py-0.5 rounded font-medium',
+              style: { backgroundColor: '#E5E7EB', color: '#4B5563' }
+            },
+            'd'
+          )
+        )
+  );
+};
+
+// Total Float renderer with critical path indicator
+const renderTotalFloatBadge = (value: number) => {
+  const floatValue = value ?? 0;
+  const isCritical = floatValue <= 0;
+  
+  return React.createElement(
+    'div',
+    { 
+      className: 'flex items-center gap-1',
+      title: isCritical ? 'Caminho Crítico - Sem folga' : `${floatValue} dias de folga`
+    },
+    React.createElement(
+      'span',
+      { 
+        className: 'font-semibold',
+        style: { color: isCritical ? '#DC2626' : floatValue <= 3 ? '#D97706' : '#059669' }
+      },
+      floatValue
+    ),
+    React.createElement(
+      'span',
+      { 
+        className: 'text-xs px-1.5 py-0.5 rounded font-medium',
+        style: { 
+          backgroundColor: isCritical ? '#FEE2E2' : floatValue <= 3 ? '#FEF3C7' : '#D1FAE5',
+          color: isCritical ? '#DC2626' : floatValue <= 3 ? '#D97706' : '#059669'
+        }
+      },
+      isCritical ? 'CRIT' : 'd'
+    )
+  );
+};
+
+export const GENERAL_COLUMNS: ColumnConfig[] = [
+  {
+    field: 'codigo',
+    header: 'Código',
+    width: 90,
+    minWidth: 70,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'name',
+    header: 'Nome da Atividade',
+    width: 280,
+    minWidth: 180,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'startDate',
+    header: 'Início',
+    width: 110,
+    minWidth: 100,
+    renderer: renderDate,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'endDate',
+    header: 'Término',
+    width: 110,
+    minWidth: 100,
+    renderer: renderDate,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'duration',
+    header: 'Duração',
+    width: 100,
+    minWidth: 80,
+    renderer: renderDurationBadge,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'totalFloat',
+    header: 'Folga Total',
+    width: 90,
+    minWidth: 75,
+    renderer: renderTotalFloatBadge,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'progress',
+    header: '% Completo',
+    width: 130,
+    minWidth: 100,
+    renderer: renderProgressBar,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'status',
+    header: 'Status',
+    width: 130,
+    minWidth: 100,
+    renderer: renderStatusIcon,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'resources',
+    header: 'Recursos',
+    width: 150,
+    minWidth: 100,
+    maxWidth: 250,
+    sortable: false,
+    resizable: true
+  },
+  {
+    field: 'calendarId',
+    header: 'Calendário',
+    width: 130,
+    minWidth: 100,
+    maxWidth: 200,
+    renderer: (value: string) => {
+      if (!value) {
+        return React.createElement('span', { className: 'text-gray-400 text-xs' }, 'Padrão');
+      }
+      return React.createElement(
+        'span',
+        { className: 'text-xs font-medium text-gray-700', title: `ID: ${value}` },
+        value
+      );
+    },
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'responsavel',
+    header: 'Responsável',
+    width: 150,
+    minWidth: 100,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'descricao',
+    header: 'Descrição',
+    width: 200,
+    minWidth: 100,
+    sortable: false,
+    resizable: true
+  },
+  {
+    field: 'tipo',
+    header: 'Tipo',
+    width: 100,
+    minWidth: 80,
+    sortable: true,
+    resizable: true
+  },
+  {
+    field: 'prioridade',
+    header: 'Prioridade',
+    width: 100,
+    minWidth: 80,
+    renderer: (value: string) => {
+      const prioridadeConfig: Record<string, { color: string; bgColor: string }> = {
+        alta: { color: '#DC2626', bgColor: '#FEE2E2' },
+        media: { color: '#D97706', bgColor: '#FEF3C7' },
+        baixa: { color: '#059669', bgColor: '#D1FAE5' },
+        Alta: { color: '#DC2626', bgColor: '#FEE2E2' },
+        Média: { color: '#D97706', bgColor: '#FEF3C7' },
+        Baixa: { color: '#059669', bgColor: '#D1FAE5' },
+      };
+      const config = prioridadeConfig[value] || { color: '#6B7280', bgColor: '#F3F4F6' };
+      return React.createElement(
+        'span',
+        {
+          className: 'px-2 py-0.5 rounded text-xs font-medium',
+          style: { color: config.color, backgroundColor: config.bgColor }
+        },
+        value || '-'
+      );
+    },
+    sortable: true,
+    resizable: true
+  }
+];
+
+// ============================================================================
 // COLUMN PRESETS
 // ============================================================================
 
 export const P6_COLUMN_PRESETS = {
+  general: GENERAL_COLUMNS,
   baseline: BASELINE_COLUMNS,
   evm: EVM_COLUMNS,
   activityCodes: ACTIVITY_CODE_COLUMNS,
@@ -1208,6 +1502,7 @@ export const P6_COLUMN_PRESETS = {
 };
 
 export const ALL_P6_COLUMNS: ColumnConfig[] = [
+  ...GENERAL_COLUMNS,
   ...BASELINE_COLUMNS,
   ...EVM_COLUMNS,
   ...ACTIVITY_CODE_COLUMNS,
