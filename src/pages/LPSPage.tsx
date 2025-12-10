@@ -31,7 +31,6 @@ import {
   RefreshCw,
   Download,
   Settings,
-  FileText,
 } from 'lucide-react';
 
 export const LPSPage: React.FC = () => {
@@ -444,6 +443,8 @@ export const LPSPage: React.FC = () => {
             dataFim={dataFim}
             atividades={atividades}
             restricoes={restricoes}
+            wbsList={wbsList}
+            selectedWbsId={selectedWbs?.id}
             onActivityMove={handleActivityMove}
             onActivityClick={handleActivityClick}
             mostrarFinsDeSemana={mostrarFinsDeSemana}

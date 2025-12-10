@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import { format, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AtividadeLPS, RestricaoLPS } from '../../../types/lps';
+import { AtividadeLPS, RestricaoLPS, WBSLPS } from '../../../types/lps';
 import { ActivityCard } from './ActivityCard';
 
 interface CalendarViewProps {
@@ -14,6 +14,8 @@ interface CalendarViewProps {
   dataFim: Date;
   atividades: AtividadeLPS[];
   restricoes?: RestricaoLPS[];
+  wbsList?: WBSLPS[];
+  selectedWbsId?: string;
   onActivityMove?: (atividadeId: string, novaData: Date) => void;
   onActivityClick?: (atividade: AtividadeLPS) => void;
   mostrarFinsDeSemana?: boolean;
@@ -24,6 +26,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   dataFim,
   atividades,
   restricoes = [],
+  wbsList = [],
+  selectedWbsId,
   onActivityMove,
   onActivityClick,
   mostrarFinsDeSemana = true,
@@ -56,12 +60,41 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return todasDatas;
   }, [dataInicio, dataFim, mostrarFinsDeSemana]);
 
+  // Função para obter todos os IDs descendentes de uma WBS (incluindo ela mesma)
+  const getDescendantWbsIds = useMemo(() => {
+    if (!selectedWbsId || wbsList.length === 0) return null;
+    
+    const getAllDescendants = (parentId: string): string[] => {
+      const directChildren = wbsList.filter((w) => w.parent_id === parentId);
+      let ids: string[] = [parentId];
+      directChildren.forEach((child) => {
+        ids = [...ids, ...getAllDescendants(child.id)];
+      });
+      return ids;
+    };
+    
+    return getAllDescendants(selectedWbsId);
+  }, [selectedWbsId, wbsList]);
+
+  // Filtrar atividades por WBS selecionada
+  // Quando um WBS é selecionado, mostra atividades desse WBS e seus filhos
+  // Atividades sem wbs_id são sempre exibidas (não classificadas)
+  const atividadesFiltradas = useMemo(() => {
+    if (!getDescendantWbsIds) return atividades;
+    return atividades.filter((a) => {
+      // Se atividade não tem wbs_id, sempre exibe (não classificada)
+      if (!a.wbs_id) return true;
+      // Se tem wbs_id, verifica se está no filtro
+      return getDescendantWbsIds.includes(a.wbs_id);
+    });
+  }, [atividades, getDescendantWbsIds]);
+
   // Agrupar atividades por data
   const atividadesPorData = useMemo(() => {
     const agrupadas: { [key: string]: AtividadeLPS[] } = {};
     datas.forEach((data) => {
       const key = format(data, 'yyyy-MM-dd');
-      agrupadas[key] = atividades.filter((atividade) => {
+      agrupadas[key] = atividadesFiltradas.filter((atividade) => {
         // Converter datas da atividade para Date
         const dataAtribuida = atividade.data_atribuida
           ? parseDate(atividade.data_atribuida)
@@ -87,7 +120,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       });
     });
     return agrupadas;
-  }, [datas, atividades]);
+  }, [datas, atividadesFiltradas]);
 
   // Obter nome do dia da semana
   const getDiaSemana = (data: Date): string => {
