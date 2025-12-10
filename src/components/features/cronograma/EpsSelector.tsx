@@ -144,27 +144,27 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject }) => 
             {filteredProjects.map(project => (
               <tr 
                 key={project.id}
-                className="border-b border-gray-200 dark:border-gray-700 cursor-pointer bg-yellow-50 hover:bg-yellow-100 transition-colors"
+                className="border-b border-gray-300 dark:border-gray-600 cursor-pointer bg-amber-100 hover:bg-amber-200 transition-colors"
                 onDoubleClick={() => handleDoubleClick(project)}
               >
-                <td className="py-3 px-4">
+                <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <FileSpreadsheet className="w-5 h-5 text-yellow-600" />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                    <FileSpreadsheet className="w-5 h-5 text-amber-700" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
                       {project.nome}
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-mono text-sm text-gray-600">
+                <td className="py-4 px-4 font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
                   {project.codigo}
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <span className="text-xs bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full font-medium">
+                <td className="py-4 px-4 text-center">
+                  <span className="text-xs bg-amber-500 text-white px-3 py-1 rounded-full font-bold shadow-sm">
                     PROJETO
                   </span>
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <span className="text-xs text-gray-500 italic">
+                <td className="py-4 px-4 text-center">
+                  <span className="text-sm text-amber-700 font-medium">
                     Duplo clique para abrir
                   </span>
                 </td>
