@@ -1,8 +1,9 @@
 -- Fix RLS policies for empresas table to allow admins to see all companies
 -- Run this script in Supabase SQL Editor
 
--- Drop the restrictive policy
+-- Drop existing policies first (both old and new names)
 DROP POLICY IF EXISTS "users_view_own_empresa" ON public.empresas;
+DROP POLICY IF EXISTS "users_view_empresas" ON public.empresas;
 
 -- Create a more flexible SELECT policy:
 -- 1. ADMIN users can see ALL companies
