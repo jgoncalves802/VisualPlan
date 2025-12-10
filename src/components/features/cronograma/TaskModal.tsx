@@ -25,6 +25,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const calendarios = useCronogramaStore((state) => state.calendarios);
   const calendario_padrao = useCronogramaStore((state) => state.calendario_padrao);
   const atividade = atividadeId ? atividades.find((a) => a.id === atividadeId) : null;
+  
+  // WBS/EPS nodes are read-only and cannot be edited via this modal
+  const isWbsOrEpsNode = atividade?.is_wbs_node || atividade?.is_eps_node;
 
   const [formData, setFormData] = useState({
     codigo: '',
@@ -154,6 +157,36 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   };
 
   if (!open) return null;
+  
+  // Show read-only message for WBS/EPS nodes
+  if (isWbsOrEpsNode) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Elemento WBS (Somente Leitura)
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Este elemento faz parte da Estrutura Analítica do Projeto (WBS) e não pode ser editado aqui.
+              Para modificar a estrutura WBS, acesse a página de WBS.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -268,16 +301,24 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Sem atividade mãe (nível raiz)</option>
+                {/* WBS nodes first, then regular activities that can be parents */}
                 {atividades
-                  .filter((a) => a.id !== atividadeId)
+                  .filter((a) => a.id !== atividadeId && (a.is_wbs_node || a.is_eps_node))
+                  .map((a) => (
+                    <option key={a.id} value={a.id} className="font-medium text-purple-700">
+                      {a.edt ? `${a.edt} - ` : ''}{a.nome} (WBS)
+                    </option>
+                  ))}
+                {atividades
+                  .filter((a) => a.id !== atividadeId && !a.is_wbs_node && !a.is_eps_node && a.tipo === 'Fase')
                   .map((a) => (
                     <option key={a.id} value={a.id}>
-                      {(a.codigo ? `${a.codigo} - ` : '') + a.nome}
+                      {(a.edt ? `${a.edt} - ` : '') + a.nome}
                     </option>
                   ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Defina a hierarquia do cronograma
+                Selecione um nó WBS ou fase para organizar a hierarquia
               </p>
             </div>
 
