@@ -93,3 +93,8 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **Column Config Persistence**: Column visibility and order is now saved per-user, per-project to Supabase. Changes persist across sessions.
 *   **WBS-Activity Hierarchy Fix**: Activities under WBS nodes now correctly use `wbs_id` (UUID) for database storage and synthetic `parent_id` for UI hierarchy. Foreign key constraint respected.
 *   **Service Layer Improvements**: Added `stripSyntheticPrefix` helper to clean `wbs-`/`eps-` prefixes before database persistence.
+*   **Performance Caching Strategy**: Implemented comprehensive caching for optimal performance:
+    - **cronogramaCacheService.ts**: localStorage-based cache with TTL (24h for columns, 5min for activities/dependencies)
+    - **Cache-first loading**: Column configs and activities load instantly from cache, sync with Supabase in background when expired
+    - **Optimistic inserts**: New activities appear immediately with temp ID, persist to database in background
+    - **Batch update manager**: 500ms debounce groups multiple rapid edits into single database requests
