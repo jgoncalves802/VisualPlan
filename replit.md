@@ -58,9 +58,16 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - Lag support in days
     - Cascading deletes linked to activities
 
+*   **cronograma_column_configs**: Per-user, per-project column visibility and order preferences:
+    - user_id, projeto_id composite unique constraint
+    - visible_columns JSONB array of field names
+    - column_order JSONB array for display order
+    - RLS policies for user-scoped access
+
 ### Migration Files
 
 *   `scripts/migrations/013_create_atividades_cronograma.sql`: Creates schedule tables with RLS policies
+*   `scripts/migrations/014_cronograma_column_configs.sql`: Creates column configuration persistence table
 
 **Note**: Tables must be created in the Supabase Dashboard SQL Editor for production use.
 
@@ -83,3 +90,6 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **Cronograma Service Migration**: Converted `cronogramaService.ts` from mock data to real Supabase CRUD operations
 *   **CPM Calculation**: Fixed Critical Path Method to return proper `FolgaAtividade` type with early/late dates and float values
 *   **Database Tables**: Created `atividades_cronograma` and `dependencias_atividades` tables with proper indexes and RLS
+*   **Column Config Persistence**: Column visibility and order is now saved per-user, per-project to Supabase. Changes persist across sessions.
+*   **WBS-Activity Hierarchy Fix**: Activities under WBS nodes now correctly use `wbs_id` (UUID) for database storage and synthetic `parent_id` for UI hierarchy. Foreign key constraint respected.
+*   **Service Layer Improvements**: Added `stripSyntheticPrefix` helper to clean `wbs-`/`eps-` prefixes before database persistence.
