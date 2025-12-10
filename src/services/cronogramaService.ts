@@ -562,6 +562,131 @@ export const getCalendarioPadrao = async (): Promise<string> => {
 };
 
 // ============================================================================
+// COLUMN CONFIGURATIONS
+// ============================================================================
+
+export interface ColumnConfig {
+  id?: string;
+  user_id?: string;
+  projeto_id: string;
+  empresa_id?: string;
+  visible_columns: string[];
+  column_order: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Get column configuration for current user and project
+ */
+export const getColumnConfig = async (projetoId: string): Promise<ColumnConfig | null> => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    console.log('[getColumnConfig] User not authenticated');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('cronograma_column_configs')
+    .select('*')
+    .eq('user_id', userData.user.id)
+    .eq('projeto_id', projetoId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned - this is expected for new users/projects
+      console.log('[getColumnConfig] No config found for user/project');
+      return null;
+    }
+    console.error('[getColumnConfig] Error fetching column config:', error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    projeto_id: data.projeto_id,
+    empresa_id: data.empresa_id,
+    visible_columns: data.visible_columns || [],
+    column_order: data.column_order || [],
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
+};
+
+/**
+ * Save column configuration for current user and project (upsert)
+ */
+export const saveColumnConfig = async (
+  projetoId: string,
+  visibleColumns: string[],
+  columnOrder: string[]
+): Promise<boolean> => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    console.error('[saveColumnConfig] User not authenticated');
+    return false;
+  }
+
+  // Get user's empresa_id
+  const { data: userProfile } = await supabase
+    .from('usuarios')
+    .select('empresa_id')
+    .eq('id', userData.user.id)
+    .single();
+
+  if (!userProfile?.empresa_id) {
+    console.error('[saveColumnConfig] User has no empresa_id');
+    return false;
+  }
+
+  const { error } = await supabase
+    .from('cronograma_column_configs')
+    .upsert({
+      user_id: userData.user.id,
+      projeto_id: projetoId,
+      empresa_id: userProfile.empresa_id,
+      visible_columns: visibleColumns,
+      column_order: columnOrder,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'user_id,projeto_id',
+    });
+
+  if (error) {
+    console.error('[saveColumnConfig] Error saving column config:', error);
+    return false;
+  }
+
+  console.log('[saveColumnConfig] Column config saved successfully');
+  return true;
+};
+
+/**
+ * Delete column configuration (reset to defaults)
+ */
+export const deleteColumnConfig = async (projetoId: string): Promise<boolean> => {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from('cronograma_column_configs')
+    .delete()
+    .eq('user_id', userData.user.id)
+    .eq('projeto_id', projetoId);
+
+  if (error) {
+    console.error('[deleteColumnConfig] Error deleting column config:', error);
+    return false;
+  }
+
+  return true;
+};
+
+// ============================================================================
 // EXPORTAR TIPOS
 // ============================================================================
 

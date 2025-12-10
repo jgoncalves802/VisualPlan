@@ -411,3 +411,9 @@ export const COMPACT_COLUMNS: ColumnConfig[] = [
     resizable: true
   }
 ];
+
+// All available columns combined (for column config modal)
+export const ALL_AVAILABLE_COLUMNS: ColumnConfig[] = [
+  ...DEFAULT_COLUMNS,
+  ...EXTENDED_COLUMNS.filter(ec => !DEFAULT_COLUMNS.some(dc => dc.field === ec.field))
+];

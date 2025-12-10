@@ -19,6 +19,7 @@ import { SaveBaselineButton } from './SaveBaselineButton';
 import { DEFAULT_COLUMNS, EXTENDED_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { ColumnConfigModal } from './ColumnConfigModal';
+import { getColumnConfig, saveColumnConfig } from '../../../services/cronogramaService';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -70,6 +71,48 @@ export function VisionGanttWrapper({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [columnConfigOpen, setColumnConfigOpen] = useState(false);
+  
+  // Load saved column configuration on mount or when project changes
+  useEffect(() => {
+    const loadColumnConfig = async () => {
+      try {
+        const savedConfig = await getColumnConfig(projetoId);
+        if (savedConfig && savedConfig.visible_columns.length > 0) {
+          // Reconstruct column configs from saved field names
+          const allColumns = [...DEFAULT_COLUMNS, ...EXTENDED_COLUMNS];
+          const columnMap = new Map(allColumns.map(c => [c.field, c]));
+          
+          // Build columns in saved order
+          const loadedColumns: ColumnConfig[] = [];
+          for (const field of savedConfig.column_order) {
+            const col = columnMap.get(field);
+            if (col && savedConfig.visible_columns.includes(field)) {
+              loadedColumns.push(col);
+            }
+          }
+          
+          // Always ensure WBS column is first
+          const wbsIndex = loadedColumns.findIndex(c => c.field === 'wbs');
+          if (wbsIndex > 0) {
+            const [wbsCol] = loadedColumns.splice(wbsIndex, 1);
+            loadedColumns.unshift(wbsCol);
+          } else if (wbsIndex === -1) {
+            const wbsCol = columnMap.get('wbs');
+            if (wbsCol) loadedColumns.unshift(wbsCol);
+          }
+          
+          if (loadedColumns.length > 0) {
+            setSelectedColumns(loadedColumns);
+            console.log('[VisionGanttWrapper] Loaded saved column config:', loadedColumns.map(c => c.field));
+          }
+        }
+      } catch (error) {
+        console.error('[VisionGanttWrapper] Error loading column config:', error);
+      }
+    };
+    
+    loadColumnConfig();
+  }, [projetoId]);
   
   const [editDependencyModal, setEditDependencyModal] = useState<{
     open: boolean;
@@ -412,12 +455,22 @@ export function VisionGanttWrapper({
   
   const handleColumnReorder = useCallback((newColumns: ColumnConfig[]) => {
     setSelectedColumns(newColumns);
-  }, []);
+    // Save column order to database
+    const visibleFields = newColumns.map(c => c.field);
+    saveColumnConfig(projetoId, visibleFields, visibleFields).catch(err => {
+      console.error('[VisionGanttWrapper] Error saving column reorder:', err);
+    });
+  }, [projetoId]);
   
   const handleColumnConfigSave = useCallback((newColumns: ColumnConfig[]) => {
     setSelectedColumns(newColumns);
     setColumnConfigOpen(false);
-  }, []);
+    // Save column configuration to database
+    const visibleFields = newColumns.map(c => c.field);
+    saveColumnConfig(projetoId, visibleFields, visibleFields).catch(err => {
+      console.error('[VisionGanttWrapper] Error saving column config:', err);
+    });
+  }, [projetoId]);
 
   const handleRowMove = useCallback((taskId: string, newParentId: string | null, _newIndex: number) => {
     if (taskId.startsWith('wbs-')) {
