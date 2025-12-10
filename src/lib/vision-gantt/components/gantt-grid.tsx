@@ -341,7 +341,7 @@ export function GanttGrid({
           const isSelected = task?.id === selectedTaskId || selectedTaskIds.includes(task?.id ?? '');
           const isEven = rowIndex % 2 === 0;
           const isGroup = task?.isGroup === true;
-          const isMilestone = (task as any)?.isMilestone === true || (task as any)?.duration === 0;
+          const isMilestone = !isGroup && ((task as any)?.isMilestone === true || ((task as any)?.duration === 0 && !(task as any)?.isGroup));
           const isCritical = criticalPathIds.includes(task?.id ?? '');
           const level = task?.level ?? 0;
           const isProject = isGroup && level === 0;
@@ -448,7 +448,7 @@ export function GanttGrid({
                 if (onKeyDown) {
                   onKeyDown(e);
                 }
-                if (e.ctrlKey && (e.key === '+' || e.key === '=') && onInsertRow) {
+                if (e.shiftKey && (e.key === '+' || e.key === '=') && onInsertRow) {
                   e.preventDefault();
                   onInsertRow(task?.id ?? null);
                 }
@@ -472,7 +472,7 @@ export function GanttGrid({
                     e.stopPropagation();
                     handleInsertRow(task?.id ?? null);
                   }}
-                  title="Inserir linha abaixo (Ctrl++)"
+                  title="Inserir linha abaixo (Shift++)"
                 >
                   <div className="flex items-center gap-1 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs shadow-lg">
                     <Plus size={12} />

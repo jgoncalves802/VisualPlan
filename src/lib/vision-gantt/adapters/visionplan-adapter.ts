@@ -81,11 +81,9 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
   let eac: number | undefined;
   let etc: number | undefined;
   let vac: number | undefined;
-  let costVariance: number | undefined;
   
   if (bcwp !== undefined && acwp !== undefined && acwp > 0) {
     cpi = bcwp / acwp; // Cost Performance Index
-    costVariance = bcwp - acwp; // CV = EV - AC
   }
   if (bcwp !== undefined && bcws !== undefined && bcws > 0) {
     spi = bcwp / bcws; // Schedule Performance Index
@@ -162,7 +160,7 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
     
     // Duration fields
     durationHours: atividade.duracao_horas,
-    durationUnit: atividade.unidade_tempo === 'HORAS' ? 'hours' : 'days',
+    durationUnit: atividade.unidade_tempo === 'HORAS' ? 'h' : 'd',
     
     // EVM Fields - Calculated values
     bcws: bcws, // Planned Value

@@ -428,28 +428,58 @@ export function VisionGanttWrapper({
     const atividade = atividadeMap.get(taskId);
     if (!atividade || !onAtividadeUpdate) return;
     
+    let actualWbsId: string | undefined = undefined;
     let actualParentId: string | undefined = undefined;
+    
     if (newParentId) {
       if (newParentId.startsWith('wbs-')) {
-        actualParentId = newParentId.replace('wbs-', '');
-      } else {
+        actualWbsId = newParentId.replace('wbs-', '');
         actualParentId = newParentId;
+      } else {
+        const targetAtividade = atividadeMap.get(newParentId);
+        if (targetAtividade) {
+          actualWbsId = targetAtividade.wbs_id || undefined;
+          if (targetAtividade.parent_id) {
+            actualParentId = targetAtividade.parent_id;
+            if (!actualWbsId) {
+              actualWbsId = targetAtividade.parent_id.startsWith('wbs-') 
+                ? targetAtividade.parent_id.replace('wbs-', '') 
+                : targetAtividade.parent_id;
+            }
+          }
+          if (actualWbsId && !actualParentId) {
+            actualParentId = `wbs-${actualWbsId}`;
+          }
+        }
       }
     }
     
     const updatedAtividade: AtividadeMock = {
       ...atividade,
-      wbs_id: actualParentId,
+      wbs_id: actualWbsId,
+      parent_id: actualParentId,
     };
     
-    onAtividadeUpdate(updatedAtividade, { wbs_id: actualParentId });
-    console.log('[VisionGanttWrapper] Moved task', taskId, 'to WBS', actualParentId);
+    onAtividadeUpdate(updatedAtividade, { wbs_id: actualWbsId, parent_id: actualParentId });
+    console.log('[VisionGanttWrapper] Moved task', taskId, 'to WBS', actualWbsId, 'with parent_id', actualParentId);
   }, [atividadeMap, onAtividadeUpdate]);
 
   const handleInsertRow = useCallback((afterTaskId: string | null) => {
     if (onAtividadeCreate) {
       let parentWbsId: string | null = null;
       let actualAfterTaskId: string | null = afterTaskId;
+      
+      const resolveWbsId = (atividade: AtividadeMock): string | null => {
+        if (atividade.wbs_id) {
+          return atividade.wbs_id;
+        }
+        if (atividade.parent_id) {
+          return atividade.parent_id.startsWith('wbs-') 
+            ? atividade.parent_id.replace('wbs-', '') 
+            : atividade.parent_id;
+        }
+        return null;
+      };
       
       if (afterTaskId) {
         if (afterTaskId.startsWith('wbs-')) {
@@ -458,7 +488,7 @@ export function VisionGanttWrapper({
         } else {
           const atividade = atividadeMap.get(afterTaskId);
           if (atividade) {
-            parentWbsId = atividade.wbs_id || atividade.parent_id || null;
+            parentWbsId = resolveWbsId(atividade);
           }
         }
       } else if (selectedTask) {
@@ -468,7 +498,7 @@ export function VisionGanttWrapper({
         } else {
           const atividade = atividadeMap.get(selectedTask.id);
           if (atividade) {
-            parentWbsId = atividade.wbs_id || atividade.parent_id || null;
+            parentWbsId = resolveWbsId(atividade);
             actualAfterTaskId = selectedTask.id;
           }
         }

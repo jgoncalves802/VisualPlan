@@ -238,6 +238,24 @@ export const CronogramaPage: React.FC = () => {
                   onAtividadeUpdate={async (atividade, changes) => {
                     await atualizarAtividade(atividade.id, changes);
                   }}
+                  onAtividadeCreate={async (_afterTaskId, parentWbsId) => {
+                    try {
+                      await adicionarAtividade({
+                        nome: 'Nova Atividade',
+                        projeto_id: projetoId,
+                        wbs_id: parentWbsId || undefined,
+                        parent_id: parentWbsId ? `wbs-${parentWbsId}` : undefined,
+                        data_inicio: new Date().toISOString().split('T')[0],
+                        data_fim: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                        duracao_dias: 1,
+                        progresso: 0,
+                        status: 'A Fazer',
+                        tipo: 'Atividade',
+                      } as any);
+                    } catch (error) {
+                      console.error('Erro ao criar atividade:', error);
+                    }
+                  }}
                   onDependenciaCreate={async (dep) => {
                     await adicionarDependencia(dep);
                   }}
