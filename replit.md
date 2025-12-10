@@ -119,3 +119,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **SCurveChart**: EVM-based S-curve visualization (PV, AC, EV) with CPI/SPI indicators, variance analysis, and BAC/EAC/VAC metrics
     - **CommodityCurvesChart**: Aggregated curves by resource category (Labor, Material, Equipment, Subcontractor) with cumulative/periodic views and stacked bar options
     - **Resource Leveling Engine**: Priority-based algorithm respecting total float, predecessors, and critical path constraints with conflict detection and logging
+*   **Split-View Resource Allocation (P6/MS Project Style)**:
+    - **ResourceWorkspace**: Lateral panel with resource pool, category filtering (Mao de Obra, Material, Custo, Generico, Orcamento), search, and quick assignment via + button
+    - **Split-View Layout**: CronogramaPage with resizable Gantt (left) and Resources panel (right), toggle button in toolbar
+    - **Task-Resource Sync**: Selecting a task in VisionGantt automatically updates ResourceWorkspace to show current allocations and enable assignment
+    - **Drag-Drop Assignment**: Resources can be dragged from pool to allocate (when activity selected)
+    - **Calendar Inheritance System**: Resources can have custom calendars (calendarioId) or inherit from activity/project. Priority order: Resource calendar > Activity calendar > Project calendar > Default. Color-coded badges show calendar source (Calendario do Recurso, Herdado da Atividade, Herdado do Projeto, Calendario Padrao)
+    - **calendar-inheritance.ts**: Utility for resolving effective calendar with getCalendarForResourceAllocation and visual helpers
