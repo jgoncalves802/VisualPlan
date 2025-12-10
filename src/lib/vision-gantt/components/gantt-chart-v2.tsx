@@ -624,6 +624,20 @@ export function GanttChartV2({
               // Find the task to get its current values
               const task = flatTasks.find(t => t.id === taskId);
               
+              // Helper to parse date string as local date (avoiding timezone issues)
+              const parseLocalDate = (dateStr: string): Date => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid DST issues
+              };
+              
+              // Helper to format date as YYYY-MM-DD
+              const formatDate = (date: Date): string => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+              };
+              
               // Handle duration field - extract days from object if needed
               if (field === 'duration') {
                 let durationDays: number;
@@ -633,7 +647,10 @@ export function GanttChartV2({
                   durationDays = typeof value === 'number' ? value : parseInt(value as string) || 1;
                 }
                 // Update duration and recalculate end date
-                const startDate = task?.startDate ? new Date(task.startDate) : new Date();
+                const startDateStr = task?.startDate 
+                  ? (typeof task.startDate === 'string' ? task.startDate : formatDate(task.startDate as Date))
+                  : formatDate(new Date());
+                const startDate = parseLocalDate(startDateStr);
                 const endDate = new Date(startDate);
                 endDate.setDate(endDate.getDate() + durationDays);
                 controller.updateTask(taskId, { 
@@ -648,7 +665,8 @@ export function GanttChartV2({
               
               // Recalculate dates based on duration
               if (field === 'startDate' && value) {
-                const startDate = new Date(value as string);
+                const dateStr = typeof value === 'string' ? value : formatDate(value as Date);
+                const startDate = parseLocalDate(dateStr);
                 const endDate = new Date(startDate);
                 endDate.setDate(endDate.getDate() + duration);
                 controller.updateTask(taskId, { 
@@ -656,7 +674,8 @@ export function GanttChartV2({
                   endDate: endDate
                 });
               } else if (field === 'endDate' && value) {
-                const endDate = new Date(value as string);
+                const dateStr = typeof value === 'string' ? value : formatDate(value as Date);
+                const endDate = parseLocalDate(dateStr);
                 const startDate = new Date(endDate);
                 startDate.setDate(startDate.getDate() - duration);
                 controller.updateTask(taskId, { 
