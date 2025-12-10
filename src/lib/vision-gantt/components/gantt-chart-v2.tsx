@@ -7,7 +7,7 @@
  * 3. All hierarchy changes are internal, emitted to parent via callbacks
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import type { Task, Dependency, ViewPreset, GanttConfig, ViewPresetConfig, ColumnConfig } from '../types';
 import { GanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
@@ -153,6 +153,53 @@ export function GanttChartV2({
   // Use controller's tasks and methods
   const taskTree = controller.getTaskTree();
   const flatTasks = flattenTasks(taskTree);
+  
+  // SCROLL PRESERVATION - Save scroll position before task updates, restore after
+  const scrollPositionRef = useRef<{ grid: number; timeline: number }>({ grid: 0, timeline: 0 });
+  const previousTaskCountRef = useRef(flatTasks.length);
+  
+  // Save scroll position whenever tasks are about to change
+  useLayoutEffect(() => {
+    // Only restore if we have a saved position and task count hasn't changed dramatically
+    // (dramatic change = structural change like collapse/expand)
+    const taskCountDelta = Math.abs(flatTasks.length - previousTaskCountRef.current);
+    const isIncrementalUpdate = taskCountDelta <= 1;
+    
+    if (isIncrementalUpdate && scrollPositionRef.current.grid > 0) {
+      // Restore scroll position after render
+      if (gridScrollRef.current) {
+        gridScrollRef.current.scrollTop = scrollPositionRef.current.grid;
+      }
+      if (timelineScrollRef.current) {
+        timelineScrollRef.current.scrollTop = scrollPositionRef.current.timeline;
+      }
+    }
+    
+    previousTaskCountRef.current = flatTasks.length;
+  }, [flatTasks]);
+  
+  // Capture scroll position periodically (on scroll events)
+  useEffect(() => {
+    const captureScroll = () => {
+      if (gridScrollRef.current) {
+        scrollPositionRef.current.grid = gridScrollRef.current.scrollTop;
+      }
+      if (timelineScrollRef.current) {
+        scrollPositionRef.current.timeline = timelineScrollRef.current.scrollTop;
+      }
+    };
+    
+    const gridEl = gridScrollRef.current;
+    const timelineEl = timelineScrollRef.current;
+    
+    gridEl?.addEventListener('scroll', captureScroll, { passive: true });
+    timelineEl?.addEventListener('scroll', captureScroll, { passive: true });
+    
+    return () => {
+      gridEl?.removeEventListener('scroll', captureScroll);
+      timelineEl?.removeEventListener('scroll', captureScroll);
+    };
+  }, []);
   
   console.log('[GanttChartV2] Tasks from controller:', controller.tasks.slice(0, 3).map(t => ({ id: t.id, name: t.name, level: t.level, parentId: t.parentId, isGroup: t.isGroup })));
   console.log('[GanttChartV2] TaskTree root count:', taskTree.length, 'first:', taskTree[0]?.name, 'children:', taskTree[0]?.children?.length);
