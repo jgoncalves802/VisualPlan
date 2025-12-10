@@ -621,8 +621,29 @@ export function GanttChartV2({
             showInsertButtons={showInsertButtons}
             enableInlineEdit={true}
             onCellEdit={(taskId, field, value) => {
-              // Find the task to get its current duration
+              // Find the task to get its current values
               const task = flatTasks.find(t => t.id === taskId);
+              
+              // Handle duration field - extract days from object if needed
+              if (field === 'duration') {
+                let durationDays: number;
+                if (value && typeof value === 'object' && 'days' in value) {
+                  durationDays = Math.round(value.days);
+                } else {
+                  durationDays = typeof value === 'number' ? value : parseInt(value as string) || 1;
+                }
+                // Update duration and recalculate end date
+                const startDate = task?.startDate ? new Date(task.startDate) : new Date();
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + durationDays);
+                controller.updateTask(taskId, { 
+                  duration: durationDays,
+                  endDate: endDate
+                });
+                return;
+              }
+              
+              // Get current duration for date calculations
               const duration = task?.duration || 1;
               
               // Recalculate dates based on duration
