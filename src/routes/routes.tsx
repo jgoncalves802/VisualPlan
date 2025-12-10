@@ -23,6 +23,7 @@ import GestaoMudancaPage from '../pages/GestaoMudancaPage';
 import AnaliseIshikawaPage from '../pages/AnaliseIshikawaPage';
 import ReunioesPage from '../pages/ReunioesPage';
 import PortfolioPage from '../pages/PortfolioPage';
+import { RecursosPage } from '../pages/RecursosPage';
 import { useAuthStore } from '../stores/authStore';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -81,6 +82,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="projetos" element={<PlaceholderPage title="Projetos" />} />
           <Route path="planejamento" element={<PlaceholderPage title="Planejamento" />} />
           <Route path="cronograma/:projetoId" element={<CronogramaPage />} />
+          <Route path="recursos" element={<RecursosPage />} />
           <Route path="lps" element={<LPSPage />} />
           <Route path="restricoes" element={<RestricoesPage />} />
           <Route path="kanban" element={<KanbanPage />} />
