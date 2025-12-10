@@ -42,10 +42,21 @@ const formatValue = (value: number, unit: string): string => {
 const CustomTooltip = ({ active, payload, label, unit }: any) => {
   if (!active || !payload || payload.length === 0) return null;
   
+  const formatLabel = (lbl: any): string => {
+    if (!lbl) return '';
+    try {
+      const parsed = parseISO(String(lbl));
+      if (isNaN(parsed.getTime())) return String(lbl);
+      return format(parsed, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch {
+      return String(lbl);
+    }
+  };
+  
   return (
     <div className="bg-white border rounded-lg shadow-lg p-3">
       <p className="text-sm font-medium text-gray-900 mb-2">
-        {format(parseISO(label), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        {formatLabel(label)}
       </p>
       <div className="space-y-1">
         {payload.map((entry: any, index: number) => (
@@ -114,10 +125,18 @@ export function SCurveChart({
   }, [data]);
 
   const chartData = useMemo(() => {
-    return data.map(point => ({
-      ...point,
-      dateLabel: format(parseISO(point.date), 'dd/MM', { locale: ptBR }),
-    }));
+    return data.map(point => {
+      let dateLabel = point.date;
+      try {
+        const parsed = parseISO(point.date);
+        if (!isNaN(parsed.getTime())) {
+          dateLabel = format(parsed, 'dd/MM', { locale: ptBR });
+        }
+      } catch {
+        // Keep original if parse fails
+      }
+      return { ...point, dateLabel };
+    });
   }, [data]);
 
   const toggleLine = (line: keyof typeof activeLines) => {
@@ -138,12 +157,20 @@ export function SCurveChart({
             <TrendingUp className="w-5 h-5 text-blue-600" />
             <div>
               <h3 className="font-semibold text-gray-900">{title}</h3>
-              {dataDate && (
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                  <Calendar className="w-3 h-3" />
-                  Data de Status: {format(parseISO(dataDate), "d 'de' MMMM", { locale: ptBR })}
-                </p>
-              )}
+              {dataDate && (() => {
+                try {
+                  const parsed = parseISO(dataDate);
+                  if (isNaN(parsed.getTime())) return null;
+                  return (
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3" />
+                      Data de Status: {format(parsed, "d 'de' MMMM", { locale: ptBR })}
+                    </p>
+                  );
+                } catch {
+                  return null;
+                }
+              })()}
             </div>
           </div>
           
