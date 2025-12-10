@@ -103,6 +103,32 @@ export const epsService = {
     return this.buildTree(nodes);
   },
 
+  async getEpsOnlyTree(empresaId: string): Promise<EpsNode[]> {
+    const { data, error } = await supabase
+      .from('eps_nodes')
+      .select(`
+        *,
+        obs_nodes:responsible_manager_id (
+          id,
+          nome,
+          codigo
+        )
+      `)
+      .eq('empresa_id', empresaId)
+      .eq('ativo', true)
+      .lte('nivel', 1)
+      .order('nivel', { ascending: true })
+      .order('ordem', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching EPS nodes:', error);
+      throw error;
+    }
+
+    const epsNodes = (data || []).map(mapFromDB);
+    return this.buildTree(epsNodes);
+  },
+
   buildTree(nodes: EpsNode[]): EpsNode[] {
     const nodeMap = new Map<string, EpsNode>();
     const roots: EpsNode[] = [];
