@@ -41,9 +41,38 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Portfolio Prioritization**: Multi-criteria scoring matrix with bubble chart visualization, radar chart comparison, and weighted ranking (ROI, Strategic Alignment, Urgency, Complexity, Resources, Risk).
     *   **WBS Integration to Schedule**: WBS nodes from the WBS page are automatically inherited and displayed in the schedule (cronograma) as read-only summary tasks. EDT codes are auto-generated using hierarchical numbering (1, 1.1, 1.1.2). Activities can be assigned to WBS nodes via a dedicated dropdown, maintaining proper separation between WBS structure assignment (`wbs_id`) and activity parent relationships (`parent_id`). Synthetic IDs (`wbs-xxx`) are used internally for UI binding while real UUIDs are persisted.
 
+## Database Schema
+
+### Cronograma (Schedule) Tables
+
+*   **atividades_cronograma**: Main schedule activities table with full Primavera P6-compatible fields:
+    - UUID primary keys
+    - WBS integration via `wbs_id` foreign key
+    - Activity hierarchy via `parent_id` self-reference
+    - CPM fields: `e_critica`, `folga_total`
+    - EVM fields: `custo_planejado`, `custo_real`, `valor_planejado`, `valor_real`
+    - Multi-tenancy via `empresa_id` with RLS policies
+
+*   **dependencias_atividades**: Activity dependencies/relationships:
+    - Supports all 4 PDM dependency types: FS, SS, FF, SF
+    - Lag support in days
+    - Cascading deletes linked to activities
+
+### Migration Files
+
+*   `scripts/migrations/013_create_atividades_cronograma.sql`: Creates schedule tables with RLS policies
+
+**Note**: Tables must be created in the Supabase Dashboard SQL Editor for production use.
+
 ## External Dependencies
 
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
 *   **Recharts**: For dynamic and interactive charts.
 *   **React Three Fiber**: For 3D visualization.
 *   **VisionGantt** (internal): Custom Gantt chart library.
+
+## Recent Changes (December 2025)
+
+*   **Cronograma Service Migration**: Converted `cronogramaService.ts` from mock data to real Supabase CRUD operations
+*   **CPM Calculation**: Fixed Critical Path Method to return proper `FolgaAtividade` type with early/late dates and float values
+*   **Database Tables**: Created `atividades_cronograma` and `dependencias_atividades` tables with proper indexes and RLS
