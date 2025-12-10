@@ -240,11 +240,13 @@ export const CronogramaPage: React.FC = () => {
                   }}
                   onAtividadeCreate={async (_afterTaskId, parentWbsId) => {
                     try {
+                      // When creating under a WBS node, set wbs_id but leave parent_id NULL
+                      // (parent_id FK only allows references to atividades_cronograma, not eps_nodes)
                       await adicionarAtividade({
                         nome: 'Nova Atividade',
                         projeto_id: projetoId,
                         wbs_id: parentWbsId || undefined,
-                        parent_id: parentWbsId ? `wbs-${parentWbsId}` : undefined,
+                        parent_id: undefined, // NULL - WBS nodes are not activity parents
                         data_inicio: new Date().toISOString().split('T')[0],
                         data_fim: new Date(Date.now() + 86400000).toISOString().split('T')[0],
                         duracao_dias: 1,

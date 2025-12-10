@@ -433,23 +433,16 @@ export function VisionGanttWrapper({
     
     if (newParentId) {
       if (newParentId.startsWith('wbs-')) {
+        // Moving to a WBS node: set wbs_id, but parent_id must be NULL
+        // (parent_id FK only allows references to atividades_cronograma, not eps_nodes)
         actualWbsId = newParentId.replace('wbs-', '');
-        actualParentId = newParentId;
+        actualParentId = undefined; // NULL - no activity parent
       } else {
+        // Moving to another activity: inherit its wbs_id, set parent_id to the activity
         const targetAtividade = atividadeMap.get(newParentId);
         if (targetAtividade) {
           actualWbsId = targetAtividade.wbs_id || undefined;
-          if (targetAtividade.parent_id) {
-            actualParentId = targetAtividade.parent_id;
-            if (!actualWbsId) {
-              actualWbsId = targetAtividade.parent_id.startsWith('wbs-') 
-                ? targetAtividade.parent_id.replace('wbs-', '') 
-                : targetAtividade.parent_id;
-            }
-          }
-          if (actualWbsId && !actualParentId) {
-            actualParentId = `wbs-${actualWbsId}`;
-          }
+          actualParentId = newParentId; // Point to the activity
         }
       }
     }
