@@ -544,6 +544,9 @@ export const useCronogramaStore = create<CronogramaState>()(
             // If we didn't use cache, this is a blocking load
             // If we used cache, this runs in background
             const fetchPromise = (async () => {
+              // Ensure all activities have codes before fetching
+              await cronogramaService.ensureActivityCodes(projetoId);
+              
               const [atividades, wbsNodes] = await Promise.all([
                 cronogramaService.getAtividades(projetoId),
                 epsService.getProjectWbsTree(projetoId),

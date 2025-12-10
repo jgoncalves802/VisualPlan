@@ -687,6 +687,128 @@ export const deleteColumnConfig = async (projetoId: string): Promise<boolean> =>
 };
 
 // ============================================================================
+// ACTIVITY CODE UTILITIES
+// ============================================================================
+
+/**
+ * Generates Primavera P6-style activity codes (A1010, A1020, etc.)
+ * Codes increment by 10, never recycle deleted codes
+ */
+function generateNextActivityCode(existingCodes: (string | undefined | null)[]): string {
+  const prefix = 'A';
+  const increment = 10;
+  const startSuffix = 1000; // First code will be 1000 + 10 = 1010
+  let maxSuffix = startSuffix;
+  
+  for (const code of existingCodes) {
+    if (code && typeof code === 'string' && code.startsWith(prefix)) {
+      const match = code.match(/(\d+)$/);
+      if (match) {
+        const suffix = parseInt(match[1], 10);
+        if (suffix > maxSuffix) {
+          maxSuffix = suffix;
+        }
+      }
+    }
+  }
+  
+  return `${prefix}${maxSuffix + increment}`;
+}
+
+/**
+ * Ensures all activities in a project have activity codes.
+ * Activities without codes will get auto-generated codes (A1010, A1020, etc.)
+ * Returns the number of activities updated.
+ */
+export const ensureActivityCodes = async (projetoId: string): Promise<number> => {
+  // Get all activities
+  const { data: atividades, error: fetchError } = await supabase
+    .from('atividades_cronograma')
+    .select('id, codigo')
+    .eq('projeto_id', projetoId)
+    .order('created_at', { ascending: true });
+
+  if (fetchError) {
+    console.error('[ensureActivityCodes] Error fetching activities:', fetchError);
+    return 0;
+  }
+
+  if (!atividades || atividades.length === 0) {
+    console.log('[ensureActivityCodes] No activities found');
+    return 0;
+  }
+
+  // Find activities without codes
+  const activitiesWithoutCode = atividades.filter(a => !a.codigo);
+  
+  if (activitiesWithoutCode.length === 0) {
+    console.log('[ensureActivityCodes] All activities have codes');
+    return 0;
+  }
+
+  // Get all existing codes to avoid collisions
+  const existingCodes = atividades.map(a => a.codigo).filter(Boolean);
+  
+  let updatedCount = 0;
+  
+  // Update each activity without a code
+  for (const activity of activitiesWithoutCode) {
+    const newCode = generateNextActivityCode(existingCodes);
+    existingCodes.push(newCode); // Track for next iteration
+    
+    const { error: updateError } = await supabase
+      .from('atividades_cronograma')
+      .update({ codigo: newCode, updated_at: new Date().toISOString() })
+      .eq('id', activity.id);
+    
+    if (updateError) {
+      console.error(`[ensureActivityCodes] Error updating activity ${activity.id}:`, updateError);
+    } else {
+      console.log(`[ensureActivityCodes] Assigned code ${newCode} to activity ${activity.id}`);
+      updatedCount++;
+    }
+  }
+  
+  console.log(`[ensureActivityCodes] Updated ${updatedCount} activities`);
+  return updatedCount;
+};
+
+/**
+ * Ensures all activities across ALL projects have activity codes.
+ * Useful for data migration or cleanup.
+ */
+export const ensureAllActivityCodes = async (): Promise<number> => {
+  // Get all unique project IDs
+  const { data: projects, error: projectError } = await supabase
+    .from('atividades_cronograma')
+    .select('projeto_id')
+    .order('projeto_id');
+
+  if (projectError) {
+    console.error('[ensureAllActivityCodes] Error fetching projects:', projectError);
+    return 0;
+  }
+
+  if (!projects || projects.length === 0) {
+    console.log('[ensureAllActivityCodes] No activities found in database');
+    return 0;
+  }
+
+  // Get unique project IDs
+  const uniqueProjectIds = [...new Set(projects.map(p => p.projeto_id))];
+  
+  let totalUpdated = 0;
+  
+  for (const projetoId of uniqueProjectIds) {
+    const count = await ensureActivityCodes(projetoId);
+    totalUpdated += count;
+  }
+  
+  console.log(`[ensureAllActivityCodes] Total activities updated: ${totalUpdated}`);
+  return totalUpdated;
+};
+
+// ============================================================================
 // EXPORTAR TIPOS
 // ============================================================================
 
