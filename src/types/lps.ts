@@ -74,6 +74,27 @@ export enum CategoriaAtividade {
 // ============================================================================
 
 /**
+ * WBS - Work Breakdown Structure (Estrutura Analítica do Projeto)
+ * Representa uma fase ou pacote de trabalho do projeto
+ */
+export interface WBSLPS {
+  id: string;
+  codigo: string;
+  nome: string;
+  descricao?: string;
+  nivel: number;
+  parent_id?: string;
+  ordem: number;
+  cor?: string;
+  icone?: string;
+  data_inicio?: Date;
+  data_fim?: Date;
+  progresso?: number;
+  responsavel?: string;
+  responsavel_id?: string;
+}
+
+/**
  * Histórico de conclusão de uma atividade
  */
 export interface AtividadeHistoricoConclusao {
@@ -102,6 +123,7 @@ export interface AtividadeLPS {
   status: StatusAtividadeLPS;
   tipo: TipoAtividadeLPS;
   categoria: CategoriaAtividade;
+  wbs_id?: string; // Link com WBS (fase do projeto)
   responsavel?: string;
   responsavel_id?: string;
   apoio?: string;
@@ -171,6 +193,7 @@ export interface RestricaoLPS {
   tipo: TipoRestricao; // S (Sim, tem restrição) ou N (Não, sem restrição)
   tipo_detalhado?: TipoRestricaoDetalhado; // Tipo detalhado da restrição
   tipo_responsabilidade?: TipoResponsabilidade; // Preponente, Fiscalização ou Contratada
+  wbs_id?: string; // Link com WBS (fase do projeto)
   responsavel?: string;
   responsavel_id?: string;
   apoio?: string;

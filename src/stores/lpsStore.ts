@@ -8,6 +8,7 @@ import {
   AtividadeLPS,
   RestricaoLPS,
   AnotacaoLPS,
+  WBSLPS,
   PlanejamentoLPS,
   StatusAtividadeLPS,
   TipoRestricao,
@@ -24,6 +25,7 @@ interface LPSState {
   atividades: AtividadeLPS[];
   restricoes: RestricaoLPS[];
   anotacoes: AnotacaoLPS[];
+  wbsList: WBSLPS[];
   dataInicio: Date;
   dataFim: Date;
   loading: boolean;
@@ -132,6 +134,7 @@ export const useLPSStore = create<LPSState>()(
         atividades: [],
         restricoes: [],
         anotacoes: [],
+        wbsList: [],
         dataInicio: new Date(2024, 10, 10), // 10/11/2024
         dataFim: new Date(2024, 11, 1), // 01/12/2024
         loading: false,

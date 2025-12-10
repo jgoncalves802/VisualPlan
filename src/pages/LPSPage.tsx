@@ -8,16 +8,18 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarView } from '../components/features/lps/CalendarView';
-import { AnotacoesSection } from '../components/features/lps/AnotacoesSection';
+import { WBSSection } from '../components/features/lps/WBSSection';
 import { RestricoesSection } from '../components/features/lps/RestricoesSection';
 import { ActivityActionsModal } from '../components/features/lps/ActivityActionsModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
 import { LPSA3PrintViewer } from '../components/features/lps/LPSA3PrintViewer';
+import { AnotacoesModal } from '../components/features/lps/AnotacoesModal';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import {
   AtividadeLPS,
   RestricaoLPS,
+  WBSLPS,
   StatusAtividadeLPS,
   CategoriaAtividade,
   TipoAtividadeLPS,
@@ -29,6 +31,7 @@ import {
   RefreshCw,
   Download,
   Settings,
+  FileText,
 } from 'lucide-react';
 
 export const LPSPage: React.FC = () => {
@@ -41,6 +44,7 @@ export const LPSPage: React.FC = () => {
     atividades,
     restricoes,
     anotacoes,
+    wbsList,
     dataInicio,
     dataFim,
     loading,
@@ -75,6 +79,8 @@ export const LPSPage: React.FC = () => {
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
   const [printViewerOpen, setPrintViewerOpen] = useState(false);
+  const [selectedWbs, setSelectedWbs] = useState<WBSLPS | null>(null);
+  const [anotacoesModalOpen, setAnotacoesModalOpen] = useState(false);
 
   // Carregar atividades do cronograma
   useEffect(() => {
@@ -109,6 +115,7 @@ export const LPSPage: React.FC = () => {
         const atividadesMock = module.getAtividadesMockLPS();
         const restricoesMock = module.getRestricoesMockLPS();
         const anotacoesMock = module.getAnotacoesMockLPS();
+        const wbsMock = module.getWBSMockLPS();
 
         atividadesMock.forEach((atividade) => {
           const { id, ...rest } = atividade;
@@ -128,6 +135,13 @@ export const LPSPage: React.FC = () => {
           const { id, ...rest } = anotacao;
           useLPSStore.setState((state) => ({
             anotacoes: [...state.anotacoes, { ...rest, id }],
+          }));
+        });
+
+        wbsMock.forEach((wbs) => {
+          const { id, ...rest } = wbs;
+          useLPSStore.setState((state) => ({
+            wbsList: [...state.wbsList, { ...rest, id }],
           }));
         });
 
@@ -411,14 +425,15 @@ export const LPSPage: React.FC = () => {
 
       {/* Conteúdo principal */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Seção de Anotações (lateral esquerda) */}
+        {/* Seção WBS (lateral esquerda) */}
         <div className="w-80 flex-shrink-0">
-          <AnotacoesSection
-            anotacoes={anotacoes}
+          <WBSSection
+            wbsList={wbsList}
+            atividades={atividades}
             restricoes={restricoes}
-            onAddAnotacao={handleAddAnotacao}
-            onEditAnotacao={handleEditAnotacao}
-            onDeleteAnotacao={handleDeleteAnotacao}
+            selectedWbs={selectedWbs}
+            onSelectWbs={setSelectedWbs}
+            onOpenAnotacoes={() => setAnotacoesModalOpen(true)}
           />
         </div>
 
@@ -543,6 +558,16 @@ export const LPSPage: React.FC = () => {
         dataInicio={dataInicio}
         dataFim={dataFim}
         projetoNome="VisionPlan - Planejamento Puxado"
+      />
+
+      {/* Modal de Anotações */}
+      <AnotacoesModal
+        isOpen={anotacoesModalOpen}
+        onClose={() => setAnotacoesModalOpen(false)}
+        anotacoes={anotacoes}
+        onAddAnotacao={handleAddAnotacao}
+        onEditAnotacao={handleEditAnotacao}
+        onDeleteAnotacao={handleDeleteAnotacao}
       />
     </div>
   );
