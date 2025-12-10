@@ -18,7 +18,12 @@ const parseFiniteNumber = (val: string | number | null | undefined): number | un
 
 const parseValidDate = (val: string | null | undefined): Date | undefined => {
   if (!val || val === '') return undefined;
-  const date = new Date(val + 'T00:00:00');
+  // Parse as local date using year, month, day components to avoid timezone issues
+  const parts = val.split('-');
+  if (parts.length !== 3) return undefined;
+  const [year, month, day] = parts.map(Number);
+  if (!year || !month || !day) return undefined;
+  const date = new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid DST issues
   return isNaN(date.getTime()) ? undefined : date;
 };
 
@@ -236,7 +241,11 @@ export function EditableDateCell({ task, value, onCommit, onCancel, field }: Bas
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date);
     if (isNaN(d.getTime())) return '';
-    return d.toISOString().split('T')[0];
+    // Format as local date (YYYY-MM-DD) to avoid timezone issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const originalValue = formatDateForInput(value);
