@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Task, Dependency, ViewPreset, GanttConfig, ViewPresetConfig } from '../types';
+import type { Task, Dependency, ViewPreset, GanttConfig, ViewPresetConfig, ColumnConfig } from '../types';
 import { GanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
 import { ZoomControl } from './zoom-control';
@@ -40,6 +40,8 @@ export interface GanttChartV2Props extends GanttConfig {
   onDependencyClick?: (dependency: Dependency, fromTask: Task, toTask: Task) => void;
   onTasksChange?: (tasks: Task[]) => void;
   onCellDoubleClick?: (task: Task, columnField: string) => void;
+  onColumnReorder?: (columns: ColumnConfig[]) => void;
+  onTaskSelect?: (task: Task) => void;
 }
 
 export function GanttChartV2({
@@ -66,6 +68,8 @@ export function GanttChartV2({
   onDependencyClick,
   onTasksChange,
   onCellDoubleClick,
+  onColumnReorder,
+  onTaskSelect,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -281,9 +285,11 @@ export function GanttChartV2({
     [onTaskClick]
   );
 
-  const handleTaskSelect = useCallback(
+  const handleTaskSelectInternal = useCallback(
     (task: Task, event?: React.MouseEvent) => {
       if (!task?.id) return;
+      
+      onTaskSelect?.(task);
       
       if (event?.shiftKey && selectedTaskId) {
         const startIndex = flatTasks.findIndex(t => t.id === selectedTaskId);
@@ -559,11 +565,12 @@ export function GanttChartV2({
             selectedTaskIds={selectedTaskIds}
             criticalPathIds={criticalPathIds}
             onTaskClick={handleTaskClick}
-            onTaskSelect={handleTaskSelect}
+            onTaskSelect={handleTaskSelectInternal}
             onTaskContextMenu={handleTaskContextMenu}
             onToggleExpand={handleToggleExpand}
             onWBSUpdate={handleWBSUpdate}
             onCellDoubleClick={onCellDoubleClick}
+            onColumnReorder={onColumnReorder}
           />
         </div>
         

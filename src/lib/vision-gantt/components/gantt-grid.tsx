@@ -43,6 +43,7 @@ interface GanttGridProps {
   selectedTaskId?: string;
   selectedTaskIds?: string[];
   onColumnResize?: (columnIndex: number, newWidth: number) => void;
+  onColumnReorder?: (columns: ColumnConfig[]) => void;
   onWBSUpdate?: (taskId: string, newWBS: string) => void;
   resources?: Resource[];
   allocations?: ResourceAllocation[];
@@ -67,6 +68,7 @@ export function GanttGrid({
   selectedTaskId,
   selectedTaskIds = [],
   onColumnResize,
+  onColumnReorder,
   onWBSUpdate,
   resources = [],
   allocations = [],
@@ -84,6 +86,61 @@ export function GanttGrid({
   
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const cancelledRef = useRef(false);
+  
+  const [dragColumnIndex, setDragColumnIndex] = useState<number | null>(null);
+  const [dropColumnIndex, setDropColumnIndex] = useState<number | null>(null);
+  
+  const handleColumnDragStart = useCallback((e: React.DragEvent, index: number) => {
+    const column = columns[index];
+    if (column.field === 'wbs') {
+      e.preventDefault();
+      return;
+    }
+    setDragColumnIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  }, [columns]);
+  
+  const handleColumnDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragColumnIndex === null) return;
+    const column = columns[index];
+    if (column.field === 'wbs') return;
+    setDropColumnIndex(index);
+  }, [dragColumnIndex, columns]);
+  
+  const handleColumnDragEnd = useCallback(() => {
+    setDragColumnIndex(null);
+    setDropColumnIndex(null);
+  }, []);
+  
+  const handleColumnDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (dragColumnIndex === null || !onColumnReorder) return;
+    
+    const targetColumn = columns[targetIndex];
+    if (targetColumn.field === 'wbs') {
+      handleColumnDragEnd();
+      return;
+    }
+    
+    const newColumns = [...columns];
+    const [movedColumn] = newColumns.splice(dragColumnIndex, 1);
+    
+    let insertIndex = targetIndex;
+    if (dragColumnIndex < targetIndex) {
+      insertIndex = targetIndex;
+    }
+    
+    const wbsIndex = newColumns.findIndex(c => c.field === 'wbs');
+    if (insertIndex <= wbsIndex && wbsIndex >= 0) {
+      insertIndex = wbsIndex + 1;
+    }
+    
+    newColumns.splice(insertIndex, 0, movedColumn);
+    onColumnReorder(newColumns);
+    handleColumnDragEnd();
+  }, [dragColumnIndex, columns, onColumnReorder, handleColumnDragEnd]);
 
   const {
     resizeState,
@@ -155,18 +212,28 @@ export function GanttGrid({
         {columns.map((column, index) => {
           const columnWidth = getColumnWidth(index);
           const isLastColumn = index === columns.length - 1;
+          const isWbsColumn = column?.field === 'wbs';
+          const isDragging = dragColumnIndex === index;
+          const isDropTarget = dropColumnIndex === index && dragColumnIndex !== index;
           
           return (
             <div
               key={column?.field?.toString() ?? index}
-              className="flex items-center relative group"
+              draggable={!isWbsColumn && !!onColumnReorder}
+              onDragStart={(e) => handleColumnDragStart(e, index)}
+              onDragOver={(e) => handleColumnDragOver(e, index)}
+              onDragEnd={handleColumnDragEnd}
+              onDrop={(e) => handleColumnDrop(e, index)}
+              className={`flex items-center relative group ${isDragging ? 'opacity-50' : ''}`}
               style={{ 
                 width: columnWidth, 
                 minWidth: column?.minWidth ?? 50,
                 paddingLeft: '10px',
                 paddingRight: '10px',
                 borderRight: isLastColumn ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                cursor: column?.sortable ? 'pointer' : 'default'
+                cursor: isWbsColumn ? 'default' : onColumnReorder ? 'grab' : column?.sortable ? 'pointer' : 'default',
+                borderLeft: isDropTarget ? '3px solid #3B82F6' : 'none',
+                transition: 'border-left 0.15s ease'
               }}
             >
               <span 

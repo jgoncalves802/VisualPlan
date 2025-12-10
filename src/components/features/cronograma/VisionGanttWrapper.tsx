@@ -11,13 +11,14 @@ import {
 } from '../../../lib/vision-gantt/adapters/visionplan-adapter';
 import type { AtividadeMock, DependenciaAtividade, CalendarioProjeto, TipoDependencia } from '../../../types/cronograma';
 import type { Resource, ResourceAllocation } from '../../../services/resourceService';
-import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
+import { BarChart3, Calendar, Users, AlertTriangle, Clock, TrendingUp, PanelRightClose } from 'lucide-react';
 import { EditDependencyModal } from './EditDependencyModal';
 import { useP6Data } from '../../../hooks/useP6Data';
-import { ColumnSelector } from './ColumnSelector';
 import { BaselineSelector } from './BaselineSelector';
 import { SaveBaselineButton } from './SaveBaselineButton';
-import { DEFAULT_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
+import { DEFAULT_COLUMNS, EXTENDED_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
+import { TaskDetailPanel } from './TaskDetailPanel';
+import { ColumnConfigModal } from './ColumnConfigModal';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -60,6 +61,9 @@ export function VisionGanttWrapper({
 }: VisionGanttWrapperProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
   const [selectedColumns, setSelectedColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
+  const [columnConfigOpen, setColumnConfigOpen] = useState(false);
   
   const [editDependencyModal, setEditDependencyModal] = useState<{
     open: boolean;
@@ -167,9 +171,6 @@ export function VisionGanttWrapper({
     if (task.name !== originalAtividade.nome) {
       changes.nome = task.name;
     }
-    if (task.notes !== undefined && task.notes !== originalAtividade.notas) {
-      changes.notas = task.notes;
-    }
     if (task.description !== undefined && task.description !== originalAtividade.descricao) {
       changes.descricao = task.description;
     }
@@ -203,12 +204,9 @@ export function VisionGanttWrapper({
       changes.progresso = task.progress ?? 0;
     }
     
-    // Check cost fields
-    if (task.cost !== undefined && task.cost !== originalAtividade.custo_previsto) {
-      changes.custo_previsto = task.cost;
-    }
-    if (task.actualCost !== undefined && task.actualCost !== originalAtividade.custo_real) {
-      changes.custo_real = task.actualCost;
+    // Check cost fields (using bac for budget cost)
+    if (task.bac !== undefined && task.bac !== originalAtividade.custo_real) {
+      changes.custo_real = task.bac;
     }
 
     if (Object.keys(changes).length > 0) {
@@ -377,17 +375,43 @@ export function VisionGanttWrapper({
   }, [atividadeMap, projetoId, onAtividadeUpdate]);
 
   const handleTaskClick = useCallback((task: Task) => {
-    // BLOCK CLICK HANDLER FOR WBS/EPS NODES - they cannot be edited here
-    if (task.id.startsWith('wbs-')) {
-      console.log('[VisionGanttWrapper] Blocked click for WBS node:', task.id, '- WBS nodes are read-only');
+    const isWbsNode = task.id.startsWith('wbs-') || task.isWbsNode || task.isReadOnly || task.isGroup;
+    const enrichedTask = { ...task, isWbsNode, isReadOnly: isWbsNode };
+    setSelectedTask(enrichedTask);
+    setShowDetailPanel(true);
+  }, []);
+  
+  const handleTaskSelect = useCallback((task: Task) => {
+    const isWbsNode = task.id.startsWith('wbs-') || task.isWbsNode || task.isReadOnly || task.isGroup;
+    const enrichedTask = { ...task, isWbsNode, isReadOnly: isWbsNode };
+    setSelectedTask(enrichedTask);
+    setShowDetailPanel(true);
+  }, []);
+  
+  const handleCloseDetailPanel = useCallback(() => {
+    setShowDetailPanel(false);
+    setSelectedTask(null);
+  }, []);
+  
+  const handleEditFromDetail = useCallback((taskId: string) => {
+    if (taskId.startsWith('wbs-')) {
+      console.log('[VisionGanttWrapper] Blocked edit for WBS node:', taskId);
       return;
     }
-    
-    const atividade = atividadeMap.get(task.id);
+    const atividade = atividadeMap.get(taskId);
     if (atividade && onAtividadeClick) {
       onAtividadeClick(atividade);
     }
   }, [atividadeMap, onAtividadeClick]);
+  
+  const handleColumnReorder = useCallback((newColumns: ColumnConfig[]) => {
+    setSelectedColumns(newColumns);
+  }, []);
+  
+  const handleColumnConfigSave = useCallback((newColumns: ColumnConfig[]) => {
+    setSelectedColumns(newColumns);
+    setColumnConfigOpen(false);
+  }, []);
 
   const handleDependencyCreate = useCallback((dep: Dependency) => {
     if (!onDependenciaCreate) return;
@@ -395,11 +419,6 @@ export function VisionGanttWrapper({
     const dependencia = ganttDependencyToDependencia(dep);
     onDependenciaCreate(dependencia);
   }, [onDependenciaCreate]);
-
-  const _handleDependencyDelete = useCallback((depId: string) => {
-    if (!onDependenciaDelete) return;
-    onDependenciaDelete(depId);
-  }, [onDependenciaDelete]);
 
   const handleDependencyClick = useCallback((dependency: Dependency, fromTask: Task, toTask: Task) => {
     setEditDependencyModal({
@@ -560,14 +579,28 @@ export function VisionGanttWrapper({
             loading={p6Data.loading}
           />
           
-          <ColumnSelector
-            selectedColumns={selectedColumns}
-            onColumnsChange={setSelectedColumns}
-          />
+          <button
+            onClick={() => setColumnConfigOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <PanelRightClose className="w-4 h-4" />
+            Colunas
+          </button>
+          
+          {showDetailPanel && (
+            <button
+              onClick={handleCloseDetailPanel}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Fechar Detalhes
+            </button>
+          )}
         </div>
       </div>
 
-      <GanttChartV2
+      <div className="flex">
+        <div className={`flex-1 ${showDetailPanel ? 'mr-80' : ''} transition-all duration-300`}>
+          <GanttChartV2
         tasks={localTasks}
         dependencies={baseGanttData.dependencies}
         resources={baseGanttData.resources}
@@ -593,7 +626,29 @@ export function VisionGanttWrapper({
         nearCriticalPathIds={criticalPath.nearCriticalPathIds}
         violationTaskIds={criticalPath.violations.map(v => v.toTaskId)}
         conflictTaskIds={baseGanttData.conflictTaskIds}
-        className="rounded-lg shadow-sm"
+            className="rounded-lg shadow-sm"
+            onColumnReorder={handleColumnReorder}
+            onTaskSelect={handleTaskSelect}
+          />
+        </div>
+        
+        {showDetailPanel && (
+          <div className="fixed right-0 top-0 h-full z-30">
+            <TaskDetailPanel
+              task={selectedTask}
+              onClose={handleCloseDetailPanel}
+              onEdit={handleEditFromDetail}
+            />
+          </div>
+        )}
+      </div>
+      
+      <ColumnConfigModal
+        isOpen={columnConfigOpen}
+        onClose={() => setColumnConfigOpen(false)}
+        activeColumns={selectedColumns}
+        availableColumns={EXTENDED_COLUMNS}
+        onSave={handleColumnConfigSave}
       />
       
       <EditDependencyModal
