@@ -52,6 +52,33 @@ const PRIORITY_MAP: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
   'Crítica': 'critical',
 };
 
+/**
+ * Parse a date string as a local date, avoiding timezone issues.
+ * Accepts YYYY-MM-DD format and creates a Date at noon local time.
+ */
+function parseLocalDate(dateStr: string | Date | null | undefined): Date {
+  if (!dateStr) return new Date();
+  if (dateStr instanceof Date) return dateStr;
+  
+  // If it's a YYYY-MM-DD string, parse as local
+  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0); // Noon to avoid DST issues
+  }
+  
+  // For ISO strings or other formats, try standard parsing but adjust to local noon
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) {
+    // Extract the date components and recreate at noon local time
+    const year = parsed.getFullYear();
+    const month = parsed.getMonth();
+    const day = parsed.getDate();
+    return new Date(year, month, day, 12, 0, 0);
+  }
+  
+  return new Date();
+}
+
 export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: { 
   id?: string; 
   nome?: string; 
@@ -66,8 +93,9 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
   const isWbsOrEps = atividade.is_wbs_node || atividade.is_eps_node || atividade.tipo === 'WBS';
   
   // Calculate variances if baseline data is present
-  const startDate = new Date(atividade.data_inicio);
-  const endDate = new Date(atividade.data_fim);
+  // Use parseLocalDate to avoid timezone issues
+  const startDate = parseLocalDate(atividade.data_inicio);
+  const endDate = parseLocalDate(atividade.data_fim);
   
   // Calculate EVM metrics
   const bcws = atividade.valor_planejado; // Planned Value

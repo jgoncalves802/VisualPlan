@@ -292,6 +292,10 @@ export function GanttGrid({
           borderBottom: `1px solid ${headerColors.border}`
         }}
       >
+        {/* Placeholder to match row drag handle width for column alignment */}
+        {enableRowDragDrop && (
+          <div className="flex-shrink-0" style={{ width: 20 }} />
+        )}
         {columns.map((column, index) => {
           const columnWidth = getColumnWidth(index);
           const isLastColumn = index === columns.length - 1;
@@ -475,13 +479,14 @@ export function GanttGrid({
                 }
               }}
             >
-              {canDragRow && (
+              {/* Placeholder/drag handle to maintain column alignment */}
+              {enableRowDragDrop && (
                 <div
-                  className="flex-shrink-0 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity cursor-grab"
+                  className={`flex-shrink-0 flex items-center justify-center transition-opacity ${canDragRow ? 'opacity-0 group-hover/row:opacity-100 cursor-grab' : ''}`}
                   style={{ width: 20, height: rowHeight }}
-                  title="Arraste para mover"
+                  title={canDragRow ? "Arraste para mover" : undefined}
                 >
-                  <GripVertical size={14} className="text-gray-400" />
+                  {canDragRow && <GripVertical size={14} className="text-gray-400" />}
                 </div>
               )}
               
