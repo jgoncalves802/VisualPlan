@@ -224,7 +224,7 @@ export const CronogramaPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
             {visualizacao === VisualizacaoCronograma.GANTT ? (
               <div className="flex-1 min-h-[600px]">
                 <VisionGanttWrapper
@@ -433,7 +433,7 @@ export const CronogramaPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50">
+    <div className="flex flex-col min-h-full w-full bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
