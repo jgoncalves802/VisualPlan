@@ -94,7 +94,7 @@ const menuItems: MenuItem[] = [
     id: 'cronograma',
     label: 'Gantt / Cronograma',
     icon: <Calendar className="w-5 h-5" />,
-    path: '/cronograma/proj-1',
+    path: '/cronograma',
   },
   {
     id: 'kanban',

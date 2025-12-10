@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { 
       icon: Calendar, 
       label: 'Gantt / Cronograma', 
-      path: '/cronograma/proj-1',
+      path: '/cronograma',
       roles: ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'FISCALIZACAO_LEAD']
     },
     { 

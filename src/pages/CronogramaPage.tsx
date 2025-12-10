@@ -19,16 +19,24 @@ import { CronogramaStats } from '../components/features/cronograma/CronogramaSta
 import { AtividadeActionsModal } from '../components/features/cronograma/AtividadeActionsModal';
 import { ManageDependenciesModal } from '../components/features/cronograma/ManageDependenciesModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
+import { EpsSelector } from '../components/features/cronograma/EpsSelector';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { RestricaoLPS } from '../types/lps';
+import { ArrowLeft } from 'lucide-react';
 
 /**
  * Página do Cronograma - VisionGantt
  */
 export const CronogramaPage: React.FC = () => {
-  const { projetoId } = useParams<{ projetoId: string }>();
+  const { projetoId: urlProjetoId } = useParams<{ projetoId: string }>();
+  
+  const [selectedProjetoId, setSelectedProjetoId] = useState<string | null>(urlProjetoId || null);
+  const [selectedProjetoNome, setSelectedProjetoNome] = useState<string>('');
+  
+  const projetoId = selectedProjetoId || urlProjetoId;
+  
   const {
     atividades,
     todasAtividades,
@@ -44,11 +52,21 @@ export const CronogramaPage: React.FC = () => {
     atualizarDependencia,
     excluirDependencia,
     calcularCaminhoCritico,
-  } = useCronograma(projetoId || 'proj-1');
+  } = useCronograma(projetoId || '');
 
   const { calendarios } = useCronogramaStore();
   const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
   const { usuario } = useAuthStore();
+  
+  const handleSelectProject = (projectId: string, projectName: string) => {
+    setSelectedProjetoId(projectId);
+    setSelectedProjetoNome(projectName);
+  };
+  
+  const handleBackToSelection = () => {
+    setSelectedProjetoId(null);
+    setSelectedProjetoNome('');
+  };
   
   const { 
     resources, 
@@ -212,7 +230,7 @@ export const CronogramaPage: React.FC = () => {
                 <VisionGanttWrapper
                   atividades={todasAtividades}
                   dependencias={dependencias}
-                  projetoId={projetoId || 'proj-1'}
+                  projetoId={projetoId!}
                   empresaId={usuario?.empresaId}
                   resources={resources}
                   allocations={allocations}
@@ -256,14 +274,14 @@ export const CronogramaPage: React.FC = () => {
           setAtividadeSelecionada(null);
         }}
         atividadeId={atividadeSelecionada}
-        projetoId={projetoId || 'proj-1'}
+        projetoId={projetoId!}
         onSave={async (dados) => {
           if (atividadeSelecionada) {
             await atualizarAtividade(atividadeSelecionada, dados);
           } else {
             await adicionarAtividade({
               ...dados,
-              projeto_id: projetoId || 'proj-1',
+              projeto_id: projetoId,
             } as any);
           }
           setModalTaskOpen(false);
@@ -373,15 +391,45 @@ export const CronogramaPage: React.FC = () => {
     );
   }
 
+  if (!projetoId) {
+    return (
+      <div className="flex flex-col h-full w-full bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Selecione um projeto da estrutura EPS para abrir o cronograma
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 p-6 overflow-auto">
+          <EpsSelector onSelectProject={handleSelectProject} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full w-full bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Gerencie o cronograma do projeto com VisionGantt
-            </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToSelection}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Voltar para seleção de projetos"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedProjetoNome || 'Gerencie o cronograma do projeto com VisionGantt'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -396,7 +444,7 @@ export const CronogramaPage: React.FC = () => {
           onNovaDependencia={handleNovaDependencia}
           onToggleFilters={() => setShowFilters(!showFilters)}
           showFilters={showFilters}
-          projetoNome="Projeto VisionPlan"
+          projetoNome={selectedProjetoNome || "Projeto VisionPlan"}
           presentationMode={presentationMode}
           onTogglePresentationMode={togglePresentationMode}
         />

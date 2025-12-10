@@ -68,8 +68,9 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/wbs" element={<WBSPage />} />
+            <Route path="/cronograma" element={<CronogramaPage />} />
             <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
-            <Route path="/gantt" element={<Navigate to="/cronograma/proj-1" replace />} />
+            <Route path="/gantt" element={<Navigate to="/cronograma" replace />} />
             <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/lps" element={<LPSPage />} />
             <Route path="/lps/:projetoId" element={<LPSPage />} />

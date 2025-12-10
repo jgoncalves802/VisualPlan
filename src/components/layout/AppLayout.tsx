@@ -39,7 +39,7 @@ export const AppLayout: React.FC = () => {
       id: 'planejamento',
       label: 'Planejamento',
       items: [
-        { icon: Calendar, label: 'Cronograma', path: '/cronograma/proj-1', roles: managementRoles },
+        { icon: Calendar, label: 'Cronograma', path: '/cronograma', roles: managementRoles },
         { icon: FileText, label: 'LPS', path: '/lps', roles: managementRoles },
       ]
     },
