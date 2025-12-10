@@ -102,4 +102,5 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Incremental Sync**: `SYNC_TASKS` action in `useGanttController` uses hash-based diffing to detect changes (name, dates, progress, duration, status, expanded) - no full page reloads when adding/editing rows
     - **Skeleton Loader**: Grid-style skeleton with shimmer animation for initial load, mimics actual Gantt layout
     - **Fade-in Animation**: New rows animate in with 0.3s fade and highlight effect using CSS keyframes
+    - **Scroll Preservation**: Inline edits preserve scroll position using useLayoutEffect to capture scroll before render and restore after DOM commit
     - **No Reload CRUD**: All create/update/delete operations update UI instantly without page refresh
