@@ -57,7 +57,7 @@ export const CronogramaPage: React.FC = () => {
     calcularCaminhoCritico,
   } = useCronograma(projetoId || '');
 
-  const { calendarios } = useCronogramaStore();
+  const { calendarios, calendario_padrao } = useCronogramaStore();
   const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
   const { usuario } = useAuthStore();
   
@@ -409,6 +409,7 @@ export const CronogramaPage: React.FC = () => {
             <ResourceWorkspace
               empresaId={usuario.empresaId}
               selectedTask={selectedTaskForResources}
+              projectCalendarId={calendario_padrao}
               onAssignResource={handleAssignResource}
               onUnassignResource={handleUnassignResource}
             />

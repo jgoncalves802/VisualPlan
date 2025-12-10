@@ -5,7 +5,7 @@
  * RF-L06 to RF-L19 requirements
  */
 
-import type { Task, Resource } from './index';
+import type { Resource } from './index';
 
 // ============================================================================
 // RF-L06 to RF-L10: ADVANCED RESOURCE ALLOCATION

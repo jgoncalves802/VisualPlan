@@ -2,15 +2,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { 
   Users, Search, ChevronDown, ChevronRight, 
   User, Wrench, Package, DollarSign, Clock, Plus, Minus,
-  GripVertical, Calendar, AlertTriangle, Check, Boxes
+  GripVertical, Calendar, AlertTriangle, Check, Boxes, Info
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { resourceService, Resource, ResourceCategory, ResourceAllocation } from '@/services/resourceService';
 import type { Task } from '@/lib/vision-gantt/types';
+import { getCalendarInheritanceLabel, getCalendarInheritanceBadgeColor, type ResolvedCalendar } from '@/lib/vision-gantt/utils/calendar-inheritance';
 
 interface ResourceWorkspaceProps {
   empresaId: string;
   selectedTask: Task | null;
+  projectCalendarId?: string;
   onAssignResource: (resourceId: string, taskId: string) => void;
   onUnassignResource: (allocationId: string) => void;
 }
@@ -23,9 +25,21 @@ const CATEGORY_CONFIG: Record<ResourceCategory, { label: string; icon: React.Ele
   BUDGET: { label: 'Orcamento', icon: Wrench, color: 'bg-gray-100 text-gray-700' },
 };
 
+function resolveCalendarSource(
+  resourceCalendarId?: string | null,
+  activityCalendarId?: string | null,
+  projectCalendarId?: string | null
+): ResolvedCalendar['source'] {
+  if (resourceCalendarId) return 'resource';
+  if (activityCalendarId) return 'activity';
+  if (projectCalendarId) return 'project';
+  return 'default';
+}
+
 export function ResourceWorkspace({
   empresaId,
   selectedTask,
+  projectCalendarId,
   onAssignResource,
   onUnassignResource,
 }: ResourceWorkspaceProps) {
@@ -242,25 +256,41 @@ export function ResourceWorkspace({
           {allocations.length > 0 && (
             <div className="mt-2 space-y-1">
               <span className="text-xs font-medium text-gray-600">Alocados:</span>
-              {allocations.map(alloc => (
-                <div 
-                  key={alloc.id}
-                  className="flex items-center justify-between bg-white px-2 py-1 rounded border"
-                >
-                  <span className="text-xs truncate">{alloc.resource?.nome || 'Recurso'}</span>
-                  <div className="flex items-center gap-1">
-                    <Badge variant="default" className="text-xs">
-                      {alloc.unidades}%
-                    </Badge>
-                    <button
-                      onClick={() => handleUnassign(alloc)}
-                      className="p-1 hover:bg-red-100 rounded text-red-500"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
+              {allocations.map(alloc => {
+                const calendarSource = resolveCalendarSource(
+                  alloc.resource?.calendarioId,
+                  selectedTask?.calendarId,
+                  projectCalendarId
+                );
+                
+                return (
+                  <div 
+                    key={alloc.id}
+                    className="flex flex-col bg-white px-2 py-1.5 rounded border gap-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium truncate">{alloc.resource?.nome || 'Recurso'}</span>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="default" className="text-xs">
+                          {alloc.unidades}%
+                        </Badge>
+                        <button
+                          onClick={() => handleUnassign(alloc)}
+                          className="p-1 hover:bg-red-100 rounded text-red-500"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-gray-400" />
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${getCalendarInheritanceBadgeColor(calendarSource)}`}>
+                        {getCalendarInheritanceLabel(calendarSource)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
