@@ -98,3 +98,8 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Cache-first loading**: Column configs and activities load instantly from cache, sync with Supabase in background when expired
     - **Optimistic inserts**: New activities appear immediately with temp ID, persist to database in background
     - **Batch update manager**: 500ms debounce groups multiple rapid edits into single database requests
+*   **UX Improvements - Dynamic Interactions (ClickUp/Google Sheets-inspired)**:
+    - **Incremental Sync**: `SYNC_TASKS` action in `useGanttController` uses hash-based diffing to detect changes (name, dates, progress, duration, status, expanded) - no full page reloads when adding/editing rows
+    - **Skeleton Loader**: Grid-style skeleton with shimmer animation for initial load, mimics actual Gantt layout
+    - **Fade-in Animation**: New rows animate in with 0.3s fade and highlight effect using CSS keyframes
+    - **No Reload CRUD**: All create/update/delete operations update UI instantly without page refresh
