@@ -252,7 +252,7 @@ export const CronogramaPage: React.FC = () => {
                         duracao_dias: 1,
                         progresso: 0,
                         status: 'A Fazer',
-                        tipo: 'Atividade',
+                        tipo: 'Tarefa',
                       } as any);
                     } catch (error) {
                       console.error('Erro ao criar atividade:', error);
