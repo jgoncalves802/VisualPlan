@@ -104,3 +104,6 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Fade-in Animation**: New rows animate in with 0.3s fade and highlight effect using CSS keyframes
     - **Scroll Preservation**: Inline edits preserve scroll position using useLayoutEffect to capture scroll before render and restore after DOM commit
     - **No Reload CRUD**: All create/update/delete operations update UI instantly without page refresh
+    - **Inline Editing**: GanttGrid supports inline editing with onCellEdit handler and enableInlineEdit prop for spreadsheet-like experience
+    - **Column Alignment Fix**: WBS indentation only applies to name column, not affecting alignment of other columns
+    - **Automatic Activity Codes**: P6-style activity codes (A1010, A1020, etc.) are auto-generated when creating activities. Codes increment by 10 and are stored in `codigo` field (distinct from `edt` which is for WBS codes)
