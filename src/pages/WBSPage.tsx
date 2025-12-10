@@ -22,8 +22,7 @@ import {
   Users,
   Eye,
   Plus,
-  Trash2,
-  CheckCircle
+  Trash2
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { epsService, EpsNode } from '../services/epsService';
@@ -474,12 +473,40 @@ export const WBSPage: React.FC = () => {
     navigate(`/cronograma/${projectId}`);
   };
 
+  // Generate EDT code automatically
+  const generateEdtCode = (parent: EpsNode | null): string => {
+    if (!parent) {
+      // For EPS (root level projects), find the next sequential number
+      const existingCodes = epsTree
+        .map(node => parseInt(node.codigo, 10))
+        .filter(num => !isNaN(num));
+      const nextNum = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
+      return nextNum.toString();
+    } else {
+      // For WBS (child nodes), use parent.code + "." + next sequential number
+      const siblings = parent.children || [];
+      const parentCode = parent.codigo;
+      
+      // Extract the last number from sibling codes that start with parentCode
+      const siblingNumbers = siblings
+        .map(s => {
+          const match = s.codigo.match(new RegExp(`^${parentCode.replace(/\./g, '\\.')}\\.?(\\d+)$`));
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(num => num > 0);
+      
+      const nextNum = siblingNumbers.length > 0 ? Math.max(...siblingNumbers) + 1 : 1;
+      return `${parentCode}.${nextNum}`;
+    }
+  };
+
   // Modal handlers
   const openCreateModal = (parent: EpsNode | null = null) => {
+    const autoCode = generateEdtCode(parent);
     setModalMode('create');
     setParentNode(parent);
     setEditingNode(null);
-    setFormData({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
+    setFormData({ codigo: autoCode, nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
     setShowModal(true);
   };
 
@@ -767,13 +794,19 @@ export const WBSPage: React.FC = () => {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código EDT {modalMode === 'create' && <span className="text-xs text-gray-500">(gerado automaticamente)</span>}
+                </label>
                 <input
                   type="text"
                   value={formData.codigo}
                   onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                  placeholder={isCreatingWbs ? 'Ex: 1.1, 1.2' : 'Ex: PRJ-001'}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  readOnly={modalMode === 'create'}
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    modalMode === 'create' 
+                      ? 'bg-gray-100 text-gray-600 cursor-not-allowed' 
+                      : 'focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
+                  }`}
                 />
               </div>
               <div>
