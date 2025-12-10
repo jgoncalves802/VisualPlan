@@ -18,9 +18,12 @@ import {
   Save,
   X,
   AlertCircle,
+  AlertTriangle,
   Users,
   Eye,
-  Settings
+  Plus,
+  Trash2,
+  CheckCircle
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { epsService, EpsNode } from '../services/epsService';
@@ -42,6 +45,9 @@ interface WBSTreeNodeProps {
   onNavigate: (id: string) => void;
   visibleNodeIds: Set<string>;
   isAdmin: boolean;
+  onAddChild?: (node: EpsNode) => void;
+  onEdit?: (node: EpsNode) => void;
+  onDelete?: (node: EpsNode) => void;
 }
 
 const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
@@ -58,6 +64,9 @@ const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
   onNavigate,
   visibleNodeIds,
   isAdmin,
+  onAddChild,
+  onEdit,
+  onDelete,
 }) => {
   const isExpanded = expandedNodes.has(node.id);
   const hasChildren = node.children && node.children.length > 0;
@@ -92,7 +101,7 @@ const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+        className={`group flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
           isProject 
             ? 'bg-purple-50 hover:bg-purple-100 border border-purple-200' 
             : 'hover:bg-gray-100'
@@ -203,6 +212,33 @@ const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
           </div>
         )}
 
+        {/* Action buttons */}
+        {canEditWbs && (
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddChild?.(node); }}
+              className="p-1.5 text-green-600 hover:bg-green-100 rounded"
+              title="Adicionar WBS filho"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit?.(node); }}
+              className="p-1.5 text-blue-600 hover:bg-blue-100 rounded"
+              title="Editar"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete?.(node); }}
+              className="p-1.5 text-red-600 hover:bg-red-100 rounded"
+              title="Excluir"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {isProject && (
           <button
             onClick={() => onNavigate(node.id)}
@@ -239,6 +275,9 @@ const WBSTreeNode: React.FC<WBSTreeNodeProps> = ({
               onNavigate={onNavigate}
               visibleNodeIds={visibleNodeIds}
               isAdmin={isAdmin}
+              onAddChild={onAddChild}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -261,6 +300,16 @@ export const WBSPage: React.FC = () => {
   const [filterProject, setFilterProject] = useState<string>('all');
   const [editingWeight, setEditingWeight] = useState<string | null>(null);
   const [tempWeight, setTempWeight] = useState<string>('');
+
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [parentNode, setParentNode] = useState<EpsNode | null>(null);
+  const [editingNode, setEditingNode] = useState<EpsNode | null>(null);
+  const [formData, setFormData] = useState({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState<EpsNode | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const empresaId = usuario?.empresaId;
   const isAdmin = usuario?.perfilAcesso === 'ADMIN';
@@ -425,6 +474,92 @@ export const WBSPage: React.FC = () => {
     navigate(`/cronograma/${projectId}`);
   };
 
+  // Modal handlers
+  const openCreateModal = (parent: EpsNode | null = null) => {
+    setModalMode('create');
+    setParentNode(parent);
+    setEditingNode(null);
+    setFormData({ codigo: '', nome: '', descricao: '', cor: '#3B82F6', pesoEstimado: '100' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (node: EpsNode) => {
+    setModalMode('edit');
+    setParentNode(null);
+    setEditingNode(node);
+    setFormData({
+      codigo: node.codigo,
+      nome: node.nome,
+      descricao: node.descricao || '',
+      cor: node.cor || '#3B82F6',
+      pesoEstimado: ((node.pesoEstimado || 1) * 100).toFixed(1),
+    });
+    setShowModal(true);
+  };
+
+  const openDeleteModal = (node: EpsNode) => {
+    setNodeToDelete(node);
+    setShowDeleteModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!empresaId || !formData.codigo || !formData.nome) {
+      toast.error('Código e nome são obrigatórios');
+      return;
+    }
+    setSaving(true);
+    try {
+      const pesoEstimado = parseFloat(formData.pesoEstimado) / 100;
+      if (modalMode === 'create') {
+        await epsService.create({
+          empresaId,
+          parentId: parentNode?.id || null,
+          codigo: formData.codigo,
+          nome: formData.nome,
+          descricao: formData.descricao || undefined,
+          cor: formData.cor,
+          pesoEstimado: parentNode ? pesoEstimado : 1.0,
+        });
+        toast.success(parentNode ? 'WBS criado com sucesso!' : 'Projeto (EPS) criado com sucesso!');
+      } else if (editingNode) {
+        await epsService.update(editingNode.id, {
+          codigo: formData.codigo,
+          nome: formData.nome,
+          descricao: formData.descricao || null,
+          cor: formData.cor,
+          pesoEstimado: editingNode.nivel > 0 ? pesoEstimado : 1.0,
+        });
+        toast.success('Atualizado com sucesso!');
+      }
+      setShowModal(false);
+      loadData();
+    } catch (error) {
+      console.error('Error saving:', error);
+      toast.error('Erro ao salvar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!nodeToDelete) return;
+    setSaving(true);
+    try {
+      await epsService.delete(nodeToDelete.id);
+      toast.success(nodeToDelete.nivel === 0 ? 'Projeto excluído!' : 'WBS excluído!');
+      setShowDeleteModal(false);
+      setNodeToDelete(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast.error('Erro ao excluir');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isCreatingWbs = parentNode !== null;
+
   const stats = useMemo(() => {
     const countNodes = (nodes: EpsNode[]): { projects: number; wbs: number } => {
       let projects = 0;
@@ -482,11 +617,11 @@ export const WBSPage: React.FC = () => {
               <span className="text-sm font-medium text-blue-900">{stats.wbs} Itens WBS</span>
             </div>
             <button
-              onClick={() => navigate('/admin/eps')}
+              onClick={() => openCreateModal(null)}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              <Settings className="w-4 h-4" />
-              Gerenciar EPS/WBS
+              <Plus className="w-4 h-4" />
+              Novo Projeto (EPS)
             </button>
           </div>
         </div>
@@ -557,11 +692,11 @@ export const WBSPage: React.FC = () => {
               </p>
               {!searchTerm && filterProject === 'all' && (
                 <button
-                  onClick={() => navigate('/admin/eps')}
+                  onClick={() => openCreateModal(null)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  Criar Projeto EPS/WBS
+                  <Plus className="w-4 h-4" />
+                  Criar Projeto (EPS)
                 </button>
               )}
             </div>
@@ -584,6 +719,9 @@ export const WBSPage: React.FC = () => {
                 onNavigate={handleNavigate}
                 visibleNodeIds={visibleNodeIds}
                 isAdmin={isAdmin}
+                onAddChild={openCreateModal}
+                onEdit={openEditModal}
+                onDelete={openDeleteModal}
               />
             ))}
           </div>
@@ -612,6 +750,143 @@ export const WBSPage: React.FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {modalMode === 'create' 
+                  ? (isCreatingWbs ? `Novo WBS em ${parentNode?.nome}` : 'Novo Projeto (EPS)')
+                  : `Editar ${editingNode?.nivel === 0 ? 'Projeto' : 'WBS'}`}
+              </h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
+                <input
+                  type="text"
+                  value={formData.codigo}
+                  onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                  placeholder={isCreatingWbs ? 'Ex: 1.1, 1.2' : 'Ex: PRJ-001'}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+                <input
+                  type="text"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder={isCreatingWbs ? 'Ex: Fundações, Estrutura' : 'Ex: Construção Edifício A'}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <textarea
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+                  <input
+                    type="color"
+                    value={formData.cor}
+                    onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                    className="w-full h-10 rounded-lg cursor-pointer"
+                  />
+                </div>
+                {(isCreatingWbs || (editingNode && editingNode.nivel > 0)) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Peso (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.pesoEstimado}
+                      onChange={(e) => setFormData({ ...formData, pesoEstimado: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={saving || !formData.codigo || !formData.nome}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {modalMode === 'create' ? 'Criar' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && nodeToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-red-600">Confirmar Exclusão</h3>
+              <button onClick={() => setShowDeleteModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-gray-900">
+                    Tem certeza que deseja excluir <strong>{nodeToDelete.nome}</strong>?
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {nodeToDelete.children && nodeToDelete.children.length > 0
+                      ? 'Todos os itens filhos também serão excluídos.'
+                      : 'Esta ação não pode ser desfeita.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={saving}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
