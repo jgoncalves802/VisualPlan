@@ -125,6 +125,61 @@ export const epsService = {
     return roots;
   },
 
+  /**
+   * Get WBS tree for a specific project (EPS node)
+   * Returns the project node and all its WBS children as a flat list
+   */
+  async getProjectWbsTree(projetoId: string): Promise<EpsNode[]> {
+    // First get the project node
+    const { data: projectNode, error: projectError } = await supabase
+      .from('eps_nodes')
+      .select(`
+        *,
+        obs_nodes:responsible_manager_id (
+          id,
+          nome,
+          codigo
+        )
+      `)
+      .eq('id', projetoId)
+      .eq('ativo', true)
+      .single();
+
+    if (projectError || !projectNode) {
+      console.error('Error fetching project node:', projectError);
+      return [];
+    }
+
+    // Then get all descendants (recursive)
+    const result: EpsNode[] = [mapFromDB(projectNode)];
+    
+    const getChildren = async (parentId: string): Promise<void> => {
+      const { data: children, error: childError } = await supabase
+        .from('eps_nodes')
+        .select(`
+          *,
+          obs_nodes:responsible_manager_id (
+            id,
+            nome,
+            codigo
+          )
+        `)
+        .eq('parent_id', parentId)
+        .eq('ativo', true)
+        .order('ordem', { ascending: true });
+
+      if (childError || !children) return;
+
+      for (const child of children) {
+        result.push(mapFromDB(child));
+        await getChildren(child.id);
+      }
+    };
+
+    await getChildren(projetoId);
+    return result;
+  },
+
   async create(data: {
     empresaId: string;
     parentId?: string | null;

@@ -194,8 +194,9 @@ export interface AtividadeMock {
   edt?: string;
   nome: string;
   descricao?: string;
-  tipo: 'Tarefa' | 'Marco' | 'Fase';
+  tipo: 'Tarefa' | 'Marco' | 'Fase' | 'WBS';
   parent_id?: string; // ID da atividade mãe (para hierarquia)
+  wbs_id?: string; // ID do nó WBS pai (vincula atividade ao WBS)
   data_inicio: string;
   data_fim: string;
   duracao_dias: number;
@@ -210,6 +211,12 @@ export interface AtividadeMock {
   e_critica?: boolean;
   folga_total?: number;
   calendario_id?: string;
+  
+  // WBS/EPS Control
+  is_wbs_node?: boolean; // True se for um nó WBS (somente leitura no cronograma)
+  is_eps_node?: boolean; // True se for um nó EPS/Projeto (somente leitura no cronograma)
+  wbs_nivel?: number; // Nível na hierarquia WBS
+  wbs_cor?: string; // Cor do WBS para visualização
   
   // Custos e Valores
   custo_planejado?: number;        // Custo planejado (R$)

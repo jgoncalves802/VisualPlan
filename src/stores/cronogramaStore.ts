@@ -19,6 +19,38 @@ import {
   DiaTrabalho,
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
+import { epsService, EpsNode } from '../services/epsService';
+
+/**
+ * Converts EPS/WBS nodes to AtividadeMock format for display in Gantt chart
+ * WBS nodes are read-only summary tasks that organize activities
+ */
+function convertWbsToAtividades(wbsNodes: EpsNode[], projetoId: string): AtividadeMock[] {
+  const now = new Date().toISOString();
+  
+  return wbsNodes.map(node => ({
+    id: `wbs-${node.id}`,
+    projeto_id: projetoId,
+    codigo: node.codigo,
+    edt: node.codigo,
+    nome: node.nome,
+    descricao: node.descricao || undefined,
+    tipo: 'WBS' as const,
+    parent_id: node.parentId ? `wbs-${node.parentId}` : undefined,
+    wbs_id: node.id,
+    data_inicio: now.split('T')[0],
+    data_fim: now.split('T')[0],
+    duracao_dias: 0,
+    progresso: 0,
+    status: 'Planejada',
+    is_wbs_node: node.nivel > 0,
+    is_eps_node: node.nivel === 0,
+    wbs_nivel: node.nivel,
+    wbs_cor: node.cor,
+    created_at: node.createdAt,
+    updated_at: node.updatedAt,
+  }));
+}
 
 /**
  * Aplica auto-scheduling: recalcula datas das atividades com base nas dependências
@@ -424,7 +456,26 @@ export const useCronogramaStore = create<CronogramaState>()(
         set({ isLoading: true, erro: null });
 
         try {
-          const atividades = await cronogramaService.getAtividades(projetoId);
+          // Load activities and WBS in parallel
+          const [atividades, wbsNodes] = await Promise.all([
+            cronogramaService.getAtividades(projetoId),
+            epsService.getProjectWbsTree(projetoId),
+          ]);
+          
+          // Convert WBS nodes to activities (read-only summary tasks)
+          const wbsAsAtividades = convertWbsToAtividades(wbsNodes, projetoId);
+          
+          // Update activities to link to their WBS parent
+          const atividadesComWbs = atividades.map(a => {
+            // If activity has a wbs_id, update its parent_id to point to the WBS node
+            if (a.wbs_id && !a.parent_id) {
+              return { ...a, parent_id: `wbs-${a.wbs_id}` };
+            }
+            return a;
+          });
+          
+          // Combine WBS nodes (first) with activities (after)
+          const todasAtividades = [...wbsAsAtividades, ...atividadesComWbs];
           
           // Detecta automaticamente se deve usar HORAS
           const atividadesComHoras = atividades.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
@@ -433,13 +484,13 @@ export const useCronogramaStore = create<CronogramaState>()(
           // Ajusta escala e unidade automaticamente
           if (usarHoras) {
             set({ 
-              atividades, 
+              atividades: todasAtividades, 
               isLoading: false,
               escala: EscalaTempo.HORA,
               unidadeTempoPadrao: UnidadeTempo.HORAS,
             });
           } else {
-            set({ atividades, isLoading: false });
+            set({ atividades: todasAtividades, isLoading: false });
           }
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao carregar atividades';
