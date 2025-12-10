@@ -149,11 +149,80 @@ export const CronogramaPage: React.FC = () => {
 
   if (isLoading && atividades.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando cronograma...</p>
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+          </div>
         </div>
+        
+        <div className="flex-1 overflow-hidden p-4">
+          <div className="h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="flex border-b border-gray-200 bg-gray-100">
+              {[40, 180, 100, 100, 80, 1].map((w, i) => (
+                <div 
+                  key={i}
+                  className="h-10 border-r border-gray-200 flex items-center px-2"
+                  style={{ width: i === 5 ? 'auto' : w, flex: i === 5 ? 1 : 'none' }}
+                >
+                  <div className="h-3 bg-gray-300 rounded animate-pulse" style={{ width: '70%' }}></div>
+                </div>
+              ))}
+            </div>
+            
+            {Array.from({ length: 10 }).map((_, rowIndex) => (
+              <div 
+                key={rowIndex}
+                className={`flex border-b border-gray-100 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                style={{ height: 36 }}
+              >
+                {[40, 180, 100, 100, 80].map((w, colIndex) => (
+                  <div 
+                    key={colIndex}
+                    className="border-r border-gray-100 flex items-center px-2"
+                    style={{ width: w }}
+                  >
+                    <div 
+                      className="h-3 bg-gray-200 rounded animate-pulse skeleton-shimmer"
+                      style={{ 
+                        width: colIndex === 0 ? '40%' : colIndex === 1 ? '60%' : '50%',
+                        animationDelay: `${rowIndex * 50}ms`
+                      }}
+                    ></div>
+                  </div>
+                ))}
+                
+                <div className="flex-1 flex items-center px-4">
+                  <div 
+                    className="h-5 bg-blue-100 rounded animate-pulse skeleton-shimmer"
+                    style={{ 
+                      width: `${25 + (rowIndex % 5) * 10}%`,
+                      marginLeft: (rowIndex % 3) * 24,
+                      animationDelay: `${rowIndex * 50 + 100}ms`
+                    }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <style>{`
+          @keyframes shimmer {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+          }
+          .skeleton-shimmer {
+            animation: shimmer 1.5s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }

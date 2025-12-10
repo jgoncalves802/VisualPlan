@@ -21,7 +21,8 @@ type TaskAction =
   | { type: 'OUTDENT_TASK'; payload: { taskId: string } }
   | { type: 'DELETE_TASK'; payload: { taskId: string } }
   | { type: 'ADD_TASK'; payload: { task: Task; afterTaskId?: string } }
-  | { type: 'TOGGLE_EXPANSION'; payload: { taskId: string } };
+  | { type: 'TOGGLE_EXPANSION'; payload: { taskId: string } }
+  | { type: 'SYNC_TASKS'; payload: { added: Task[]; removed: string[]; updated: Task[] } };
 
 interface TaskState {
   tasks: Task[];
@@ -326,6 +327,37 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
       };
     }
     
+    case 'SYNC_TASKS': {
+      const { added, removed, updated } = action.payload;
+      const removedSet = new Set(removed);
+      
+      let newTasks = state.tasks.filter(t => !removedSet.has(t.id));
+      
+      const updatedMap = new Map(updated.map(t => [t.id, t]));
+      newTasks = newTasks.map(t => {
+        const update = updatedMap.get(t.id);
+        if (update) {
+          return { ...t, ...update };
+        }
+        return t;
+      });
+      
+      for (const task of added) {
+        if (!newTasks.some(t => t.id === task.id)) {
+          newTasks.push(task);
+        }
+      }
+      
+      if (added.length === 0 && removed.length === 0 && updated.length === 0) {
+        return state;
+      }
+      
+      return {
+        tasks: generateWBSCodes(newTasks),
+        version: state.version + 1
+      };
+    }
+    
     default:
       return state;
   }
@@ -398,17 +430,67 @@ export function useGanttController(
     })
   );
   
-  // Track which task IDs we have - only reinitialize if this changes
+  // Track which task IDs we have - use incremental sync instead of full reinit
   const lastTaskIdsRef = useRef<string>(initialTasks.map(t => t.id).sort().join(','));
+  const lastTaskHashRef = useRef<Map<string, string>>(
+    new Map(initialTasks.map(t => [t.id, JSON.stringify({
+      name: t.name, parentId: t.parentId, startDate: t.startDate, endDate: t.endDate,
+      progress: t.progress, duration: t.duration, status: t.status,
+      isGroup: t.isGroup, expanded: t.expanded
+    })]))
+  );
   
-  // Check if we need to reinitialize (only when task IDs change - add/remove)
+  // Incremental sync - only add/remove/update what changed (no full reload)
   useEffect(() => {
+    const currentHashes = lastTaskHashRef.current;
     const newIds = initialTasks.map(t => t.id).sort().join(',');
-    if (newIds !== lastTaskIdsRef.current) {
-      console.log('[GanttController] Task IDs changed, reinitializing');
-      dispatch({ type: 'INIT_TASKS', payload: initialTasks });
-      lastTaskIdsRef.current = newIds;
+    
+    const added: Task[] = [];
+    const removed: string[] = [];
+    const updated: Task[] = [];
+    const newTaskMap = new Map(initialTasks.map(t => [t.id, t]));
+    const newHashMap = new Map<string, string>();
+    
+    // Find added and updated tasks
+    for (const task of initialTasks) {
+      const newHash = JSON.stringify({
+        name: task.name, parentId: task.parentId, startDate: task.startDate, endDate: task.endDate,
+        progress: task.progress, duration: task.duration, status: task.status,
+        isGroup: task.isGroup, expanded: task.expanded
+      });
+      newHashMap.set(task.id, newHash);
+      
+      const oldHash = currentHashes.get(task.id);
+      if (!oldHash) {
+        added.push(task);
+      } else if (oldHash !== newHash) {
+        updated.push(task);
+      }
     }
+    
+    // Find removed tasks
+    for (const id of currentHashes.keys()) {
+      if (!newTaskMap.has(id)) {
+        removed.push(id);
+      }
+    }
+    
+    // Only dispatch if there are actual changes
+    const hasIdChanges = newIds !== lastTaskIdsRef.current;
+    const hasContentChanges = added.length > 0 || removed.length > 0 || updated.length > 0;
+    
+    if (hasIdChanges || hasContentChanges) {
+      console.log('[GanttController] Incremental sync:', { 
+        added: added.length, 
+        removed: removed.length, 
+        updated: updated.length,
+        hasIdChanges
+      });
+      dispatch({ type: 'SYNC_TASKS', payload: { added, removed, updated } });
+    }
+    
+    lastTaskIdsRef.current = newIds;
+    lastTaskHashRef.current = newHashMap;
   }, [initialTasks]);
   
   // Emit changes to external store (one-way)

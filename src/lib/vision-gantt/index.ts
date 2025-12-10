@@ -38,7 +38,9 @@ export {
   TaskBar,
   DependencyLine,
   TimelineHeader,
-  ZoomControl
+  ZoomControl,
+  SkeletonLoader,
+  RowSkeleton
 } from './components';
 
 // Types

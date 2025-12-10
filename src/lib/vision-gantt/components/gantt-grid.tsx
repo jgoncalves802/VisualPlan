@@ -101,6 +101,22 @@ export function GanttGrid({
   const [dragRowTaskId, setDragRowTaskId] = useState<string | null>(null);
   const [dropRowIndex, setDropRowIndex] = useState<number | null>(null);
   const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+  
+  const [newlyAddedIds, setNewlyAddedIds] = useState<Set<string>>(new Set());
+  const prevTaskIdsRef = useRef<Set<string>>(new Set(tasks.map(t => t.id)));
+  
+  useEffect(() => {
+    const currentIds = new Set(tasks.map(t => t.id));
+    const prevIds = prevTaskIdsRef.current;
+    
+    const added = [...currentIds].filter(id => !prevIds.has(id));
+    if (added.length > 0) {
+      setNewlyAddedIds(new Set(added));
+      setTimeout(() => setNewlyAddedIds(new Set()), 500);
+    }
+    
+    prevTaskIdsRef.current = currentIds;
+  }, [tasks]);
 
   const handleRowDragStart = useCallback((e: React.DragEvent, task: Task) => {
     if (task.isGroup || task.id.startsWith('wbs-')) {
@@ -390,11 +406,12 @@ export function GanttGrid({
           const isRowDropTarget = dropRowIndex === rowIndex && dragRowTaskId !== task?.id;
           const canDragRow = enableRowDragDrop && !isGroup && !task?.id.startsWith('wbs-');
           const isHovered = hoveredRowIndex === rowIndex;
+          const isNewlyAdded = task?.id ? newlyAddedIds.has(task.id) : false;
           
           return (
             <div
               key={task?.id ?? `task-${rowIndex}`}
-              className="gantt-grid-row flex cursor-pointer select-none relative group/row"
+              className={`gantt-grid-row flex cursor-pointer select-none relative group/row ${isNewlyAdded ? 'gantt-row-fade-in' : ''}`}
               tabIndex={0}
               data-task-id={task?.id}
               data-row-index={rowIndex}
@@ -408,10 +425,14 @@ export function GanttGrid({
               style={{ 
                 height: rowHeight,
                 ...rowStyle,
-                transition: 'background-color 0.1s ease',
+                transition: 'background-color 0.15s ease, opacity 0.3s ease, transform 0.3s ease',
                 outline: 'none',
                 opacity: isRowDragging ? 0.5 : 1,
-                borderTop: isRowDropTarget ? '2px solid #3B82F6' : 'none'
+                borderTop: isRowDropTarget ? '2px solid #3B82F6' : 'none',
+                ...(isNewlyAdded && {
+                  animation: 'rowFadeIn 0.3s ease-out',
+                  backgroundColor: `${gridColors.selectedBorder}20`
+                })
               }}
               onMouseDownCapture={(e) => {
                 // Capture phase: Select task and focus row BEFORE any cell stopPropagation
