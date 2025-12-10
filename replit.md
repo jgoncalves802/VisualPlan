@@ -39,6 +39,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Ishikawa Analysis (Kaizen)**: Interactive fishbone diagram with 6M categories adapted for construction (Método, Mão de Obra, Material, Medida, Meio Ambiente, Máquina), hierarchical filters (EPS/WBS/Activity), Pareto chart, trend analysis, and KPI cards (TMR, TRC, IRP, Eficácia).
     *   **Reuniões Matrix**: Calendar-based meeting management with auto-generated agendas based on restrictions, KPIs, and 5W2H actions. Supports meeting minutes and history.
     *   **Portfolio Prioritization**: Multi-criteria scoring matrix with bubble chart visualization, radar chart comparison, and weighted ranking (ROI, Strategic Alignment, Urgency, Complexity, Resources, Risk).
+    *   **WBS Integration to Schedule**: WBS nodes from the WBS page are automatically inherited and displayed in the schedule (cronograma) as read-only summary tasks. EDT codes are auto-generated using hierarchical numbering (1, 1.1, 1.1.2). Activities can be assigned to WBS nodes via a dedicated dropdown, maintaining proper separation between WBS structure assignment (`wbs_id`) and activity parent relationships (`parent_id`). Synthetic IDs (`wbs-xxx`) are used internally for UI binding while real UUIDs are persisted.
 
 ## External Dependencies
 
