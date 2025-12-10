@@ -7,6 +7,21 @@ import { AtividadeMock, DependenciaAtividade, CaminhoCritico, TipoDependencia, F
 import { supabase } from './supabase';
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Remove synthetic prefixes (wbs-, eps-) from IDs before saving to database.
+ * The database uses pure UUIDs, while the frontend uses prefixed IDs for hierarchy.
+ */
+const stripSyntheticPrefix = (id: string | undefined | null): string | null => {
+  if (!id) return null;
+  if (id.startsWith('wbs-')) return id.replace('wbs-', '');
+  if (id.startsWith('eps-')) return id.replace('eps-', '');
+  return id;
+};
+
+// ============================================================================
 // ATIVIDADES
 // ============================================================================
 
@@ -89,8 +104,8 @@ export const createAtividade = async (
       nome: atividade.nome,
       descricao: atividade.descricao,
       tipo: atividade.tipo,
-      parent_id: atividade.parent_id,
-      wbs_id: atividade.wbs_id,
+      parent_id: stripSyntheticPrefix(atividade.parent_id),
+      wbs_id: stripSyntheticPrefix(atividade.wbs_id),
       data_inicio: atividade.data_inicio,
       data_fim: atividade.data_fim,
       duracao_dias: atividade.duracao_dias,
@@ -157,10 +172,19 @@ export const updateAtividade = async (
   id: string,
   dados: Partial<AtividadeMock>
 ): Promise<AtividadeMock> => {
+  // Clean synthetic prefixes from IDs before saving to database
+  const cleanedData = { ...dados };
+  if ('parent_id' in cleanedData) {
+    cleanedData.parent_id = stripSyntheticPrefix(cleanedData.parent_id) || undefined;
+  }
+  if ('wbs_id' in cleanedData) {
+    cleanedData.wbs_id = stripSyntheticPrefix(cleanedData.wbs_id) || undefined;
+  }
+  
   const { data, error } = await supabase
     .from('atividades_cronograma')
     .update({
-      ...dados,
+      ...cleanedData,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
