@@ -71,13 +71,38 @@ export function ResourceAssignmentModal({
   const loadData = async () => {
     setLoading(true);
     try {
-      const [resources, curves] = await Promise.all([
-        resourceService.getResources(empresaId),
-        resourceService.getResourceCurves(empresaId),
-      ]);
+      // Load resources first - this is required
+      let resources: Resource[] = [];
+      try {
+        resources = await resourceService.getResources(empresaId);
+        setAvailableResources(resources);
+      } catch (err) {
+        console.error('Error fetching resources:', err);
+        setAvailableResources([]);
+      }
       
-      setAvailableResources(resources);
-      setAvailableCurves(curves);
+      // Load curves - optional, fail gracefully if table doesn't exist
+      try {
+        const curves = await resourceService.getResourceCurves(empresaId);
+        setAvailableCurves(curves);
+      } catch (err) {
+        console.warn('Resource curves not available:', err);
+        // Provide default curves when table doesn't exist
+        setAvailableCurves([
+          {
+            id: 'default-linear',
+            codigo: 'LINEAR',
+            nome: 'Linear',
+            curveType: 'LINEAR',
+            distributionPoints: Array(21).fill(100 / 21),
+            isSystemDefault: true,
+            cor: '#3B82F6',
+            ativo: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+        ]);
+      }
 
       const drafts: AllocationDraft[] = existingAllocations.map(alloc => ({
         id: alloc.id,
@@ -97,6 +122,7 @@ export function ResourceAssignmentModal({
       
       setAllocations(drafts);
 
+      // Load rates - optional, fail gracefully per resource
       const ratesMap = new Map<string, ResourceRate[]>();
       for (const resource of resources) {
         try {

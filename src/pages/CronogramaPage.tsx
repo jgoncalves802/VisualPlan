@@ -24,7 +24,10 @@ import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { RestricaoLPS } from '../types/lps';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, PanelRightOpen, PanelRightClose, Users } from 'lucide-react';
+import { ResourceWorkspace } from '../components/features/cronograma/ResourceWorkspace';
+import { resourceService } from '../services/resourceService';
+import type { Task } from '../lib/vision-gantt/types';
 
 /**
  * Página do Cronograma - VisionGantt
@@ -84,6 +87,8 @@ export const CronogramaPage: React.FC = () => {
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
   const [manageDepsModalOpen, setManageDepsModalOpen] = useState(false);
   const [manageDepsAtividadeId, setManageDepsAtividadeId] = useState<string | null>(null);
+  const [showResourcePanel, setShowResourcePanel] = useState(false);
+  const [selectedTaskForResources, setSelectedTaskForResources] = useState<Task | null>(null);
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -147,6 +152,45 @@ export const CronogramaPage: React.FC = () => {
     }
   };
 
+  const handleAssignResource = async (resourceId: string, taskId: string) => {
+    if (!usuario?.empresaId) return;
+    
+    try {
+      const task = todasAtividades.find(a => a.id === taskId);
+      const startDate = task?.data_inicio || new Date().toISOString().split('T')[0];
+      const endDate = task?.data_fim || new Date().toISOString().split('T')[0];
+      
+      await resourceService.createAllocation({
+        empresaId: usuario.empresaId,
+        atividadeId: taskId,
+        resourceId,
+        dataInicio: startDate,
+        dataFim: endDate,
+        unidades: 100,
+        unidadeTipo: 'PERCENT',
+        quantidadePlanejada: 8,
+        quantidadeReal: 0,
+        custoPlanejado: 0,
+        custoReal: 0,
+        curvaAlocacao: 'LINEAR',
+        status: 'PLANNED',
+        ativo: true,
+        metadata: {},
+      });
+    } catch (err) {
+      console.error('Error assigning resource:', err);
+    }
+  };
+
+  const handleUnassignResource = async (allocationId: string) => {
+    try {
+      await resourceService.deleteAllocation(allocationId);
+    } catch (err) {
+      console.error('Error unassigning resource:', err);
+    }
+  };
+
+  
   if (isLoading && atividades.length === 0) {
     return (
       <div className="flex flex-col h-full bg-gray-50">
@@ -261,7 +305,9 @@ export const CronogramaPage: React.FC = () => {
 
   const CronogramaContent = () => (
     <>
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Main Gantt Area */}
+        <div className={`flex-1 overflow-auto p-6 transition-all duration-300 ${showResourcePanel ? 'pr-0' : ''}`}>
         {atividades.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -335,6 +381,7 @@ export const CronogramaPage: React.FC = () => {
                   }}
                   onAtividadeClick={(atividade) => handleAtividadeClick(atividade.id)}
                   onManageDependencies={handleManageDependencies}
+                  onTaskSelect={setSelectedTaskForResources}
                   height={600}
                   gridWidth={500}
                 />
@@ -352,6 +399,19 @@ export const CronogramaPage: React.FC = () => {
                 }}
               />
             )}
+          </div>
+        )}
+        </div>
+        
+        {/* Resource Panel - Split View (P6 Style) */}
+        {showResourcePanel && usuario?.empresaId && (
+          <div className="w-80 flex-shrink-0 h-full">
+            <ResourceWorkspace
+              empresaId={usuario.empresaId}
+              selectedTask={selectedTaskForResources}
+              onAssignResource={handleAssignResource}
+              onUnassignResource={handleUnassignResource}
+            />
           </div>
         )}
       </div>
@@ -520,6 +580,25 @@ export const CronogramaPage: React.FC = () => {
               </p>
             </div>
           </div>
+          
+          {/* Resource Panel Toggle Button */}
+          <button
+            onClick={() => setShowResourcePanel(!showResourcePanel)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              showResourcePanel 
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            title={showResourcePanel ? 'Ocultar painel de recursos' : 'Mostrar painel de recursos'}
+          >
+            {showResourcePanel ? (
+              <PanelRightClose className="w-5 h-5" />
+            ) : (
+              <PanelRightOpen className="w-5 h-5" />
+            )}
+            <Users className="w-4 h-4" />
+            <span className="text-sm font-medium">Recursos</span>
+          </button>
         </div>
       </div>
 

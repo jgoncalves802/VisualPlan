@@ -42,6 +42,7 @@ interface VisionGanttWrapperProps {
   onDependenciaDelete?: (depId: string) => void;
   onAtividadeClick?: (atividade: AtividadeMock) => void;
   onManageDependencies?: (atividadeId: string) => void;
+  onTaskSelect?: (task: Task | null) => void;
   height?: number;
   gridWidth?: number;
   initialViewPreset?: ViewPreset;
@@ -65,6 +66,7 @@ export function VisionGanttWrapper({
   onDependenciaDelete,
   onAtividadeClick,
   onManageDependencies,
+  onTaskSelect: onTaskSelectProp,
   height = 600,
   gridWidth = 500,
   initialViewPreset = 'month',
@@ -465,12 +467,14 @@ export function VisionGanttWrapper({
     const enrichedTask = { ...task, isWbsNode, isReadOnly: isWbsNode };
     setSelectedTask(enrichedTask);
     setShowDetailPanel(true);
-  }, []);
+    onTaskSelectProp?.(enrichedTask);
+  }, [onTaskSelectProp]);
   
   const handleCloseDetailPanel = useCallback(() => {
     setShowDetailPanel(false);
     setSelectedTask(null);
-  }, []);
+    onTaskSelectProp?.(null);
+  }, [onTaskSelectProp]);
   
   const handleEditFromDetail = useCallback((taskId: string) => {
     if (taskId.startsWith('wbs-')) {
