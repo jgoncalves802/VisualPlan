@@ -404,10 +404,12 @@ export interface CronogramaState {
   adicionarAtividade: (atividade: Omit<AtividadeMock, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   atualizarAtividade: (id: string, dados: Partial<AtividadeMock>) => Promise<void>;
   excluirAtividade: (id: string) => Promise<void>;
+  initBatchUpdates: () => void;
 
   // Actions - CRUD Dependências
   carregarDependencias: (projetoId: string) => Promise<void>;
   adicionarDependencia: (dependencia: Omit<DependenciaAtividade, 'id' | 'created_at'>) => Promise<void>;
+  atualizarDependencia: (id: string, updates: { tipo?: TipoDependencia; lag_dias?: number }) => Promise<void>;
   excluirDependencia: (id: string) => Promise<void>;
 
   // Actions - Caminho Crítico

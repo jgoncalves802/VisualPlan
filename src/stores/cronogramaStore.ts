@@ -20,6 +20,18 @@ import {
 } from '../types/cronograma';
 import * as cronogramaService from '../services/cronogramaService';
 import { epsService, EpsNode } from '../services/epsService';
+import {
+  getActivitiesFromCache,
+  setActivitiesToCache,
+  isActivitiesCacheExpired,
+  updateActivityInCache,
+  addActivityToCache,
+  removeActivityFromCache,
+  generateTempId,
+  isTempId,
+  getActivityTemplate,
+  batchUpdateManager,
+} from '../services/cronogramaCacheService';
 
 /**
  * Converts EPS/WBS nodes to AtividadeMock format for display in Gantt chart
@@ -451,46 +463,93 @@ export const useCronogramaStore = create<CronogramaState>()(
 
       /**
        * Carrega atividades de um projeto
+       * Usa estratégia cache-first: carrega do cache instantaneamente,
+       * depois sincroniza com Supabase em background se cache expirado
        */
       carregarAtividades: async (projetoId: string) => {
         set({ isLoading: true, erro: null });
 
-        try {
-          // Load activities and WBS in parallel
-          const [atividades, wbsNodes] = await Promise.all([
-            cronogramaService.getAtividades(projetoId),
-            epsService.getProjectWbsTree(projetoId),
-          ]);
-          
-          // Convert WBS nodes to activities (read-only summary tasks)
+        // Helper function to process activities
+        const processAtividades = (atividades: AtividadeMock[], wbsNodes: EpsNode[]) => {
           const wbsAsAtividades = convertWbsToAtividades(wbsNodes, projetoId);
-          
-          // Update activities to link to their WBS parent
           const atividadesComWbs = atividades.map(a => {
-            // If activity has a wbs_id, update its parent_id to point to the WBS node
             if (a.wbs_id && !a.parent_id) {
               return { ...a, parent_id: `wbs-${a.wbs_id}` };
             }
             return a;
           });
+          return [...wbsAsAtividades, ...atividadesComWbs];
+        };
+
+        try {
+          // Step 1: Try to load from cache immediately (instant response)
+          const cachedData = getActivitiesFromCache(projetoId);
+          let usedCache = false;
           
-          // Combine WBS nodes (first) with activities (after)
-          const todasAtividades = [...wbsAsAtividades, ...atividadesComWbs];
+          if (cachedData && cachedData.activities.length > 0) {
+            // Load WBS nodes (usually fast, cached by browser)
+            const wbsNodes = await epsService.getProjectWbsTree(projetoId);
+            const todasAtividades = processAtividades(cachedData.activities, wbsNodes);
+            
+            const atividadesComHoras = cachedData.activities.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
+            const usarHoras = atividadesComHoras.length > cachedData.activities.length / 2;
+            
+            if (usarHoras) {
+              set({ 
+                atividades: todasAtividades, 
+                isLoading: false,
+                escala: EscalaTempo.HORA,
+                unidadeTempoPadrao: UnidadeTempo.HORAS,
+              });
+            } else {
+              set({ atividades: todasAtividades, isLoading: false });
+            }
+            usedCache = true;
+            console.log('[CronogramaStore] Loaded from cache (instant)');
+          }
+
+          // Step 2: If cache is expired or empty, fetch from Supabase
+          const shouldFetch = isActivitiesCacheExpired(projetoId) || !cachedData;
           
-          // Detecta automaticamente se deve usar HORAS
-          const atividadesComHoras = atividades.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
-          const usarHoras = atividadesComHoras.length > atividades.length / 2; // Mais de 50% em horas
-          
-          // Ajusta escala e unidade automaticamente
-          if (usarHoras) {
-            set({ 
-              atividades: todasAtividades, 
-              isLoading: false,
-              escala: EscalaTempo.HORA,
-              unidadeTempoPadrao: UnidadeTempo.HORAS,
-            });
-          } else {
-            set({ atividades: todasAtividades, isLoading: false });
+          if (shouldFetch) {
+            // If we didn't use cache, this is a blocking load
+            // If we used cache, this runs in background
+            const fetchPromise = (async () => {
+              const [atividades, wbsNodes] = await Promise.all([
+                cronogramaService.getAtividades(projetoId),
+                epsService.getProjectWbsTree(projetoId),
+              ]);
+              
+              // Update cache
+              setActivitiesToCache(projetoId, atividades);
+              
+              const todasAtividades = processAtividades(atividades, wbsNodes);
+              
+              const atividadesComHoras = atividades.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
+              const usarHoras = atividadesComHoras.length > atividades.length / 2;
+              
+              if (usarHoras) {
+                set({ 
+                  atividades: todasAtividades, 
+                  isLoading: false,
+                  escala: EscalaTempo.HORA,
+                  unidadeTempoPadrao: UnidadeTempo.HORAS,
+                });
+              } else {
+                set({ atividades: todasAtividades, isLoading: false });
+              }
+              console.log('[CronogramaStore] Synced from Supabase');
+            })();
+            
+            // If we used cache, let this run in background
+            // Otherwise, await it
+            if (!usedCache) {
+              await fetchPromise;
+            } else {
+              fetchPromise.catch(err => {
+                console.warn('[CronogramaStore] Background sync failed:', err);
+              });
+            }
           }
         } catch (error) {
           const mensagem = error instanceof Error ? error.message : 'Erro ao carregar atividades';
@@ -500,61 +559,141 @@ export const useCronogramaStore = create<CronogramaState>()(
       },
 
       /**
-       * Adiciona uma nova atividade
+       * Adiciona uma nova atividade com inserção otimista
+       * Mostra a atividade instantaneamente com ID temporário,
+       * depois substitui pelo ID real após persistir no banco
        */
       adicionarAtividade: async (atividade) => {
-        set({ isLoading: true, erro: null });
-
+        // Get template defaults for faster creation
+        const template = getActivityTemplate();
+        const tempId = generateTempId();
+        
+        // Create optimistic activity with temp ID (instant)
+        const now = new Date().toISOString();
+        const atividadeOtimista: AtividadeMock = {
+          // Spread user data first, then apply defaults for missing fields
+          projeto_id: atividade.projeto_id || '',
+          nome: atividade.nome || template.nome,
+          tipo: atividade.tipo || template.tipo,
+          data_inicio: atividade.data_inicio || now.split('T')[0],
+          data_fim: atividade.data_fim || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          duracao_dias: atividade.duracao_dias ?? template.duracao_dias,
+          progresso: atividade.progresso ?? template.progresso,
+          status: atividade.status || template.status,
+          prioridade: atividade.prioridade || template.prioridade,
+          parent_id: atividade.parent_id,
+          wbs_id: atividade.wbs_id,
+          // Force these values
+          id: tempId,
+          created_at: now,
+          updated_at: now,
+        };
+        
+        // Add to UI immediately (optimistic)
+        set((state) => ({
+          atividades: [...state.atividades, atividadeOtimista],
+        }));
+        
+        // Add to cache immediately
+        addActivityToCache(atividade.projeto_id || '', atividadeOtimista);
+        
+        // Persist to database in background
         try {
           const novaAtividade = await cronogramaService.createAtividade(atividade);
+          
+          // Replace temp ID with real ID
           set((state) => ({
-            atividades: [...state.atividades, novaAtividade],
-            isLoading: false,
+            atividades: state.atividades.map((a) =>
+              a.id === tempId ? novaAtividade : a
+            ),
           }));
+          
+          // Update cache with real activity
+          removeActivityFromCache(atividade.projeto_id || '', tempId);
+          addActivityToCache(atividade.projeto_id || '', novaAtividade);
+          
+          console.log('[CronogramaStore] Activity created:', tempId, '->', novaAtividade.id);
         } catch (error) {
-          const mensagem = error instanceof Error ? error.message : 'Erro ao adicionar atividade';
-          set({ erro: mensagem, isLoading: false });
+          // Rollback on error - remove optimistic activity
+          set((state) => ({
+            atividades: state.atividades.filter((a) => a.id !== tempId),
+            erro: error instanceof Error ? error.message : 'Erro ao adicionar atividade',
+          }));
+          removeActivityFromCache(atividade.projeto_id || '', tempId);
           throw error;
         }
       },
 
       /**
-       * Atualiza uma atividade existente e aplica auto-scheduling
+       * Atualiza uma atividade existente com update otimista e batch
+       * Atualiza UI imediatamente, agrupa múltiplos updates com debounce de 500ms
        */
       atualizarAtividade: async (id: string, dados: Partial<AtividadeMock>) => {
-        set({ isLoading: true, erro: null });
-
-        try {
-          const atividadeAtualizada = await cronogramaService.updateAtividade(id, dados);
-          
-          set((state) => {
-            const atividadesAtualizadas = state.atividades.map((a) =>
-              a.id === id ? atividadeAtualizada : a
-            );
-            
-            // Aplica auto-scheduling se configurado e se houve mudança de datas/duração
-            const hasDateChange = dados.data_inicio !== undefined || 
-                                  dados.data_fim !== undefined || 
-                                  dados.duracao_dias !== undefined;
-            
-            if (hasDateChange && state.configuracoes.habilitar_auto_scheduling) {
-              const atividadesRecalculadas = applyAutoScheduling(atividadesAtualizadas, state.dependencias);
-              return {
-                atividades: atividadesRecalculadas,
-                isLoading: false,
-              };
-            }
-            
-            return {
-              atividades: atividadesAtualizadas,
-              isLoading: false,
-            };
-          });
-        } catch (error) {
-          const mensagem = error instanceof Error ? error.message : 'Erro ao atualizar atividade';
-          set({ erro: mensagem, isLoading: false });
-          throw error;
+        // Skip temp IDs - they're still being created
+        if (isTempId(id)) {
+          console.log('[CronogramaStore] Skipping update for temp ID:', id);
+          return;
         }
+        
+        // Get current activity for cache update
+        const currentState = useCronogramaStore.getState();
+        const currentActivity = currentState.atividades.find(a => a.id === id);
+        const projetoId = currentActivity?.projeto_id || '';
+        
+        // Update UI immediately (optimistic)
+        set((state) => {
+          const atividadesAtualizadas = state.atividades.map((a) =>
+            a.id === id ? { ...a, ...dados, updated_at: new Date().toISOString() } : a
+          );
+          
+          // Aplica auto-scheduling se configurado e se houve mudança de datas/duração
+          const hasDateChange = dados.data_inicio !== undefined || 
+                                dados.data_fim !== undefined || 
+                                dados.duracao_dias !== undefined;
+          
+          if (hasDateChange && state.configuracoes.habilitar_auto_scheduling) {
+            const atividadesRecalculadas = applyAutoScheduling(atividadesAtualizadas, state.dependencias);
+            return { atividades: atividadesRecalculadas };
+          }
+          
+          return { atividades: atividadesAtualizadas };
+        });
+        
+        // Update cache immediately
+        updateActivityInCache(projetoId, id, dados);
+        
+        // Queue update for batch processing (debounced 500ms)
+        batchUpdateManager.queueUpdate(id, dados);
+      },
+      
+      /**
+       * Inicializa o batch update manager com callback para persistir no banco
+       * Deve ser chamado uma vez na inicialização
+       */
+      initBatchUpdates: () => {
+        batchUpdateManager.setCallback(async (updates) => {
+          const promises: Promise<void>[] = [];
+          
+          updates.forEach((changes, activityId) => {
+            promises.push(
+              cronogramaService.updateAtividade(activityId, changes)
+                .then(updatedActivity => {
+                  // Update state with server response
+                  set((state) => ({
+                    atividades: state.atividades.map((a) =>
+                      a.id === activityId ? updatedActivity : a
+                    ),
+                  }));
+                })
+                .catch(err => {
+                  console.error('[CronogramaStore] Batch update failed for', activityId, err);
+                })
+            );
+          });
+          
+          await Promise.allSettled(promises);
+          console.log('[CronogramaStore] Batch update completed:', updates.size, 'activities');
+        });
       },
 
       /**

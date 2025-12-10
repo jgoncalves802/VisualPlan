@@ -39,7 +39,16 @@ export const useCronograma = (projetoId: string) => {
     setEscala,
     setFiltros,
     limparFiltros,
+    initBatchUpdates,
   } = useCronogramaStore();
+
+  // ========================================================================
+  // INICIALIZAÇÃO DO BATCH UPDATE MANAGER
+  // ========================================================================
+  
+  useEffect(() => {
+    initBatchUpdates();
+  }, [initBatchUpdates]);
 
   // ========================================================================
   // CARREGAMENTO INICIAL

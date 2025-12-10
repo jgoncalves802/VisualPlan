@@ -20,6 +20,11 @@ import { DEFAULT_COLUMNS, EXTENDED_COLUMNS } from '../../../lib/vision-gantt/con
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { ColumnConfigModal } from './ColumnConfigModal';
 import { getColumnConfig, saveColumnConfig } from '../../../services/cronogramaService';
+import {
+  getColumnConfigFromCache,
+  setColumnConfigToCache,
+  isColumnConfigCacheExpired,
+} from '../../../services/cronogramaCacheService';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -72,47 +77,70 @@ export function VisionGanttWrapper({
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [columnConfigOpen, setColumnConfigOpen] = useState(false);
   
+  // Helper to reconstruct columns from saved config
+  const reconstructColumnsFromConfig = useCallback((savedConfig: { visible_columns: string[]; column_order: string[] }) => {
+    const allColumns = [...DEFAULT_COLUMNS, ...EXTENDED_COLUMNS];
+    const columnMap = new Map(allColumns.map(c => [c.field, c]));
+    
+    const loadedColumns: ColumnConfig[] = [];
+    for (const field of savedConfig.column_order) {
+      const col = columnMap.get(field);
+      if (col && savedConfig.visible_columns.includes(field)) {
+        loadedColumns.push(col);
+      }
+    }
+    
+    // Always ensure WBS column is first
+    const wbsIndex = loadedColumns.findIndex(c => c.field === 'wbs');
+    if (wbsIndex > 0) {
+      const [wbsCol] = loadedColumns.splice(wbsIndex, 1);
+      loadedColumns.unshift(wbsCol);
+    } else if (wbsIndex === -1) {
+      const wbsCol = columnMap.get('wbs');
+      if (wbsCol) loadedColumns.unshift(wbsCol);
+    }
+    
+    return loadedColumns;
+  }, []);
+
   // Load saved column configuration on mount or when project changes
+  // Uses cache-first strategy: load from localStorage instantly, then sync from Supabase in background
   useEffect(() => {
-    const loadColumnConfig = async () => {
-      try {
-        const savedConfig = await getColumnConfig(projetoId);
-        if (savedConfig && savedConfig.visible_columns.length > 0) {
-          // Reconstruct column configs from saved field names
-          const allColumns = [...DEFAULT_COLUMNS, ...EXTENDED_COLUMNS];
-          const columnMap = new Map(allColumns.map(c => [c.field, c]));
-          
-          // Build columns in saved order
-          const loadedColumns: ColumnConfig[] = [];
-          for (const field of savedConfig.column_order) {
-            const col = columnMap.get(field);
-            if (col && savedConfig.visible_columns.includes(field)) {
-              loadedColumns.push(col);
+    const userId = 'default'; // Column config is per-project, user handled by RLS
+    
+    // Step 1: Load from cache immediately (instant)
+    const cachedConfig = getColumnConfigFromCache(userId, projetoId);
+    if (cachedConfig && cachedConfig.visible_columns.length > 0) {
+      const loadedColumns = reconstructColumnsFromConfig(cachedConfig);
+      if (loadedColumns.length > 0) {
+        setSelectedColumns(loadedColumns);
+        console.log('[VisionGanttWrapper] Loaded columns from cache (instant)');
+      }
+    }
+    
+    // Step 2: Check if cache is expired, if so fetch from Supabase in background
+    const shouldFetchFromDb = isColumnConfigCacheExpired(userId, projetoId) || !cachedConfig;
+    
+    if (shouldFetchFromDb) {
+      getColumnConfig(projetoId)
+        .then(savedConfig => {
+          if (savedConfig && savedConfig.visible_columns.length > 0) {
+            // Update cache
+            setColumnConfigToCache(userId, projetoId, savedConfig);
+            
+            // Only update UI if different from current
+            const loadedColumns = reconstructColumnsFromConfig(savedConfig);
+            if (loadedColumns.length > 0) {
+              setSelectedColumns(loadedColumns);
+              console.log('[VisionGanttWrapper] Synced columns from Supabase');
             }
           }
-          
-          // Always ensure WBS column is first
-          const wbsIndex = loadedColumns.findIndex(c => c.field === 'wbs');
-          if (wbsIndex > 0) {
-            const [wbsCol] = loadedColumns.splice(wbsIndex, 1);
-            loadedColumns.unshift(wbsCol);
-          } else if (wbsIndex === -1) {
-            const wbsCol = columnMap.get('wbs');
-            if (wbsCol) loadedColumns.unshift(wbsCol);
-          }
-          
-          if (loadedColumns.length > 0) {
-            setSelectedColumns(loadedColumns);
-            console.log('[VisionGanttWrapper] Loaded saved column config:', loadedColumns.map(c => c.field));
-          }
-        }
-      } catch (error) {
-        console.error('[VisionGanttWrapper] Error loading column config:', error);
-      }
-    };
-    
-    loadColumnConfig();
-  }, [projetoId]);
+        })
+        .catch(error => {
+          console.warn('[VisionGanttWrapper] Background column sync failed:', error);
+        });
+    }
+  }, [projetoId, reconstructColumnsFromConfig]);
   
   const [editDependencyModal, setEditDependencyModal] = useState<{
     open: boolean;
@@ -455,8 +483,13 @@ export function VisionGanttWrapper({
   
   const handleColumnReorder = useCallback((newColumns: ColumnConfig[]) => {
     setSelectedColumns(newColumns);
-    // Save column order to database
     const visibleFields = newColumns.map(c => c.field);
+    const config = { visible_columns: visibleFields, column_order: visibleFields };
+    
+    // Update cache immediately (instant feedback)
+    setColumnConfigToCache('default', projetoId, config);
+    
+    // Save to database in background
     saveColumnConfig(projetoId, visibleFields, visibleFields).catch(err => {
       console.error('[VisionGanttWrapper] Error saving column reorder:', err);
     });
@@ -465,8 +498,13 @@ export function VisionGanttWrapper({
   const handleColumnConfigSave = useCallback((newColumns: ColumnConfig[]) => {
     setSelectedColumns(newColumns);
     setColumnConfigOpen(false);
-    // Save column configuration to database
     const visibleFields = newColumns.map(c => c.field);
+    const config = { visible_columns: visibleFields, column_order: visibleFields };
+    
+    // Update cache immediately (instant feedback)
+    setColumnConfigToCache('default', projetoId, config);
+    
+    // Save to database in background
     saveColumnConfig(projetoId, visibleFields, visibleFields).catch(err => {
       console.error('[VisionGanttWrapper] Error saving column config:', err);
     });
