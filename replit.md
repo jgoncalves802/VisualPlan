@@ -107,3 +107,15 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Inline Editing**: GanttGrid supports inline editing with onCellEdit handler and enableInlineEdit prop for spreadsheet-like experience
     - **Column Alignment Fix**: WBS indentation only applies to name column, not affecting alignment of other columns
     - **Automatic Activity Codes**: P6-style activity codes (A1010, A1020, etc.) are auto-generated when creating activities. Codes increment by 10 and are stored in `codigo` field (distinct from `edt` which is for WBS codes)
+*   **Primavera P6-Grade Resource Allocation System**:
+    - **Multi-Rate Pricing**: 5 rate types per resource (Padrão, Hora Extra, Externo, Especial, Emergência) with time-phased effectiveness periods
+    - **Resource Curves**: 7 distribution curve types (Linear, Bell/S-Curve, Front-loaded, Back-loaded, Triangular, Trapezoidal, Custom) with 21-point distribution (0%, 5%, 10%...100%)
+    - **ResourceAssignmentModal**: Comprehensive modal for allocating resources with units %, units/time, rate type selection, and curve assignment
+    - **EditableResourceCell**: Inline resource editing in GanttGrid with autocomplete search and multi-select badges
+    - **ResourceRateResolver**: Cost calculation engine using time-varied rates with effective date logic
+    - **Resource Column Badges**: Colored badges in grid showing allocated resources with unit percentages
+    - **ResourceCurveEditor**: Visual curve editor with canvas-based chart, preset curves, and 21-point fine-tuning
+    - **ResourceHistogram**: Enhanced histogram with capacity lines, over-allocation indicators, and weekly navigation
+    - **SCurveChart**: EVM-based S-curve visualization (PV, AC, EV) with CPI/SPI indicators, variance analysis, and BAC/EAC/VAC metrics
+    - **CommodityCurvesChart**: Aggregated curves by resource category (Labor, Material, Equipment, Subcontractor) with cumulative/periodic views and stacked bar options
+    - **Resource Leveling Engine**: Priority-based algorithm respecting total float, predecessors, and critical path constraints with conflict detection and logging

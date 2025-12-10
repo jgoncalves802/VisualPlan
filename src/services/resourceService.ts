@@ -3,6 +3,8 @@ import { supabase } from './supabaseClient';
 export type ResourceCategory = 'WORK' | 'MATERIAL' | 'COST' | 'GENERIC' | 'BUDGET';
 export type AllocationStatus = 'PLANNED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type ConflictSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type CurveType = 'LINEAR' | 'BELL' | 'FRONT_LOADED' | 'BACK_LOADED' | 'TRIANGULAR' | 'TRAPEZOIDAL' | 'CUSTOM';
+export type RateUnitType = 'hour' | 'day' | 'week' | 'month' | 'unit' | 'fixed';
 
 export interface ResourceType {
   id: string;
@@ -92,6 +94,74 @@ export interface ResourceConflict {
   resolvidoEm?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ResourceRate {
+  id: string;
+  empresaId: string;
+  resourceId: string;
+  rateType: number;
+  rateName: string;
+  pricePerUnit: number;
+  unitType: RateUnitType;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  descricao?: string;
+  ativo: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResourceCurve {
+  id: string;
+  empresaId?: string;
+  codigo: string;
+  nome: string;
+  descricao?: string;
+  curveType: CurveType;
+  distributionPoints: number[];
+  isSystemDefault: boolean;
+  cor: string;
+  ativo: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+export interface ResourceAssignmentPeriod {
+  id: string;
+  allocationId: string;
+  periodStart: string;
+  periodEnd: string;
+  periodType: 'day' | 'week' | 'month';
+  plannedUnits: number;
+  actualUnits: number;
+  remainingUnits: number;
+  plannedCost: number;
+  actualCost: number;
+  remainingCost: number;
+  earnedValue: number;
+  isManualEntry: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResourceAllocationP6 extends ResourceAllocation {
+  curveId?: string;
+  curve?: ResourceCurve;
+  rateType: number;
+  unitsPerTime: number;
+  budgetedUnits: number;
+  actualUnits: number;
+  remainingUnits: number;
+  atCompletionUnits: number;
+  budgetedCost: number;
+  actualCost: number;
+  remainingCost: number;
+  atCompletionCost: number;
+  actualStart?: string;
+  actualFinish?: string;
+  periods?: ResourceAssignmentPeriod[];
 }
 
 function mapResourceTypeFromDB(data: any): ResourceType {
@@ -189,6 +259,84 @@ function mapConflictFromDB(data: any): ResourceConflict {
     resolvidoEm: data.resolvido_em,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+  };
+}
+
+function mapResourceRateFromDB(data: any): ResourceRate {
+  return {
+    id: data.id,
+    empresaId: data.empresa_id,
+    resourceId: data.resource_id,
+    rateType: data.rate_type,
+    rateName: data.rate_name,
+    pricePerUnit: parseFloat(data.price_per_unit) || 0,
+    unitType: data.unit_type || 'hour',
+    effectiveFrom: data.effective_from,
+    effectiveTo: data.effective_to,
+    descricao: data.descricao,
+    ativo: data.ativo,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+function mapResourceCurveFromDB(data: any): ResourceCurve {
+  return {
+    id: data.id,
+    empresaId: data.empresa_id,
+    codigo: data.codigo,
+    nome: data.nome,
+    descricao: data.descricao,
+    curveType: data.curve_type || 'LINEAR',
+    distributionPoints: data.distribution_points || [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],
+    isSystemDefault: data.is_system_default || false,
+    cor: data.cor || '#3B82F6',
+    ativo: data.ativo,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    createdBy: data.created_by,
+  };
+}
+
+function mapAssignmentPeriodFromDB(data: any): ResourceAssignmentPeriod {
+  return {
+    id: data.id,
+    allocationId: data.allocation_id,
+    periodStart: data.period_start,
+    periodEnd: data.period_end,
+    periodType: data.period_type || 'day',
+    plannedUnits: parseFloat(data.planned_units) || 0,
+    actualUnits: parseFloat(data.actual_units) || 0,
+    remainingUnits: parseFloat(data.remaining_units) || 0,
+    plannedCost: parseFloat(data.planned_cost) || 0,
+    actualCost: parseFloat(data.actual_cost) || 0,
+    remainingCost: parseFloat(data.remaining_cost) || 0,
+    earnedValue: parseFloat(data.earned_value) || 0,
+    isManualEntry: data.is_manual_entry || false,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+function mapAllocationP6FromDB(data: any): ResourceAllocationP6 {
+  const base = mapAllocationFromDB(data);
+  return {
+    ...base,
+    curveId: data.curve_id,
+    curve: data.resource_curves ? mapResourceCurveFromDB(data.resource_curves) : undefined,
+    rateType: data.rate_type || 1,
+    unitsPerTime: parseFloat(data.units_per_time) || 8,
+    budgetedUnits: parseFloat(data.budgeted_units) || 0,
+    actualUnits: parseFloat(data.actual_units) || 0,
+    remainingUnits: parseFloat(data.remaining_units) || 0,
+    atCompletionUnits: parseFloat(data.at_completion_units) || 0,
+    budgetedCost: parseFloat(data.budgeted_cost) || 0,
+    actualCost: parseFloat(data.actual_cost) || 0,
+    remainingCost: parseFloat(data.remaining_cost) || 0,
+    atCompletionCost: parseFloat(data.at_completion_cost) || 0,
+    actualStart: data.actual_start,
+    actualFinish: data.actual_finish,
+    periods: data.resource_assignment_periods?.map(mapAssignmentPeriodFromDB),
   };
 }
 
@@ -695,6 +843,497 @@ export const resourceService = {
     }
     
     return histogram;
+  },
+
+  async getResourceRates(resourceId: string): Promise<ResourceRate[]> {
+    const { data, error } = await supabase
+      .from('resource_rates')
+      .select('*')
+      .eq('resource_id', resourceId)
+      .eq('ativo', true)
+      .order('rate_type');
+
+    if (error) {
+      console.error('Error fetching resource rates:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapResourceRateFromDB);
+  },
+
+  async createResourceRate(rate: Omit<ResourceRate, 'id' | 'createdAt' | 'updatedAt'>): Promise<ResourceRate> {
+    const { data, error } = await supabase
+      .from('resource_rates')
+      .insert({
+        empresa_id: rate.empresaId,
+        resource_id: rate.resourceId,
+        rate_type: rate.rateType,
+        rate_name: rate.rateName,
+        price_per_unit: rate.pricePerUnit,
+        unit_type: rate.unitType,
+        effective_from: rate.effectiveFrom,
+        effective_to: rate.effectiveTo,
+        descricao: rate.descricao,
+        ativo: rate.ativo ?? true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating resource rate:', error);
+      throw error;
+    }
+
+    return mapResourceRateFromDB(data);
+  },
+
+  async updateResourceRate(id: string, updates: Partial<ResourceRate>): Promise<ResourceRate> {
+    const updateData: Record<string, unknown> = {};
+    
+    if (updates.rateName !== undefined) updateData.rate_name = updates.rateName;
+    if (updates.pricePerUnit !== undefined) updateData.price_per_unit = updates.pricePerUnit;
+    if (updates.unitType !== undefined) updateData.unit_type = updates.unitType;
+    if (updates.effectiveFrom !== undefined) updateData.effective_from = updates.effectiveFrom;
+    if (updates.effectiveTo !== undefined) updateData.effective_to = updates.effectiveTo;
+    if (updates.descricao !== undefined) updateData.descricao = updates.descricao;
+    if (updates.ativo !== undefined) updateData.ativo = updates.ativo;
+
+    const { data, error } = await supabase
+      .from('resource_rates')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating resource rate:', error);
+      throw error;
+    }
+
+    return mapResourceRateFromDB(data);
+  },
+
+  async deleteResourceRate(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('resource_rates')
+      .update({ ativo: false })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting resource rate:', error);
+      throw error;
+    }
+  },
+
+  async getResourceCurves(empresaId?: string): Promise<ResourceCurve[]> {
+    let query = supabase
+      .from('resource_curves')
+      .select('*')
+      .eq('ativo', true)
+      .order('nome');
+
+    if (empresaId) {
+      query = query.or(`empresa_id.eq.${empresaId},empresa_id.is.null`);
+    } else {
+      query = query.is('empresa_id', null);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching resource curves:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapResourceCurveFromDB);
+  },
+
+  async getSystemDefaultCurves(): Promise<ResourceCurve[]> {
+    const { data, error } = await supabase
+      .from('resource_curves')
+      .select('*')
+      .eq('is_system_default', true)
+      .eq('ativo', true)
+      .order('nome');
+
+    if (error) {
+      console.error('Error fetching system default curves:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapResourceCurveFromDB);
+  },
+
+  async createResourceCurve(curve: Omit<ResourceCurve, 'id' | 'createdAt' | 'updatedAt'>): Promise<ResourceCurve> {
+    const { data, error } = await supabase
+      .from('resource_curves')
+      .insert({
+        empresa_id: curve.empresaId,
+        codigo: curve.codigo,
+        nome: curve.nome,
+        descricao: curve.descricao,
+        curve_type: curve.curveType,
+        distribution_points: curve.distributionPoints,
+        is_system_default: curve.isSystemDefault || false,
+        cor: curve.cor,
+        ativo: curve.ativo ?? true,
+        created_by: curve.createdBy,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating resource curve:', error);
+      throw error;
+    }
+
+    return mapResourceCurveFromDB(data);
+  },
+
+  async updateResourceCurve(id: string, updates: Partial<ResourceCurve>): Promise<ResourceCurve> {
+    const updateData: Record<string, unknown> = {};
+    
+    if (updates.nome !== undefined) updateData.nome = updates.nome;
+    if (updates.descricao !== undefined) updateData.descricao = updates.descricao;
+    if (updates.curveType !== undefined) updateData.curve_type = updates.curveType;
+    if (updates.distributionPoints !== undefined) updateData.distribution_points = updates.distributionPoints;
+    if (updates.cor !== undefined) updateData.cor = updates.cor;
+    if (updates.ativo !== undefined) updateData.ativo = updates.ativo;
+
+    const { data, error } = await supabase
+      .from('resource_curves')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating resource curve:', error);
+      throw error;
+    }
+
+    return mapResourceCurveFromDB(data);
+  },
+
+  async getAllocationsP6(empresaId: string, atividadeId?: string): Promise<ResourceAllocationP6[]> {
+    let query = supabase
+      .from('resource_allocations')
+      .select(`
+        *,
+        resources (*, resource_types (*)),
+        resource_curves (*),
+        resource_assignment_periods (*)
+      `)
+      .eq('empresa_id', empresaId)
+      .eq('ativo', true);
+
+    if (atividadeId) {
+      query = query.eq('atividade_id', atividadeId);
+    }
+
+    const { data, error } = await query.order('data_inicio');
+
+    if (error) {
+      console.error('Error fetching P6 allocations:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapAllocationP6FromDB);
+  },
+
+  async createAllocationP6(allocation: Omit<ResourceAllocationP6, 'id' | 'createdAt' | 'updatedAt' | 'resource' | 'curve' | 'periods'>): Promise<ResourceAllocationP6> {
+    const { data, error } = await supabase
+      .from('resource_allocations')
+      .insert({
+        empresa_id: allocation.empresaId,
+        atividade_id: allocation.atividadeId,
+        resource_id: allocation.resourceId,
+        data_inicio: allocation.dataInicio,
+        data_fim: allocation.dataFim,
+        unidades: allocation.unidades,
+        unidade_tipo: allocation.unidadeTipo,
+        quantidade_planejada: allocation.quantidadePlanejada,
+        quantidade_real: allocation.quantidadeReal,
+        custo_planejado: allocation.custoPlanejado,
+        custo_real: allocation.custoReal,
+        curva_alocacao: allocation.curvaAlocacao,
+        status: allocation.status,
+        notas: allocation.notas,
+        metadata: allocation.metadata,
+        ativo: allocation.ativo ?? true,
+        created_by: allocation.createdBy,
+        curve_id: allocation.curveId,
+        rate_type: allocation.rateType,
+        units_per_time: allocation.unitsPerTime,
+        budgeted_units: allocation.budgetedUnits,
+        actual_units: allocation.actualUnits,
+        remaining_units: allocation.remainingUnits,
+        at_completion_units: allocation.atCompletionUnits,
+        budgeted_cost: allocation.budgetedCost,
+        actual_cost: allocation.actualCost,
+        remaining_cost: allocation.remainingCost,
+        at_completion_cost: allocation.atCompletionCost,
+        actual_start: allocation.actualStart,
+        actual_finish: allocation.actualFinish,
+      })
+      .select(`
+        *,
+        resources (*, resource_types (*)),
+        resource_curves (*)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error creating P6 allocation:', error);
+      throw error;
+    }
+
+    return mapAllocationP6FromDB(data);
+  },
+
+  async updateAllocationP6(id: string, updates: Partial<ResourceAllocationP6>): Promise<ResourceAllocationP6> {
+    const updateData: Record<string, unknown> = {};
+    
+    if (updates.dataInicio !== undefined) updateData.data_inicio = updates.dataInicio;
+    if (updates.dataFim !== undefined) updateData.data_fim = updates.dataFim;
+    if (updates.unidades !== undefined) updateData.unidades = updates.unidades;
+    if (updates.unidadeTipo !== undefined) updateData.unidade_tipo = updates.unidadeTipo;
+    if (updates.quantidadePlanejada !== undefined) updateData.quantidade_planejada = updates.quantidadePlanejada;
+    if (updates.quantidadeReal !== undefined) updateData.quantidade_real = updates.quantidadeReal;
+    if (updates.custoPlanejado !== undefined) updateData.custo_planejado = updates.custoPlanejado;
+    if (updates.custoReal !== undefined) updateData.custo_real = updates.custoReal;
+    if (updates.curvaAlocacao !== undefined) updateData.curva_alocacao = updates.curvaAlocacao;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.notas !== undefined) updateData.notas = updates.notas;
+    if (updates.curveId !== undefined) updateData.curve_id = updates.curveId;
+    if (updates.rateType !== undefined) updateData.rate_type = updates.rateType;
+    if (updates.unitsPerTime !== undefined) updateData.units_per_time = updates.unitsPerTime;
+    if (updates.budgetedUnits !== undefined) updateData.budgeted_units = updates.budgetedUnits;
+    if (updates.actualUnits !== undefined) updateData.actual_units = updates.actualUnits;
+    if (updates.remainingUnits !== undefined) updateData.remaining_units = updates.remainingUnits;
+    if (updates.atCompletionUnits !== undefined) updateData.at_completion_units = updates.atCompletionUnits;
+    if (updates.budgetedCost !== undefined) updateData.budgeted_cost = updates.budgetedCost;
+    if (updates.actualCost !== undefined) updateData.actual_cost = updates.actualCost;
+    if (updates.remainingCost !== undefined) updateData.remaining_cost = updates.remainingCost;
+    if (updates.atCompletionCost !== undefined) updateData.at_completion_cost = updates.atCompletionCost;
+    if (updates.actualStart !== undefined) updateData.actual_start = updates.actualStart;
+    if (updates.actualFinish !== undefined) updateData.actual_finish = updates.actualFinish;
+
+    const { data, error } = await supabase
+      .from('resource_allocations')
+      .update(updateData)
+      .eq('id', id)
+      .select(`
+        *,
+        resources (*, resource_types (*)),
+        resource_curves (*)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error updating P6 allocation:', error);
+      throw error;
+    }
+
+    return mapAllocationP6FromDB(data);
+  },
+
+  async getAssignmentPeriods(allocationId: string): Promise<ResourceAssignmentPeriod[]> {
+    const { data, error } = await supabase
+      .from('resource_assignment_periods')
+      .select('*')
+      .eq('allocation_id', allocationId)
+      .order('period_start');
+
+    if (error) {
+      console.error('Error fetching assignment periods:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapAssignmentPeriodFromDB);
+  },
+
+  async updateAssignmentPeriod(id: string, updates: Partial<ResourceAssignmentPeriod>): Promise<ResourceAssignmentPeriod> {
+    const updateData: Record<string, unknown> = {};
+    
+    if (updates.plannedUnits !== undefined) updateData.planned_units = updates.plannedUnits;
+    if (updates.actualUnits !== undefined) updateData.actual_units = updates.actualUnits;
+    if (updates.remainingUnits !== undefined) updateData.remaining_units = updates.remainingUnits;
+    if (updates.plannedCost !== undefined) updateData.planned_cost = updates.plannedCost;
+    if (updates.actualCost !== undefined) updateData.actual_cost = updates.actualCost;
+    if (updates.remainingCost !== undefined) updateData.remaining_cost = updates.remainingCost;
+    if (updates.earnedValue !== undefined) updateData.earned_value = updates.earnedValue;
+    if (updates.isManualEntry !== undefined) updateData.is_manual_entry = updates.isManualEntry;
+
+    const { data, error } = await supabase
+      .from('resource_assignment_periods')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating assignment period:', error);
+      throw error;
+    }
+
+    return mapAssignmentPeriodFromDB(data);
+  },
+
+  calculateCurveDistribution(
+    totalUnits: number,
+    startDate: Date,
+    endDate: Date,
+    distributionPoints: number[]
+  ): { date: Date; units: number; cumulativePercent: number }[] {
+    const result: { date: Date; units: number; cumulativePercent: number }[] = [];
+    const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    for (let i = 0; i < duration; i++) {
+      const progressPercent = (i / duration) * 100;
+      const curveIndex = Math.min(Math.floor(progressPercent / 5), 19);
+      
+      const prevPct = distributionPoints[curveIndex] || 0;
+      const currPct = distributionPoints[curveIndex + 1] || 100;
+      
+      const interpolatedPct = prevPct + ((currPct - prevPct) * ((progressPercent % 5) / 5));
+      const nextInterpolatedPct = i < duration - 1 
+        ? prevPct + ((currPct - prevPct) * (((progressPercent + (100/duration)) % 5) / 5))
+        : 100;
+      
+      const dailyUnits = totalUnits * (nextInterpolatedPct - interpolatedPct) / 100;
+      
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      
+      result.push({
+        date,
+        units: Math.max(0, dailyUnits),
+        cumulativePercent: interpolatedPct,
+      });
+    }
+    
+    return result;
+  },
+
+  generateSCurveData(
+    allocations: ResourceAllocationP6[],
+    _startDate?: Date,
+    _endDate?: Date,
+    groupBy: 'day' | 'week' | 'month' = 'week'
+  ): { 
+    date: string; 
+    plannedCumulative: number; 
+    actualCumulative: number;
+    remainingCumulative: number;
+    earnedValueCumulative: number;
+  }[] {
+    const result: Map<string, { planned: number; actual: number; remaining: number; earnedValue: number }> = new Map();
+    
+    allocations.forEach(alloc => {
+      if (!alloc.periods) return;
+      
+      alloc.periods.forEach(period => {
+        const periodDate = new Date(period.periodStart);
+        let dateKey: string;
+        
+        if (groupBy === 'day') {
+          dateKey = periodDate.toISOString().split('T')[0];
+        } else if (groupBy === 'week') {
+          const weekStart = new Date(periodDate);
+          weekStart.setDate(periodDate.getDate() - periodDate.getDay());
+          dateKey = weekStart.toISOString().split('T')[0];
+        } else {
+          dateKey = `${periodDate.getFullYear()}-${String(periodDate.getMonth() + 1).padStart(2, '0')}-01`;
+        }
+        
+        if (!result.has(dateKey)) {
+          result.set(dateKey, { planned: 0, actual: 0, remaining: 0, earnedValue: 0 });
+        }
+        
+        const entry = result.get(dateKey)!;
+        entry.planned += period.plannedCost;
+        entry.actual += period.actualCost;
+        entry.remaining += period.remainingCost;
+        entry.earnedValue += period.earnedValue;
+      });
+    });
+    
+    const sortedDates = Array.from(result.keys()).sort();
+    let plannedCumulative = 0;
+    let actualCumulative = 0;
+    let remainingCumulative = 0;
+    let earnedValueCumulative = 0;
+    
+    return sortedDates.map(date => {
+      const entry = result.get(date)!;
+      plannedCumulative += entry.planned;
+      actualCumulative += entry.actual;
+      remainingCumulative += entry.remaining;
+      earnedValueCumulative += entry.earnedValue;
+      
+      return {
+        date,
+        plannedCumulative,
+        actualCumulative,
+        remainingCumulative,
+        earnedValueCumulative,
+      };
+    });
+  },
+
+  generateCommodityCurveData(
+    allocations: ResourceAllocationP6[],
+    resources: Resource[],
+    groupBy: 'day' | 'week' | 'month' = 'week'
+  ): Map<string, { date: string; value: number; cumulative: number }[]> {
+    const categoryData: Map<string, Map<string, number>> = new Map();
+    
+    allocations.forEach(alloc => {
+      const resource = resources.find(r => r.id === alloc.resourceId);
+      if (!resource?.resourceType) return;
+      
+      const category = resource.resourceType.categoria;
+      if (!categoryData.has(category)) {
+        categoryData.set(category, new Map());
+      }
+      
+      const catMap = categoryData.get(category)!;
+      
+      if (alloc.periods) {
+        alloc.periods.forEach(period => {
+          const periodDate = new Date(period.periodStart);
+          let dateKey: string;
+          
+          if (groupBy === 'day') {
+            dateKey = periodDate.toISOString().split('T')[0];
+          } else if (groupBy === 'week') {
+            const weekStart = new Date(periodDate);
+            weekStart.setDate(periodDate.getDate() - periodDate.getDay());
+            dateKey = weekStart.toISOString().split('T')[0];
+          } else {
+            dateKey = `${periodDate.getFullYear()}-${String(periodDate.getMonth() + 1).padStart(2, '0')}-01`;
+          }
+          
+          catMap.set(dateKey, (catMap.get(dateKey) || 0) + period.plannedCost);
+        });
+      }
+    });
+    
+    const result: Map<string, { date: string; value: number; cumulative: number }[]> = new Map();
+    
+    categoryData.forEach((dateMap, category) => {
+      const sortedDates = Array.from(dateMap.keys()).sort();
+      let cumulative = 0;
+      
+      result.set(category, sortedDates.map(date => {
+        const value = dateMap.get(date) || 0;
+        cumulative += value;
+        return { date, value, cumulative };
+      }));
+    });
+    
+    return result;
   },
 };
 

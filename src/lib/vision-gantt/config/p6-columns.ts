@@ -1333,6 +1333,81 @@ const renderTotalFloatBadge = (value: number) => {
   );
 };
 
+interface ResourceAssignment {
+  resourceId: string;
+  unidades: number;
+  resource?: {
+    id: string;
+    nome: string;
+    cor?: string;
+  };
+}
+
+const renderResourceBadges = (value: ResourceAssignment[] | string | undefined, _task?: Task, maxBadges: number = 3) => {
+  if (!value) {
+    return React.createElement('span', { className: 'text-gray-400 text-xs' }, '-');
+  }
+  
+  if (typeof value === 'string') {
+    return React.createElement(
+      'span', 
+      { className: 'text-xs text-gray-700 truncate' }, 
+      value
+    );
+  }
+  
+  if (!Array.isArray(value) || value.length === 0) {
+    return React.createElement('span', { className: 'text-gray-400 text-xs' }, '-');
+  }
+  
+  const visibleItems = value.slice(0, maxBadges);
+  const hiddenCount = Math.max(0, value.length - maxBadges);
+  
+  const badges: React.ReactElement[] = visibleItems.map((assignment, index) => {
+    const resourceName = assignment.resource?.nome || 'R';
+    const resourceColor = assignment.resource?.cor || '#6B7280';
+    const units = assignment.unidades;
+    const displayName = resourceName.length > 6 ? resourceName.slice(0, 6) : resourceName;
+    
+    return React.createElement(
+      'span',
+      {
+        key: assignment.resourceId || index,
+        className: 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium text-white gap-0.5',
+        style: { backgroundColor: resourceColor },
+        title: `${resourceName} - ${units}%`
+      },
+      displayName,
+      units !== 100 && React.createElement(
+        'span',
+        { className: 'opacity-75 text-[10px]' },
+        `${units}%`
+      )
+    );
+  });
+  
+  if (hiddenCount > 0) {
+    badges.push(
+      React.createElement(
+        'span',
+        { 
+          key: 'more',
+          className: 'text-xs font-medium text-gray-500',
+          style: {},
+          title: `Mais ${hiddenCount} recursos`
+        } as any,
+        `+${hiddenCount}`
+      )
+    );
+  }
+  
+  return React.createElement(
+    'div',
+    { className: 'flex items-center gap-1 flex-wrap' },
+    ...badges
+  );
+};
+
 export const GENERAL_COLUMNS: ColumnConfig[] = [
   {
     field: 'codigo',
@@ -1410,6 +1485,7 @@ export const GENERAL_COLUMNS: ColumnConfig[] = [
     width: 150,
     minWidth: 100,
     maxWidth: 250,
+    renderer: renderResourceBadges,
     sortable: false,
     resizable: true
   },
