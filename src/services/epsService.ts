@@ -116,8 +116,7 @@ export const epsService = {
       `)
       .eq('empresa_id', empresaId)
       .eq('ativo', true)
-      .lte('nivel', 1)
-      .order('nivel', { ascending: true })
+      .eq('nivel', 0)
       .order('ordem', { ascending: true });
 
     if (error) {
@@ -125,8 +124,7 @@ export const epsService = {
       throw error;
     }
 
-    const epsNodes = (data || []).map(mapFromDB);
-    return this.buildTree(epsNodes);
+    return (data || []).map(mapFromDB);
   },
 
   buildTree(nodes: EpsNode[]): EpsNode[] {
