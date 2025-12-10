@@ -73,6 +73,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (December 2025)
 
+*   **TaskDetailPanel**: Comprehensive panel showing selected task details (status, dates, progress, resources, dependencies, EVM metrics). WBS/EPS hierarchy nodes show "somente leitura" banner and hide edit actions.
+*   **Column Configuration Modal**: Drag-drop interface for managing active/available columns. WBS column is always locked as first column and cannot be removed.
+*   **Column Drag-Drop in GanttGrid**: Users can reorder columns directly in the grid header, with WBS column locked.
+*   **Read-Only Enforcement**: VisionGanttWrapper enriches selected tasks with isWbsNode/isReadOnly flags to ensure WBS/EPS nodes cannot be edited.
 *   **EPS Selection Flow**: Implemented EpsSelector component with tree view - double-click on project nodes (nivel === 1) opens the schedule. Routes updated from `/cronograma/proj-1` to `/cronograma` with optional `:projetoId` parameter.
 *   **Cronograma Service Migration**: Converted `cronogramaService.ts` from mock data to real Supabase CRUD operations
 *   **CPM Calculation**: Fixed Critical Path Method to return proper `FolgaAtividade` type with early/late dates and float values
