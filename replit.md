@@ -73,6 +73,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (December 2025)
 
+*   **EPS Selection Flow**: Implemented EpsSelector component with tree view - double-click on project nodes (nivel === 1) opens the schedule. Routes updated from `/cronograma/proj-1` to `/cronograma` with optional `:projetoId` parameter.
 *   **Cronograma Service Migration**: Converted `cronogramaService.ts` from mock data to real Supabase CRUD operations
 *   **CPM Calculation**: Fixed Critical Path Method to return proper `FolgaAtividade` type with early/late dates and float values
 *   **Database Tables**: Created `atividades_cronograma` and `dependencias_atividades` tables with proper indexes and RLS
