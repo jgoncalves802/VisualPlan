@@ -327,8 +327,8 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       
-      <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-[900px] max-w-[95vw] max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary to-primary-dark rounded-t-xl">
+      <div className="relative bg-surface rounded-xl shadow-2xl w-[900px] max-w-[95vw] max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-primary rounded-t-xl">
           <div className="flex items-center gap-3">
             <Columns className="w-6 h-6 text-white" />
             <div>
@@ -345,19 +345,19 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-hidden flex">
-          <div className="w-[45%] border-r border-gray-200 dark:border-gray-700 flex flex-col">
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className="w-[45%] border-r border-border flex flex-col">
+            <div className="p-3 bg-surface-secondary border-b border-border">
+              <h3 className="font-medium text-text mb-2">
                 Colunas Disponíveis
               </h3>
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type="text"
                   placeholder="Buscar coluna..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-surface text-text"
                 />
               </div>
             </div>
@@ -370,20 +370,20 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               onDrop={(e) => handleDrop(e, 'available', localAvailableColumns.length)}
             >
               {filteredCategories.map((category) => (
-                <div key={category.id} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+                <div key={category.id} className="border-b border-border-light last:border-b-0">
                   <button
                     onClick={() => toggleCategory(category.id)}
-                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 bg-surface-secondary hover:bg-surface-tertiary transition-colors"
                   >
                     <span className="text-sm">{category.icon}</span>
-                    <span className="flex-1 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="flex-1 text-left text-sm font-medium text-text">
                       {category.name}
                     </span>
-                    <span className="text-xs text-gray-500 mr-2">{category.columns.length}</span>
+                    <span className="text-xs text-text-muted mr-2">{category.columns.length}</span>
                     {expandedCategories.has(category.id) ? (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 text-text-muted" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 text-text-muted" />
                     )}
                   </button>
                   
@@ -405,19 +405,19 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
                             className={`
                               flex items-center gap-2 px-3 py-2 rounded-md border transition-all cursor-pointer
                               ${isSelected
-                                ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
+                                ? 'bg-primary-100 border-primary-300'
                                 : isDragging
-                                  ? 'bg-blue-100 border-blue-300 opacity-50'
-                                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-green-300 hover:bg-green-50'
+                                  ? 'bg-primary-100 border-primary-300 opacity-50'
+                                  : 'bg-surface border-border hover:border-success hover:bg-success-light'
                               }
                             `}
                           >
-                            <GripVertical className="w-3 h-3 text-gray-400 flex-shrink-0 cursor-grab" />
-                            <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">
+                            <GripVertical className="w-3 h-3 text-text-muted flex-shrink-0 cursor-grab" />
+                            <span className="flex-1 text-sm text-text truncate">
                               {column.header}
                             </span>
                             {isSelected && (
-                              <Check className="w-4 h-4 text-blue-600" />
+                              <Check className="w-4 h-4 text-primary" />
                             )}
                           </div>
                         );
@@ -428,7 +428,7 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               ))}
               
               {filteredCategories.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-text-muted">
                   <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Nenhuma coluna encontrada</p>
                 </div>
@@ -436,15 +436,15 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
             </div>
           </div>
 
-          <div className="w-[10%] flex flex-col items-center justify-center gap-2 py-4 bg-gray-50 dark:bg-gray-800">
+          <div className="w-[10%] flex flex-col items-center justify-center gap-2 py-4 bg-surface-secondary">
             <button
               onClick={moveSelectedToActive}
               disabled={selectedAvailableColumns.size === 0}
               className={`
                 p-2 rounded-lg border-2 transition-all
                 ${selectedAvailableColumns.size > 0
-                  ? 'bg-green-500 border-green-500 text-white hover:bg-green-600'
-                  : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
+                  ? 'bg-success border-success text-white hover:opacity-90'
+                  : 'bg-surface-tertiary border-border text-text-muted cursor-not-allowed'
                 }
               `}
               title="Adicionar selecionadas"
@@ -458,8 +458,8 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               className={`
                 p-2 rounded-lg border-2 transition-all
                 ${selectedActiveColumns.size > 0
-                  ? 'bg-red-500 border-red-500 text-white hover:bg-red-600'
-                  : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
+                  ? 'bg-danger border-danger text-white hover:opacity-90'
+                  : 'bg-surface-tertiary border-border text-text-muted cursor-not-allowed'
                 }
               `}
               title="Remover selecionadas"
@@ -475,8 +475,8 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               className={`
                 p-2 rounded-lg border-2 transition-all
                 ${selectedActiveColumns.size === 1
-                  ? 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
+                  ? 'bg-primary border-primary text-white hover:opacity-90'
+                  : 'bg-surface-tertiary border-border text-text-muted cursor-not-allowed'
                 }
               `}
               title="Mover para cima"
@@ -490,8 +490,8 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               className={`
                 p-2 rounded-lg border-2 transition-all
                 ${selectedActiveColumns.size === 1
-                  ? 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
+                  ? 'bg-primary border-primary text-white hover:opacity-90'
+                  : 'bg-surface-tertiary border-border text-text-muted cursor-not-allowed'
                 }
               `}
               title="Mover para baixo"
@@ -501,12 +501,12 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
           </div>
 
           <div className="w-[45%] flex flex-col">
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
+            <div className="p-3 bg-surface-secondary border-b border-border">
+              <h3 className="font-medium text-text flex items-center gap-2">
+                <Check className="w-4 h-4 text-success" />
                 Colunas Ativas ({localActiveColumns.length})
               </h3>
-              <p className="text-xs text-gray-500 mt-1">Arraste para reordenar ou clique para selecionar</p>
+              <p className="text-xs text-text-muted mt-1">Arraste para reordenar ou clique para selecionar</p>
             </div>
             
             <div 
@@ -537,30 +537,30 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
                       className={`
                         flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all
                         ${isWbs 
-                          ? 'bg-amber-50 border-amber-200 cursor-not-allowed' 
+                          ? 'bg-warning-light border-warning cursor-not-allowed' 
                           : isSelected
-                            ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
+                            ? 'bg-primary-100 border-primary-300'
                             : isDragging
-                              ? 'bg-blue-100 border-blue-300 opacity-50'
-                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:bg-blue-50 cursor-pointer'
+                              ? 'bg-primary-100 border-primary-300 opacity-50'
+                              : 'bg-surface border-border hover:border-primary-300 hover:bg-primary-50 cursor-pointer'
                         }
                       `}
                     >
                       {isWbs ? (
-                        <Lock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                        <Lock className="w-4 h-4 text-warning flex-shrink-0" />
                       ) : (
-                        <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab" />
+                        <GripVertical className="w-4 h-4 text-text-muted flex-shrink-0 cursor-grab" />
                       )}
-                      <span className={`flex-1 text-sm font-medium ${isWbs ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <span className={`flex-1 text-sm font-medium ${isWbs ? 'text-warning' : 'text-text'}`}>
                         {column.header}
                       </span>
                       {isWbs && (
-                        <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-warning text-white px-2 py-0.5 rounded">
                           Fixo
                         </span>
                       )}
                       {isSelected && !isWbs && (
-                        <Check className="w-4 h-4 text-blue-600" />
+                        <Check className="w-4 h-4 text-primary" />
                       )}
                     </div>
                   </div>
@@ -568,7 +568,7 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
               })}
               
               {localActiveColumns.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-text-muted">
                   <Columns className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Arraste colunas aqui</p>
                 </div>
@@ -577,10 +577,10 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-xl flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-t border-border bg-surface-secondary rounded-b-xl flex-shrink-0">
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-text-secondary hover:text-text hover:bg-surface-tertiary rounded-lg transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
             Restaurar Padrão
@@ -589,13 +589,13 @@ export const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-text-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors flex items-center gap-2"
+              className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:opacity-90 transition-colors flex items-center gap-2"
             >
               <Check className="w-4 h-4" />
               Aplicar
