@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, GripVertical } from 'lucide-react';
 import { useColumnResize } from '../hooks/use-column-resize';
 import { EditableWBSCell } from './editable-wbs-cell';
 import { EditableResourceCell } from './editable-resource-cell';
@@ -52,6 +52,10 @@ interface GanttGridProps {
   enableInlineEdit?: boolean;
   calendars?: CalendarOption[];
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  onRowMove?: (taskId: string, newParentId: string | null, newIndex: number) => void;
+  onInsertRow?: (afterTaskId: string | null) => void;
+  enableRowDragDrop?: boolean;
+  showInsertButtons?: boolean;
 }
 
 export function GanttGrid({
@@ -76,7 +80,11 @@ export function GanttGrid({
   criticalPathIds = [],
   enableInlineEdit = true,
   calendars = [],
-  onKeyDown
+  onKeyDown,
+  onRowMove,
+  onInsertRow,
+  enableRowDragDrop = false,
+  showInsertButtons = false
 }: GanttGridProps) {
   const actualHeaderHeight = headerHeight ?? rowHeight;
   const { theme } = useGanttTheme();
@@ -89,6 +97,65 @@ export function GanttGrid({
   
   const [dragColumnIndex, setDragColumnIndex] = useState<number | null>(null);
   const [dropColumnIndex, setDropColumnIndex] = useState<number | null>(null);
+  
+  const [dragRowTaskId, setDragRowTaskId] = useState<string | null>(null);
+  const [dropRowIndex, setDropRowIndex] = useState<number | null>(null);
+  const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+
+  const handleRowDragStart = useCallback((e: React.DragEvent, task: Task) => {
+    if (task.isGroup || task.id.startsWith('wbs-')) {
+      e.preventDefault();
+      return;
+    }
+    setDragRowTaskId(task.id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task.id);
+    
+    const dragImage = document.createElement('div');
+    dragImage.className = 'bg-blue-500 text-white px-3 py-2 rounded shadow-lg text-sm';
+    dragImage.textContent = task.name;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  }, []);
+
+  const handleRowDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragRowTaskId === null) return;
+    e.dataTransfer.dropEffect = 'move';
+    setDropRowIndex(index);
+  }, [dragRowTaskId]);
+
+  const handleRowDragEnd = useCallback(() => {
+    setDragRowTaskId(null);
+    setDropRowIndex(null);
+  }, []);
+
+  const handleRowDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (!dragRowTaskId || !onRowMove) {
+      handleRowDragEnd();
+      return;
+    }
+    
+    const targetTask = tasks[targetIndex];
+    let newParentId: string | null = null;
+    
+    if (targetTask?.isGroup || targetTask?.id.startsWith('wbs-')) {
+      newParentId = targetTask.id;
+    } else if (targetTask?.parentId) {
+      newParentId = targetTask.parentId;
+    }
+    
+    onRowMove(dragRowTaskId, newParentId, targetIndex);
+    handleRowDragEnd();
+  }, [dragRowTaskId, onRowMove, tasks, handleRowDragEnd]);
+
+  const handleInsertRow = useCallback((afterTaskId: string | null) => {
+    if (onInsertRow) {
+      onInsertRow(afterTaskId);
+    }
+  }, [onInsertRow]);
   
   const handleColumnDragStart = useCallback((e: React.DragEvent, index: number) => {
     const column = columns[index];
@@ -319,19 +386,32 @@ export function GanttGrid({
           };
 
           const rowStyle = getRowStyle();
+          const isRowDragging = dragRowTaskId === task?.id;
+          const isRowDropTarget = dropRowIndex === rowIndex && dragRowTaskId !== task?.id;
+          const canDragRow = enableRowDragDrop && !isGroup && !task?.id.startsWith('wbs-');
+          const isHovered = hoveredRowIndex === rowIndex;
           
           return (
             <div
               key={task?.id ?? `task-${rowIndex}`}
-              className="gantt-grid-row flex cursor-pointer select-none"
+              className="gantt-grid-row flex cursor-pointer select-none relative group/row"
               tabIndex={0}
               data-task-id={task?.id}
               data-row-index={rowIndex}
+              draggable={canDragRow}
+              onDragStart={(e) => canDragRow && handleRowDragStart(e, task)}
+              onDragOver={(e) => enableRowDragDrop && handleRowDragOver(e, rowIndex)}
+              onDragEnd={handleRowDragEnd}
+              onDrop={(e) => enableRowDragDrop && handleRowDrop(e, rowIndex)}
+              onMouseEnter={() => setHoveredRowIndex(rowIndex)}
+              onMouseLeave={() => setHoveredRowIndex(null)}
               style={{ 
                 height: rowHeight,
                 ...rowStyle,
                 transition: 'background-color 0.1s ease',
-                outline: 'none'
+                outline: 'none',
+                opacity: isRowDragging ? 0.5 : 1,
+                borderTop: isRowDropTarget ? '2px solid #3B82F6' : 'none'
               }}
               onMouseDownCapture={(e) => {
                 // Capture phase: Select task and focus row BEFORE any cell stopPropagation
@@ -364,23 +444,43 @@ export function GanttGrid({
                   onTaskClick?.(task);
                 }
               }}
-              onMouseEnter={(e) => {
-                if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = gridColors.hover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSelected && !isGroup) {
-                  e.currentTarget.style.backgroundColor = rowStyle.backgroundColor as string;
-                }
-              }}
               onKeyDown={(e) => {
-                // Forward keyboard events to parent for Shift+Arrow indent/outdent
                 if (onKeyDown) {
                   onKeyDown(e);
                 }
+                if (e.ctrlKey && (e.key === '+' || e.key === '=') && onInsertRow) {
+                  e.preventDefault();
+                  onInsertRow(task?.id ?? null);
+                }
               }}
             >
+              {canDragRow && (
+                <div
+                  className="flex-shrink-0 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity cursor-grab"
+                  style={{ width: 20, height: rowHeight }}
+                  title="Arraste para mover"
+                >
+                  <GripVertical size={14} className="text-gray-400" />
+                </div>
+              )}
+              
+              {showInsertButtons && isHovered && !isGroup && (
+                <button
+                  className="absolute left-0 -bottom-2 z-10 w-full h-4 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                  style={{ transform: 'translateY(50%)' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInsertRow(task?.id ?? null);
+                  }}
+                  title="Inserir linha abaixo (Ctrl++)"
+                >
+                  <div className="flex items-center gap-1 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs shadow-lg">
+                    <Plus size={12} />
+                    <span>Nova linha</span>
+                  </div>
+                </button>
+              )}
+              
               {columns.map((column, colIndex) => {
                 const isNameColumn = column?.field === 'name';
                 const indent = isNameColumn ? level * 20 + 10 : 10;

@@ -42,6 +42,10 @@ export interface GanttChartV2Props extends GanttConfig {
   onCellDoubleClick?: (task: Task, columnField: string) => void;
   onColumnReorder?: (columns: ColumnConfig[]) => void;
   onTaskSelect?: (task: Task) => void;
+  onRowMove?: (taskId: string, newParentId: string | null, newIndex: number) => void;
+  onInsertRow?: (afterTaskId: string | null) => void;
+  enableRowDragDrop?: boolean;
+  showInsertButtons?: boolean;
 }
 
 export function GanttChartV2({
@@ -70,6 +74,10 @@ export function GanttChartV2({
   onCellDoubleClick,
   onColumnReorder,
   onTaskSelect,
+  onRowMove,
+  onInsertRow,
+  enableRowDragDrop = false,
+  showInsertButtons = false,
   className = '',
   criticalPathIds = [],
   nearCriticalPathIds = [],
@@ -571,6 +579,10 @@ export function GanttChartV2({
             onWBSUpdate={handleWBSUpdate}
             onCellDoubleClick={onCellDoubleClick}
             onColumnReorder={onColumnReorder}
+            onRowMove={onRowMove}
+            onInsertRow={onInsertRow}
+            enableRowDragDrop={enableRowDragDrop}
+            showInsertButtons={showInsertButtons}
           />
         </div>
         

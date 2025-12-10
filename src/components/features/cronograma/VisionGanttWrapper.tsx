@@ -29,6 +29,7 @@ interface VisionGanttWrapperProps {
   allocations?: ResourceAllocation[];
   calendarios?: CalendarioProjeto[];
   onAtividadeUpdate?: (atividade: AtividadeMock, changes: Partial<AtividadeMock>) => void;
+  onAtividadeCreate?: (afterTaskId: string | null, parentWbsId: string | null) => void;
   onDependenciaCreate?: (dep: DependenciaAtividade) => void;
   onDependenciaUpdate?: (depId: string, updates: { tipo: TipoDependencia; lag_dias: number }) => Promise<void>;
   onDependenciaDelete?: (depId: string) => void;
@@ -38,6 +39,8 @@ interface VisionGanttWrapperProps {
   gridWidth?: number;
   initialViewPreset?: ViewPreset;
   className?: string;
+  enableRowDragDrop?: boolean;
+  showInsertButtons?: boolean;
 }
 
 export function VisionGanttWrapper({
@@ -49,6 +52,7 @@ export function VisionGanttWrapper({
   allocations = [],
   calendarios = [],
   onAtividadeUpdate,
+  onAtividadeCreate,
   onDependenciaCreate,
   onDependenciaUpdate,
   onDependenciaDelete,
@@ -58,6 +62,8 @@ export function VisionGanttWrapper({
   gridWidth = 500,
   initialViewPreset = 'month',
   className = '',
+  enableRowDragDrop = true,
+  showInsertButtons = true,
 }: VisionGanttWrapperProps) {
   const [viewPreset, setViewPreset] = useState<ViewPreset>(initialViewPreset);
   const [selectedColumns, setSelectedColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
@@ -413,6 +419,66 @@ export function VisionGanttWrapper({
     setColumnConfigOpen(false);
   }, []);
 
+  const handleRowMove = useCallback((taskId: string, newParentId: string | null, _newIndex: number) => {
+    if (taskId.startsWith('wbs-')) {
+      console.log('[VisionGanttWrapper] Blocked move for WBS node:', taskId);
+      return;
+    }
+    
+    const atividade = atividadeMap.get(taskId);
+    if (!atividade || !onAtividadeUpdate) return;
+    
+    let actualParentId: string | undefined = undefined;
+    if (newParentId) {
+      if (newParentId.startsWith('wbs-')) {
+        actualParentId = newParentId.replace('wbs-', '');
+      } else {
+        actualParentId = newParentId;
+      }
+    }
+    
+    const updatedAtividade: AtividadeMock = {
+      ...atividade,
+      wbs_id: actualParentId,
+    };
+    
+    onAtividadeUpdate(updatedAtividade, { wbs_id: actualParentId });
+    console.log('[VisionGanttWrapper] Moved task', taskId, 'to WBS', actualParentId);
+  }, [atividadeMap, onAtividadeUpdate]);
+
+  const handleInsertRow = useCallback((afterTaskId: string | null) => {
+    if (onAtividadeCreate) {
+      let parentWbsId: string | null = null;
+      let actualAfterTaskId: string | null = afterTaskId;
+      
+      if (afterTaskId) {
+        if (afterTaskId.startsWith('wbs-')) {
+          parentWbsId = afterTaskId.replace('wbs-', '');
+          actualAfterTaskId = null;
+        } else {
+          const atividade = atividadeMap.get(afterTaskId);
+          if (atividade) {
+            parentWbsId = atividade.wbs_id || atividade.parent_id || null;
+          }
+        }
+      } else if (selectedTask) {
+        if (selectedTask.id.startsWith('wbs-')) {
+          parentWbsId = selectedTask.id.replace('wbs-', '');
+          actualAfterTaskId = null;
+        } else {
+          const atividade = atividadeMap.get(selectedTask.id);
+          if (atividade) {
+            parentWbsId = atividade.wbs_id || atividade.parent_id || null;
+            actualAfterTaskId = selectedTask.id;
+          }
+        }
+      }
+      
+      onAtividadeCreate(actualAfterTaskId, parentWbsId);
+      console.log('[VisionGanttWrapper] Insert row after', actualAfterTaskId, 'with WBS', parentWbsId);
+    }
+  }, [atividadeMap, onAtividadeCreate, selectedTask]);
+
   const handleDependencyCreate = useCallback((dep: Dependency) => {
     if (!onDependenciaCreate) return;
     
@@ -629,6 +695,10 @@ export function VisionGanttWrapper({
             className="rounded-lg shadow-sm"
             onColumnReorder={handleColumnReorder}
             onTaskSelect={handleTaskSelect}
+            onRowMove={handleRowMove}
+            onInsertRow={handleInsertRow}
+            enableRowDragDrop={enableRowDragDrop}
+            showInsertButtons={showInsertButtons}
           />
         </div>
         

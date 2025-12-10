@@ -73,8 +73,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 
 ## Recent Changes (December 2025)
 
+*   **Row Drag-Drop in GanttGrid**: Activities can be dragged to WBS nodes to change parent hierarchy. GripVertical handle appears on hover, visual drop indicator shows target position.
+*   **Insert Row Functionality**: "+" button appears between rows on hover, Ctrl++ keyboard shortcut for adding activities. New rows inherit parent WBS from context.
+*   **ColumnConfigModal Enhanced**: P6 enterprise columns organized by categories (Geral, Cronograma, Baseline, EVM, Caminho Crítico, Dependências, Recursos, Códigos, Validação) with expandable sections, ChevronLeft/Right transfer arrows, ChevronUp/Down reorder buttons, multi-selection, and "Aplicar" button.
 *   **TaskDetailPanel**: Comprehensive panel showing selected task details (status, dates, progress, resources, dependencies, EVM metrics). WBS/EPS hierarchy nodes show "somente leitura" banner and hide edit actions.
-*   **Column Configuration Modal**: Drag-drop interface for managing active/available columns. WBS column is always locked as first column and cannot be removed.
 *   **Column Drag-Drop in GanttGrid**: Users can reorder columns directly in the grid header, with WBS column locked.
 *   **Read-Only Enforcement**: VisionGanttWrapper enriches selected tasks with isWbsNode/isReadOnly flags to ensure WBS/EPS nodes cannot be edited.
 *   **EPS Selection Flow**: Implemented EpsSelector component with tree view - double-click on project nodes (nivel === 1) opens the schedule. Routes updated from `/cronograma/proj-1` to `/cronograma` with optional `:projetoId` parameter.
