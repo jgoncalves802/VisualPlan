@@ -192,7 +192,7 @@ export const CronogramaPage: React.FC = () => {
 
   const CronogramaContent = () => (
     <>
-      <div className="flex-1 overflow-hidden p-6">
+      <div className="flex-1 overflow-auto p-6">
         {atividades.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
