@@ -15,7 +15,7 @@ import { supabase } from './supabase';
  */
 export const getAtividades = async (projetoId: string): Promise<AtividadeMock[]> => {
   const { data, error } = await supabase
-    .from('atividades')
+    .from('atividades_cronograma')
     .select('*')
     .eq('projeto_id', projetoId)
     .order('created_at', { ascending: true });
@@ -81,7 +81,7 @@ export const createAtividade = async (
   }
 
   const { data, error } = await supabase
-    .from('atividades')
+    .from('atividades_cronograma')
     .insert({
       projeto_id: atividade.projeto_id,
       codigo: atividade.codigo,
@@ -158,7 +158,7 @@ export const updateAtividade = async (
   dados: Partial<AtividadeMock>
 ): Promise<AtividadeMock> => {
   const { data, error } = await supabase
-    .from('atividades')
+    .from('atividades_cronograma')
     .update({
       ...dados,
       updated_at: new Date().toISOString(),
@@ -209,7 +209,7 @@ export const updateAtividade = async (
  */
 export const deleteAtividade = async (id: string): Promise<void> => {
   const { error } = await supabase
-    .from('atividades')
+    .from('atividades_cronograma')
     .delete()
     .eq('id', id);
 
@@ -229,7 +229,7 @@ export const deleteAtividade = async (id: string): Promise<void> => {
 export const getDependencias = async (projetoId: string): Promise<DependenciaAtividade[]> => {
   // First get all activity IDs for this project
   const { data: atividades, error: atividadesError } = await supabase
-    .from('atividades')
+    .from('atividades_cronograma')
     .select('id')
     .eq('projeto_id', projetoId);
 

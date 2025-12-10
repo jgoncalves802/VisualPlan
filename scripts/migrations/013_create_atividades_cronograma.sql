@@ -1,11 +1,11 @@
--- Migration 013: Create atividades (schedule activities) table
+-- Migration 013: Create atividades_cronograma (schedule activities) table
 -- VisionPlan - Cronograma Module
 
 -- ============================================================================
--- TABELA DE ATIVIDADES
+-- TABELA DE ATIVIDADES DO CRONOGRAMA
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS public.atividades (
+CREATE TABLE IF NOT EXISTS public.atividades_cronograma (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     projeto_id UUID NOT NULL,
     codigo VARCHAR(50),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.atividades (
     nome VARCHAR(255) NOT NULL,
     descricao TEXT,
     tipo VARCHAR(20) DEFAULT 'Tarefa' CHECK (tipo IN ('Tarefa', 'Marco', 'Fase', 'WBS')),
-    parent_id UUID REFERENCES public.atividades(id) ON DELETE SET NULL,
+    parent_id UUID REFERENCES public.atividades_cronograma(id) ON DELETE SET NULL,
     wbs_id UUID,
     data_inicio DATE NOT NULL,
     data_fim DATE NOT NULL,
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS public.atividades (
 
 CREATE TABLE IF NOT EXISTS public.dependencias_atividades (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    atividade_origem_id UUID NOT NULL REFERENCES public.atividades(id) ON DELETE CASCADE,
-    atividade_destino_id UUID NOT NULL REFERENCES public.atividades(id) ON DELETE CASCADE,
+    atividade_origem_id UUID NOT NULL REFERENCES public.atividades_cronograma(id) ON DELETE CASCADE,
+    atividade_destino_id UUID NOT NULL REFERENCES public.atividades_cronograma(id) ON DELETE CASCADE,
     tipo VARCHAR(10) DEFAULT 'FS' CHECK (tipo IN ('FS', 'SS', 'FF', 'SF')),
     lag_dias INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -55,10 +55,10 @@ CREATE TABLE IF NOT EXISTS public.dependencias_atividades (
 -- ÍNDICES
 -- ============================================================================
 
-CREATE INDEX IF NOT EXISTS idx_atividades_projeto ON public.atividades(projeto_id);
-CREATE INDEX IF NOT EXISTS idx_atividades_empresa ON public.atividades(empresa_id);
-CREATE INDEX IF NOT EXISTS idx_atividades_parent ON public.atividades(parent_id);
-CREATE INDEX IF NOT EXISTS idx_atividades_wbs ON public.atividades(wbs_id);
+CREATE INDEX IF NOT EXISTS idx_atividades_cronograma_projeto ON public.atividades_cronograma(projeto_id);
+CREATE INDEX IF NOT EXISTS idx_atividades_cronograma_empresa ON public.atividades_cronograma(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_atividades_cronograma_parent ON public.atividades_cronograma(parent_id);
+CREATE INDEX IF NOT EXISTS idx_atividades_cronograma_wbs ON public.atividades_cronograma(wbs_id);
 CREATE INDEX IF NOT EXISTS idx_dependencias_origem ON public.dependencias_atividades(atividade_origem_id);
 CREATE INDEX IF NOT EXISTS idx_dependencias_destino ON public.dependencias_atividades(atividade_destino_id);
 
@@ -66,30 +66,30 @@ CREATE INDEX IF NOT EXISTS idx_dependencias_destino ON public.dependencias_ativi
 -- ROW LEVEL SECURITY
 -- ============================================================================
 
-ALTER TABLE public.atividades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.atividades_cronograma ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dependencias_atividades ENABLE ROW LEVEL SECURITY;
 
--- Políticas para atividades
+-- Políticas para atividades_cronograma
 CREATE POLICY "Usuários podem ver atividades da sua empresa"
-    ON public.atividades FOR SELECT
+    ON public.atividades_cronograma FOR SELECT
     USING (empresa_id IN (
         SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
     ));
 
 CREATE POLICY "Usuários podem criar atividades na sua empresa"
-    ON public.atividades FOR INSERT
+    ON public.atividades_cronograma FOR INSERT
     WITH CHECK (empresa_id IN (
         SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
     ));
 
 CREATE POLICY "Usuários podem atualizar atividades da sua empresa"
-    ON public.atividades FOR UPDATE
+    ON public.atividades_cronograma FOR UPDATE
     USING (empresa_id IN (
         SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
     ));
 
 CREATE POLICY "Usuários podem excluir atividades da sua empresa"
-    ON public.atividades FOR DELETE
+    ON public.atividades_cronograma FOR DELETE
     USING (empresa_id IN (
         SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
     ));
@@ -99,7 +99,7 @@ CREATE POLICY "Usuários podem ver dependências das suas atividades"
     ON public.dependencias_atividades FOR SELECT
     USING (
         atividade_origem_id IN (
-            SELECT id FROM public.atividades WHERE empresa_id IN (
+            SELECT id FROM public.atividades_cronograma WHERE empresa_id IN (
                 SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
             )
         )
@@ -109,7 +109,7 @@ CREATE POLICY "Usuários podem criar dependências para suas atividades"
     ON public.dependencias_atividades FOR INSERT
     WITH CHECK (
         atividade_origem_id IN (
-            SELECT id FROM public.atividades WHERE empresa_id IN (
+            SELECT id FROM public.atividades_cronograma WHERE empresa_id IN (
                 SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
             )
         )
@@ -119,7 +119,7 @@ CREATE POLICY "Usuários podem atualizar dependências das suas atividades"
     ON public.dependencias_atividades FOR UPDATE
     USING (
         atividade_origem_id IN (
-            SELECT id FROM public.atividades WHERE empresa_id IN (
+            SELECT id FROM public.atividades_cronograma WHERE empresa_id IN (
                 SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
             )
         )
@@ -129,7 +129,7 @@ CREATE POLICY "Usuários podem excluir dependências das suas atividades"
     ON public.dependencias_atividades FOR DELETE
     USING (
         atividade_origem_id IN (
-            SELECT id FROM public.atividades WHERE empresa_id IN (
+            SELECT id FROM public.atividades_cronograma WHERE empresa_id IN (
                 SELECT empresa_id FROM public.usuarios WHERE id = auth.uid()
             )
         )
@@ -139,7 +139,7 @@ CREATE POLICY "Usuários podem excluir dependências das suas atividades"
 -- TRIGGER PARA UPDATED_AT
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION update_atividades_updated_at()
+CREATE OR REPLACE FUNCTION update_atividades_cronograma_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -147,7 +147,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_atividades_updated_at
-    BEFORE UPDATE ON public.atividades
+CREATE TRIGGER trigger_atividades_cronograma_updated_at
+    BEFORE UPDATE ON public.atividades_cronograma
     FOR EACH ROW
-    EXECUTE FUNCTION update_atividades_updated_at();
+    EXECUTE FUNCTION update_atividades_cronograma_updated_at();
