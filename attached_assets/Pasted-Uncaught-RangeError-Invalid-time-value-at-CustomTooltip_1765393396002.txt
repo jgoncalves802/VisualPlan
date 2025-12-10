@@ -1,0 +1,47 @@
+Uncaught RangeError: Invalid time value
+    at CustomTooltip (CommodityCurvesChart.tsx:59:10)
+
+injected.js:37 The above error occurred in the <CustomTooltip> component:
+
+    at CustomTooltip (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/features/recursos/CommodityCurvesChart.tsx:40:26)
+    at div
+    at TooltipBoundingBox2 (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=6d1c649c:8826:5)
+    at Tooltip2 (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=6d1c649c:9102:5)
+    at div
+    at ChartLayoutContextProvider2 (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=6d1c649c:25516:28)
+    at CategoricalChartWrapper2 (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=6d1c649c:30803:7)
+    at CategoricalChart2
+    at div
+    at https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=6d1c649c:9274:21
+    at div
+    at div
+    at CommodityCurvesChart (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/features/recursos/CommodityCurvesChart.tsx:116:3)
+    at div
+    at div
+    at Card (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/ui/card.tsx:19:3)
+    at div
+    at TabsContent (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/ui/tabs.tsx:77:31)
+    at div
+    at Tabs (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/ui/tabs.tsx:20:24)
+    at div
+    at div
+    at RecursosPage (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/pages/RecursosPage.tsx:88:23)
+    at RenderedRoute (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4088:5)
+    at Outlet (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4494:26)
+    at div
+    at main
+    at div
+    at LayoutShell (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/layout/LayoutShell.tsx:34:3)
+    at AppLayout (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/layout/AppLayout.tsx:42:20)
+    at ProtectedAppLayout (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/App.tsx:49:31)
+    at RenderedRoute (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4088:5)
+    at Routes (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4558:5)
+    at Router (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4501:15)
+    at BrowserRouter (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:5247:5)
+    at ToastProvider (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/ui/Toast.tsx:152:33)
+    at App (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/App.tsx:96:27)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-334SA7H6.js?v=6d1c649c:19413 Uncaught RangeError: Invalid time value
+    at CustomTooltip (CommodityCurvesChart.tsx:59:10)

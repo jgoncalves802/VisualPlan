@@ -53,10 +53,21 @@ const CustomTooltip = ({ active, payload, label, unit }: any) => {
   
   const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
   
+  const formatLabel = (lbl: any): string => {
+    if (!lbl) return '';
+    try {
+      const parsed = parseISO(String(lbl));
+      if (isNaN(parsed.getTime())) return String(lbl);
+      return format(parsed, "d 'de' MMMM", { locale: ptBR });
+    } catch {
+      return String(lbl);
+    }
+  };
+  
   return (
     <div className="bg-white border rounded-lg shadow-lg p-3 min-w-[200px]">
       <p className="text-sm font-medium text-gray-900 mb-2 border-b pb-2">
-        {format(parseISO(label), "d 'de' MMMM", { locale: ptBR })}
+        {formatLabel(label)}
       </p>
       <div className="space-y-1">
         {payload.map((entry: any, index: number) => (
@@ -100,10 +111,21 @@ export function CommodityCurvesChart({
   const [currentChartType, setCurrentChartType] = useState(chartType);
 
   const chartData = useMemo(() => {
-    return data.map(point => ({
-      ...point,
-      dateLabel: format(parseISO(point.date), 'dd/MM', { locale: ptBR }),
-    }));
+    return data.map(point => {
+      let dateLabel = point.date;
+      try {
+        const parsed = parseISO(point.date);
+        if (!isNaN(parsed.getTime())) {
+          dateLabel = format(parsed, 'dd/MM', { locale: ptBR });
+        }
+      } catch {
+        // Keep original if parse fails
+      }
+      return {
+        ...point,
+        dateLabel,
+      };
+    });
   }, [data]);
 
   const totals = useMemo(() => {
