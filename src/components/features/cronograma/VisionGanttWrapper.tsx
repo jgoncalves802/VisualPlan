@@ -148,6 +148,12 @@ export function VisionGanttWrapper({
   const handleTaskUpdate = useCallback((task: Task) => {
     console.log('[VisionGanttWrapper] handleTaskUpdate:', task.id, task.name, 'parentId:', task.parentId, 'level:', task.level);
     
+    // BLOCK UPDATES FOR WBS/EPS NODES - they are read-only and managed in WBS page
+    if (task.id.startsWith('wbs-')) {
+      console.log('[VisionGanttWrapper] Blocked update for WBS node:', task.id, '- WBS nodes are read-only');
+      return;
+    }
+    
     // CRITICAL: Update local cache FIRST to maintain source of truth
     setLocalTasks(prevTasks => prevTasks.map(t => t.id === task.id ? { ...t, ...task } : t));
     
@@ -371,6 +377,12 @@ export function VisionGanttWrapper({
   }, [atividadeMap, projetoId, onAtividadeUpdate]);
 
   const handleTaskClick = useCallback((task: Task) => {
+    // BLOCK CLICK HANDLER FOR WBS/EPS NODES - they cannot be edited here
+    if (task.id.startsWith('wbs-')) {
+      console.log('[VisionGanttWrapper] Blocked click for WBS node:', task.id, '- WBS nodes are read-only');
+      return;
+    }
+    
     const atividade = atividadeMap.get(task.id);
     if (atividade && onAtividadeClick) {
       onAtividadeClick(atividade);

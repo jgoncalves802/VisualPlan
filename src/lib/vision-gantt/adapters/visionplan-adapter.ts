@@ -62,6 +62,9 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
 }): Task {
   const wbsLevel = atividade.edt ? atividade.edt.split('.').length - 1 : 0;
   
+  // Handle WBS/EPS nodes - they are read-only summary tasks
+  const isWbsOrEps = atividade.is_wbs_node || atividade.is_eps_node || atividade.tipo === 'WBS';
+  
   // Calculate variances if baseline data is present
   const startDate = new Date(atividade.data_inicio);
   const endDate = new Date(atividade.data_fim);
@@ -103,12 +106,18 @@ export function atividadeToGanttTask(atividade: AtividadeMock, projectContext?: 
     status: STATUS_MAP_TO_GANTT[atividade.status] || 'not_started',
     parentId: atividade.parent_id || null,
     wbs: atividade.edt,
-    wbsLevel: wbsLevel,
-    isGroup: atividade.tipo === 'Fase',
+    wbsLevel: isWbsOrEps ? (atividade.wbs_nivel ?? wbsLevel) : wbsLevel,
+    isGroup: isWbsOrEps || atividade.tipo === 'Fase',
     isMilestone: atividade.tipo === 'Marco',
     description: atividade.descricao,
     priority: atividade.prioridade ? PRIORITY_MAP[atividade.prioridade] : undefined,
     expanded: true,
+    
+    // WBS/EPS read-only flags
+    isReadOnly: isWbsOrEps,
+    isWbsNode: atividade.is_wbs_node,
+    isEpsNode: atividade.is_eps_node,
+    wbsColor: atividade.wbs_cor,
     
     // EPS/Project Fields (from context)
     projectId: projectContext?.id || atividade.projeto_id,

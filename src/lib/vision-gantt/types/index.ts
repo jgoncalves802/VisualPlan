@@ -30,6 +30,13 @@ export interface Task {
   wbs?: string; // Work Breakdown Structure code (e.g., "1.2.3")
   wbsLevel?: number; // Level in WBS hierarchy
   isGroup?: boolean; // MS Project style group header (MARCOS, EXECUÇÃO, etc.)
+  
+  // WBS/EPS read-only flags (inherited from WBS page)
+  isReadOnly?: boolean; // True if task cannot be edited in schedule (WBS/EPS nodes)
+  isWbsNode?: boolean; // True if this is a WBS node (read-only summary task)
+  isEpsNode?: boolean; // True if this is an EPS/Project node (read-only)
+  wbsColor?: string; // Color from WBS page for visual consistency
+  
   // Resource assignment
   assignedResources?: string[]; // Array of resource IDs
   // Additional metadata
