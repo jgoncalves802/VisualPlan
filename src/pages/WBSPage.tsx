@@ -19,7 +19,8 @@ import {
   X,
   AlertCircle,
   Users,
-  Eye
+  Eye,
+  Settings
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { epsService, EpsNode } from '../services/epsService';
@@ -480,6 +481,15 @@ export const WBSPage: React.FC = () => {
               <Layers className="w-4 h-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900">{stats.wbs} Itens WBS</span>
             </div>
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin/eps')}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Gerenciar EPS/WBS
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -542,11 +552,20 @@ export const WBSPage: React.FC = () => {
                   ? 'Nenhum resultado encontrado'
                   : 'Nenhum projeto cadastrado'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-4">
                 {searchTerm || filterProject !== 'all'
                   ? 'Tente ajustar os filtros de busca.'
                   : 'Crie um projeto na página de administração EPS/WBS.'}
               </p>
+              {isAdmin && !searchTerm && filterProject === 'all' && (
+                <button
+                  onClick={() => navigate('/admin/eps')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Criar Projeto EPS/WBS
+                </button>
+              )}
             </div>
           </div>
         ) : (
