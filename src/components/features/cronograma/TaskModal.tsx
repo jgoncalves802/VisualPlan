@@ -42,16 +42,61 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     status: 'Não Iniciada',
     responsavel_nome: '',
     prioridade: 'Média',
-    parent_id: '',
+    parent_id: '', // Parent activity (regular activity or phase)
+    wbs_id: '', // Real WBS UUID for persistence (never contains prefixes)
     calendario_id: calendario_padrao || 'cal-padrao-5x8',
   });
+  
+  // Separate state for dropdown selection (uses synthetic IDs like wbs-xxx)
+  const [selectedWbsOptionId, setSelectedWbsOptionId] = useState('');
+  
+  // Helper function to extract real WBS/EPS ID from synthetic ID
+  const extractRealWbsId = (syntheticId: string): string => {
+    if (syntheticId.startsWith('wbs-')) {
+      return syntheticId.replace('wbs-', '');
+    }
+    if (syntheticId.startsWith('eps-')) {
+      return syntheticId.replace('eps-', '');
+    }
+    return syntheticId;
+  };
+  
+  // Handler for WBS dropdown change - updates both states
+  const handleWbsChange = (syntheticId: string) => {
+    setSelectedWbsOptionId(syntheticId);
+    setFormData(prev => ({
+      ...prev,
+      wbs_id: syntheticId ? extractRealWbsId(syntheticId) : ''
+    }));
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Get list of WBS/EPS nodes for dropdown
+  const wbsNodes = atividades.filter(a => a.is_wbs_node || a.is_eps_node);
+  
   // Carrega dados da atividade ao editar
   useEffect(() => {
     if (atividade) {
+      // Handle parent_id - if it points to a WBS node, don't use it as parent
+      let parentId = atividade.parent_id || '';
+      
+      // Check if parent_id is actually a WBS synthetic ID (should not happen, but handle it)
+      if (parentId.startsWith('wbs-') || parentId.startsWith('eps-')) {
+        parentId = '';
+      }
+      
+      // Find the synthetic WBS option ID for dropdown selection
+      // Only do this if WBS nodes are loaded
+      let syntheticWbsId = '';
+      if (atividade.wbs_id && wbsNodes.length > 0) {
+        const matchingNode = wbsNodes.find(n => 
+          n.id === `wbs-${atividade.wbs_id}` || n.id === `eps-${atividade.wbs_id}`
+        );
+        syntheticWbsId = matchingNode?.id || '';
+      }
+      
       setFormData({
         codigo: atividade.codigo || '',
         edt: atividade.edt || '',
@@ -65,9 +110,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         status: atividade.status,
         responsavel_nome: atividade.responsavel_nome || '',
         prioridade: atividade.prioridade || 'Média',
-        parent_id: atividade.parent_id || '',
+        parent_id: parentId,
+        wbs_id: atividade.wbs_id || '', // Store real UUID only
         calendario_id: atividade.calendario_id || calendario_padrao || 'cal-padrao-5x8',
       });
+      
+      // Set dropdown selection separately
+      setSelectedWbsOptionId(syntheticWbsId);
     } else {
       // Reset para nova atividade
       const hoje = new Date().toISOString().split('T')[0];
@@ -87,11 +136,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         responsavel_nome: '',
         prioridade: 'Média',
         parent_id: '',
+        wbs_id: '',
         calendario_id: calendario_padrao || 'cal-padrao-5x8',
       });
+      setSelectedWbsOptionId('');
     }
     setErrors({});
-  }, [atividade, open, calendario_padrao]);
+  }, [atividade, open, calendario_padrao, wbsNodes.length]);
 
   // Calcula duração automaticamente ao mudar datas
   useEffect(() => {
@@ -146,6 +197,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       await onSave({
         ...formData,
         parent_id: formData.parent_id || undefined,
+        wbs_id: formData.wbs_id || undefined, // Already contains real UUID
       });
       onClose();
     } catch (error) {
@@ -291,6 +343,30 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
           {/* Hierarquia e Calendário */}
           <div className="grid grid-cols-2 gap-4">
+            {/* WBS Assignment (from WBS page) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estrutura WBS
+                <span className="ml-2 text-xs font-normal text-purple-600">(da página WBS)</span>
+              </label>
+              <select
+                value={selectedWbsOptionId}
+                onChange={(e) => handleWbsChange(e.target.value)}
+                className="w-full px-3 py-2 border border-purple-200 bg-purple-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Sem WBS associada</option>
+                {wbsNodes.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.edt ? `${a.edt} - ` : ''}{a.nome}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Vincule esta atividade a um elemento da estrutura WBS
+              </p>
+            </div>
+
+            {/* Parent Activity (for activity hierarchy within schedule) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Atividade Mãe (Hierarquia)
@@ -300,17 +376,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Sem atividade mãe (nível raiz)</option>
-                {/* WBS nodes first, then regular activities that can be parents */}
+                <option value="">Nível raiz (sem atividade mãe)</option>
                 {atividades
-                  .filter((a) => a.id !== atividadeId && (a.is_wbs_node || a.is_eps_node))
-                  .map((a) => (
-                    <option key={a.id} value={a.id} className="font-medium text-purple-700">
-                      {a.edt ? `${a.edt} - ` : ''}{a.nome} (WBS)
-                    </option>
-                  ))}
-                {atividades
-                  .filter((a) => a.id !== atividadeId && !a.is_wbs_node && !a.is_eps_node && a.tipo === 'Fase')
+                  .filter((a) => a.id !== atividadeId && !a.is_wbs_node && !a.is_eps_node && (a.tipo === 'Fase' || a.tipo === 'Tarefa'))
                   .map((a) => (
                     <option key={a.id} value={a.id}>
                       {(a.edt ? `${a.edt} - ` : '') + a.nome}
@@ -318,7 +386,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Selecione um nó WBS ou fase para organizar a hierarquia
+                Organize a hierarquia dentro do cronograma
               </p>
             </div>
 
