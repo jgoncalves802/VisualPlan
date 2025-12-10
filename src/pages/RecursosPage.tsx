@@ -6,6 +6,7 @@ import { SCurveChart, SCurveDataPoint } from '../components/features/recursos/SC
 import { CommodityCurvesChart, CommodityDataPoint } from '../components/features/recursos/CommodityCurvesChart';
 import { ResourceCurveEditor } from '../components/features/recursos/ResourceCurveEditor';
 import { ResourceAssignmentModal } from '../components/features/cronograma/ResourceAssignmentModal';
+import { ResourceFormModal } from '../components/features/recursos/ResourceFormModal';
 import { Resource, ResourceCurve, resourceService } from '../services/resourceService';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
@@ -62,6 +63,8 @@ export function RecursosPage() {
   const [showCurveEditor, setShowCurveEditor] = useState(false);
   const [editingCurve, setEditingCurve] = useState<ResourceCurve | undefined>();
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [showResourceForm, setShowResourceForm] = useState(false);
+  const [editingResource, setEditingResource] = useState<Resource | undefined>();
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
   const filteredResources = useMemo(() => {
@@ -231,9 +234,13 @@ export function RecursosPage() {
               <TrendingUp className="w-4 h-4 mr-2" />
               Nova Curva
             </Button>
-            <Button onClick={() => setShowAssignmentModal(true)}>
+            <Button variant="secondary" onClick={() => setShowAssignmentModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Nova Alocação
+            </Button>
+            <Button onClick={() => { setEditingResource(undefined); setShowResourceForm(true); }}>
+              <Users className="w-4 h-4 mr-2" />
+              Novo Recurso
             </Button>
           </div>
         </div>
@@ -470,6 +477,23 @@ export function RecursosPage() {
             setShowAssignmentModal(false);
             refresh();
           }}
+        />
+      )}
+
+      {showResourceForm && (
+        <ResourceFormModal
+          isOpen={showResourceForm}
+          onClose={() => {
+            setShowResourceForm(false);
+            setEditingResource(undefined);
+          }}
+          onSave={() => {
+            setShowResourceForm(false);
+            setEditingResource(undefined);
+            refresh();
+          }}
+          empresaId={empresaId}
+          editingResource={editingResource}
         />
       )}
     </div>

@@ -23,12 +23,14 @@ interface TaskDetailPanelProps {
   task: Task | null;
   onClose: () => void;
   onEdit?: (taskId: string) => void;
+  onManageResources?: (task: Task) => void;
 }
 
 export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
   task,
   onClose,
-  onEdit
+  onEdit,
+  onManageResources
 }) => {
   if (!task) return null;
 
@@ -326,18 +328,27 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
             );
           }
           
-          if (onEdit) {
-            return (
-              <button
-                onClick={() => onEdit(task.id)}
-                className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
-              >
-                Editar Atividade
-              </button>
-            );
-          }
-          
-          return null;
+          return (
+            <div className="space-y-2">
+              {onManageResources && (
+                <button
+                  onClick={() => onManageResources(task)}
+                  className="w-full py-2.5 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  Gerenciar Recursos
+                </button>
+              )}
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(task.id)}
+                  className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+                >
+                  Editar Atividade
+                </button>
+              )}
+            </div>
+          );
         })()}
       </div>
     </div>

@@ -19,6 +19,7 @@ import { SaveBaselineButton } from './SaveBaselineButton';
 import { DEFAULT_COLUMNS, EXTENDED_COLUMNS } from '../../../lib/vision-gantt/config/default-columns';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { ColumnConfigModal } from './ColumnConfigModal';
+import { ResourceAssignmentModal } from './ResourceAssignmentModal';
 import { getColumnConfig, saveColumnConfig } from '../../../services/cronogramaService';
 import {
   getColumnConfigFromCache,
@@ -76,6 +77,7 @@ export function VisionGanttWrapper({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [columnConfigOpen, setColumnConfigOpen] = useState(false);
+  const [resourceModalTask, setResourceModalTask] = useState<Task | null>(null);
   
   // Helper to reconstruct columns from saved config
   const reconstructColumnsFromConfig = useCallback((savedConfig: { visible_columns: string[]; column_order: string[] }) => {
@@ -481,6 +483,23 @@ export function VisionGanttWrapper({
     }
   }, [atividadeMap, onAtividadeClick]);
   
+  const handleManageResources = useCallback((task: Task) => {
+    if (task.id.startsWith('wbs-') || task.isWbsNode || task.isReadOnly) {
+      console.log('[VisionGanttWrapper] Blocked resource management for WBS node:', task.id);
+      return;
+    }
+    setResourceModalTask(task);
+  }, []);
+  
+  const handleResourceModalClose = useCallback(() => {
+    setResourceModalTask(null);
+  }, []);
+  
+  const handleResourcesSave = useCallback(() => {
+    setResourceModalTask(null);
+    // Optionally refresh allocations here
+  }, []);
+  
   const handleColumnReorder = useCallback((newColumns: ColumnConfig[]) => {
     setSelectedColumns(newColumns);
     const visibleFields = newColumns.map(c => c.field);
@@ -822,6 +841,7 @@ export function VisionGanttWrapper({
               task={selectedTask}
               onClose={handleCloseDetailPanel}
               onEdit={handleEditFromDetail}
+              onManageResources={handleManageResources}
             />
           </div>
         )}
@@ -844,6 +864,32 @@ export function VisionGanttWrapper({
         onSave={handleEditDependencySave}
         onDelete={handleEditDependencyDelete}
       />
+      
+      {resourceModalTask && empresaId && (() => {
+        const formatDateSafe = (date: Date | undefined): string => {
+          if (!date) {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          }
+          const d = new Date(date);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+        const startDate = formatDateSafe(resourceModalTask.startDate);
+        const endDate = formatDateSafe(resourceModalTask.endDate);
+        return (
+          <ResourceAssignmentModal
+            isOpen={!!resourceModalTask}
+            onClose={handleResourceModalClose}
+            atividadeId={resourceModalTask.id}
+            atividadeNome={resourceModalTask.name}
+            empresaId={empresaId}
+            startDate={startDate}
+            endDate={endDate}
+            duration={resourceModalTask.duration || 7}
+            onSave={handleResourcesSave}
+          />
+        );
+      })()}
       
       <style>{`
         :root {
