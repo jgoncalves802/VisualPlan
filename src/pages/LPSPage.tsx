@@ -25,6 +25,7 @@ import {
   TipoAtividadeLPS,
 } from '../types/lps';
 import { useCronogramaStore } from '../stores/cronogramaStore';
+import { epsService, EpsNode } from '../services/epsService';
 import {
   ChevronLeft,
   ChevronRight,
@@ -32,6 +33,30 @@ import {
   Download,
   Settings,
 } from 'lucide-react';
+
+const flattenEpsTree = (nodes: EpsNode[], parentId?: string): WBSLPS[] => {
+  const result: WBSLPS[] = [];
+  for (const node of nodes) {
+    result.push({
+      id: node.id,
+      codigo: node.codigo,
+      nome: node.nome,
+      descricao: node.descricao || undefined,
+      nivel: node.nivel,
+      parent_id: node.parentId || parentId,
+      ordem: node.ordem,
+      cor: node.cor,
+      icone: node.icone || undefined,
+      progresso: 0,
+      responsavel: node.responsibleManager?.nome,
+      responsavel_id: node.responsibleManagerId || undefined,
+    });
+    if (node.children && node.children.length > 0) {
+      result.push(...flattenEpsTree(node.children, node.id));
+    }
+  }
+  return result;
+};
 
 export const LPSPage: React.FC = () => {
   const { projetoId } = useParams<{ projetoId?: string }>();
@@ -62,6 +87,7 @@ export const LPSPage: React.FC = () => {
     addEvidencia,
     deleteEvidencia,
     addAndamento,
+    setWbsList,
   } = useLPSStore();
 
   // Auth store
@@ -87,6 +113,25 @@ export const LPSPage: React.FC = () => {
       carregarAtividades(projetoIdParam);
     }
   }, [projetoIdParam, carregarAtividades]);
+
+  // Carregar WBS do banco de dados
+  useEffect(() => {
+    const loadWbsFromDatabase = async () => {
+      if (!usuario?.empresaId) return;
+      
+      try {
+        const epsTree = await epsService.getTree(usuario.empresaId);
+        if (epsTree.length > 0) {
+          const wbsData = flattenEpsTree(epsTree);
+          setWbsList(wbsData);
+        }
+      } catch (error) {
+        console.error('Error loading WBS:', error);
+      }
+    };
+
+    loadWbsFromDatabase();
+  }, [usuario?.empresaId, setWbsList]);
 
   // Carregar dados mockados se não houver dados (apenas uma vez)
   useEffect(() => {

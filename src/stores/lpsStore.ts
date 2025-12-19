@@ -34,6 +34,7 @@ interface LPSState {
   // Ações
   setPlanejamentoAtual: (planejamento: PlanejamentoLPS | null) => void;
   setPeriodo: (dataInicio: Date, dataFim: Date) => void;
+  setWbsList: (wbsList: WBSLPS[]) => void;
   addAtividade: (atividade: Omit<AtividadeLPS, 'id'>) => void;
   updateAtividade: (id: string, atividade: Partial<AtividadeLPS>) => void;
   deleteAtividade: (id: string) => void;
@@ -157,6 +158,10 @@ export const useLPSStore = create<LPSState>()(
           dataInicio: parseDate(dataInicio),
           dataFim: parseDate(dataFim),
         });
+      },
+
+      setWbsList: (wbsList) => {
+        set({ wbsList });
       },
 
       addAtividade: (atividade) => {
