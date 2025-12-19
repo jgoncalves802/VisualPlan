@@ -126,3 +126,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     - **Drag-Drop Assignment**: Resources can be dragged from pool to allocate (when activity selected)
     - **Calendar Inheritance System**: Resources can have custom calendars (calendarioId) or inherit from activity/project. Priority order: Resource calendar > Activity calendar > Project calendar > Default. Color-coded badges show calendar source (Calendario do Recurso, Herdado da Atividade, Herdado do Projeto, Calendario Padrao)
     - **calendar-inheritance.ts**: Utility for resolving effective calendar with getCalendarForResourceAllocation and visual helpers
+*   **Graceful Error Handling (December 2025)**:
+    - **Service Layer Defensive Pattern**: All read-only service methods (getByEmpresa, getResources, getAllocations, etc.) return empty arrays instead of throwing errors on network failures
+    - **Promise.allSettled Strategy**: WBSPage and similar components use Promise.allSettled for partial data loading when some services fail
+    - **Structured Error Logging**: Errors logged with `{message, code}` format for cleaner console output without full stack traces
+    - **LPSPage Batch State Updates**: Fixed duplicate key warnings by using batch setState calls and wbsList.length guard to prevent redundant mock data loading
+    - **Network Resilience**: Application continues functioning with empty states when Supabase is unreachable, preventing UI crashes
