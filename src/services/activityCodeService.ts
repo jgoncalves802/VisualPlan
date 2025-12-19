@@ -192,8 +192,13 @@ export const activityCodeService = {
     const { data, error } = await query.order('ordem', { ascending: true });
 
     if (error) {
+      // PGRST205 = table not found - return empty array gracefully
+      if (error.code === 'PGRST205') {
+        console.warn('Activity code types table not found, returning empty array');
+        return [];
+      }
       console.error('Error fetching activity code types:', error);
-      throw error;
+      return [];
     }
 
     return (data || []).map(mapTypeFromDB);

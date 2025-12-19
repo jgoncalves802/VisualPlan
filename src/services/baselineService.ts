@@ -173,8 +173,13 @@ export const baselineService = {
     const { data, error } = await query.order('numero', { ascending: false });
 
     if (error) {
+      // PGRST205 = table not found - return empty array gracefully
+      if (error.code === 'PGRST205') {
+        console.warn('Baselines table not found, returning empty array');
+        return [];
+      }
       console.error('Error fetching baselines:', error);
-      throw error;
+      return [];
     }
 
     return (data || []).map(mapBaselineFromDB);
@@ -207,8 +212,13 @@ export const baselineService = {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
+      // PGRST205 = table not found - return null gracefully
+      if (error.code === 'PGRST205') {
+        console.warn('Baselines table not found, returning null');
+        return null;
+      }
       console.error('Error fetching current baseline:', error);
-      throw error;
+      return null;
     }
 
     return mapBaselineFromDB(data);
