@@ -460,7 +460,14 @@ export function VisionGanttWrapper({
     const enrichedTask = { ...task, isWbsNode, isReadOnly: isWbsNode };
     setSelectedTask(enrichedTask);
     setShowDetailPanel(true);
-  }, []);
+    
+    if (!isWbsNode && onAtividadeClick) {
+      const atividade = atividadeMap.get(task.id);
+      if (atividade) {
+        onAtividadeClick(atividade);
+      }
+    }
+  }, [atividadeMap, onAtividadeClick]);
   
   const handleTaskSelect = useCallback((task: Task) => {
     const isWbsNode = task.id.startsWith('wbs-') || task.isWbsNode || task.isReadOnly || task.isGroup;
