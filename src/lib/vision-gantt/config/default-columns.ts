@@ -307,8 +307,8 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
 const formatDependency = (dep: any): string => {
   if (typeof dep === 'string') return dep;
   if (typeof dep === 'object' && dep !== null) {
-    // If it has a codigo (activity code), use it
-    const code = dep.codigo || dep.activityCode || dep.id || '';
+    // Priority: taskCode (from adapter) > codigo > activityCode > id
+    const code = dep.taskCode || dep.codigo || dep.activityCode || dep.id || '';
     const tipo = dep.tipo || dep.type || 'FS';
     const lag = dep.lag_dias || dep.lag || 0;
     // Format as "A1010FS+2" or just "A1010" if no lag
