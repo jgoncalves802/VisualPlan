@@ -94,8 +94,8 @@ export const wbsEditorService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching WBS editors:', error);
-      throw error;
+      console.error('Error fetching WBS editors:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -122,8 +122,8 @@ export const wbsEditorService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching WBS editors for user:', error);
-      throw error;
+      console.error('Error fetching WBS editors for user:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -150,8 +150,8 @@ export const wbsEditorService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching WBS editors for project:', error);
-      throw error;
+      console.error('Error fetching WBS editors for project:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -298,8 +298,8 @@ export const wbsEditorService = {
       .rpc('get_visible_eps_projects', { p_empresa_id: empresaId });
 
     if (error) {
-      console.error('Error fetching visible projects:', error);
-      throw error;
+      console.error('Error fetching visible projects:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map((row: { eps_id: string; visibility_reason: string }) => ({

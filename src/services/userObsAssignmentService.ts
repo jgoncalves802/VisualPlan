@@ -104,8 +104,8 @@ export const userObsAssignmentService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching user OBS assignments:', error);
-      throw error;
+      console.error('Error fetching user OBS assignments:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -130,8 +130,8 @@ export const userObsAssignmentService = {
       .order('is_primary', { ascending: false });
 
     if (error) {
-      console.error('Error fetching assignments for user:', error);
-      throw error;
+      console.error('Error fetching assignments for user:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -156,8 +156,8 @@ export const userObsAssignmentService = {
       .eq('obs_node_id', obsNodeId);
 
     if (error) {
-      console.error('Error fetching assignments for OBS node:', error);
-      throw error;
+      console.error('Error fetching assignments for OBS node:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);

@@ -109,39 +109,18 @@ export const LPSPage: React.FC = () => {
     
     const jaInicializado = dataInicioZero.getTime() === dataInicial.getTime() && atividades.length > 0;
     
-    if (!jaInicializado && atividades.length === 0 && restricoes.length === 0 && anotacoes.length === 0) {
+    if (!jaInicializado && atividades.length === 0 && restricoes.length === 0 && anotacoes.length === 0 && wbsList.length === 0) {
       import('../mocks/lpsMocks').then((module) => {
         const atividadesMock = module.getAtividadesMockLPS();
         const restricoesMock = module.getRestricoesMockLPS();
         const anotacoesMock = module.getAnotacoesMockLPS();
         const wbsMock = module.getWBSMockLPS();
 
-        atividadesMock.forEach((atividade) => {
-          const { id, ...rest } = atividade;
-          useLPSStore.setState((state) => ({
-            atividades: [...state.atividades, { ...rest, id }],
-          }));
-        });
-
-        restricoesMock.forEach((restricao) => {
-          const { id, ...rest } = restricao;
-          useLPSStore.setState((state) => ({
-            restricoes: [...state.restricoes, { ...rest, id }],
-          }));
-        });
-
-        anotacoesMock.forEach((anotacao) => {
-          const { id, ...rest } = anotacao;
-          useLPSStore.setState((state) => ({
-            anotacoes: [...state.anotacoes, { ...rest, id }],
-          }));
-        });
-
-        wbsMock.forEach((wbs) => {
-          const { id, ...rest } = wbs;
-          useLPSStore.setState((state) => ({
-            wbsList: [...state.wbsList, { ...rest, id }],
-          }));
+        useLPSStore.setState({
+          atividades: atividadesMock,
+          restricoes: restricoesMock,
+          anotacoes: anotacoesMock,
+          wbsList: wbsMock,
         });
 
         const inicio = new Date(2024, 10, 10);
@@ -151,7 +130,7 @@ export const LPSPage: React.FC = () => {
         setPeriodo(inicio, fim);
       });
     }
-  }, [atividades.length, restricoes.length, anotacoes.length, dataInicio, addAtividade, addRestricao, addAnotacao, setPeriodo]);
+  }, [atividades.length, restricoes.length, anotacoes.length, wbsList.length, dataInicio, addAtividade, addRestricao, addAnotacao, setPeriodo]);
 
   // Sincronizar atividades do cronograma com LPS (quando disponível)
   useEffect(() => {

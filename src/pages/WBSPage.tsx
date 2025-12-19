@@ -318,11 +318,15 @@ export const WBSPage: React.FC = () => {
     
     setLoading(true);
     try {
-      const [tree, editors, assignments] = await Promise.all([
+      const results = await Promise.allSettled([
         epsService.getTree(empresaId),
         wbsEditorService.getByUser(usuario.id),
         userObsAssignmentService.getByUser(usuario.id),
       ]);
+      
+      const tree = results[0].status === 'fulfilled' ? results[0].value : [];
+      const editors = results[1].status === 'fulfilled' ? results[1].value : [];
+      const assignments = results[2].status === 'fulfilled' ? results[2].value : [];
       
       setEpsTree(tree);
       setWbsEditors(editors);
@@ -330,6 +334,11 @@ export const WBSPage: React.FC = () => {
       
       const rootIds = tree.map(node => node.id);
       setExpandedNodes(new Set(rootIds));
+      
+      const hasErrors = results.some(r => r.status === 'rejected');
+      if (hasErrors && tree.length === 0) {
+        toast.error('Erro ao carregar dados do WBS. Verifique sua conexão.');
+      }
     } catch (error) {
       console.error('Error loading WBS data:', error);
       toast.error('Erro ao carregar dados do WBS');

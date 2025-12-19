@@ -350,8 +350,8 @@ export const resourceService = {
       .order('nome');
 
     if (error) {
-      console.error('Error fetching resource types:', error);
-      throw error;
+      console.error('Error fetching resource types:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapResourceTypeFromDB);
@@ -395,8 +395,8 @@ export const resourceService = {
       .order('nome');
 
     if (error) {
-      console.error('Error fetching resources:', error);
-      throw error;
+      console.error('Error fetching resources:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapResourceFromDB);
@@ -532,8 +532,8 @@ export const resourceService = {
     const { data, error } = await query.order('data_inicio');
 
     if (error) {
-      console.error('Error fetching allocations:', error);
-      throw error;
+      console.error('Error fetching allocations:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapAllocationFromDB);
@@ -551,8 +551,8 @@ export const resourceService = {
       .order('data_inicio');
 
     if (error) {
-      console.error('Error fetching allocations by resource:', error);
-      throw error;
+      console.error('Error fetching allocations by resource:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapAllocationFromDB);
@@ -657,8 +657,8 @@ export const resourceService = {
     const { data, error } = await query.order('severidade', { ascending: false });
 
     if (error) {
-      console.error('Error fetching conflicts:', error);
-      throw error;
+      console.error('Error fetching conflicts:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapConflictFromDB);

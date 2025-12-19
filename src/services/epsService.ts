@@ -91,8 +91,8 @@ export const epsService = {
       .order('ordem', { ascending: true });
 
     if (error) {
-      console.error('Error fetching EPS nodes:', error);
-      throw error;
+      console.error('Error fetching EPS nodes:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
@@ -120,8 +120,8 @@ export const epsService = {
       .order('ordem', { ascending: true });
 
     if (error) {
-      console.error('Error fetching EPS nodes:', error);
-      throw error;
+      console.error('Error fetching EPS nodes:', { message: error.message, code: error.code });
+      return [];
     }
 
     return (data || []).map(mapFromDB);
