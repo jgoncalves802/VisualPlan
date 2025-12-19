@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import type { Task, Dependency, ViewPreset, GanttConfig, ViewPresetConfig, ColumnConfig } from '../types';
-import { GanttGrid } from './gantt-grid';
+import { MemoizedGanttGrid } from './gantt-grid';
 import { GanttTimeline } from './gantt-timeline';
 import { ZoomControl } from './zoom-control';
 import { TimeScaleConfigDialog } from './time-scale-config-dialog';
@@ -600,7 +600,7 @@ export function GanttChartV2({
             minWidth: Math.max(300, persistedColumnsWidth * 0.7)
           }}
         >
-          <GanttGrid
+          <MemoizedGanttGrid
             tasks={flatTasks}
             columns={columns}
             rowHeight={rowHeight}

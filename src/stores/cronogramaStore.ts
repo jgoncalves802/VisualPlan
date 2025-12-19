@@ -595,7 +595,7 @@ export const useCronogramaStore = create<CronogramaState>()(
        * Mostra a atividade instantaneamente com ID temporário,
        * depois substitui pelo ID real após persistir no banco
        */
-      adicionarAtividade: async (atividade) => {
+      adicionarAtividade: async (atividade, afterTaskId) => {
         // Get template defaults for faster creation
         const template = getActivityTemplate();
         const tempId = generateTempId();
@@ -629,10 +629,24 @@ export const useCronogramaStore = create<CronogramaState>()(
           updated_at: now,
         };
         
-        // Add to UI immediately (optimistic)
-        set((state) => ({
-          atividades: [...state.atividades, atividadeOtimista],
-        }));
+        // Add to UI immediately (optimistic) - insert after the specified task
+        set((state) => {
+          if (afterTaskId) {
+            // Find the index of the task to insert after
+            const afterIndex = state.atividades.findIndex(a => a.id === afterTaskId);
+            if (afterIndex !== -1) {
+              // Insert after the specified task
+              const newAtividades = [
+                ...state.atividades.slice(0, afterIndex + 1),
+                atividadeOtimista,
+                ...state.atividades.slice(afterIndex + 1)
+              ];
+              return { atividades: newAtividades };
+            }
+          }
+          // Default: add to end
+          return { atividades: [...state.atividades, atividadeOtimista] };
+        });
         
         // Add to cache immediately
         addActivityToCache(atividade.projeto_id || '', atividadeOtimista);

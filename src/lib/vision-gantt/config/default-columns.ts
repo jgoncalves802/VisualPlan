@@ -209,6 +209,28 @@ const renderDate = (value: Date | string) => {
 // P6-style columns - Essential 6 columns for clarity
 export const DEFAULT_COLUMNS: ColumnConfig[] = [
   {
+    field: 'codigo',
+    header: 'ID',
+    width: 70,
+    minWidth: 60,
+    maxWidth: 100,
+    sortable: true,
+    resizable: false,
+    renderer: (value: any, _task: Task) => {
+      if (!value) {
+        return React.createElement('span', { className: 'text-gray-400' }, '-');
+      }
+      return React.createElement(
+        'span',
+        { 
+          className: 'text-xs font-mono font-semibold text-gray-700',
+          title: `Activity ID: ${value}`
+        },
+        value
+      );
+    }
+  },
+  {
     field: 'wbs',
     header: 'WBS',
     width: 90,
@@ -281,28 +303,49 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   }
 ];
 
+// Helper to format dependency with activity code and lag
+const formatDependency = (dep: any): string => {
+  if (typeof dep === 'string') return dep;
+  if (typeof dep === 'object' && dep !== null) {
+    // If it has a codigo (activity code), use it
+    const code = dep.codigo || dep.activityCode || dep.id || '';
+    const tipo = dep.tipo || dep.type || 'FS';
+    const lag = dep.lag_dias || dep.lag || 0;
+    // Format as "A1010FS+2" or just "A1010" if no lag
+    if (lag > 0) return `${code}${tipo}+${lag}`;
+    if (lag < 0) return `${code}${tipo}${lag}`;
+    return code || String(dep);
+  }
+  return String(dep);
+};
+
 // Extended columns for detailed views
 export const EXTENDED_COLUMNS: ColumnConfig[] = [
   ...DEFAULT_COLUMNS,
   {
     field: 'predecessors',
     header: 'Pred.',
-    width: 90,
-    minWidth: 70,
+    width: 100,
+    minWidth: 80,
     renderer: (_value: any, task: Task) => {
-      const predecessorIds = (task as any).predecessors || [];
-      if (!predecessorIds || predecessorIds.length === 0) {
+      const predecessors = (task as any).predecessors || [];
+      if (!predecessors || predecessors.length === 0) {
         return React.createElement('span', { className: 'text-gray-400' }, '-');
       }
+      const formattedPreds = predecessors.map(formatDependency).filter(Boolean);
+      if (formattedPreds.length === 0) {
+        return React.createElement('span', { className: 'text-gray-400' }, '-');
+      }
+      const displayText = formattedPreds.length > 2 
+        ? `${formattedPreds.slice(0, 2).join(', ')}...` 
+        : formattedPreds.join(', ');
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-medium text-blue-600',
-          title: `Predecessors: ${predecessorIds.join(', ')}`
+          className: 'text-xs font-mono font-medium text-blue-600',
+          title: `Predecessors: ${formattedPreds.join(', ')}`
         },
-        predecessorIds.length > 2 
-          ? `${predecessorIds.slice(0, 2).join(', ')}...` 
-          : predecessorIds.join(', ')
+        displayText
       );
     },
     sortable: false,
@@ -311,22 +354,27 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
   {
     field: 'successors',
     header: 'Succ.',
-    width: 90,
-    minWidth: 70,
+    width: 100,
+    minWidth: 80,
     renderer: (_value: any, task: Task) => {
-      const successorIds = (task as any).successors || [];
-      if (!successorIds || successorIds.length === 0) {
+      const successors = (task as any).successors || [];
+      if (!successors || successors.length === 0) {
         return React.createElement('span', { className: 'text-gray-400' }, '-');
       }
+      const formattedSuccs = successors.map(formatDependency).filter(Boolean);
+      if (formattedSuccs.length === 0) {
+        return React.createElement('span', { className: 'text-gray-400' }, '-');
+      }
+      const displayText = formattedSuccs.length > 2 
+        ? `${formattedSuccs.slice(0, 2).join(', ')}...` 
+        : formattedSuccs.join(', ');
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-medium text-purple-600',
-          title: `Successors: ${successorIds.join(', ')}`
+          className: 'text-xs font-mono font-medium text-purple-600',
+          title: `Successors: ${formattedSuccs.join(', ')}`
         },
-        successorIds.length > 2 
-          ? `${successorIds.slice(0, 2).join(', ')}...` 
-          : successorIds.join(', ')
+        displayText
       );
     },
     sortable: false,

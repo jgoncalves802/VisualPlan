@@ -3,7 +3,7 @@
  * Supports inline editing for text, dates, numbers, duration, progress, and dependencies
  */
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, memo } from 'react';
 import type { Task, ColumnConfig, Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
 import { ChevronRight, ChevronDown, Plus, GripVertical } from 'lucide-react';
@@ -626,3 +626,20 @@ export function GanttGrid({
     </div>
   );
 }
+
+export const MemoizedGanttGrid = memo(GanttGrid, (prevProps, nextProps) => {
+  if (prevProps.tasks !== nextProps.tasks) return false;
+  if (prevProps.columns !== nextProps.columns) return false;
+  if (prevProps.selectedTaskId !== nextProps.selectedTaskId) return false;
+  if (prevProps.selectedTaskIds !== nextProps.selectedTaskIds) return false;
+  if (prevProps.rowHeight !== nextProps.rowHeight) return false;
+  if (prevProps.headerHeight !== nextProps.headerHeight) return false;
+  if (prevProps.criticalPathIds !== nextProps.criticalPathIds) return false;
+  if (prevProps.enableRowDragDrop !== nextProps.enableRowDragDrop) return false;
+  if (prevProps.showInsertButtons !== nextProps.showInsertButtons) return false;
+  if (prevProps.enableInlineEdit !== nextProps.enableInlineEdit) return false;
+  if (prevProps.resources !== nextProps.resources) return false;
+  if (prevProps.allocations !== nextProps.allocations) return false;
+  if (prevProps.calendars !== nextProps.calendars) return false;
+  return true;
+});

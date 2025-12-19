@@ -353,10 +353,11 @@ export const CronogramaPage: React.FC = () => {
                   onAtividadeUpdate={async (atividade, changes) => {
                     await atualizarAtividade(atividade.id, changes);
                   }}
-                  onAtividadeCreate={async (_afterTaskId, parentWbsId) => {
+                  onAtividadeCreate={async (afterTaskId, parentWbsId) => {
                     try {
                       // When creating under a WBS node, set wbs_id but leave parent_id NULL
                       // (parent_id FK only allows references to atividades_cronograma, not eps_nodes)
+                      // Pass afterTaskId to insert in correct position
                       await adicionarAtividade({
                         nome: 'Nova Atividade',
                         projeto_id: projetoId,
@@ -368,7 +369,7 @@ export const CronogramaPage: React.FC = () => {
                         progresso: 0,
                         status: 'A Fazer',
                         tipo: 'Tarefa',
-                      } as any);
+                      } as any, afterTaskId);
                     } catch (error) {
                       console.error('Erro ao criar atividade:', error);
                     }

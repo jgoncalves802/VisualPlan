@@ -401,7 +401,7 @@ export interface CronogramaState {
 
   // Actions - CRUD Atividades
   carregarAtividades: (projetoId: string) => Promise<void>;
-  adicionarAtividade: (atividade: Omit<AtividadeMock, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  adicionarAtividade: (atividade: Omit<AtividadeMock, 'id' | 'created_at' | 'updated_at'>, afterTaskId?: string | null) => Promise<void>;
   atualizarAtividade: (id: string, dados: Partial<AtividadeMock>) => Promise<void>;
   excluirAtividade: (id: string) => Promise<void>;
   initBatchUpdates: () => void;
