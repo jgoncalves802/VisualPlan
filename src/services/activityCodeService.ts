@@ -435,8 +435,13 @@ export const activityCodeService = {
       .eq('atividade_id', atividadeId);
 
     if (error) {
+      // PGRST205 = table not found - return empty array gracefully
+      if (error.code === 'PGRST205') {
+        console.warn('Activity task codes table not found, returning empty array');
+        return [];
+      }
       console.error('Error fetching task codes:', error);
-      throw error;
+      return [];
     }
 
     return (data || []).map(mapTaskCodeFromDB);
@@ -452,8 +457,13 @@ export const activityCodeService = {
       `);
 
     if (error) {
+      // PGRST205 = table not found - return empty map gracefully
+      if (error.code === 'PGRST205') {
+        console.warn('Activity task codes table not found, returning empty map');
+        return new Map();
+      }
       console.error('Error fetching project task codes:', error);
-      throw error;
+      return new Map();
     }
 
     const taskCodesMap = new Map<string, ActivityTaskCode[]>();

@@ -366,6 +366,9 @@ export function GanttGrid({
           const level = task?.level ?? 0;
           const isProject = isGroup && level === 0;
           const isWBS = isGroup && level > 0;
+          const isHovered = hoveredRowIndex === rowIndex;
+          const isLightTheme = gridColors.rowEven === '#FFFFFF';
+          const hoverBg = isLightTheme ? '#E5E7EB' : '#4B5563';
           
           const getRowStyle = () => {
             if (isProject) {
@@ -385,7 +388,7 @@ export function GanttGrid({
             if (isSelected) {
               return {
                 backgroundColor: gridColors.selected,
-                color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+                color: isLightTheme ? '#1F2937' : '#E5E7EB',
                 borderBottom: `1px solid ${gridColors.border}`,
                 borderLeft: `2px solid ${gridColors.selectedBorder}`
               };
@@ -393,14 +396,22 @@ export function GanttGrid({
             if (isCritical) {
               return {
                 backgroundColor: colors.timeline.holiday,
-                color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+                color: isLightTheme ? '#1F2937' : '#E5E7EB',
                 borderBottom: `1px solid ${colors.criticalActivity.stroke}`,
                 borderLeft: `2px solid ${colors.criticalActivity.fill}`
               };
             }
+            // Hover effect - highlight when mouse is over the row
+            if (isHovered && !isProject && !isWBS) {
+              return {
+                backgroundColor: hoverBg,
+                color: isLightTheme ? '#1F2937' : '#E5E7EB',
+                borderBottom: `1px solid ${gridColors.border}`
+              };
+            }
             return {
               backgroundColor: isEven ? gridColors.rowEven : gridColors.rowOdd,
-              color: gridColors.rowEven === '#FFFFFF' ? '#1F2937' : '#E5E7EB',
+              color: isLightTheme ? '#1F2937' : '#E5E7EB',
               borderBottom: `1px solid ${gridColors.border}`
             };
           };
@@ -409,7 +420,6 @@ export function GanttGrid({
           const isRowDragging = dragRowTaskId === task?.id;
           const isRowDropTarget = dropRowIndex === rowIndex && dragRowTaskId !== task?.id;
           const canDragRow = enableRowDragDrop && !isGroup && !task?.id.startsWith('wbs-');
-          const isHovered = hoveredRowIndex === rowIndex;
           const isNewlyAdded = task?.id ? newlyAddedIds.has(task.id) : false;
           
           return (
