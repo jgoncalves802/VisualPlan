@@ -329,22 +329,23 @@ EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
 
 -- ATIVIDADES CRONOGRAMA (13 activities)
+-- Schema: id, projeto_id, codigo, edt, nome, descricao, tipo, wbs_id, data_inicio, data_fim, duracao_dias, progresso, status, responsavel_id, responsavel_nome, empresa_id
 DO $$
 BEGIN
-  INSERT INTO atividades_cronograma (id, empresa_id, projeto_id, wbs_id, codigo, nome, tipo, data_inicio, data_termino, duracao, percentual_completo, status, responsavel, responsavel_id, created_by) VALUES
-  ('f0000001-0000-0000-0000-000000000001'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-001', 'Locação da Obra', 'Tarefa', '2025-01-15', '2025-01-20', 5, 100, 'concluida', 'Maria Santos', 'b0000002-0000-0000-0000-000000000002'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000002-0000-0000-0000-000000000002'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-002', 'Escavação Fundações', 'Tarefa', '2025-01-21', '2025-02-10', 20, 100, 'concluida', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000003-0000-0000-0000-000000000003'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-003', 'Armação Fundações', 'Tarefa', '2025-02-03', '2025-02-20', 17, 85, 'em_andamento', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000004-0000-0000-0000-000000000004'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-004', 'Concretagem Fundações', 'Tarefa', '2025-02-15', '2025-03-01', 14, 60, 'em_andamento', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000005-0000-0000-0000-000000000005'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-005', 'Forma Pilares 1º Pav', 'Tarefa', '2025-03-01', '2025-03-10', 9, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000006-0000-0000-0000-000000000006'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-006', 'Armação Pilares 1º Pav', 'Tarefa', '2025-03-08', '2025-03-18', 10, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000007-0000-0000-0000-000000000007'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-007', 'Concretagem Pilares 1º Pav', 'Tarefa', '2025-03-18', '2025-03-22', 4, 0, 'nao_iniciada', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000008-0000-0000-0000-000000000008'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000003-0000-0000-0000-000000000003'::uuid, 'AT-008', 'Alvenaria Térreo', 'Tarefa', '2025-04-01', '2025-04-30', 29, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000009-0000-0000-0000-000000000009'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000004-0000-0000-0000-000000000004'::uuid, 'AT-009', 'Instalações Elétricas Térreo', 'Tarefa', '2025-05-01', '2025-05-20', 19, 0, 'nao_iniciada', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000010-0000-0000-0000-000000000010'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000004-0000-0000-0000-000000000004'::uuid, 'AT-010', 'Instalações Hidráulicas Térreo', 'Tarefa', '2025-05-01', '2025-05-25', 24, 0, 'nao_iniciada', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000011-0000-0000-0000-000000000011'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-011', 'Revestimento Interno Térreo', 'Tarefa', '2025-06-01', '2025-07-15', 44, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000012-0000-0000-0000-000000000012'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-012', 'Pintura Geral', 'Tarefa', '2025-07-16', '2025-08-30', 45, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
-  ('f0000013-0000-0000-0000-000000000013'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, NULL, 'AT-013', 'Entrega Final', 'Marco', '2026-12-31', '2026-12-31', 0, 0, 'nao_iniciada', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid)
+  INSERT INTO atividades_cronograma (id, empresa_id, projeto_id, wbs_id, codigo, nome, tipo, data_inicio, data_fim, duracao_dias, progresso, status, responsavel_nome, responsavel_id) VALUES
+  ('f0000001-0000-0000-0000-000000000001'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-001', 'Locação da Obra', 'Tarefa', '2025-01-15', '2025-01-20', 5, 100, 'Concluída', 'Maria Santos', 'b0000002-0000-0000-0000-000000000002'::uuid),
+  ('f0000002-0000-0000-0000-000000000002'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-002', 'Escavação Fundações', 'Tarefa', '2025-01-21', '2025-02-10', 20, 100, 'Concluída', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid),
+  ('f0000003-0000-0000-0000-000000000003'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-003', 'Armação Fundações', 'Tarefa', '2025-02-03', '2025-02-20', 17, 85, 'Em Andamento', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000004-0000-0000-0000-000000000004'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-004', 'Concretagem Fundações', 'Tarefa', '2025-02-15', '2025-03-01', 14, 60, 'Em Andamento', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid),
+  ('f0000005-0000-0000-0000-000000000005'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-005', 'Forma Pilares 1º Pav', 'Tarefa', '2025-03-01', '2025-03-10', 9, 0, 'Não Iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000006-0000-0000-0000-000000000006'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-006', 'Armação Pilares 1º Pav', 'Tarefa', '2025-03-08', '2025-03-18', 10, 0, 'Não Iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000007-0000-0000-0000-000000000007'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 'AT-007', 'Concretagem Pilares 1º Pav', 'Tarefa', '2025-03-18', '2025-03-22', 4, 0, 'Não Iniciada', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid),
+  ('f0000008-0000-0000-0000-000000000008'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000003-0000-0000-0000-000000000003'::uuid, 'AT-008', 'Alvenaria Térreo', 'Tarefa', '2025-04-01', '2025-04-30', 29, 0, 'Não Iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000009-0000-0000-0000-000000000009'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000004-0000-0000-0000-000000000004'::uuid, 'AT-009', 'Instalações Elétricas Térreo', 'Tarefa', '2025-05-01', '2025-05-20', 19, 0, 'Não Iniciada', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid),
+  ('f0000010-0000-0000-0000-000000000010'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000004-0000-0000-0000-000000000004'::uuid, 'AT-010', 'Instalações Hidráulicas Térreo', 'Tarefa', '2025-05-01', '2025-05-25', 24, 0, 'Não Iniciada', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid),
+  ('f0000011-0000-0000-0000-000000000011'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-011', 'Revestimento Interno Térreo', 'Tarefa', '2025-06-01', '2025-07-15', 44, 0, 'Não Iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000012-0000-0000-0000-000000000012'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-012', 'Pintura Geral', 'Tarefa', '2025-07-16', '2025-08-30', 45, 0, 'Não Iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid),
+  ('f0000013-0000-0000-0000-000000000013'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, NULL, 'AT-013', 'Entrega Final', 'Marco', '2026-12-31', '2026-12-31', 0, 0, 'Não Iniciada', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid)
   ON CONFLICT (id) DO NOTHING;
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
@@ -379,55 +380,57 @@ EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
 
 -- AUDITORIAS (5 auditorias)
+-- Schema: id, codigo, titulo, tipo, template_id, projeto_id, projeto_nome, local_auditoria, data_programada, data_realizacao, auditor_id, auditor_nome, status, itens, total_itens, itens_conformes, itens_nao_conformes, nota_geral, observacoes, empresa_id, created_by
 DO $$
 BEGIN
-  INSERT INTO auditorias (id, codigo, titulo, descricao, checklist_id, checklist_nome, projeto_id, projeto_nome, tipo, responsavel, responsavel_id, data_auditoria, status, itens, percentual_conformidade, nao_conformidades, acoes_geradas, observacoes_gerais, empresa_id, created_by) VALUES
-  ('22222222-2222-2222-2222-222222222201'::uuid, 'AUD-2025-001', 'Auditoria de Segurança - Janeiro', 'Auditoria mensal de segurança do trabalho', '11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Segurança', 'Ana Costa', 'b0000004-0000-0000-0000-000000000004'::uuid, '2025-01-25', 'concluida',
+  INSERT INTO auditorias (id, codigo, titulo, tipo, template_id, projeto_id, projeto_nome, local_auditoria, data_programada, data_realizacao, auditor_id, auditor_nome, status, itens, total_itens, itens_conformes, itens_nao_conformes, nota_geral, observacoes, empresa_id, created_by) VALUES
+  ('22222222-2222-2222-2222-222222222201'::uuid, 'AUD-2025-001', 'Auditoria de Segurança - Janeiro', 'Segurança', '11111111-1111-1111-1111-111111111101'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Canteiro de Obras', '2025-01-25', '2025-01-25', 'b0000004-0000-0000-0000-000000000004'::uuid, 'Ana Costa', 'REALIZADA',
    '[{"id": "item-1", "status": "conforme"}, {"id": "item-2", "status": "conforme"}, {"id": "item-3", "status": "nao_conforme", "observacao": "2 extintores vencidos"}, {"id": "item-4", "status": "conforme"}, {"id": "item-5", "status": "conforme"}]',
-   80.0, 1, ARRAY['5W2H-001'], 'Auditoria realizada com sucesso. Pendência de extintores identificada.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
+   5, 4, 1, 80.0, 'Auditoria realizada com sucesso. Pendência de extintores identificada.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
 
-  ('22222222-2222-2222-2222-222222222202'::uuid, 'AUD-2025-002', 'Auditoria de Concreto - Fundações', 'Verificação de qualidade do concreto das fundações', '11111111-1111-1111-1111-111111111102'::uuid, 'Checklist de Concreto', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Qualidade', 'Ana Costa', 'b0000004-0000-0000-0000-000000000004'::uuid, '2025-02-10', 'concluida',
+  ('22222222-2222-2222-2222-222222222202'::uuid, 'AUD-2025-002', 'Auditoria de Concreto - Fundações', 'Qualidade', '11111111-1111-1111-1111-111111111102'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Fundações', '2025-02-10', '2025-02-10', 'b0000004-0000-0000-0000-000000000004'::uuid, 'Ana Costa', 'REALIZADA',
    '[{"id": "item-1", "status": "conforme"}, {"id": "item-2", "status": "conforme"}, {"id": "item-3", "status": "conforme"}, {"id": "item-4", "status": "conforme"}]',
-   100.0, 0, NULL, 'Todos os itens em conformidade.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
+   4, 4, 0, 100.0, 'Todos os itens em conformidade.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
 
-  ('22222222-2222-2222-2222-222222222203'::uuid, 'AUD-2025-003', 'Auditoria de Segurança - Fevereiro', 'Auditoria mensal de segurança do trabalho', '11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Segurança', 'Pedro Souza', 'b0000005-0000-0000-0000-000000000005'::uuid, '2025-02-25', 'em_andamento',
+  ('22222222-2222-2222-2222-222222222203'::uuid, 'AUD-2025-003', 'Auditoria de Segurança - Fevereiro', 'Segurança', '11111111-1111-1111-1111-111111111101'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Canteiro de Obras', '2025-02-25', NULL, 'b0000005-0000-0000-0000-000000000005'::uuid, 'Pedro Souza', 'EM_ANDAMENTO',
    '[{"id": "item-1", "status": "conforme"}, {"id": "item-2", "status": "pendente"}]',
-   50.0, 0, NULL, 'Auditoria em andamento.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid),
+   5, 1, 0, 50.0, 'Auditoria em andamento.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid),
 
-  ('22222222-2222-2222-2222-222222222204'::uuid, 'AUD-2025-004', 'Auditoria de Alvenaria - Térreo', 'Verificação de qualidade da alvenaria', '11111111-1111-1111-1111-111111111103'::uuid, 'Checklist de Alvenaria', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Qualidade', 'Ana Costa', 'b0000004-0000-0000-0000-000000000004'::uuid, '2025-04-15', 'programada',
-   '[]', NULL, 0, NULL, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
+  ('22222222-2222-2222-2222-222222222204'::uuid, 'AUD-2025-004', 'Auditoria de Alvenaria - Térreo', 'Qualidade', '11111111-1111-1111-1111-111111111103'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Térreo', '2025-04-15', NULL, 'b0000004-0000-0000-0000-000000000004'::uuid, 'Ana Costa', 'PROGRAMADA',
+   '[]', 4, 0, 0, NULL, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
 
-  ('22222222-2222-2222-2222-222222222205'::uuid, 'AUD-2025-005', 'Auditoria de Segurança - Março', 'Auditoria mensal de segurança do trabalho', '11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Segurança', 'Pedro Souza', 'b0000005-0000-0000-0000-000000000005'::uuid, '2025-03-25', 'programada',
-   '[]', NULL, 0, NULL, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid)
+  ('22222222-2222-2222-2222-222222222205'::uuid, 'AUD-2025-005', 'Auditoria de Segurança - Março', 'Segurança', '11111111-1111-1111-1111-111111111101'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Canteiro de Obras', '2025-03-25', NULL, 'b0000005-0000-0000-0000-000000000005'::uuid, 'Pedro Souza', 'PROGRAMADA',
+   '[]', 5, 0, 0, NULL, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid)
   ON CONFLICT (id) DO NOTHING;
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
 
 -- SOLICITACOES DE MUDANCA (5 solicitações)
+-- Schema: id, codigo, titulo, descricao, justificativa, tipo_mudanca, prioridade, solicitante, solicitante_id, data_solicitacao, status, projeto_id, projeto_nome, impacto_cronograma, impacto_custo, impacto_estimado, historico, empresa_id, created_by
 DO $$
 BEGIN
-  INSERT INTO solicitacoes_mudanca (id, codigo, titulo, descricao, justificativa, tipo_mudanca, prioridade, solicitante, solicitante_id, data_solicitacao, status, projeto_id, projeto_nome, impacto_prazo, impacto_custo, nivel_impacto, historico, empresa_id, created_by) VALUES
-  ('33333333-3333-3333-3333-333333333301'::uuid, 'SM-2025-001', 'Alteração de Layout - Subsolo', 'Modificar layout das vagas de garagem', 'Atender nova legislação municipal', 'escopo', 'alta', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-02-01', 'aprovada', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 15, 85000.00, 'medio',
+  INSERT INTO solicitacoes_mudanca (id, codigo, titulo, descricao, justificativa, tipo_mudanca, prioridade, solicitante, solicitante_id, data_solicitacao, status, projeto_id, projeto_nome, impacto_cronograma, impacto_custo, impacto_estimado, historico, empresa_id, created_by) VALUES
+  ('33333333-3333-3333-3333-333333333301'::uuid, 'SM-2025-001', 'Alteração de Layout - Subsolo', 'Modificar layout das vagas de garagem', 'Atender nova legislação municipal', 'ESCOPO', 'ALTA', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-02-01', 'APROVADA', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 15, 85000.00, 'MEDIO',
    '[{"id": "hist-1", "data": "2025-02-01T10:00:00Z", "acao": "submetida", "usuario": "João Silva"},
      {"id": "hist-2", "data": "2025-02-05T14:00:00Z", "acao": "em_analise", "usuario": "Maria Santos"},
      {"id": "hist-3", "data": "2025-02-08T16:00:00Z", "acao": "aprovada", "usuario": "Luciana Ferreira"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000002-0000-0000-0000-000000000002'::uuid),
 
-  ('33333333-3333-3333-3333-333333333302'::uuid, 'SM-2025-002', 'Inclusão de Gerador de Emergência', 'Adicionar gerador diesel 500kVA', 'Exigência do Corpo de Bombeiros', 'escopo', 'alta', 'Pedro Souza', 'b0000005-0000-0000-0000-000000000005'::uuid, '2025-02-10', 'em_analise', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 20, 180000.00, 'alto',
+  ('33333333-3333-3333-3333-333333333302'::uuid, 'SM-2025-002', 'Inclusão de Gerador de Emergência', 'Adicionar gerador diesel 500kVA', 'Exigência do Corpo de Bombeiros', 'ESCOPO', 'ALTA', 'Pedro Souza', 'b0000005-0000-0000-0000-000000000005'::uuid, '2025-02-10', 'EM_ANALISE', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 20, 180000.00, 'ALTO',
    '[{"id": "hist-1", "data": "2025-02-10T11:00:00Z", "acao": "submetida", "usuario": "Pedro Souza"},
      {"id": "hist-2", "data": "2025-02-12T16:00:00Z", "acao": "em_analise", "usuario": "João Silva"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid),
 
-  ('33333333-3333-3333-3333-333333333303'::uuid, 'SM-2025-003', 'Alteração de Acabamento - Fachada', 'Substituição de pastilha por ACM', 'Redução de custo e prazo', 'escopo', 'media', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid, '2025-02-15', 'submetida', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', -10, -45000.00, 'medio',
+  ('33333333-3333-3333-3333-333333333303'::uuid, 'SM-2025-003', 'Alteração de Acabamento - Fachada', 'Substituição de pastilha por ACM', 'Redução de custo e prazo', 'ESCOPO', 'MEDIA', 'Fernanda Oliveira', 'b0000006-0000-0000-0000-000000000006'::uuid, '2025-02-15', 'SUBMETIDA', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', -10, -45000.00, 'MEDIO',
    '[{"id": "hist-1", "data": "2025-02-15T08:30:00Z", "acao": "submetida", "usuario": "Fernanda Oliveira"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000006-0000-0000-0000-000000000006'::uuid),
 
-  ('33333333-3333-3333-3333-333333333304'::uuid, 'SM-2025-004', 'Antecipação de Elevadores', 'Antecipar instalação para uso na obra', 'Facilitar transporte de materiais', 'cronograma', 'baixa', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, '2025-02-20', 'rejeitada', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 0, 25000.00, 'baixo',
+  ('33333333-3333-3333-3333-333333333304'::uuid, 'SM-2025-004', 'Antecipação de Elevadores', 'Antecipar instalação para uso na obra', 'Facilitar transporte de materiais', 'CRONOGRAMA', 'BAIXA', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, '2025-02-20', 'REJEITADA', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 0, 25000.00, 'BAIXO',
    '[{"id": "hist-1", "data": "2025-02-20T13:00:00Z", "acao": "submetida", "usuario": "Carlos Lima"},
      {"id": "hist-2", "data": "2025-02-22T10:00:00Z", "acao": "rejeitada", "usuario": "João Silva"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000003-0000-0000-0000-000000000003'::uuid),
 
-  ('33333333-3333-3333-3333-333333333305'::uuid, 'SM-2025-005', 'Ampliação de Subsolos - Plaza', 'Adicionar nível de subsolo', 'Atender norma de vagas/m²', 'escopo', 'alta', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-03-01', 'submetida', 'c0000002-0000-0000-0000-000000000002'::uuid, 'Centro Comercial Plaza', 60, 2500000.00, 'alto',
+  ('33333333-3333-3333-3333-333333333305'::uuid, 'SM-2025-005', 'Ampliação de Subsolos - Plaza', 'Adicionar nível de subsolo', 'Atender norma de vagas/m²', 'ESCOPO', 'ALTA', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-03-01', 'SUBMETIDA', 'c0000002-0000-0000-0000-000000000002'::uuid, 'Centro Comercial Plaza', 60, 2500000.00, 'ALTO',
    '[{"id": "hist-1", "data": "2025-03-01T09:00:00Z", "acao": "submetida", "usuario": "João Silva"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid)
   ON CONFLICT (id) DO NOTHING;
@@ -534,34 +537,36 @@ END $$;
 
 -- ========================================
 -- RECURSOS (14 recursos: mão de obra, equipamentos, materiais)
+-- Schema: id, empresa_id, codigo, nome, tipo, unidade, custo_por_hora, custo_por_unidade, disponibilidade_horas, ativo
 -- ========================================
 DO $$
 BEGIN
-  INSERT INTO recursos (id, empresa_id, codigo, nome, tipo, unidade, custo_hora, custo_uso, disponibilidade_diaria, calendario, ativo) VALUES
-  ('88888888-8888-8888-8888-888888888801'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-001', 'Pedreiro', 'mao_de_obra', 'hora', 45.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888802'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-002', 'Armador', 'mao_de_obra', 'hora', 55.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888803'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-003', 'Carpinteiro', 'mao_de_obra', 'hora', 50.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888804'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-004', 'Eletricista', 'mao_de_obra', 'hora', 60.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888805'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-005', 'Encanador', 'mao_de_obra', 'hora', 55.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888806'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-006', 'Servente', 'mao_de_obra', 'hora', 25.00, 0, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888807'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-007', 'Retroescavadeira', 'equipamento', 'hora', 180.00, 50, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888808'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-008', 'Betoneira 400L', 'equipamento', 'hora', 35.00, 20, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888809'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-009', 'Grua Torre 8t', 'equipamento', 'hora', 250.00, 100, 10, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888810'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-010', 'Vibrador de Concreto', 'equipamento', 'hora', 15.00, 5, 8, 'padrao', true),
-  ('88888888-8888-8888-8888-888888888811'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-011', 'Concreto FCK 30', 'material', 'm3', 420.00, 0, 999, NULL, true),
-  ('88888888-8888-8888-8888-888888888812'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-012', 'Aço CA-50', 'material', 'kg', 8.50, 0, 999, NULL, true),
-  ('88888888-8888-8888-8888-888888888813'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-013', 'Bloco Cerâmico', 'material', 'un', 2.80, 0, 999, NULL, true),
-  ('88888888-8888-8888-8888-888888888814'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-014', 'Forma Metálica', 'equipamento', 'm2', 12.00, 30, 500, 'padrao', true)
+  INSERT INTO recursos (id, empresa_id, codigo, nome, tipo, unidade, custo_por_hora, custo_por_unidade, disponibilidade_horas, ativo) VALUES
+  ('88888888-8888-8888-8888-888888888801'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-001', 'Pedreiro', 'MAO_DE_OBRA', 'h', 45.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888802'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-002', 'Armador', 'MAO_DE_OBRA', 'h', 55.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888803'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-003', 'Carpinteiro', 'MAO_DE_OBRA', 'h', 50.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888804'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-004', 'Eletricista', 'MAO_DE_OBRA', 'h', 60.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888805'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-005', 'Encanador', 'MAO_DE_OBRA', 'h', 55.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888806'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-006', 'Servente', 'MAO_DE_OBRA', 'h', 25.00, 0, 8, true),
+  ('88888888-8888-8888-8888-888888888807'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-007', 'Retroescavadeira', 'EQUIPAMENTO', 'h', 180.00, 50, 8, true),
+  ('88888888-8888-8888-8888-888888888808'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-008', 'Betoneira 400L', 'EQUIPAMENTO', 'h', 35.00, 20, 8, true),
+  ('88888888-8888-8888-8888-888888888809'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-009', 'Grua Torre 8t', 'EQUIPAMENTO', 'h', 250.00, 100, 10, true),
+  ('88888888-8888-8888-8888-888888888810'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-010', 'Vibrador de Concreto', 'EQUIPAMENTO', 'h', 15.00, 5, 8, true),
+  ('88888888-8888-8888-8888-888888888811'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-011', 'Concreto FCK 30', 'MATERIAL', 'm3', 420.00, 0, 999, true),
+  ('88888888-8888-8888-8888-888888888812'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-012', 'Aço CA-50', 'MATERIAL', 'kg', 8.50, 0, 999, true),
+  ('88888888-8888-8888-8888-888888888813'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-013', 'Bloco Cerâmico', 'MATERIAL', 'un', 2.80, 0, 999, true),
+  ('88888888-8888-8888-8888-888888888814'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-014', 'Forma Metálica', 'EQUIPAMENTO', 'm2', 12.00, 30, 500, true)
   ON CONFLICT (id) DO NOTHING;
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
 
 -- ========================================
 -- DEPENDENCIAS DE ATIVIDADES (10 dependências)
+-- Schema: id, atividade_origem_id, atividade_destino_id, tipo, lag_dias
 -- ========================================
 DO $$
 BEGIN
-  INSERT INTO dependencias_atividades (id, atividade_predecessora_id, atividade_sucessora_id, tipo, lag) VALUES
+  INSERT INTO dependencias_atividades (id, atividade_origem_id, atividade_destino_id, tipo, lag_dias) VALUES
   ('99999999-9999-9999-9999-999999999901'::uuid, 'f0000001-0000-0000-0000-000000000001'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 'FS', 0),
   ('99999999-9999-9999-9999-999999999902'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 'SS', 5),
   ('99999999-9999-9999-9999-999999999903'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 'FS', 2),
@@ -578,28 +583,29 @@ END $$;
 
 -- ========================================
 -- RESOURCE ALLOCATIONS (18 alocações de recursos)
+-- Schema: id, atividade_id, recurso_id, quantidade, percentual_alocacao, horas_planejadas, custo_planejado, data_inicio, data_fim
 -- ========================================
 DO $$
 BEGIN
-  INSERT INTO resource_allocations (id, recurso_id, atividade_id, quantidade, unidades_por_dia, data_inicio, data_fim, custo_total) VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 4, 8, '2025-04-01', '2025-04-30', 5760.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 2, 8, '2025-04-01', '2025-04-30', 1600.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003'::uuid, '88888888-8888-8888-8888-888888888802'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 6, 8, '2025-02-03', '2025-02-20', 4752.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa004'::uuid, '88888888-8888-8888-8888-888888888812'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 15000, 1, '2025-02-03', '2025-02-20', 127500.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa005'::uuid, '88888888-8888-8888-8888-888888888807'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 1, 8, '2025-01-21', '2025-02-10', 28800.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa006'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 4, 8, '2025-01-21', '2025-02-10', 3200.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa007'::uuid, '88888888-8888-8888-8888-888888888808'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 2, 6, '2025-02-15', '2025-03-01', 2520.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa008'::uuid, '88888888-8888-8888-8888-888888888810'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 3, 6, '2025-02-15', '2025-03-01', 1890.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa009'::uuid, '88888888-8888-8888-8888-888888888811'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 250, 1, '2025-02-15', '2025-03-01', 105000.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa010'::uuid, '88888888-8888-8888-8888-888888888803'::uuid, 'f0000005-0000-0000-0000-000000000005'::uuid, 4, 8, '2025-03-01', '2025-03-10', 2880.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa011'::uuid, '88888888-8888-8888-8888-888888888814'::uuid, 'f0000005-0000-0000-0000-000000000005'::uuid, 200, 1, '2025-03-01', '2025-03-10', 2400.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa012'::uuid, '88888888-8888-8888-8888-888888888802'::uuid, 'f0000006-0000-0000-0000-000000000006'::uuid, 5, 8, '2025-03-08', '2025-03-18', 4400.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa013'::uuid, '88888888-8888-8888-8888-888888888809'::uuid, 'f0000006-0000-0000-0000-000000000006'::uuid, 1, 8, '2025-03-08', '2025-03-18', 20000.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa014'::uuid, '88888888-8888-8888-8888-888888888804'::uuid, 'f0000009-0000-0000-0000-000000000009'::uuid, 3, 8, '2025-05-01', '2025-05-20', 5760.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa015'::uuid, '88888888-8888-8888-8888-888888888805'::uuid, 'f0000010-0000-0000-0000-000000000010'::uuid, 2, 8, '2025-05-01', '2025-05-25', 4400.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa016'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000011-0000-0000-0000-000000000011'::uuid, 6, 8, '2025-06-01', '2025-07-15', 15840.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa017'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000012-0000-0000-0000-000000000012'::uuid, 4, 8, '2025-07-16', '2025-08-30', 12960.00),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa018'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000001-0000-0000-0000-000000000001'::uuid, 2, 8, '2025-01-15', '2025-01-20', 800.00)
+  INSERT INTO resource_allocations (id, recurso_id, atividade_id, quantidade, percentual_alocacao, horas_planejadas, custo_planejado, data_inicio, data_fim) VALUES
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 4, 100, 928, 5760.00, '2025-04-01', '2025-04-30'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 2, 100, 464, 1600.00, '2025-04-01', '2025-04-30'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003'::uuid, '88888888-8888-8888-8888-888888888802'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 6, 100, 816, 4752.00, '2025-02-03', '2025-02-20'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa004'::uuid, '88888888-8888-8888-8888-888888888812'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 15000, 100, 0, 127500.00, '2025-02-03', '2025-02-20'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa005'::uuid, '88888888-8888-8888-8888-888888888807'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 1, 100, 160, 28800.00, '2025-01-21', '2025-02-10'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa006'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 4, 100, 640, 3200.00, '2025-01-21', '2025-02-10'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa007'::uuid, '88888888-8888-8888-8888-888888888808'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 2, 75, 168, 2520.00, '2025-02-15', '2025-03-01'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa008'::uuid, '88888888-8888-8888-8888-888888888810'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 3, 75, 252, 1890.00, '2025-02-15', '2025-03-01'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa009'::uuid, '88888888-8888-8888-8888-888888888811'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 250, 100, 0, 105000.00, '2025-02-15', '2025-03-01'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa010'::uuid, '88888888-8888-8888-8888-888888888803'::uuid, 'f0000005-0000-0000-0000-000000000005'::uuid, 4, 100, 288, 2880.00, '2025-03-01', '2025-03-10'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa011'::uuid, '88888888-8888-8888-8888-888888888814'::uuid, 'f0000005-0000-0000-0000-000000000005'::uuid, 200, 100, 0, 2400.00, '2025-03-01', '2025-03-10'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa012'::uuid, '88888888-8888-8888-8888-888888888802'::uuid, 'f0000006-0000-0000-0000-000000000006'::uuid, 5, 100, 400, 4400.00, '2025-03-08', '2025-03-18'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa013'::uuid, '88888888-8888-8888-8888-888888888809'::uuid, 'f0000006-0000-0000-0000-000000000006'::uuid, 1, 100, 80, 20000.00, '2025-03-08', '2025-03-18'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa014'::uuid, '88888888-8888-8888-8888-888888888804'::uuid, 'f0000009-0000-0000-0000-000000000009'::uuid, 3, 100, 456, 5760.00, '2025-05-01', '2025-05-20'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa015'::uuid, '88888888-8888-8888-8888-888888888805'::uuid, 'f0000010-0000-0000-0000-000000000010'::uuid, 2, 100, 400, 4400.00, '2025-05-01', '2025-05-25'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa016'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000011-0000-0000-0000-000000000011'::uuid, 6, 100, 2112, 15840.00, '2025-06-01', '2025-07-15'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa017'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000012-0000-0000-0000-000000000012'::uuid, 4, 100, 1440, 12960.00, '2025-07-16', '2025-08-30'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa018'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000001-0000-0000-0000-000000000001'::uuid, 2, 100, 80, 800.00, '2025-01-15', '2025-01-20')
   ON CONFLICT (id) DO NOTHING;
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;

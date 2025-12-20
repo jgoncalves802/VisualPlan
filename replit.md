@@ -73,6 +73,18 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **LPS Constraints** (8 restricoes_lps): Various categories (projeto, material, mao_de_obra, equipamento, outros)
     *   **Database Constraints Validated**: camada_governanca (PROPONENTE/FISCALIZACAO/CONTRATADA), perfil_acesso (ADMIN/DIRETOR/GERENTE_PROJETO/etc), tipo (Tarefa/Marco/Fase/WBS)
     *   **FK Relationships Mapped**: auditorias/solicitacoes_mudanca/acoes_5w2h/restricoes_lps → eps_nodes.id; restricoes_ishikawa → projetos.id
+*   **SQL Seed Scripts Finalized (December 20, 2025)**:
+    *   `sql/007_reset_database.sql`: Idempotent reset script with individual DO blocks for each DELETE, safely handles undefined tables
+    *   `sql/006_complete_setup.sql`: Complete database seed with ON CONFLICT (id) DO NOTHING for safe re-runs
+    *   **Key Schema Mappings Discovered**:
+        *   atividades_cronograma: data_fim, duracao_dias, progresso, responsavel_nome (uppercase status values: 'Concluída', 'Em Andamento', 'Não Iniciada')
+        *   recursos: custo_por_hora, custo_por_unidade, disponibilidade_horas; tipo must be uppercase (MAO_DE_OBRA, EQUIPAMENTO, MATERIAL)
+        *   dependencias_atividades: atividade_origem_id, atividade_destino_id, lag_dias
+        *   resource_allocations: percentual_alocacao, horas_planejadas, custo_planejado
+        *   auditorias: template_id, auditor_id/auditor_nome, data_programada/data_realizacao, nota_geral, total_itens, itens_conformes/itens_nao_conformes; status uppercase (REALIZADA, EM_ANDAMENTO, PROGRAMADA)
+        *   solicitacoes_mudanca: impacto_cronograma, impacto_estimado (uppercase: ALTO/MEDIO/BAIXO), status uppercase (APROVADA, EM_ANALISE, SUBMETIDA, REJEITADA)
+    *   **Resource Data Added**: 14 recursos (6 mão de obra, 4 equipamentos, 4 materiais) with proper custo_por_hora/custo_por_unidade
+    *   **Resource Allocations Added**: 18 allocations linking recursos to atividades_cronograma with horas_planejadas and custo_planejado
 *   **SQL Migration 002**: Added 8 new tables - criterios_priorizacao, projetos_portfolio, scores_projetos, calendarios_projeto, excecoes_calendario, indicadores_lps, snapshots_evm, indicadores_qualidade (with RLS and triggers)
 *   **portfolioService.ts**: Multi-criteria weighted scoring with project ranking calculations
 *   **calendariosService.ts**: Work calendars (5x8, 6x8, 24/7) with holiday/exception management
