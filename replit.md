@@ -47,12 +47,18 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `auditoriaService.ts`: Audit templates and audits management
         *   `restricoesIshikawaService.ts`: Ishikawa analysis restrictions linked to EPS/WBS/Activities
         *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
+        *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
+        *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)
+        *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management)
 
 ## Recent Changes (December 2025)
-*   Migrated 6 major pages from mock data to Supabase integration with graceful fallbacks
-*   Created dedicated service layer for all management modules
-*   Implemented intelligent fallback to demo data when database tables don't exist
-*   Added loading states and error handling across all integrated pages
+*   **SQL Migration 002**: Added 8 new tables - criterios_priorizacao, projetos_portfolio, scores_projetos, calendarios_projeto, excecoes_calendario, indicadores_lps, snapshots_evm, indicadores_qualidade (with RLS and triggers)
+*   **portfolioService.ts**: Multi-criteria weighted scoring with project ranking calculations
+*   **calendariosService.ts**: Work calendars (5x8, 6x8, 24/7) with holiday/exception management
+*   **indicadoresService.ts**: Aggregates KPIs from atividades_cronograma, resource_allocations, auditorias with smart fallbacks
+*   **DashboardIndicadoresPage**: Integrated with indicadoresService replacing all mock data
+*   **PortfolioPage**: Integrated with portfolioService replacing MOCK_PROJETOS and CRITERIOS_PADRAO
+*   All services implement PGRST205 handling with graceful fallback to demo data when tables don't exist
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
