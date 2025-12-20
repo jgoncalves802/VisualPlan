@@ -40,6 +40,19 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **dependencias_atividades**: Activity dependencies/relationships supporting 4 PDM types and lag.
         *   **cronograma_column_configs**: Per-user, per-project column visibility and order preferences.
     *   **Performance & UX**: Implemented caching strategies (localStorage with TTL), optimistic UI updates, batch update manager, skeleton loaders, fade-in animations, scroll preservation, inline editing, and robust error handling with network resilience.
+    *   **Service Layer Architecture**: Dedicated Supabase services for each management module with PGRST205 graceful error handling:
+        *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions
+        *   `gestaoMudancaService.ts`: Change request management with workflow support
+        *   `reunioesService.ts`: Meeting scheduling and agenda management
+        *   `auditoriaService.ts`: Audit templates and audits management
+        *   `restricoesIshikawaService.ts`: Ishikawa analysis restrictions linked to EPS/WBS/Activities
+        *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
+
+## Recent Changes (December 2025)
+*   Migrated 6 major pages from mock data to Supabase integration with graceful fallbacks
+*   Created dedicated service layer for all management modules
+*   Implemented intelligent fallback to demo data when database tables don't exist
+*   Added loading states and error handling across all integrated pages
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

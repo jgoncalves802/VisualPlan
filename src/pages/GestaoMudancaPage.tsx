@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -19,8 +19,11 @@ import {
   MessageSquare,
   Paperclip,
   History,
+  Loader2,
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
+import { gestaoMudancaService } from '../services/gestaoMudancaService';
 import {
   SolicitacaoMudanca,
   StatusMudanca,
@@ -960,7 +963,10 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
 
 const GestaoMudancaPage: React.FC = () => {
   const { tema } = useTemaStore();
-  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoMudanca[]>(() => generateMockSolicitacoes());
+  const { usuario } = useAuthStore();
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoMudanca[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tipoFilter, setTipoFilter] = useState<string>('all');
@@ -971,6 +977,33 @@ const GestaoMudancaPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSolicitacao, setSelectedSolicitacao] = useState<SolicitacaoMudanca | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'create' | 'edit'>('view');
+
+  const loadData = useCallback(async () => {
+    if (!usuario?.empresaId) {
+      setSolicitacoes(generateMockSolicitacoes());
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await gestaoMudancaService.getAll(usuario.empresaId);
+      if (data.length === 0) {
+        setSolicitacoes(generateMockSolicitacoes());
+      } else {
+        setSolicitacoes(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar solicitações de mudança:', error);
+      setSolicitacoes(generateMockSolicitacoes());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredSolicitacoes = useMemo(() => {
     return solicitacoes.filter(sol => {
@@ -1009,81 +1042,202 @@ const GestaoMudancaPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleSave = (data: Partial<SolicitacaoMudanca>) => {
-    if (modalMode === 'create') {
-      const newSolicitacao: SolicitacaoMudanca = {
-        ...data as SolicitacaoMudanca,
-        id: `sm-${Date.now()}`,
-        codigo: `SM-${String(solicitacoes.length + 1).padStart(3, '0')}`,
-        solicitante: 'Usuário Atual',
-        dataSolicitacao: new Date(),
-        status: StatusMudanca.RASCUNHO,
-        projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
-        aprovadores: [],
-        historico: [
-          { id: `h-${Date.now()}`, data: new Date(), usuario: 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
-        ],
-      };
-      setSolicitacoes(prev => [...prev, newSolicitacao]);
+  const handleSave = async (data: Partial<SolicitacaoMudanca>) => {
+    if (!usuario?.empresaId) {
+      if (modalMode === 'create') {
+        const newSolicitacao: SolicitacaoMudanca = {
+          ...data as SolicitacaoMudanca,
+          id: `sm-${Date.now()}`,
+          codigo: `SM-${String(solicitacoes.length + 1).padStart(3, '0')}`,
+          solicitante: usuario?.nome || 'Usuário Atual',
+          dataSolicitacao: new Date(),
+          status: StatusMudanca.RASCUNHO,
+          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          aprovadores: [],
+          historico: [
+            { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
+          ],
+        };
+        setSolicitacoes(prev => [...prev, newSolicitacao]);
+      }
+      setModalOpen(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (modalMode === 'create') {
+        const codigo = await gestaoMudancaService.generateNextCodigo(usuario.empresaId);
+        const newSolicitacao = await gestaoMudancaService.create({
+          ...data,
+          codigo,
+          solicitante: usuario?.nome || 'Usuário Atual',
+          solicitanteId: usuario?.id,
+          dataSolicitacao: new Date(),
+          status: StatusMudanca.RASCUNHO,
+          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          aprovadores: [],
+          historico: [
+            { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
+          ],
+          empresaId: usuario.empresaId,
+          createdBy: usuario?.id,
+        } as any);
+        if (newSolicitacao) {
+          setSolicitacoes(prev => [...prev, newSolicitacao]);
+        }
+      } else if (modalMode === 'edit' && selectedSolicitacao) {
+        const updated = await gestaoMudancaService.update(selectedSolicitacao.id, data);
+        if (updated) {
+          setSolicitacoes(prev => prev.map(s => s.id === updated.id ? updated : s));
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao salvar solicitação:', error);
+      if (modalMode === 'create') {
+        const newSolicitacao: SolicitacaoMudanca = {
+          ...data as SolicitacaoMudanca,
+          id: `sm-${Date.now()}`,
+          codigo: `SM-${String(solicitacoes.length + 1).padStart(3, '0')}`,
+          solicitante: usuario?.nome || 'Usuário Atual',
+          dataSolicitacao: new Date(),
+          status: StatusMudanca.RASCUNHO,
+          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          aprovadores: [],
+          historico: [
+            { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
+          ],
+        };
+        setSolicitacoes(prev => [...prev, newSolicitacao]);
+      }
+    } finally {
+      setIsSaving(false);
     }
     setModalOpen(false);
   };
 
-  const handleSubmit = (solicitacao: SolicitacaoMudanca) => {
-    setSolicitacoes(prev =>
-      prev.map(s =>
-        s.id === solicitacao.id
-          ? {
-              ...s,
-              status: StatusMudanca.SUBMETIDA,
-              historico: [
-                ...(s.historico || []),
-                { id: `h-${Date.now()}`, data: new Date(), usuario: 'Usuário Atual', acao: 'Submeteu para análise' },
-              ],
-            }
-          : s
-      )
-    );
+  const handleSubmit = async (solicitacao: SolicitacaoMudanca) => {
+    setIsSaving(true);
+    try {
+      const updatedHistorico = [
+        ...(solicitacao.historico || []),
+        { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Submeteu para análise' },
+      ];
+      const updated = await gestaoMudancaService.update(solicitacao.id, {
+        status: StatusMudanca.SUBMETIDA,
+        historico: updatedHistorico,
+      });
+      if (updated) {
+        setSolicitacoes(prev => prev.map(s => s.id === updated.id ? updated : s));
+      }
+    } catch (error) {
+      console.error('Erro ao submeter solicitação:', error);
+      setSolicitacoes(prev =>
+        prev.map(s =>
+          s.id === solicitacao.id
+            ? {
+                ...s,
+                status: StatusMudanca.SUBMETIDA,
+                historico: [
+                  ...(s.historico || []),
+                  { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Submeteu para análise' },
+                ],
+              }
+            : s
+        )
+      );
+    } finally {
+      setIsSaving(false);
+    }
     setModalOpen(false);
   };
 
-  const handleApprove = (solicitacao: SolicitacaoMudanca) => {
-    setSolicitacoes(prev =>
-      prev.map(s =>
-        s.id === solicitacao.id
-          ? {
-              ...s,
-              status: StatusMudanca.APROVADA,
-              dataAprovacao: new Date(),
-              historico: [
-                ...(s.historico || []),
-                { id: `h-${Date.now()}`, data: new Date(), usuario: 'Usuário Atual', acao: 'Aprovou a solicitação' },
-              ],
-            }
-          : s
-      )
-    );
+  const handleApprove = async (solicitacao: SolicitacaoMudanca) => {
+    setIsSaving(true);
+    try {
+      const updatedHistorico = [
+        ...(solicitacao.historico || []),
+        { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Aprovou a solicitação' },
+      ];
+      const updated = await gestaoMudancaService.update(solicitacao.id, {
+        status: StatusMudanca.APROVADA,
+        dataAprovacao: new Date(),
+        historico: updatedHistorico,
+      });
+      if (updated) {
+        setSolicitacoes(prev => prev.map(s => s.id === updated.id ? updated : s));
+      }
+    } catch (error) {
+      console.error('Erro ao aprovar solicitação:', error);
+      setSolicitacoes(prev =>
+        prev.map(s =>
+          s.id === solicitacao.id
+            ? {
+                ...s,
+                status: StatusMudanca.APROVADA,
+                dataAprovacao: new Date(),
+                historico: [
+                  ...(s.historico || []),
+                  { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Aprovou a solicitação' },
+                ],
+              }
+            : s
+        )
+      );
+    } finally {
+      setIsSaving(false);
+    }
     setModalOpen(false);
   };
 
-  const handleReject = (solicitacao: SolicitacaoMudanca) => {
-    setSolicitacoes(prev =>
-      prev.map(s =>
-        s.id === solicitacao.id
-          ? {
-              ...s,
-              status: StatusMudanca.REJEITADA,
-              dataAprovacao: new Date(),
-              historico: [
-                ...(s.historico || []),
-                { id: `h-${Date.now()}`, data: new Date(), usuario: 'Usuário Atual', acao: 'Rejeitou a solicitação' },
-              ],
-            }
-          : s
-      )
-    );
+  const handleReject = async (solicitacao: SolicitacaoMudanca) => {
+    setIsSaving(true);
+    try {
+      const updatedHistorico = [
+        ...(solicitacao.historico || []),
+        { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Rejeitou a solicitação' },
+      ];
+      const updated = await gestaoMudancaService.update(solicitacao.id, {
+        status: StatusMudanca.REJEITADA,
+        dataAprovacao: new Date(),
+        historico: updatedHistorico,
+      });
+      if (updated) {
+        setSolicitacoes(prev => prev.map(s => s.id === updated.id ? updated : s));
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      setSolicitacoes(prev =>
+        prev.map(s =>
+          s.id === solicitacao.id
+            ? {
+                ...s,
+                status: StatusMudanca.REJEITADA,
+                dataAprovacao: new Date(),
+                historico: [
+                  ...(s.historico || []),
+                  { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Rejeitou a solicitação' },
+                ],
+              }
+            : s
+        )
+      );
+    } finally {
+      setIsSaving(false);
+    }
     setModalOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: tema.background }}>
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: tema.primary }} />
+          <span style={{ color: tema.text }}>Carregando solicitações de mudança...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: tema.background }}>
@@ -1096,10 +1250,11 @@ const GestaoMudancaPage: React.FC = () => {
         </div>
         <button
           onClick={() => openModal(null, 'create')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors"
+          disabled={isSaving}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50"
           style={{ backgroundColor: tema.primary }}
         >
-          <Plus size={20} />
+          {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
           Solicitar Mudança
         </button>
       </div>

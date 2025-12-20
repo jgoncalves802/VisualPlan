@@ -1,49 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, 
   Clock, 
   AlertTriangle, 
   CheckCircle2,
   Maximize2,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import KPICard from '../components/ui/KPICard';
 import { useAuthStore } from '../stores/authStore';
 import { useTemaStore } from '../stores/temaStore';
+import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution } from '../services/dashboardService';
+
+const DEFAULT_KPIS: DashboardKPIs = {
+  percentualPAC: 78.5,
+  tempoMedioResolucao: 32,
+  spi: 0.95,
+  cpi: 1.02,
+  restricoesImpeditivas: 5,
+  restricoesTotal: 25,
+  atividadesAtrasadas: 12,
+  atividadesTotal: 100,
+  acoesAbertas: 8,
+  acoesTotal: 15,
+  mudancasPendentes: 3,
+  auditoriasEmAndamento: 2,
+  conformidadeMedia: 85.5,
+};
+
+const DEFAULT_CURVA_S: CurvaSData[] = [
+  { mes: 'Jan', planejado: 10, realizado: 12 },
+  { mes: 'Fev', planejado: 25, realizado: 23 },
+  { mes: 'Mar', planejado: 42, realizado: 40 },
+  { mes: 'Abr', planejado: 58, realizado: 55 },
+  { mes: 'Mai', planejado: 73, realizado: 68 },
+  { mes: 'Jun', planejado: 85, realizado: 78 },
+  { mes: 'Jul', planejado: 100, realizado: 85 },
+];
+
+const DEFAULT_RESTRICOES: RestricaoDistribution[] = [
+  { categoria: 'Material', count: 15, color: '#10B981' },
+  { categoria: 'Mão de Obra', count: 8, color: '#3B82F6' },
+  { categoria: 'Máquina', count: 5, color: '#F59E0B' },
+  { categoria: 'Método', count: 12, color: '#8B5CF6' },
+  { categoria: 'Meio Ambiente', count: 3, color: '#06B6D4' },
+];
 
 const DashboardPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const { tema } = useTemaStore();
   const [presentationMode, setPresentationMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [kpiData, setKpiData] = useState<DashboardKPIs>(DEFAULT_KPIS);
+  const [curvaS, setCurvaS] = useState<CurvaSData[]>(DEFAULT_CURVA_S);
+  const [restricoesPorTipo, setRestricoesPorTipo] = useState<RestricaoDistribution[]>(DEFAULT_RESTRICOES);
 
-  // Mock data - em produção viria do backend
-  const kpiData = {
-    percentualPAC: 78.5,
-    tempoMedioResolucao: 32,
-    spi: 0.95,
-    cpi: 1.02,
-    restricoesImpeditivas: 5,
-    atividadesAtrasadas: 12
-  };
+  const loadData = useCallback(async () => {
+    if (!usuario?.empresaId) {
+      setIsLoading(false);
+      return;
+    }
 
-  const curvaS = [
-    { mes: 'Jan', planejado: 10, realizado: 12 },
-    { mes: 'Fev', planejado: 25, realizado: 23 },
-    { mes: 'Mar', planejado: 42, realizado: 40 },
-    { mes: 'Abr', planejado: 58, realizado: 55 },
-    { mes: 'Mai', planejado: 73, realizado: 68 },
-    { mes: 'Jun', planejado: 85, realizado: 78 },
-    { mes: 'Jul', planejado: 100, realizado: 85 }
-  ];
+    setIsLoading(true);
+    try {
+      const [kpis, curva, restricoes] = await Promise.all([
+        dashboardService.getKPIs(usuario.empresaId),
+        dashboardService.getCurvaS(usuario.empresaId),
+        dashboardService.getRestricoesPorCategoria(usuario.empresaId),
+      ]);
 
-  const restricoesPorTipo = [
-    { tipo: 'Material', count: 15 },
-    { tipo: 'Mão de Obra', count: 8 },
-    { tipo: 'Equipamento', count: 5 },
-    { tipo: 'Projeto', count: 12 },
-    { tipo: 'Clima', count: 3 }
-  ];
+      const hasRealKPIData = kpis.atividadesTotal > 0 || kpis.acoesTotal > 0 || kpis.restricoesTotal > 0;
+      setKpiData(hasRealKPIData ? kpis : DEFAULT_KPIS);
+      
+      setCurvaS(curva.length > 0 ? curva : DEFAULT_CURVA_S);
+      
+      const hasRealRestricoes = restricoes.some(r => r.count > 0);
+      setRestricoesPorTipo(hasRealRestricoes ? restricoes : DEFAULT_RESTRICOES);
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const togglePresentationMode = () => {
     setPresentationMode(!presentationMode);
@@ -152,12 +196,12 @@ const DashboardPage: React.FC = () => {
           <div className="space-y-3">
             {restricoesPorTipo.map((item) => {
               const total = restricoesPorTipo.reduce((acc, r) => acc + r.count, 0);
-              const percentage = (item.count / total) * 100;
+              const percentage = total > 0 ? (item.count / total) * 100 : 0;
               
               return (
-                <div key={item.tipo}>
+                <div key={item.categoria}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="theme-text-secondary">{item.tipo}</span>
+                    <span className="theme-text-secondary">{item.categoria}</span>
                     <span className="font-medium theme-text">{item.count}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -165,7 +209,7 @@ const DashboardPage: React.FC = () => {
                       className="h-2 rounded-full transition-all duration-500"
                       style={{ 
                         width: `${percentage}%`,
-                        backgroundColor: tema.primary
+                        backgroundColor: item.color
                       }}
                     />
                   </div>
@@ -225,6 +269,17 @@ const DashboardPage: React.FC = () => {
       </div>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center" style={{ backgroundColor: tema.background }}>
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4" style={{ color: tema.primary }} />
+          <p className="text-sm" style={{ color: tema.textSecondary }}>Carregando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (presentationMode) {
     return (

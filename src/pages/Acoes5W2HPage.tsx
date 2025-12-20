@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -29,6 +29,9 @@ import {
   FileText,
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
+import { acoes5w2hService } from '../services/acoes5w2hService';
+import { userService } from '../services/userService';
 import {
   Acao5W2H,
   StatusAcao5W2H,
@@ -55,130 +58,6 @@ const MOCK_RESTRICOES_LPS = [
   { id: 'rest-2', descricao: 'RES-002 - Equipamento indisponível' },
   { id: 'rest-3', descricao: 'RES-003 - Aprovação de projeto pendente' },
 ];
-
-const generateMockAcoes = (): Acao5W2H[] => {
-  const hoje = new Date();
-  return [
-    {
-      id: '1',
-      codigo: '5W2H-001',
-      oQue: 'Replanejar cronograma da fundação do Bloco A considerando novos prazos de entrega de materiais',
-      porQue: 'Atraso na entrega de materiais impactou o cronograma original em 12 dias',
-      onde: 'Bloco A - Fundação',
-      quando: new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000),
-      quem: 'João Silva',
-      quemId: '1',
-      como: 'Reunir equipe de planejamento, revisar sequência de atividades e realocar recursos',
-      quanto: 0,
-      quantoDescricao: 'Sem custo adicional',
-      status: StatusAcao5W2H.EM_ANDAMENTO,
-      prioridade: PrioridadeAcao.ALTA,
-      origem: OrigemAcao.RESTRICAO_LPS,
-      origemId: 'rest-1',
-      origemDescricao: 'RES-001 - Falta de material',
-      atividadeGanttId: 'act-1',
-      dataCriacao: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
-      percentualConcluido: 45,
-      tags: ['cronograma', 'fundação', 'urgente'],
-    },
-    {
-      id: '2',
-      codigo: '5W2H-002',
-      oQue: 'Contratar equipe adicional para recuperar atraso na estrutura metálica',
-      porQue: 'Produtividade abaixo do esperado nas últimas 3 semanas',
-      onde: 'Pavilhão 2',
-      quando: new Date(hoje.getTime() + 3 * 24 * 60 * 60 * 1000),
-      quem: 'Maria Santos',
-      quemId: '2',
-      como: 'Acionar fornecedor de mão de obra temporária e treinar equipe',
-      quanto: 45000,
-      quantoDescricao: 'Custo adicional de mão de obra',
-      status: StatusAcao5W2H.PENDENTE,
-      prioridade: PrioridadeAcao.ALTA,
-      origem: OrigemAcao.KPI_DESVIO,
-      origemDescricao: 'SPI abaixo de 0.85',
-      dataCriacao: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000),
-      percentualConcluido: 0,
-      tags: ['recursos', 'mão de obra'],
-    },
-    {
-      id: '3',
-      codigo: '5W2H-003',
-      oQue: 'Corrigir não conformidade identificada no concreto da laje L3',
-      porQue: 'Auditoria identificou resistência abaixo do especificado',
-      onde: 'Edifício Principal - Laje L3',
-      quando: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000),
-      quem: 'Carlos Lima',
-      quemId: '3',
-      como: 'Realizar ensaios adicionais e aplicar reforço estrutural se necessário',
-      quanto: 15000,
-      quantoDescricao: 'Custo estimado de correção',
-      status: StatusAcao5W2H.ATRASADA,
-      prioridade: PrioridadeAcao.ALTA,
-      origem: OrigemAcao.AUDITORIA,
-      origemId: 'aud-1',
-      origemDescricao: 'AUD-003 - Auditoria Estrutural',
-      dataCriacao: new Date(hoje.getTime() - 10 * 24 * 60 * 60 * 1000),
-      percentualConcluido: 30,
-      tags: ['qualidade', 'estrutura', 'auditoria'],
-    },
-    {
-      id: '4',
-      codigo: '5W2H-004',
-      oQue: 'Atualizar documentação técnica após aprovação da mudança de escopo',
-      porQue: 'Mudança aprovada requer atualização de todos os documentos afetados',
-      onde: 'Escritório de Projetos',
-      quando: new Date(hoje.getTime() + 14 * 24 * 60 * 60 * 1000),
-      quem: 'Ana Costa',
-      quemId: '4',
-      como: 'Revisar plantas, especificações e cronograma conforme novo escopo',
-      status: StatusAcao5W2H.PENDENTE,
-      prioridade: PrioridadeAcao.MEDIA,
-      origem: OrigemAcao.MUDANCA,
-      origemId: 'mud-1',
-      origemDescricao: 'SM-001 - Ampliação área técnica',
-      dataCriacao: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000),
-      percentualConcluido: 0,
-      tags: ['documentação', 'mudança'],
-    },
-    {
-      id: '5',
-      codigo: '5W2H-005',
-      oQue: 'Implementar melhorias no processo de inspeção de qualidade',
-      porQue: 'Ciclo PDCA identificou oportunidades de melhoria no processo atual',
-      onde: 'Todas as frentes de obra',
-      quando: new Date(hoje.getTime() + 21 * 24 * 60 * 60 * 1000),
-      quem: 'Pedro Souza',
-      quemId: '5',
-      como: 'Desenvolver checklist padronizado e treinar equipe de qualidade',
-      status: StatusAcao5W2H.PENDENTE,
-      prioridade: PrioridadeAcao.BAIXA,
-      origem: OrigemAcao.PDCA,
-      origemId: 'pdca-1',
-      origemDescricao: 'PDCA-002 - Melhoria Inspeção',
-      dataCriacao: new Date(),
-      percentualConcluido: 0,
-      tags: ['qualidade', 'processo', 'melhoria'],
-    },
-    {
-      id: '6',
-      codigo: '5W2H-006',
-      oQue: 'Revisar procedimento de segurança para trabalho em altura',
-      porQue: 'Necessidade de adequação às novas normas regulamentadoras',
-      onde: 'Todas as frentes',
-      quando: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
-      quem: 'João Silva',
-      quemId: '1',
-      status: StatusAcao5W2H.CONCLUIDA,
-      prioridade: PrioridadeAcao.ALTA,
-      origem: OrigemAcao.MANUAL,
-      dataCriacao: new Date(hoje.getTime() - 15 * 24 * 60 * 60 * 1000),
-      dataConclusao: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
-      percentualConcluido: 100,
-      tags: ['segurança', 'normas'],
-    },
-  ];
-};
 
 const getOrigemIcon = (origem: OrigemAcao) => {
   switch (origem) {
@@ -305,13 +184,14 @@ interface AcaoModalProps {
   onClose: () => void;
   onSave: (acao: Partial<Acao5W2H>) => void;
   acao?: Acao5W2H | null;
-  nextCodigo: string;
+  responsaveis?: { id: string; nome: string }[];
+  isLoading?: boolean;
 }
 
-const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, nextCodigo }) => {
+const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, responsaveis = [] }) => {
   const { tema } = useTemaStore();
   const [formData, setFormData] = useState<Partial<Acao5W2H>>({
-    codigo: acao?.codigo || nextCodigo,
+    codigo: acao?.codigo || '',
     oQue: acao?.oQue || '',
     porQue: acao?.porQue || '',
     onde: acao?.onde || '',
@@ -341,7 +221,7 @@ const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, ne
       });
     } else {
       setFormData({
-        codigo: nextCodigo,
+        codigo: '',
         oQue: '',
         porQue: '',
         onde: '',
@@ -361,7 +241,7 @@ const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, ne
         tags: [],
       });
     }
-  }, [acao, nextCodigo]);
+  }, [acao]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,7 +253,7 @@ const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, ne
   };
 
   const handleResponsavelChange = (id: string) => {
-    const responsavel = MOCK_RESPONSAVEIS.find((r) => r.id === id);
+    const responsavel = responsaveis.find((r) => r.id === id);
     setFormData({
       ...formData,
       quemId: id,
@@ -497,7 +377,7 @@ const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, ne
                 required
               >
                 <option value="">Selecione o responsável...</option>
-                {MOCK_RESPONSAVEIS.map((resp) => (
+                {responsaveis.map((resp) => (
                   <option key={resp.id} value={resp.id}>
                     {resp.nome}
                   </option>
@@ -776,7 +656,11 @@ const QuickActionMenu: React.FC<QuickActionMenuProps> = ({ isOpen, onClose, onSe
 
 export const Acoes5W2HPage: React.FC = () => {
   const { tema } = useTemaStore();
-  const [acoes, setAcoes] = useState<Acao5W2H[]>(generateMockAcoes());
+  const { usuario } = useAuthStore();
+  const [acoes, setAcoes] = useState<Acao5W2H[]>([]);
+  const [responsaveis, setResponsaveis] = useState<{ id: string; nome: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigem, setFilterOrigem] = useState<OrigemAcao | 'ALL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<StatusAcao5W2H | 'ALL'>('ALL');
@@ -790,6 +674,37 @@ export const Acoes5W2HPage: React.FC = () => {
   const [acaoSelecionada, setAcaoSelecionada] = useState<Acao5W2H | null>(null);
   const [quickActionMenuOpen, setQuickActionMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+
+  const loadAcoes = useCallback(async () => {
+    if (!usuario?.empresaId) return;
+    
+    setIsLoading(true);
+    try {
+      const data = await acoes5w2hService.getAll(usuario.empresaId);
+      setAcoes(data);
+    } catch (error) {
+      console.error('Erro ao carregar ações:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  const loadResponsaveis = useCallback(async () => {
+    if (!usuario?.empresaId) return;
+    
+    try {
+      const { data } = await userService.getAll({ empresaId: usuario.empresaId, ativo: true });
+      setResponsaveis((data || []).map(u => ({ id: u.id, nome: u.nome })));
+    } catch (error) {
+      console.error('Erro ao carregar responsáveis:', error);
+      setResponsaveis(MOCK_RESPONSAVEIS);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadAcoes();
+    loadResponsaveis();
+  }, [loadAcoes, loadResponsaveis]);
 
   const estatisticas = useMemo(() => {
     return {
@@ -873,12 +788,15 @@ export const Acoes5W2HPage: React.FC = () => {
     return resultado;
   }, [acoes, searchTerm, filterOrigem, filterStatus, filterPrioridade, filterResponsavel, filterDataInicio, filterDataFim, sortField, sortDirection]);
 
-  const getNextCodigo = (): string => {
-    const maxNum = acoes.reduce((max, a) => {
-      const num = parseInt(a.codigo.replace('5W2H-', ''));
-      return num > max ? num : max;
-    }, 0);
-    return `5W2H-${String(maxNum + 1).padStart(3, '0')}`;
+  const getNextCodigo = async (): Promise<string> => {
+    if (!usuario?.empresaId) {
+      const maxNum = acoes.reduce((max, a) => {
+        const num = parseInt(a.codigo.replace('5W2H-', ''));
+        return num > max ? num : max;
+      }, 0);
+      return `5W2H-${String(maxNum + 1).padStart(3, '0')}`;
+    }
+    return acoes5w2hService.generateNextCodigo(usuario.empresaId);
   };
 
   const handleSort = (field: SortField) => {
@@ -900,59 +818,82 @@ export const Acoes5W2HPage: React.FC = () => {
     setModalAberto(true);
   };
 
-  const handleExcluirAcao = (id: string) => {
+  const handleExcluirAcao = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta ação?')) {
-      setAcoes(acoes.filter((a) => a.id !== id));
+      try {
+        await acoes5w2hService.delete(id);
+        setAcoes(acoes.filter((a) => a.id !== id));
+      } catch (error) {
+        console.error('Erro ao excluir ação:', error);
+        alert('Erro ao excluir ação. Tente novamente.');
+      }
     }
   };
 
-  const handleConcluirAcao = (id: string) => {
-    setAcoes(
-      acoes.map((a) =>
-        a.id === id
-          ? { ...a, status: StatusAcao5W2H.CONCLUIDA, dataConclusao: new Date(), percentualConcluido: 100 }
-          : a
-      )
-    );
+  const handleConcluirAcao = async (id: string) => {
+    try {
+      const updated = await acoes5w2hService.update(id, {
+        status: StatusAcao5W2H.CONCLUIDA,
+        dataConclusao: new Date(),
+        percentualConcluido: 100,
+      });
+      if (updated) {
+        setAcoes(acoes.map((a) => (a.id === id ? updated : a)));
+      }
+    } catch (error) {
+      console.error('Erro ao concluir ação:', error);
+      setAcoes(
+        acoes.map((a) =>
+          a.id === id
+            ? { ...a, status: StatusAcao5W2H.CONCLUIDA, dataConclusao: new Date(), percentualConcluido: 100 }
+            : a
+        )
+      );
+    }
   };
 
-  const handleSaveAcao = (acaoData: Partial<Acao5W2H>) => {
-    if (acaoSelecionada) {
-      setAcoes(acoes.map((a) => (a.id === acaoSelecionada.id ? { ...a, ...acaoData } : a)));
-    } else {
-      const novaAcao: Acao5W2H = {
-        id: Date.now().toString(),
-        codigo: getNextCodigo(),
-        oQue: acaoData.oQue || '',
-        porQue: acaoData.porQue || '',
-        onde: acaoData.onde,
-        quando: acaoData.quando || new Date(),
-        quem: acaoData.quem || '',
-        quemId: acaoData.quemId,
-        como: acaoData.como,
-        quanto: acaoData.quanto,
-        quantoDescricao: acaoData.quantoDescricao,
-        status: acaoData.status || StatusAcao5W2H.PENDENTE,
-        prioridade: acaoData.prioridade || PrioridadeAcao.MEDIA,
-        origem: acaoData.origem || OrigemAcao.MANUAL,
-        origemId: acaoData.origemId,
-        origemDescricao: acaoData.origemDescricao,
-        atividadeGanttId: acaoData.atividadeGanttId,
-        restricaoLpsId: acaoData.restricaoLpsId,
-        dataCriacao: new Date(),
-        observacoes: acaoData.observacoes,
-        percentualConcluido: 0,
-        tags: acaoData.tags,
-      };
-      setAcoes([...acoes, novaAcao]);
+  const handleSaveAcao = async (acaoData: Partial<Acao5W2H>) => {
+    if (!usuario?.empresaId) return;
+    
+    setIsSaving(true);
+    try {
+      if (acaoSelecionada?.id && !acaoSelecionada.id.startsWith('temp-')) {
+        const updated = await acoes5w2hService.update(acaoSelecionada.id, acaoData);
+        if (updated) {
+          setAcoes(acoes.map((a) => (a.id === acaoSelecionada.id ? updated : a)));
+        }
+      } else {
+        const codigo = await getNextCodigo();
+        const created = await acoes5w2hService.create({
+          ...acaoData,
+          codigo,
+          oQue: acaoData.oQue || '',
+          porQue: acaoData.porQue || '',
+          quando: acaoData.quando || new Date(),
+          quem: acaoData.quem || '',
+          status: acaoData.status || StatusAcao5W2H.PENDENTE,
+          prioridade: acaoData.prioridade || PrioridadeAcao.MEDIA,
+          origem: acaoData.origem || OrigemAcao.MANUAL,
+          empresaId: usuario.empresaId,
+          createdBy: usuario.id,
+        });
+        if (created) {
+          setAcoes([created, ...acoes]);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao salvar ação:', error);
+      alert('Erro ao salvar ação. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+      setModalAberto(false);
+      setAcaoSelecionada(null);
     }
-    setModalAberto(false);
-    setAcaoSelecionada(null);
   };
 
   const handleQuickAction = (type: 'restriction' | 'audit' | 'kpi') => {
     const prefilledData: Partial<Acao5W2H> = {
-      codigo: getNextCodigo(),
+      id: `temp-${Date.now()}`,
       status: StatusAcao5W2H.PENDENTE,
       prioridade: PrioridadeAcao.ALTA,
       dataCriacao: new Date(),
@@ -1179,7 +1120,7 @@ export const Acoes5W2HPage: React.FC = () => {
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               >
                 <option value="ALL">Todos</option>
-                {MOCK_RESPONSAVEIS.map((resp) => (
+                {responsaveis.map((resp) => (
                   <option key={resp.id} value={resp.id}>
                     {resp.nome}
                   </option>
@@ -1210,7 +1151,14 @@ export const Acoes5W2HPage: React.FC = () => {
 
       <div className="flex-1 overflow-hidden p-6">
         <div className="bg-white rounded-lg border h-full flex flex-col">
-          {acoesFiltradas.length === 0 ? (
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+                <p className="text-sm text-gray-500">Carregando ações...</p>
+              </div>
+            </div>
+          ) : acoesFiltradas.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <ClipboardList size={64} className="mx-auto text-gray-300 mb-4" />
@@ -1439,7 +1387,8 @@ export const Acoes5W2HPage: React.FC = () => {
         }}
         onSave={handleSaveAcao}
         acao={acaoSelecionada}
-        nextCodigo={getNextCodigo()}
+        responsaveis={responsaveis}
+        isLoading={isSaving}
       />
     </div>
   );

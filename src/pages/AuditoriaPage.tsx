@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -36,8 +36,11 @@ import {
   Leaf,
   Zap,
   Save,
+  Loader2,
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
+import { auditoriaService } from '../services/auditoriaService';
 import {
   Auditoria,
   ItemAuditoria,
@@ -884,12 +887,15 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onSave, 
 
 const AuditoriaPage: React.FC = () => {
   const { tema } = useTemaStore();
+  const { usuario } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('auditorias');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusAuditoria | 'all'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [templates, setTemplates] = useState<ChecklistTemplate[]>(generateMockTemplates);
-  const [auditorias, setAuditorias] = useState<Auditoria[]>(() => generateMockAuditorias(generateMockTemplates()));
+  const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
+  const [auditorias, setAuditorias] = useState<Auditoria[]>([]);
 
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ChecklistTemplate | null>(null);
@@ -903,6 +909,47 @@ const AuditoriaPage: React.FC = () => {
     responsavelId: '',
     dataAuditoria: format(new Date(), 'yyyy-MM-dd'),
   });
+
+  const loadData = useCallback(async () => {
+    if (!usuario?.empresaId) {
+      const mockTemplates = generateMockTemplates();
+      setTemplates(mockTemplates);
+      setAuditorias(generateMockAuditorias(mockTemplates));
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const [templatesData, auditoriasData] = await Promise.all([
+        auditoriaService.getAllTemplates(usuario.empresaId),
+        auditoriaService.getAllAuditorias(usuario.empresaId),
+      ]);
+      
+      if (templatesData.length === 0) {
+        setTemplates(generateMockTemplates());
+      } else {
+        setTemplates(templatesData);
+      }
+      
+      if (auditoriasData.length === 0) {
+        setAuditorias(generateMockAuditorias(templatesData.length > 0 ? templatesData : generateMockTemplates()));
+      } else {
+        setAuditorias(auditoriasData);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados de auditoria:', error);
+      const mockTemplates = generateMockTemplates();
+      setTemplates(mockTemplates);
+      setAuditorias(generateMockAuditorias(mockTemplates));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const ongoingAudits = useMemo(() => {
     return auditorias.filter(a => a.status !== StatusAuditoria.CONCLUIDA && a.status !== StatusAuditoria.CANCELADA);
@@ -938,48 +985,154 @@ const AuditoriaPage: React.FC = () => {
     }));
   }, []);
 
-  const handleSaveTemplate = (templateData: Partial<ChecklistTemplate>) => {
-    if (editingTemplate) {
-      setTemplates(prev =>
-        prev.map(t =>
-          t.id === editingTemplate.id
-            ? { ...t, ...templateData, dataAtualizacao: new Date() }
-            : t
-        )
-      );
-    } else {
-      const newTemplate: ChecklistTemplate = {
-        id: `tpl-${Date.now()}`,
-        nome: templateData.nome || '',
-        categoria: templateData.categoria || CategoriaChecklist.QUALIDADE,
-        versao: templateData.versao || '1.0',
-        itens: templateData.itens || [],
-        dataCriacao: new Date(),
-      };
-      setTemplates(prev => [...prev, newTemplate]);
+  const handleSaveTemplate = async (templateData: Partial<ChecklistTemplate>) => {
+    setIsSaving(true);
+    try {
+      if (editingTemplate) {
+        if (usuario?.empresaId) {
+          const updated = await auditoriaService.updateTemplate(editingTemplate.id, templateData);
+          if (updated) {
+            setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
+          } else {
+            setTemplates(prev =>
+              prev.map(t =>
+                t.id === editingTemplate.id
+                  ? { ...t, ...templateData, dataAtualizacao: new Date() }
+                  : t
+              )
+            );
+          }
+        } else {
+          setTemplates(prev =>
+            prev.map(t =>
+              t.id === editingTemplate.id
+                ? { ...t, ...templateData, dataAtualizacao: new Date() }
+                : t
+            )
+          );
+        }
+      } else {
+        if (usuario?.empresaId) {
+          const created = await auditoriaService.createTemplate({
+            nome: templateData.nome || '',
+            categoria: templateData.categoria || CategoriaChecklist.QUALIDADE,
+            versao: templateData.versao || '1.0',
+            itens: templateData.itens || [],
+            empresaId: usuario.empresaId,
+            createdBy: usuario?.id,
+          });
+          if (created) {
+            setTemplates(prev => [...prev, created]);
+          }
+        } else {
+          const newTemplate: ChecklistTemplate = {
+            id: `tpl-${Date.now()}`,
+            nome: templateData.nome || '',
+            categoria: templateData.categoria || CategoriaChecklist.QUALIDADE,
+            versao: templateData.versao || '1.0',
+            itens: templateData.itens || [],
+            dataCriacao: new Date(),
+          };
+          setTemplates(prev => [...prev, newTemplate]);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao salvar template:', error);
+      if (editingTemplate) {
+        setTemplates(prev =>
+          prev.map(t =>
+            t.id === editingTemplate.id
+              ? { ...t, ...templateData, dataAtualizacao: new Date() }
+              : t
+          )
+        );
+      } else {
+        const newTemplate: ChecklistTemplate = {
+          id: `tpl-${Date.now()}`,
+          nome: templateData.nome || '',
+          categoria: templateData.categoria || CategoriaChecklist.QUALIDADE,
+          versao: templateData.versao || '1.0',
+          itens: templateData.itens || [],
+          dataCriacao: new Date(),
+        };
+        setTemplates(prev => [...prev, newTemplate]);
+      }
+    } finally {
+      setIsSaving(false);
     }
     setEditingTemplate(null);
   };
 
-  const handleDuplicateTemplate = (template: ChecklistTemplate) => {
-    const newTemplate: ChecklistTemplate = {
-      ...template,
-      id: `tpl-${Date.now()}`,
-      nome: `${template.nome} (Cópia)`,
-      versao: '1.0',
-      dataCriacao: new Date(),
-      dataAtualizacao: undefined,
-    };
-    setTemplates(prev => [...prev, newTemplate]);
-  };
-
-  const handleDeleteTemplate = (templateId: string) => {
-    if (confirm('Tem certeza que deseja excluir este template?')) {
-      setTemplates(prev => prev.filter(t => t.id !== templateId));
+  const handleDuplicateTemplate = async (template: ChecklistTemplate) => {
+    setIsSaving(true);
+    try {
+      if (usuario?.empresaId) {
+        const created = await auditoriaService.createTemplate({
+          nome: `${template.nome} (Cópia)`,
+          categoria: template.categoria,
+          versao: '1.0',
+          itens: template.itens,
+          empresaId: usuario.empresaId,
+          createdBy: usuario?.id,
+        });
+        if (created) {
+          setTemplates(prev => [...prev, created]);
+        } else {
+          const newTemplate: ChecklistTemplate = {
+            ...template,
+            id: `tpl-${Date.now()}`,
+            nome: `${template.nome} (Cópia)`,
+            versao: '1.0',
+            dataCriacao: new Date(),
+            dataAtualizacao: undefined,
+          };
+          setTemplates(prev => [...prev, newTemplate]);
+        }
+      } else {
+        const newTemplate: ChecklistTemplate = {
+          ...template,
+          id: `tpl-${Date.now()}`,
+          nome: `${template.nome} (Cópia)`,
+          versao: '1.0',
+          dataCriacao: new Date(),
+          dataAtualizacao: undefined,
+        };
+        setTemplates(prev => [...prev, newTemplate]);
+      }
+    } catch (error) {
+      console.error('Erro ao duplicar template:', error);
+      const newTemplate: ChecklistTemplate = {
+        ...template,
+        id: `tpl-${Date.now()}`,
+        nome: `${template.nome} (Cópia)`,
+        versao: '1.0',
+        dataCriacao: new Date(),
+        dataAtualizacao: undefined,
+      };
+      setTemplates(prev => [...prev, newTemplate]);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleCreateAudit = () => {
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este template?')) return;
+    
+    setIsSaving(true);
+    try {
+      if (usuario?.empresaId) {
+        await auditoriaService.deleteTemplate(templateId);
+      }
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+    } catch (error) {
+      console.error('Erro ao excluir template:', error);
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateAudit = async () => {
     if (!newAuditForm.titulo || !newAuditForm.checklistId || !newAuditForm.projetoId || !newAuditForm.responsavelId) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
@@ -989,33 +1142,86 @@ const AuditoriaPage: React.FC = () => {
     const projeto = MOCK_PROJETOS.find(p => p.id === newAuditForm.projetoId);
     const auditor = MOCK_AUDITORES.find(a => a.id === newAuditForm.responsavelId);
 
-    const newAudit: Auditoria = {
-      id: `aud-${Date.now()}`,
-      codigo: `AUD-${String(auditorias.length + 1).padStart(3, '0')}`,
-      titulo: newAuditForm.titulo,
-      checklistId: newAuditForm.checklistId,
-      checklistNome: template?.nome || '',
-      projetoId: newAuditForm.projetoId,
-      projetoNome: projeto?.nome || '',
-      tipo: template?.categoria || 'Geral',
-      responsavel: auditor?.nome || '',
-      responsavelId: newAuditForm.responsavelId,
-      dataAuditoria: new Date(newAuditForm.dataAuditoria),
-      status: StatusAuditoria.PLANEJADA,
-      percentualConformidade: 0,
-      naoConformidades: 0,
-      dataCriacao: new Date(),
-      itens: template?.itens.map((item, idx) => ({
-        id: `ai-${Date.now()}-${idx}`,
-        auditoriaId: `aud-${Date.now()}`,
-        itemChecklistId: item.id,
-        ordem: idx + 1,
-        pergunta: item.descricao,
-        status: StatusItemAuditoria.PENDENTE,
-      })) || [],
-    };
+    const itens = template?.itens.map((item, idx) => ({
+      id: `ai-${Date.now()}-${idx}`,
+      auditoriaId: '',
+      itemChecklistId: item.id,
+      ordem: idx + 1,
+      pergunta: item.descricao,
+      status: StatusItemAuditoria.PENDENTE,
+    })) || [];
 
-    setAuditorias(prev => [...prev, newAudit]);
+    setIsSaving(true);
+    try {
+      if (usuario?.empresaId) {
+        const codigo = await auditoriaService.generateNextCodigo(usuario.empresaId);
+        const created = await auditoriaService.createAuditoria({
+          codigo,
+          titulo: newAuditForm.titulo,
+          checklistId: newAuditForm.checklistId,
+          checklistNome: template?.nome,
+          projetoId: newAuditForm.projetoId,
+          projetoNome: projeto?.nome,
+          tipo: template?.categoria || 'Geral',
+          responsavel: auditor?.nome || '',
+          responsavelId: newAuditForm.responsavelId,
+          dataAuditoria: new Date(newAuditForm.dataAuditoria),
+          status: StatusAuditoria.PLANEJADA,
+          itens,
+          percentualConformidade: 0,
+          naoConformidades: 0,
+          empresaId: usuario.empresaId,
+          createdBy: usuario?.id,
+        });
+        if (created) {
+          setAuditorias(prev => [...prev, created]);
+        }
+      } else {
+        const newAudit: Auditoria = {
+          id: `aud-${Date.now()}`,
+          codigo: `AUD-${String(auditorias.length + 1).padStart(3, '0')}`,
+          titulo: newAuditForm.titulo,
+          checklistId: newAuditForm.checklistId,
+          checklistNome: template?.nome || '',
+          projetoId: newAuditForm.projetoId,
+          projetoNome: projeto?.nome || '',
+          tipo: template?.categoria || 'Geral',
+          responsavel: auditor?.nome || '',
+          responsavelId: newAuditForm.responsavelId,
+          dataAuditoria: new Date(newAuditForm.dataAuditoria),
+          status: StatusAuditoria.PLANEJADA,
+          percentualConformidade: 0,
+          naoConformidades: 0,
+          dataCriacao: new Date(),
+          itens,
+        };
+        setAuditorias(prev => [...prev, newAudit]);
+      }
+    } catch (error) {
+      console.error('Erro ao criar auditoria:', error);
+      const newAudit: Auditoria = {
+        id: `aud-${Date.now()}`,
+        codigo: `AUD-${String(auditorias.length + 1).padStart(3, '0')}`,
+        titulo: newAuditForm.titulo,
+        checklistId: newAuditForm.checklistId,
+        checklistNome: template?.nome || '',
+        projetoId: newAuditForm.projetoId,
+        projetoNome: projeto?.nome || '',
+        tipo: template?.categoria || 'Geral',
+        responsavel: auditor?.nome || '',
+        responsavelId: newAuditForm.responsavelId,
+        dataAuditoria: new Date(newAuditForm.dataAuditoria),
+        status: StatusAuditoria.PLANEJADA,
+        percentualConformidade: 0,
+        naoConformidades: 0,
+        dataCriacao: new Date(),
+        itens,
+      };
+      setAuditorias(prev => [...prev, newAudit]);
+    } finally {
+      setIsSaving(false);
+    }
+
     setShowNewAuditModal(false);
     setNewAuditForm({
       titulo: '',
@@ -1026,35 +1232,79 @@ const AuditoriaPage: React.FC = () => {
     });
   };
 
-  const handleSaveAuditItems = (items: ItemAuditoria[]) => {
+  const handleSaveAuditItems = async (items: ItemAuditoria[]) => {
     if (!selectedAuditoria) return;
 
-    const conformeCount = items.filter(i => i.status === StatusItemAuditoria.CONFORME).length;
-    const naoConformeCount = items.filter(i => i.status === StatusItemAuditoria.NAO_CONFORME).length;
-    const applicableItems = items.filter(i => i.status !== StatusItemAuditoria.NAO_APLICAVEL && i.status !== StatusItemAuditoria.PENDENTE);
-    const conformanceScore = applicableItems.length > 0 ? (conformeCount / applicableItems.length) * 100 : 0;
+    const { percentual: conformanceScore, naoConformidades: naoConformeCount } = auditoriaService.calculateConformidade(items);
     const pendingCount = items.filter(i => i.status === StatusItemAuditoria.PENDENTE).length;
 
     let newStatus = selectedAuditoria.status;
     if (pendingCount === 0) {
-      newStatus = naoConformeCount > 0 ? StatusAuditoria.CONCLUIDA : StatusAuditoria.CONCLUIDA;
+      newStatus = StatusAuditoria.CONCLUIDA;
     } else if (pendingCount < items.length) {
       newStatus = StatusAuditoria.EM_ANDAMENTO;
     }
 
-    setAuditorias(prev =>
-      prev.map(a =>
-        a.id === selectedAuditoria.id
-          ? {
-              ...a,
-              itens: items,
-              percentualConformidade: conformanceScore,
-              naoConformidades: naoConformeCount,
-              status: newStatus,
-            }
-          : a
-      )
-    );
+    setIsSaving(true);
+    try {
+      if (usuario?.empresaId) {
+        const updated = await auditoriaService.updateAuditoria(selectedAuditoria.id, {
+          itens: items,
+          percentualConformidade: conformanceScore,
+          naoConformidades: naoConformeCount,
+          status: newStatus,
+        });
+        if (updated) {
+          setAuditorias(prev => prev.map(a => a.id === updated.id ? updated : a));
+        } else {
+          setAuditorias(prev =>
+            prev.map(a =>
+              a.id === selectedAuditoria.id
+                ? {
+                    ...a,
+                    itens: items,
+                    percentualConformidade: conformanceScore,
+                    naoConformidades: naoConformeCount,
+                    status: newStatus,
+                  }
+                : a
+            )
+          );
+        }
+      } else {
+        setAuditorias(prev =>
+          prev.map(a =>
+            a.id === selectedAuditoria.id
+              ? {
+                  ...a,
+                  itens: items,
+                  percentualConformidade: conformanceScore,
+                  naoConformidades: naoConformeCount,
+                  status: newStatus,
+                }
+              : a
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Erro ao salvar itens de auditoria:', error);
+      setAuditorias(prev =>
+        prev.map(a =>
+          a.id === selectedAuditoria.id
+            ? {
+                ...a,
+                itens: items,
+                percentualConformidade: conformanceScore,
+                naoConformidades: naoConformeCount,
+                status: newStatus,
+              }
+            : a
+        )
+      );
+    } finally {
+      setIsSaving(false);
+    }
+    
     setShowAuditModal(false);
     setSelectedAuditoria(null);
   };
@@ -1069,6 +1319,17 @@ const AuditoriaPage: React.FC = () => {
     { id: 'historico', label: 'Histórico', count: completedAudits.length },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: tema.background }}>
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: tema.primary }} />
+          <span style={{ color: tema.text }}>Carregando auditorias...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6" style={{ backgroundColor: tema.background, minHeight: '100vh' }}>
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1082,10 +1343,11 @@ const AuditoriaPage: React.FC = () => {
         </div>
         <button
           onClick={() => setShowNewAuditModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-transform hover:scale-105"
+          disabled={isSaving}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-transform hover:scale-105 disabled:opacity-50"
           style={{ backgroundColor: tema.primary }}
         >
-          <Plus size={20} />
+          {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
           <span>Nova Auditoria</span>
         </button>
       </div>

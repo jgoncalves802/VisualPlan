@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, addDays, startOfWeek, isSameDay, addHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -26,8 +26,11 @@ import {
   XCircle,
   Download,
   Eye,
+  Loader2,
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
+import { reunioesService } from '../services/reunioesService';
 import { TipoReuniao } from '../types/gestao';
 
 export enum StatusItemPauta {
@@ -361,8 +364,11 @@ const TIPO_ITEM_ICONS: Record<string, React.ReactNode> = {
 
 export const ReunioesPage: React.FC = () => {
   const { tema } = useTemaStore();
+  const { usuario } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'calendario' | 'configuracao' | 'historico'>('calendario');
-  const [reunioes, setReunioes] = useState<Reuniao[]>(generateMockReunioes());
+  const [reunioes, setReunioes] = useState<Reuniao[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [configuracoes, setConfiguracoes] = useState<Record<TipoReuniao, ConfiguracaoReuniao>>(TIPO_REUNIAO_CONFIG);
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
   const [showModal, setShowModal] = useState(false);
@@ -382,6 +388,47 @@ export const ReunioesPage: React.FC = () => {
     gerarPautaAuto: true,
     status: StatusReuniao.AGENDADA,
   });
+
+  const loadData = useCallback(async () => {
+    if (!usuario?.empresaId) {
+      setReunioes(generateMockReunioes());
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await reunioesService.getAllReunioes(usuario.empresaId);
+      if (data.length === 0) {
+        setReunioes(generateMockReunioes());
+      } else {
+        const mappedReunioes: Reuniao[] = data.map(r => ({
+          id: r.id,
+          tipo: r.tipo,
+          titulo: r.titulo,
+          descricao: r.descricao,
+          data: r.proximaData || new Date(),
+          duracao: r.duracao || 60,
+          local: r.local,
+          link: undefined,
+          participantes: r.participantes || [],
+          itensPauta: [],
+          gerarPautaAuto: true,
+          status: r.ativo ? StatusReuniao.AGENDADA : StatusReuniao.CANCELADA,
+        }));
+        setReunioes(mappedReunioes);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar reuniões:', error);
+      setReunioes(generateMockReunioes());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
@@ -477,7 +524,7 @@ export const ReunioesPage: React.FC = () => {
     }));
   };
 
-  const handleSaveReuniao = () => {
+  const handleSaveReuniao = async () => {
     if (!formData.titulo || !formData.data) return;
 
     const newReuniao: Reuniao = {
@@ -497,10 +544,73 @@ export const ReunioesPage: React.FC = () => {
       decisoes: formData.decisoes,
     };
 
-    if (editingReuniao) {
-      setReunioes(prev => prev.map(r => r.id === editingReuniao.id ? newReuniao : r));
-    } else {
-      setReunioes(prev => [...prev, newReuniao]);
+    if (!usuario?.empresaId) {
+      if (editingReuniao) {
+        setReunioes(prev => prev.map(r => r.id === editingReuniao.id ? newReuniao : r));
+      } else {
+        setReunioes(prev => [...prev, newReuniao]);
+      }
+      handleCloseModal();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (editingReuniao) {
+        await reunioesService.updateReuniao(editingReuniao.id, {
+          tipo: formData.tipo,
+          titulo: formData.titulo,
+          descricao: formData.descricao,
+          proximaData: new Date(formData.data),
+          duracao: formData.duracao,
+          local: formData.local,
+          participantes: formData.participantes,
+          ativo: formData.status !== StatusReuniao.CANCELADA,
+        });
+        setReunioes(prev => prev.map(r => r.id === editingReuniao.id ? newReuniao : r));
+      } else {
+        const created = await reunioesService.createReuniao({
+          tipo: formData.tipo!,
+          titulo: formData.titulo,
+          descricao: formData.descricao,
+          frequencia: 'Avulsa',
+          participantes: formData.participantes || [],
+          proximaData: new Date(formData.data),
+          duracao: formData.duracao,
+          local: formData.local,
+          ativo: true,
+          empresaId: usuario.empresaId,
+          createdBy: usuario?.id,
+        });
+        if (created) {
+          const mappedReuniao: Reuniao = {
+            id: created.id,
+            tipo: created.tipo,
+            titulo: created.titulo,
+            descricao: created.descricao,
+            data: created.proximaData || new Date(),
+            duracao: created.duracao || 60,
+            local: created.local,
+            link: undefined,
+            participantes: created.participantes || [],
+            itensPauta: [],
+            gerarPautaAuto: true,
+            status: StatusReuniao.AGENDADA,
+          };
+          setReunioes(prev => [...prev, mappedReuniao]);
+        } else {
+          setReunioes(prev => [...prev, newReuniao]);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao salvar reunião:', error);
+      if (editingReuniao) {
+        setReunioes(prev => prev.map(r => r.id === editingReuniao.id ? newReuniao : r));
+      } else {
+        setReunioes(prev => [...prev, newReuniao]);
+      }
+    } finally {
+      setIsSaving(false);
     }
 
     handleCloseModal();
@@ -548,6 +658,17 @@ export const ReunioesPage: React.FC = () => {
     return { total, realizadas, taxaCumprimento, mediaParticipacao: Math.round(mediaParticipacao) };
   }, [historicoCompleto]);
 
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-background)' }}>
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: tema.primary }} />
+          <span style={{ color: 'var(--color-text)' }}>Carregando reuniões...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
@@ -556,10 +677,11 @@ export const ReunioesPage: React.FC = () => {
         </h1>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium"
+          disabled={isSaving}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50"
           style={{ backgroundColor: tema.primary }}
         >
-          <Plus className="w-5 h-5" />
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
           Agendar Reunião
         </button>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   X,
   ChevronDown,
@@ -7,7 +7,8 @@ import {
   Clock,
   Target,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 import {
   Bar,
@@ -27,6 +28,7 @@ import {
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
 import {
   CategoriaIshikawa,
   StatusRestricaoIshikawa,
@@ -34,6 +36,7 @@ import {
   KPIKaizen,
   DadosIshikawa
 } from '../types/gestao';
+import { restricoesIshikawaService } from '../services/restricoesIshikawaService';
 import KPICard from '../components/ui/KPICard';
 import TimeNavigator, { TimeViewMode } from '../components/ui/TimeNavigator';
 
@@ -559,7 +562,9 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
 
 const AnaliseIshikawaPage: React.FC = () => {
   const { tema } = useTemaStore();
-  const [restrictions] = useState<RestricaoIshikawa[]>(generateMockRestrictions());
+  const { usuario } = useAuthStore();
+  const [restrictions, setRestrictions] = useState<RestricaoIshikawa[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [periodoAtual, setPeriodoAtual] = useState(() => {
     const hoje = new Date();
@@ -582,6 +587,31 @@ const AnaliseIshikawaPage: React.FC = () => {
 
   const availableWBS = selectedEPS ? mockWBS[selectedEPS] || [] : [];
   const availableActivities = selectedWBS ? mockActivities[selectedWBS] || [] : [];
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (usuario?.empresaId) {
+        const data = await restricoesIshikawaService.getAll(usuario.empresaId);
+        if (data.length > 0) {
+          setRestrictions(data);
+        } else {
+          setRestrictions(generateMockRestrictions());
+        }
+      } else {
+        setRestrictions(generateMockRestrictions());
+      }
+    } catch (error) {
+      console.error('Erro ao carregar restrições:', error);
+      setRestrictions(generateMockRestrictions());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [usuario?.empresaId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredRestrictions = useMemo(() => {
     return restrictions.filter(r => {
@@ -697,6 +727,17 @@ const AnaliseIshikawaPage: React.FC = () => {
     : [];
 
   const isDarkMode = tema.background === '#1a1a2e' || tema.background === '#0f172a';
+
+  if (isLoading) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center" style={{ backgroundColor: tema.background }}>
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4" style={{ color: tema.primary }} />
+          <p className="text-sm" style={{ color: tema.textSecondary }}>Carregando restrições...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 min-h-screen" style={{ backgroundColor: tema.background }}>
