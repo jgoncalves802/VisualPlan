@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -22,7 +22,8 @@ import {
   Shield,
   FileCheck,
   AlertCircle,
-  Wrench
+  Wrench,
+  Loader2
 } from 'lucide-react';
 import {
   LineChart,
@@ -40,7 +41,23 @@ import {
 } from 'recharts';
 import KPICard from '../components/ui/KPICard';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
 import { SetorDashboard } from '../types/gestao';
+import {
+  indicadoresService,
+  IndicadorEVM,
+  IndicadorLPS,
+  IndicadorQualidade,
+  IndicadorRecursos,
+  IndicadorGestao,
+  CurvaSItem,
+  PPCSemanal,
+  AtividadeAtrasada,
+  AlocacaoRecurso,
+  AuditoriaRecente,
+  AcaoRecente,
+  RestricaoPorTipo
+} from '../services/indicadoresService';
 
 interface SectorProps {
   id: SetorDashboard;
@@ -95,6 +112,9 @@ const CollapsibleSector: React.FC<SectorProps> = ({
 
 const DashboardIndicadoresPage: React.FC = () => {
   const { tema } = useTemaStore();
+  const { usuario } = useAuthStore();
+  const empresaId = usuario?.empresaId;
+  const [loading, setLoading] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
   const [expandedSectors, setExpandedSectors] = useState<Record<SetorDashboard, boolean>>({
     [SetorDashboard.CRONOGRAMA_EVM]: true,
@@ -104,7 +124,66 @@ const DashboardIndicadoresPage: React.FC = () => {
     [SetorDashboard.GESTAO]: true
   });
 
+  const [evmData, setEvmData] = useState<IndicadorEVM>({ spi: 0, cpi: 0, eac: 0, vac: 0, bac: 0 });
+  const [lpsData, setLpsData] = useState<IndicadorLPS>({ ppc: 0, tmr: 0, restricoesAtivas: 0 });
+  const [qualidadeData, setQualidadeData] = useState<IndicadorQualidade>({ iqo: 0, auditoriasCompletas: 0, naoConformidades: 0, acoesCorretivas: 0 });
+  const [recursosData, setRecursosData] = useState<IndicadorRecursos>({ capacidadeEquipe: 0, alocacaoAtual: 0, indiceProdutividade: 0 });
+  const [gestaoData, setGestaoData] = useState<IndicadorGestao>({ solicitacoesMudanca: 0, acoes5w2h: 0, ciclosPdca: 0, licoesAprendidas: 0 });
+  const [curvaS, setCurvaS] = useState<CurvaSItem[]>([]);
+  const [ppcSemanal, setPpcSemanal] = useState<PPCSemanal[]>([]);
+  const [atividadesAtrasadas, setAtividadesAtrasadas] = useState<AtividadeAtrasada[]>([]);
+  const [alocacaoRecursos, setAlocacaoRecursos] = useState<AlocacaoRecurso[]>([]);
+  const [auditoriasRecentes, setAuditoriasRecentes] = useState<AuditoriaRecente[]>([]);
+  const [acoesRecentes, setAcoesRecentes] = useState<AcaoRecente[]>([]);
+  const [restricoesPorTipo, setRestricoesPorTipo] = useState<RestricaoPorTipo[]>([]);
+
   const lastUpdate = new Date().toLocaleString('pt-BR');
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [empresaId]);
+
+  const loadDashboardData = async () => {
+    if (!empresaId) return;
+    
+    setLoading(true);
+    try {
+      const [
+        evm, lps, qualidade, recursos, gestao,
+        curva, ppc, atrasadas, alocacao, auditorias, acoes, restricoes
+      ] = await Promise.all([
+        indicadoresService.getEVM(empresaId),
+        indicadoresService.getLPS(empresaId),
+        indicadoresService.getQualidade(empresaId),
+        indicadoresService.getRecursos(empresaId),
+        indicadoresService.getGestao(empresaId),
+        indicadoresService.getCurvaS(empresaId),
+        indicadoresService.getPPCSemanal(empresaId),
+        indicadoresService.getAtividadesAtrasadas(empresaId),
+        indicadoresService.getAlocacaoRecursos(empresaId),
+        indicadoresService.getAuditoriasRecentes(empresaId),
+        indicadoresService.getAcoesRecentes(empresaId),
+        indicadoresService.getRestricoesPorTipo(empresaId),
+      ]);
+
+      setEvmData(evm);
+      setLpsData(lps);
+      setQualidadeData(qualidade);
+      setRecursosData(recursos);
+      setGestaoData(gestao);
+      setCurvaS(curva);
+      setPpcSemanal(ppc);
+      setAtividadesAtrasadas(atrasadas);
+      setAlocacaoRecursos(alocacao);
+      setAuditoriasRecentes(auditorias);
+      setAcoesRecentes(acoes);
+      setRestricoesPorTipo(restricoes);
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleSector = (sector: SetorDashboard) => {
     setExpandedSectors(prev => ({ ...prev, [sector]: !prev[sector] }));
@@ -118,115 +197,6 @@ const DashboardIndicadoresPage: React.FC = () => {
       document.body.style.overflow = 'auto';
     }
   };
-
-  // ============================================================================
-  // MOCK DATA - CRONOGRAMA & EVM
-  // ============================================================================
-  const evmData = {
-    spi: 0.95,
-    cpi: 1.02,
-    eac: 15800000,
-    vac: -280000,
-    bac: 15520000
-  };
-
-  const curvaS = [
-    { mes: 'Jan', planejado: 5, realizado: 6 },
-    { mes: 'Fev', planejado: 12, realizado: 11 },
-    { mes: 'Mar', planejado: 22, realizado: 20 },
-    { mes: 'Abr', planejado: 35, realizado: 32 },
-    { mes: 'Mai', planejado: 48, realizado: 44 },
-    { mes: 'Jun', planejado: 62, realizado: 56 },
-    { mes: 'Jul', planejado: 75, realizado: 68 },
-    { mes: 'Ago', planejado: 85, realizado: 78 }
-  ];
-
-  const atividadesAtrasadas = [
-    { id: '1.2.3.1', nome: 'Fundação Bloco A', atraso: 12, responsavel: 'João Silva' },
-    { id: '1.3.2.4', nome: 'Estrutura Metálica P2', atraso: 8, responsavel: 'Maria Santos' },
-    { id: '2.1.1.3', nome: 'Instalações Elétricas', atraso: 6, responsavel: 'Carlos Lima' },
-    { id: '1.4.5.2', nome: 'Acabamento Interno', atraso: 5, responsavel: 'Ana Costa' },
-    { id: '2.2.3.1', nome: 'Sistema HVAC', atraso: 4, responsavel: 'Pedro Souza' }
-  ];
-
-  // ============================================================================
-  // MOCK DATA - PRODUÇÃO LPS
-  // ============================================================================
-  const lpsData = {
-    ppc: 78.5,
-    tmr: 4.2,
-    restricoesAtivas: 15
-  };
-
-  const ppcSemanal = [
-    { semana: 'S1', ppc: 72 },
-    { semana: 'S2', ppc: 68 },
-    { semana: 'S3', ppc: 75 },
-    { semana: 'S4', ppc: 82 },
-    { semana: 'S5', ppc: 79 },
-    { semana: 'S6', ppc: 78 },
-    { semana: 'S7', ppc: 85 },
-    { semana: 'S8', ppc: 78.5 }
-  ];
-
-  const restricoesPorTipo = [
-    { tipo: 'Material', quantidade: 6 },
-    { tipo: 'Mão de Obra', quantidade: 4 },
-    { tipo: 'Equipamento', quantidade: 2 },
-    { tipo: 'Projeto', quantidade: 2 },
-    { tipo: 'Clima', quantidade: 1 }
-  ];
-
-  // ============================================================================
-  // MOCK DATA - QUALIDADE
-  // ============================================================================
-  const qualidadeData = {
-    iqo: 92.5,
-    auditoriasCompletas: 12,
-    naoConformidades: 8,
-    acoesCorretivas: 5
-  };
-
-  const auditoriasRecentes = [
-    { id: 'AUD-001', titulo: 'Auditoria Estrutural', data: '2024-12-05', conformidade: 95 },
-    { id: 'AUD-002', titulo: 'Auditoria de Segurança', data: '2024-12-03', conformidade: 88 },
-    { id: 'AUD-003', titulo: 'Auditoria Ambiental', data: '2024-11-28', conformidade: 92 },
-    { id: 'AUD-004', titulo: 'Auditoria de Qualidade', data: '2024-11-25', conformidade: 96 }
-  ];
-
-  // ============================================================================
-  // MOCK DATA - RECURSOS
-  // ============================================================================
-  const recursosData = {
-    capacidadeEquipe: 45,
-    alocacaoAtual: 87,
-    indiceProdutividade: 1.05
-  };
-
-  const alocacaoRecursos = [
-    { recurso: 'Engenheiros Civis', alocado: 92, capacidade: 8 },
-    { recurso: 'Técnicos', alocado: 85, capacidade: 15 },
-    { recurso: 'Operadores', alocado: 78, capacidade: 12 },
-    { recurso: 'Supervisores', alocado: 95, capacidade: 5 },
-    { recurso: 'Auxiliares', alocado: 70, capacidade: 10 }
-  ];
-
-  // ============================================================================
-  // MOCK DATA - GESTÃO
-  // ============================================================================
-  const gestaoData = {
-    solicitacoesMudanca: 3,
-    acoes5w2h: 18,
-    ciclosPdca: 4,
-    licoesAprendidas: 12
-  };
-
-  const acoesRecentes = [
-    { id: '5W2H-018', titulo: 'Replanejar atividade fundação', status: 'EM_ANDAMENTO', prazo: '2024-12-15' },
-    { id: '5W2H-017', titulo: 'Solicitar material adicional', status: 'CONCLUIDA', prazo: '2024-12-10' },
-    { id: '5W2H-016', titulo: 'Treinar equipe nova', status: 'PENDENTE', prazo: '2024-12-20' },
-    { id: '5W2H-015', titulo: 'Revisar cronograma fase 2', status: 'EM_ANDAMENTO', prazo: '2024-12-18' }
-  ];
 
   // ============================================================================
   // SECTOR COLORS
@@ -714,6 +684,15 @@ const DashboardIndicadoresPage: React.FC = () => {
       </CollapsibleSector>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 theme-text">Carregando indicadores...</span>
+      </div>
+    );
+  }
 
   if (presentationMode) {
     return (

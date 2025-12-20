@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   Settings,
@@ -17,7 +17,8 @@ import {
   Info,
   History,
   ArrowUpDown,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import {
   ScatterChart,
@@ -37,6 +38,7 @@ import {
   Legend
 } from 'recharts';
 import { useTemaStore } from '../stores/temaStore';
+import { useAuthStore } from '../stores/authStore';
 import KPICard from '../components/ui/KPICard';
 import {
   StatusProjeto,
@@ -46,6 +48,11 @@ import {
   getCorStatusProjeto,
   getLabelStatusProjeto
 } from '../types/gestao';
+import {
+  portfolioService,
+  ProjetoPortfolio,
+  CriterioPriorizacao as CriterioService
+} from '../services/portfolioService';
 
 const CRITERIOS_PADRAO: CriterioPriorizacao[] = [
   { id: 'roi', nome: 'ROI', descricao: 'Retorno sobre Investimento', peso: 20, inverso: false },
@@ -568,8 +575,33 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ projetos, criterios, 
   );
 };
 
+const mapServiceToLocal = (projeto: ProjetoPortfolio): ProjetoPrioritizado => ({
+  id: projeto.id,
+  nome: projeto.nome,
+  descricao: projeto.descricao || '',
+  gerente: projeto.gerente || '',
+  orcamento: projeto.orcamento || 0,
+  dataInicio: projeto.dataInicio || new Date(),
+  dataFim: projeto.dataFim || new Date(),
+  status: projeto.status as unknown as StatusProjeto,
+  scores: projeto.scores.map(s => ({ criterioId: s.criterioId, score: s.score })),
+  valorEstrategico: projeto.valorEstrategico,
+  roiEsperado: projeto.roiEsperado,
+});
+
+const mapCriterioToLocal = (criterio: CriterioService): CriterioPriorizacao => ({
+  id: criterio.id,
+  nome: criterio.nome,
+  descricao: criterio.descricao,
+  peso: criterio.peso,
+  inverso: criterio.inverso,
+});
+
 const PortfolioPage: React.FC = () => {
   const { tema } = useTemaStore();
+  const { usuario } = useAuthStore();
+  const empresaId = usuario?.empresaId;
+  const [loading, setLoading] = useState(true);
   const [criterios, setCriterios] = useState<CriterioPriorizacao[]>(CRITERIOS_PADRAO);
   const [projetos, setProjetos] = useState<ProjetoPrioritizado[]>(MOCK_PROJETOS);
   const [showCriteriaPanel, setShowCriteriaPanel] = useState(false);
@@ -579,6 +611,37 @@ const PortfolioPage: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string>('scoreTotal');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [activeTab, setActiveTab] = useState<'chart' | 'table' | 'comparison'>('chart');
+
+  useEffect(() => {
+    loadData();
+  }, [empresaId]);
+
+  const loadData = async () => {
+    if (!empresaId) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const [criteriosData, projetosData] = await Promise.all([
+        portfolioService.getCriterios(empresaId),
+        portfolioService.getProjetos(empresaId),
+      ]);
+
+      if (criteriosData.length > 0) {
+        setCriterios(criteriosData.map(mapCriterioToLocal));
+      }
+
+      if (projetosData.length > 0) {
+        setProjetos(projetosData.map(mapServiceToLocal));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do portfólio:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const pesoTotal = useMemo(() => criterios.reduce((sum, c) => sum + c.peso, 0), [criterios]);
 
@@ -701,6 +764,15 @@ const PortfolioPage: React.FC = () => {
     }
     return null;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 theme-text">Carregando portfólio...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
