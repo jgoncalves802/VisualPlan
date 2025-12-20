@@ -128,13 +128,13 @@ const generateDemoRestrictions = (): RestricaoIshikawa[] => {
   ];
 };
 
-const mockEPS = [
+const DEMO_EPS = [
   { id: 'EPS-01', nome: 'Edifício Principal' },
   { id: 'EPS-02', nome: 'Bloco B' },
   { id: 'EPS-03', nome: 'Estacionamento' },
 ];
 
-const mockWBS: Record<string, Array<{ id: string; nome: string }>> = {
+const DEMO_WBS: Record<string, Array<{ id: string; nome: string }>> = {
   'EPS-01': [
     { id: 'WBS-01', nome: 'Estrutura' },
     { id: 'WBS-02', nome: 'Vedação' },
@@ -152,7 +152,7 @@ const mockWBS: Record<string, Array<{ id: string; nome: string }>> = {
   ],
 };
 
-const mockActivities: Record<string, Array<{ id: string; nome: string }>> = {
+const DEMO_ACTIVITIES: Record<string, Array<{ id: string; nome: string }>> = {
   'WBS-01': [
     { id: 'A001', nome: 'Fundação Bloco A' },
     { id: 'A002', nome: 'Montagem Estrutura' },
@@ -570,8 +570,8 @@ const AnaliseIshikawaPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoriaIshikawa | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const availableWBS = selectedEPS ? mockWBS[selectedEPS] || [] : [];
-  const availableActivities = selectedWBS ? mockActivities[selectedWBS] || [] : [];
+  const availableWBS = selectedEPS ? DEMO_WBS[selectedEPS] || [] : [];
+  const availableActivities = selectedWBS ? DEMO_ACTIVITIES[selectedWBS] || [] : [];
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -757,7 +757,7 @@ const AnaliseIshikawaPage: React.FC = () => {
               style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
             >
               <option value="">Todos os EPS</option>
-              {mockEPS.map(eps => (
+              {DEMO_EPS.map(eps => (
                 <option key={eps.id} value={eps.id}>{eps.nome}</option>
               ))}
             </select>

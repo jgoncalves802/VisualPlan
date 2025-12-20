@@ -52,120 +52,120 @@ import {
   CategoriaChecklist,
 } from '../types/gestao';
 
-const MOCK_PROJETOS = [
-  { id: 'proj-1', nome: 'Edifício Corporativo Alpha' },
-  { id: 'proj-2', nome: 'Residencial Vista Verde' },
-  { id: 'proj-3', nome: 'Shopping Center Plaza' },
+const DEMO_PROJETOS = [
+  { id: 'demo-proj-1', nome: 'Edifício Corporativo Alpha' },
+  { id: 'demo-proj-2', nome: 'Residencial Vista Verde' },
+  { id: 'demo-proj-3', nome: 'Shopping Center Plaza' },
 ];
 
-const MOCK_AUDITORES = [
-  { id: '1', nome: 'João Silva' },
-  { id: '2', nome: 'Maria Santos' },
-  { id: '3', nome: 'Carlos Lima' },
-  { id: '4', nome: 'Ana Costa' },
+const DEMO_AUDITORES = [
+  { id: 'demo-auditor-1', nome: 'João Silva' },
+  { id: 'demo-auditor-2', nome: 'Maria Santos' },
+  { id: 'demo-auditor-3', nome: 'Carlos Lima' },
+  { id: 'demo-auditor-4', nome: 'Ana Costa' },
 ];
 
-const generateMockTemplates = (): ChecklistTemplate[] => {
+const generateDemoTemplates = (): ChecklistTemplate[] => {
   return [
     {
-      id: 'tpl-1',
+      id: 'demo-tpl-1',
       nome: 'Segurança do Trabalho',
       categoria: CategoriaChecklist.SEGURANCA,
       versao: '2.1',
       dataCriacao: new Date('2024-01-15'),
       dataAtualizacao: new Date('2024-11-20'),
       itens: [
-        { id: 'item-1', descricao: 'EPIs adequados estão sendo utilizados', obrigatorio: true },
-        { id: 'item-2', descricao: 'Sinalização de segurança está visível', obrigatorio: true },
-        { id: 'item-3', descricao: 'Extintores estão dentro da validade', obrigatorio: true },
-        { id: 'item-4', descricao: 'Áreas de risco estão isoladas', obrigatorio: true },
-        { id: 'item-5', descricao: 'Treinamento de segurança foi realizado', obrigatorio: true },
-        { id: 'item-6', descricao: 'Kit de primeiros socorros está disponível', obrigatorio: false },
-        { id: 'item-7', descricao: 'Rotas de evacuação estão sinalizadas', obrigatorio: true },
-        { id: 'item-8', descricao: 'Documentação de segurança está atualizada', obrigatorio: true },
+        { id: 'demo-item-1', descricao: 'EPIs adequados estão sendo utilizados', obrigatorio: true },
+        { id: 'demo-item-2', descricao: 'Sinalização de segurança está visível', obrigatorio: true },
+        { id: 'demo-item-3', descricao: 'Extintores estão dentro da validade', obrigatorio: true },
+        { id: 'demo-item-4', descricao: 'Áreas de risco estão isoladas', obrigatorio: true },
+        { id: 'demo-item-5', descricao: 'Treinamento de segurança foi realizado', obrigatorio: true },
+        { id: 'demo-item-6', descricao: 'Kit de primeiros socorros está disponível', obrigatorio: false },
+        { id: 'demo-item-7', descricao: 'Rotas de evacuação estão sinalizadas', obrigatorio: true },
+        { id: 'demo-item-8', descricao: 'Documentação de segurança está atualizada', obrigatorio: true },
       ],
     },
     {
-      id: 'tpl-2',
+      id: 'demo-tpl-2',
       nome: 'Qualidade de Execução - Estrutura',
       categoria: CategoriaChecklist.QUALIDADE,
       versao: '1.5',
       dataCriacao: new Date('2024-02-10'),
       dataAtualizacao: new Date('2024-10-15'),
       itens: [
-        { id: 'item-9', descricao: 'Concreto atende especificação de resistência', obrigatorio: true },
-        { id: 'item-10', descricao: 'Armadura está posicionada corretamente', obrigatorio: true },
-        { id: 'item-11', descricao: 'Espaçadores estão adequados', obrigatorio: true },
-        { id: 'item-12', descricao: 'Formas estão alinhadas e niveladas', obrigatorio: true },
-        { id: 'item-13', descricao: 'Cura do concreto está sendo realizada', obrigatorio: true },
-        { id: 'item-14', descricao: 'Rastreabilidade do concreto está documentada', obrigatorio: true },
+        { id: 'demo-item-9', descricao: 'Concreto atende especificação de resistência', obrigatorio: true },
+        { id: 'demo-item-10', descricao: 'Armadura está posicionada corretamente', obrigatorio: true },
+        { id: 'demo-item-11', descricao: 'Espaçadores estão adequados', obrigatorio: true },
+        { id: 'demo-item-12', descricao: 'Formas estão alinhadas e niveladas', obrigatorio: true },
+        { id: 'demo-item-13', descricao: 'Cura do concreto está sendo realizada', obrigatorio: true },
+        { id: 'demo-item-14', descricao: 'Rastreabilidade do concreto está documentada', obrigatorio: true },
       ],
     },
     {
-      id: 'tpl-3',
+      id: 'demo-tpl-3',
       nome: 'Gestão Ambiental',
       categoria: CategoriaChecklist.AMBIENTAL,
       versao: '1.2',
       dataCriacao: new Date('2024-03-05'),
       itens: [
-        { id: 'item-15', descricao: 'Resíduos estão segregados corretamente', obrigatorio: true },
-        { id: 'item-16', descricao: 'Área de descarte está sinalizada', obrigatorio: true },
-        { id: 'item-17', descricao: 'Controle de poeira está sendo realizado', obrigatorio: true },
-        { id: 'item-18', descricao: 'Água está sendo reaproveitada quando possível', obrigatorio: false },
-        { id: 'item-19', descricao: 'Licenças ambientais estão vigentes', obrigatorio: true },
+        { id: 'demo-item-15', descricao: 'Resíduos estão segregados corretamente', obrigatorio: true },
+        { id: 'demo-item-16', descricao: 'Área de descarte está sinalizada', obrigatorio: true },
+        { id: 'demo-item-17', descricao: 'Controle de poeira está sendo realizado', obrigatorio: true },
+        { id: 'demo-item-18', descricao: 'Água está sendo reaproveitada quando possível', obrigatorio: false },
+        { id: 'demo-item-19', descricao: 'Licenças ambientais estão vigentes', obrigatorio: true },
       ],
     },
     {
-      id: 'tpl-4',
+      id: 'demo-tpl-4',
       nome: 'Instalações Elétricas',
       categoria: CategoriaChecklist.INSTALACOES,
       versao: '1.0',
       dataCriacao: new Date('2024-04-20'),
       itens: [
-        { id: 'item-20', descricao: 'Eletrodutos estão instalados conforme projeto', obrigatorio: true },
-        { id: 'item-21', descricao: 'Fiação está identificada corretamente', obrigatorio: true },
-        { id: 'item-22', descricao: 'Quadros elétricos estão aterrados', obrigatorio: true },
-        { id: 'item-23', descricao: 'Disjuntores estão dimensionados corretamente', obrigatorio: true },
+        { id: 'demo-item-20', descricao: 'Eletrodutos estão instalados conforme projeto', obrigatorio: true },
+        { id: 'demo-item-21', descricao: 'Fiação está identificada corretamente', obrigatorio: true },
+        { id: 'demo-item-22', descricao: 'Quadros elétricos estão aterrados', obrigatorio: true },
+        { id: 'demo-item-23', descricao: 'Disjuntores estão dimensionados corretamente', obrigatorio: true },
       ],
     },
     {
-      id: 'tpl-5',
+      id: 'demo-tpl-5',
       nome: 'Documentação Técnica',
       categoria: CategoriaChecklist.DOCUMENTACAO,
       versao: '1.3',
       dataCriacao: new Date('2024-05-12'),
       itens: [
-        { id: 'item-24', descricao: 'Projetos atualizados estão disponíveis', obrigatorio: true },
-        { id: 'item-25', descricao: 'Diário de obra está preenchido', obrigatorio: true },
-        { id: 'item-26', descricao: 'RDOs estão arquivados corretamente', obrigatorio: true },
-        { id: 'item-27', descricao: 'Ensaios de qualidade estão documentados', obrigatorio: true },
+        { id: 'demo-item-24', descricao: 'Projetos atualizados estão disponíveis', obrigatorio: true },
+        { id: 'demo-item-25', descricao: 'Diário de obra está preenchido', obrigatorio: true },
+        { id: 'demo-item-26', descricao: 'RDOs estão arquivados corretamente', obrigatorio: true },
+        { id: 'demo-item-27', descricao: 'Ensaios de qualidade estão documentados', obrigatorio: true },
       ],
     },
   ];
 };
 
-const generateMockAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => {
+const generateDemoAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => {
   const hoje = new Date();
   return [
     {
-      id: 'aud-1',
+      id: 'demo-aud-1',
       codigo: 'AUD-001',
       titulo: 'Auditoria de Segurança - Bloco A',
-      checklistId: 'tpl-1',
+      checklistId: 'demo-tpl-1',
       checklistNome: 'Segurança do Trabalho',
-      projetoId: 'proj-1',
+      projetoId: 'demo-proj-1',
       projetoNome: 'Edifício Corporativo Alpha',
       tipo: 'Segurança',
       responsavel: 'João Silva',
-      responsavelId: '1',
+      responsavelId: 'demo-auditor-1',
       dataAuditoria: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000),
       status: StatusAuditoria.CONCLUIDA,
       percentualConformidade: 87.5,
       naoConformidades: 1,
       dataCriacao: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
       itens: templates[0].itens.map((item, idx) => ({
-        id: `ai-${idx}`,
-        auditoriaId: 'aud-1',
+        id: `demo-ai-${idx}`,
+        auditoriaId: 'demo-aud-1',
         itemChecklistId: item.id,
         ordem: idx + 1,
         pergunta: item.descricao,
@@ -175,24 +175,24 @@ const generateMockAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => 
       })),
     },
     {
-      id: 'aud-2',
+      id: 'demo-aud-2',
       codigo: 'AUD-002',
       titulo: 'Auditoria de Qualidade - Fundação',
-      checklistId: 'tpl-2',
+      checklistId: 'demo-tpl-2',
       checklistNome: 'Qualidade de Execução - Estrutura',
-      projetoId: 'proj-1',
+      projetoId: 'demo-proj-1',
       projetoNome: 'Edifício Corporativo Alpha',
       tipo: 'Qualidade',
       responsavel: 'Maria Santos',
-      responsavelId: '2',
+      responsavelId: 'demo-auditor-2',
       dataAuditoria: new Date(hoje.getTime() + 1 * 24 * 60 * 60 * 1000),
       status: StatusAuditoria.EM_ANDAMENTO,
       percentualConformidade: 66.7,
       naoConformidades: 2,
       dataCriacao: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000),
       itens: templates[1].itens.map((item, idx) => ({
-        id: `ai2-${idx}`,
-        auditoriaId: 'aud-2',
+        id: `demo-ai2-${idx}`,
+        auditoriaId: 'demo-aud-2',
         itemChecklistId: item.id,
         ordem: idx + 1,
         pergunta: item.descricao,
@@ -202,24 +202,24 @@ const generateMockAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => 
       })),
     },
     {
-      id: 'aud-3',
+      id: 'demo-aud-3',
       codigo: 'AUD-003',
       titulo: 'Auditoria Ambiental Mensal',
-      checklistId: 'tpl-3',
+      checklistId: 'demo-tpl-3',
       checklistNome: 'Gestão Ambiental',
-      projetoId: 'proj-2',
+      projetoId: 'demo-proj-2',
       projetoNome: 'Residencial Vista Verde',
       tipo: 'Ambiental',
       responsavel: 'Carlos Lima',
-      responsavelId: '3',
+      responsavelId: 'demo-auditor-3',
       dataAuditoria: new Date(hoje.getTime() + 5 * 24 * 60 * 60 * 1000),
       status: StatusAuditoria.PLANEJADA,
       percentualConformidade: 0,
       naoConformidades: 0,
       dataCriacao: new Date(),
       itens: templates[2].itens.map((item, idx) => ({
-        id: `ai3-${idx}`,
-        auditoriaId: 'aud-3',
+        id: `demo-ai3-${idx}`,
+        auditoriaId: 'demo-aud-3',
         itemChecklistId: item.id,
         ordem: idx + 1,
         pergunta: item.descricao,
@@ -227,24 +227,24 @@ const generateMockAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => 
       })),
     },
     {
-      id: 'aud-4',
+      id: 'demo-aud-4',
       codigo: 'AUD-004',
       titulo: 'Auditoria Instalações - Pavimento 3',
-      checklistId: 'tpl-4',
+      checklistId: 'demo-tpl-4',
       checklistNome: 'Instalações Elétricas',
-      projetoId: 'proj-3',
+      projetoId: 'demo-proj-3',
       projetoNome: 'Shopping Center Plaza',
       tipo: 'Instalações',
       responsavel: 'Ana Costa',
-      responsavelId: '4',
+      responsavelId: 'demo-auditor-4',
       dataAuditoria: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000),
       status: StatusAuditoria.CONCLUIDA,
       percentualConformidade: 100,
       naoConformidades: 0,
       dataCriacao: new Date(hoje.getTime() - 10 * 24 * 60 * 60 * 1000),
       itens: templates[3].itens.map((item, idx) => ({
-        id: `ai4-${idx}`,
-        auditoriaId: 'aud-4',
+        id: `demo-ai4-${idx}`,
+        auditoriaId: 'demo-aud-4',
         itemChecklistId: item.id,
         ordem: idx + 1,
         pergunta: item.descricao,
@@ -912,9 +912,9 @@ const AuditoriaPage: React.FC = () => {
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
-      const mockTemplates = generateMockTemplates();
-      setTemplates(mockTemplates);
-      setAuditorias(generateMockAuditorias(mockTemplates));
+      const demoTemplates = generateDemoTemplates();
+      setTemplates(demoTemplates);
+      setAuditorias(generateDemoAuditorias(demoTemplates));
       setIsLoading(false);
       return;
     }
@@ -927,21 +927,21 @@ const AuditoriaPage: React.FC = () => {
       ]);
       
       if (templatesData.length === 0) {
-        setTemplates(generateMockTemplates());
+        setTemplates(generateDemoTemplates());
       } else {
         setTemplates(templatesData);
       }
       
       if (auditoriasData.length === 0) {
-        setAuditorias(generateMockAuditorias(templatesData.length > 0 ? templatesData : generateMockTemplates()));
+        setAuditorias(generateDemoAuditorias(templatesData.length > 0 ? templatesData : generateDemoTemplates()));
       } else {
         setAuditorias(auditoriasData);
       }
     } catch (error) {
       console.error('Erro ao carregar dados de auditoria:', error);
-      const mockTemplates = generateMockTemplates();
-      setTemplates(mockTemplates);
-      setAuditorias(generateMockAuditorias(mockTemplates));
+      const demoTemplates = generateDemoTemplates();
+      setTemplates(demoTemplates);
+      setAuditorias(generateDemoAuditorias(demoTemplates));
     } finally {
       setIsLoading(false);
     }
@@ -1139,8 +1139,8 @@ const AuditoriaPage: React.FC = () => {
     }
 
     const template = templates.find(t => t.id === newAuditForm.checklistId);
-    const projeto = MOCK_PROJETOS.find(p => p.id === newAuditForm.projetoId);
-    const auditor = MOCK_AUDITORES.find(a => a.id === newAuditForm.responsavelId);
+    const projeto = DEMO_PROJETOS.find(p => p.id === newAuditForm.projetoId);
+    const auditor = DEMO_AUDITORES.find(a => a.id === newAuditForm.responsavelId);
 
     const itens = template?.itens.map((item, idx) => ({
       id: `ai-${Date.now()}-${idx}`,
@@ -1832,7 +1832,7 @@ const AuditoriaPage: React.FC = () => {
                   style={{ borderColor: tema.border }}
                 >
                   <option value="">Selecione um projeto</option>
-                  {MOCK_PROJETOS.map(p => (
+                  {DEMO_PROJETOS.map(p => (
                     <option key={p.id} value={p.id}>
                       {p.nome}
                     </option>
@@ -1852,7 +1852,7 @@ const AuditoriaPage: React.FC = () => {
                     style={{ borderColor: tema.border }}
                   >
                     <option value="">Selecione</option>
-                    {MOCK_AUDITORES.map(a => (
+                    {DEMO_AUDITORES.map(a => (
                       <option key={a.id} value={a.id}>
                         {a.nome}
                       </option>

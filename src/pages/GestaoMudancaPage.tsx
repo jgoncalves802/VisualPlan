@@ -32,17 +32,17 @@ import {
   PrioridadeAcao,
 } from '../types/gestao';
 
-const MOCK_PROJETOS = [
-  { id: 'proj-1', nome: 'Edifício Corporativo Alpha' },
-  { id: 'proj-2', nome: 'Residencial Vista Verde' },
-  { id: 'proj-3', nome: 'Shopping Center Plaza' },
+const DEMO_PROJETOS = [
+  { id: 'demo-proj-1', nome: 'Edifício Corporativo Alpha' },
+  { id: 'demo-proj-2', nome: 'Residencial Vista Verde' },
+  { id: 'demo-proj-3', nome: 'Shopping Center Plaza' },
 ];
 
-const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
+const generateDemoSolicitacoes = (): SolicitacaoMudanca[] => {
   const hoje = new Date();
   return [
     {
-      id: 'sm-1',
+      id: 'demo-sm-1',
       codigo: 'SM-001',
       titulo: 'Alteração do layout do pavimento tipo',
       descricao: 'Necessidade de alterar o layout do pavimento tipo para adequação às novas exigências do cliente, incluindo reorganização das áreas comuns e redimensionamento dos escritórios.',
@@ -50,10 +50,10 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       tipoMudanca: TipoMudanca.ESCOPO,
       prioridade: PrioridadeAcao.ALTA,
       solicitante: 'João Silva',
-      solicitanteId: '1',
+      solicitanteId: 'demo-user-1',
       dataSolicitacao: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
       status: StatusMudanca.EM_ANALISE,
-      projetoId: 'proj-1',
+      projetoId: 'demo-proj-1',
       projetoNome: 'Edifício Corporativo Alpha',
       impactoCronograma: 15,
       impactoCusto: 250000,
@@ -62,18 +62,18 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       riscos: ['Atraso na entrega do pavimento tipo', 'Conflito com instalações já executadas'],
       impactoEstimado: ImpactoMudanca.ALTO,
       aprovadores: [
-        { id: 'apr-1', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'APROVADO', dataDecisao: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000), comentario: 'Aprovado com ressalvas quanto ao prazo' },
-        { id: 'apr-2', nome: 'Maria Santos', cargo: 'Diretora de Engenharia', status: 'PENDENTE' },
+        { id: 'demo-apr-1', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'APROVADO', dataDecisao: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000), comentario: 'Aprovado com ressalvas quanto ao prazo' },
+        { id: 'demo-apr-2', nome: 'Maria Santos', cargo: 'Diretora de Engenharia', status: 'PENDENTE' },
       ],
       historico: [
-        { id: 'h-1', data: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000), usuario: 'João Silva', acao: 'Criou a solicitação' },
-        { id: 'h-2', data: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), usuario: 'João Silva', acao: 'Submeteu para análise' },
-        { id: 'h-3', data: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Aprovou a solicitação', detalhes: 'Aprovado com ressalvas quanto ao prazo' },
+        { id: 'demo-h-1', data: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000), usuario: 'João Silva', acao: 'Criou a solicitação' },
+        { id: 'demo-h-2', data: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), usuario: 'João Silva', acao: 'Submeteu para análise' },
+        { id: 'demo-h-3', data: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Aprovou a solicitação', detalhes: 'Aprovado com ressalvas quanto ao prazo' },
       ],
       anexos: ['Planta_Alterada_v2.pdf', 'Orçamento_Adicional.xlsx'],
     },
     {
-      id: 'sm-2',
+      id: 'demo-sm-2',
       codigo: 'SM-002',
       titulo: 'Extensão do prazo de fundações',
       descricao: 'Solicitação de extensão do prazo para conclusão das fundações devido a condições climáticas adversas.',
@@ -81,25 +81,25 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       tipoMudanca: TipoMudanca.PRAZO,
       prioridade: PrioridadeAcao.ALTA,
       solicitante: 'Maria Santos',
-      solicitanteId: '2',
+      solicitanteId: 'demo-user-2',
       dataSolicitacao: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000),
       status: StatusMudanca.APROVADA,
-      projetoId: 'proj-2',
+      projetoId: 'demo-proj-2',
       projetoNome: 'Residencial Vista Verde',
       impactoCronograma: 20,
       impactoCusto: 0,
       impactoEstimado: ImpactoMudanca.MEDIO,
       aprovadores: [
-        { id: 'apr-3', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'APROVADO', dataDecisao: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), comentario: 'Condições climáticas comprovadas' },
+        { id: 'demo-apr-3', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'APROVADO', dataDecisao: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), comentario: 'Condições climáticas comprovadas' },
       ],
       historico: [
-        { id: 'h-4', data: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Criou a solicitação' },
-        { id: 'h-5', data: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Submeteu para análise' },
-        { id: 'h-6', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Aprovou a solicitação' },
+        { id: 'demo-h-4', data: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Criou a solicitação' },
+        { id: 'demo-h-5', data: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Submeteu para análise' },
+        { id: 'demo-h-6', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Aprovou a solicitação' },
       ],
     },
     {
-      id: 'sm-3',
+      id: 'demo-sm-3',
       codigo: 'SM-003',
       titulo: 'Substituição de fornecedor de aço',
       descricao: 'Troca do fornecedor de aço devido a problemas de qualidade e entrega.',
@@ -107,24 +107,24 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       tipoMudanca: TipoMudanca.RECURSO,
       prioridade: PrioridadeAcao.MEDIA,
       solicitante: 'Ana Costa',
-      solicitanteId: '4',
+      solicitanteId: 'demo-user-4',
       dataSolicitacao: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000),
       status: StatusMudanca.SUBMETIDA,
-      projetoId: 'proj-1',
+      projetoId: 'demo-proj-1',
       projetoNome: 'Edifício Corporativo Alpha',
       impactoCronograma: 0,
       impactoCusto: 50000,
       impactoEstimado: ImpactoMudanca.BAIXO,
       aprovadores: [
-        { id: 'apr-4', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'PENDENTE' },
+        { id: 'demo-apr-4', nome: 'Carlos Lima', cargo: 'Gerente de Projetos', status: 'PENDENTE' },
       ],
       historico: [
-        { id: 'h-7', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Ana Costa', acao: 'Criou a solicitação' },
-        { id: 'h-8', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Ana Costa', acao: 'Submeteu para análise' },
+        { id: 'demo-h-7', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Ana Costa', acao: 'Criou a solicitação' },
+        { id: 'demo-h-8', data: new Date(hoje.getTime() - 1 * 24 * 60 * 60 * 1000), usuario: 'Ana Costa', acao: 'Submeteu para análise' },
       ],
     },
     {
-      id: 'sm-4',
+      id: 'demo-sm-4',
       codigo: 'SM-004',
       titulo: 'Aumento do orçamento de acabamentos',
       descricao: 'Solicitação de aumento de 15% no orçamento de acabamentos devido a valorização de materiais.',
@@ -132,25 +132,25 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       tipoMudanca: TipoMudanca.CUSTO,
       prioridade: PrioridadeAcao.ALTA,
       solicitante: 'Carlos Lima',
-      solicitanteId: '3',
+      solicitanteId: 'demo-user-3',
       dataSolicitacao: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000),
       status: StatusMudanca.REJEITADA,
-      projetoId: 'proj-3',
+      projetoId: 'demo-proj-3',
       projetoNome: 'Shopping Center Plaza',
       impactoCronograma: 0,
       impactoCusto: 180000,
       impactoEstimado: ImpactoMudanca.ALTO,
       aprovadores: [
-        { id: 'apr-5', nome: 'Maria Santos', cargo: 'Diretora de Engenharia', status: 'REJEITADO', dataDecisao: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), comentario: 'Buscar alternativas de materiais com melhor custo-benefício' },
+        { id: 'demo-apr-5', nome: 'Maria Santos', cargo: 'Diretora de Engenharia', status: 'REJEITADO', dataDecisao: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), comentario: 'Buscar alternativas de materiais com melhor custo-benefício' },
       ],
       historico: [
-        { id: 'h-9', data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Criou a solicitação' },
-        { id: 'h-10', data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Submeteu para análise' },
-        { id: 'h-11', data: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Rejeitou a solicitação', detalhes: 'Buscar alternativas de materiais com melhor custo-benefício' },
+        { id: 'demo-h-9', data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Criou a solicitação' },
+        { id: 'demo-h-10', data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000), usuario: 'Carlos Lima', acao: 'Submeteu para análise' },
+        { id: 'demo-h-11', data: new Date(hoje.getTime() - 4 * 24 * 60 * 60 * 1000), usuario: 'Maria Santos', acao: 'Rejeitou a solicitação', detalhes: 'Buscar alternativas de materiais com melhor custo-benefício' },
       ],
     },
     {
-      id: 'sm-5',
+      id: 'demo-sm-5',
       codigo: 'SM-005',
       titulo: 'Revisão dos critérios de qualidade',
       descricao: 'Proposta de revisão dos critérios de aceitação para serviços de alvenaria.',
@@ -158,17 +158,17 @@ const generateMockSolicitacoes = (): SolicitacaoMudanca[] => {
       tipoMudanca: TipoMudanca.QUALIDADE,
       prioridade: PrioridadeAcao.BAIXA,
       solicitante: 'João Silva',
-      solicitanteId: '1',
+      solicitanteId: 'demo-user-1',
       dataSolicitacao: new Date(),
       status: StatusMudanca.RASCUNHO,
-      projetoId: 'proj-2',
+      projetoId: 'demo-proj-2',
       projetoNome: 'Residencial Vista Verde',
       impactoCronograma: -5,
       impactoCusto: -20000,
       impactoEstimado: ImpactoMudanca.BAIXO,
       aprovadores: [],
       historico: [
-        { id: 'h-12', data: new Date(), usuario: 'João Silva', acao: 'Criou a solicitação (rascunho)' },
+        { id: 'demo-h-12', data: new Date(), usuario: 'João Silva', acao: 'Criou a solicitação (rascunho)' },
       ],
     },
   ];
@@ -488,7 +488,7 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
                     }}
                   >
                     <option value="">Selecione um projeto</option>
-                    {MOCK_PROJETOS.map(proj => (
+                    {DEMO_PROJETOS.map(proj => (
                       <option key={proj.id} value={proj.id}>
                         {proj.nome}
                       </option>
@@ -980,7 +980,7 @@ const GestaoMudancaPage: React.FC = () => {
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
-      setSolicitacoes(generateMockSolicitacoes());
+      setSolicitacoes(generateDemoSolicitacoes());
       setIsLoading(false);
       return;
     }
@@ -989,13 +989,13 @@ const GestaoMudancaPage: React.FC = () => {
     try {
       const data = await gestaoMudancaService.getAll(usuario.empresaId);
       if (data.length === 0) {
-        setSolicitacoes(generateMockSolicitacoes());
+        setSolicitacoes(generateDemoSolicitacoes());
       } else {
         setSolicitacoes(data);
       }
     } catch (error) {
       console.error('Erro ao carregar solicitações de mudança:', error);
-      setSolicitacoes(generateMockSolicitacoes());
+      setSolicitacoes(generateDemoSolicitacoes());
     } finally {
       setIsLoading(false);
     }
@@ -1052,7 +1052,7 @@ const GestaoMudancaPage: React.FC = () => {
           solicitante: usuario?.nome || 'Usuário Atual',
           dataSolicitacao: new Date(),
           status: StatusMudanca.RASCUNHO,
-          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          projetoNome: DEMO_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
           aprovadores: [],
           historico: [
             { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
@@ -1075,7 +1075,7 @@ const GestaoMudancaPage: React.FC = () => {
           solicitanteId: usuario?.id,
           dataSolicitacao: new Date(),
           status: StatusMudanca.RASCUNHO,
-          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          projetoNome: DEMO_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
           aprovadores: [],
           historico: [
             { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
@@ -1102,7 +1102,7 @@ const GestaoMudancaPage: React.FC = () => {
           solicitante: usuario?.nome || 'Usuário Atual',
           dataSolicitacao: new Date(),
           status: StatusMudanca.RASCUNHO,
-          projetoNome: MOCK_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
+          projetoNome: DEMO_PROJETOS.find(p => p.id === data.projetoId)?.nome || '',
           aprovadores: [],
           historico: [
             { id: `h-${Date.now()}`, data: new Date(), usuario: usuario?.nome || 'Usuário Atual', acao: 'Criou a solicitação (rascunho)' },
@@ -1335,7 +1335,7 @@ const GestaoMudancaPage: React.FC = () => {
             style={{ borderColor: tema.border, color: tema.text }}
           >
             <option value="all">Todos Projetos</option>
-            {MOCK_PROJETOS.map(proj => (
+            {DEMO_PROJETOS.map(proj => (
               <option key={proj.id} value={proj.id}>
                 {proj.nome}
               </option>

@@ -178,15 +178,15 @@ const TIPO_REUNIAO_CONFIG: Record<TipoReuniao, ConfiguracaoReuniao> = {
   },
 };
 
-const MOCK_PARTICIPANTES = [
-  { id: '1', nome: 'João Silva', cargo: 'Gerente de Projeto' },
-  { id: '2', nome: 'Maria Santos', cargo: 'Engenheira Civil' },
-  { id: '3', nome: 'Carlos Lima', cargo: 'Mestre de Obras' },
-  { id: '4', nome: 'Ana Costa', cargo: 'Coordenadora de Qualidade' },
-  { id: '5', nome: 'Pedro Souza', cargo: 'Engenheiro de Planejamento' },
-  { id: '6', nome: 'Lucas Ferreira', cargo: 'Técnico de Segurança' },
-  { id: '7', nome: 'Marina Oliveira', cargo: 'Arquiteta' },
-  { id: '8', nome: 'Roberto Dias', cargo: 'Coordenador de Suprimentos' },
+const DEMO_PARTICIPANTES = [
+  { id: 'demo-part-1', nome: 'João Silva', cargo: 'Gerente de Projeto' },
+  { id: 'demo-part-2', nome: 'Maria Santos', cargo: 'Engenheira Civil' },
+  { id: 'demo-part-3', nome: 'Carlos Lima', cargo: 'Mestre de Obras' },
+  { id: 'demo-part-4', nome: 'Ana Costa', cargo: 'Coordenadora de Qualidade' },
+  { id: 'demo-part-5', nome: 'Pedro Souza', cargo: 'Engenheiro de Planejamento' },
+  { id: 'demo-part-6', nome: 'Lucas Ferreira', cargo: 'Técnico de Segurança' },
+  { id: 'demo-part-7', nome: 'Marina Oliveira', cargo: 'Arquiteta' },
+  { id: 'demo-part-8', nome: 'Roberto Dias', cargo: 'Coordenador de Suprimentos' },
 ];
 
 const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
@@ -194,32 +194,32 @@ const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
   
   if (tipo === TipoReuniao.DAILY) {
     items.push(
-      { id: 'auto-1', titulo: '3 restrições pendentes para discussão', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 5, responsavel: 'Carlos Lima' },
-      { id: 'auto-2', titulo: '2 tarefas incompletas de ontem', tipo: 'ACAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 3, responsavel: 'Maria Santos' },
-      { id: 'auto-3', titulo: 'Alerta: Entrega de materiais atrasada', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 2 },
+      { id: 'demo-auto-1', titulo: '3 restrições pendentes para discussão', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 5, responsavel: 'Carlos Lima' },
+      { id: 'demo-auto-2', titulo: '2 tarefas incompletas de ontem', tipo: 'ACAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 3, responsavel: 'Maria Santos' },
+      { id: 'demo-auto-3', titulo: 'Alerta: Entrega de materiais atrasada', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 2 },
     );
   } else if (tipo === TipoReuniao.WEEKLY) {
     items.push(
-      { id: 'auto-1', titulo: 'Revisão PPC Semanal: 78%', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Pedro Souza' },
-      { id: 'auto-2', titulo: '8 restrições pendentes para discussão', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Carlos Lima' },
-      { id: 'auto-3', titulo: '2 indicadores com desvio', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Ana Costa' },
-      { id: 'auto-4', titulo: '5 ações 5W2H atrasadas', tipo: 'ACAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'João Silva' },
-      { id: 'auto-5', titulo: '1 não conformidade aberta', tipo: 'AUDITORIA', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 5, responsavel: 'Ana Costa' },
+      { id: 'demo-auto-1', titulo: 'Revisão PPC Semanal: 78%', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Pedro Souza' },
+      { id: 'demo-auto-2', titulo: '8 restrições pendentes para discussão', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Carlos Lima' },
+      { id: 'demo-auto-3', titulo: '2 indicadores com desvio', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Ana Costa' },
+      { id: 'demo-auto-4', titulo: '5 ações 5W2H atrasadas', tipo: 'ACAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'João Silva' },
+      { id: 'demo-auto-5', titulo: '1 não conformidade aberta', tipo: 'AUDITORIA', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 5, responsavel: 'Ana Costa' },
     );
   } else if (tipo === TipoReuniao.QUINZENAL) {
     items.push(
-      { id: 'auto-1', titulo: 'Análise EVM: CPI 0.92 / SPI 0.88', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'Pedro Souza' },
-      { id: 'auto-2', titulo: '3 conflitos de recursos identificados', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Roberto Dias' },
-      { id: 'auto-3', titulo: 'Revisão do registro de riscos', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'João Silva' },
-      { id: 'auto-4', titulo: 'Atualização do cronograma físico', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15 },
+      { id: 'demo-auto-1', titulo: 'Análise EVM: CPI 0.92 / SPI 0.88', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'Pedro Souza' },
+      { id: 'demo-auto-2', titulo: '3 conflitos de recursos identificados', tipo: 'RESTRICAO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Roberto Dias' },
+      { id: 'demo-auto-3', titulo: 'Revisão do registro de riscos', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'João Silva' },
+      { id: 'demo-auto-4', titulo: 'Atualização do cronograma físico', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15 },
     );
   } else if (tipo === TipoReuniao.MENSAL) {
     items.push(
-      { id: 'auto-1', titulo: 'Dashboard Executivo - Visão Geral', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 30, responsavel: 'João Silva' },
-      { id: 'auto-2', titulo: 'Indicadores de Desempenho do Mês', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'Pedro Souza' },
-      { id: 'auto-3', titulo: 'Itens Estratégicos Pendentes', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 30, responsavel: 'João Silva' },
-      { id: 'auto-4', titulo: 'Lições Aprendidas do Período', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15 },
-      { id: 'auto-5', titulo: 'Planejamento do Próximo Mês', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 25, responsavel: 'João Silva' },
+      { id: 'demo-auto-1', titulo: 'Dashboard Executivo - Visão Geral', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 30, responsavel: 'João Silva' },
+      { id: 'demo-auto-2', titulo: 'Indicadores de Desempenho do Mês', tipo: 'KPI', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'Pedro Souza' },
+      { id: 'demo-auto-3', titulo: 'Itens Estratégicos Pendentes', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 30, responsavel: 'João Silva' },
+      { id: 'demo-auto-4', titulo: 'Lições Aprendidas do Período', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15 },
+      { id: 'demo-auto-5', titulo: 'Planejamento do Próximo Mês', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 25, responsavel: 'João Silva' },
     );
   }
   
@@ -228,12 +228,12 @@ const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
 
 const hoje = new Date();
 
-const generateMockReunioes = (): Reuniao[] => {
+const generateDemoReunioes = (): Reuniao[] => {
   const inicioSemana = startOfWeek(hoje, { weekStartsOn: 1 });
   
   return [
     {
-      id: 'reu-1',
+      id: 'demo-reu-1',
       tipo: TipoReuniao.DAILY,
       titulo: 'Daily Standup - Equipe Estrutura',
       data: addHours(addDays(inicioSemana, 1), 8),
@@ -248,7 +248,7 @@ const generateMockReunioes = (): Reuniao[] => {
       participantesPresentes: ['João Silva', 'Maria Santos', 'Carlos Lima'],
     },
     {
-      id: 'reu-2',
+      id: 'demo-reu-2',
       tipo: TipoReuniao.WEEKLY,
       titulo: 'Reunião Semanal de Acompanhamento',
       data: addHours(addDays(inicioSemana, 1), 14),
@@ -261,7 +261,7 @@ const generateMockReunioes = (): Reuniao[] => {
       status: StatusReuniao.AGENDADA,
     },
     {
-      id: 'reu-3',
+      id: 'demo-reu-3',
       tipo: TipoReuniao.DAILY,
       titulo: 'Daily Standup - Equipe Estrutura',
       data: addHours(addDays(inicioSemana, 2), 8),
@@ -273,7 +273,7 @@ const generateMockReunioes = (): Reuniao[] => {
       status: StatusReuniao.AGENDADA,
     },
     {
-      id: 'reu-4',
+      id: 'demo-reu-4',
       tipo: TipoReuniao.QUINZENAL,
       titulo: 'Revisão Quinzenal de Projeto',
       data: addHours(addDays(inicioSemana, 3), 9),
@@ -285,7 +285,7 @@ const generateMockReunioes = (): Reuniao[] => {
       status: StatusReuniao.AGENDADA,
     },
     {
-      id: 'reu-5',
+      id: 'demo-reu-5',
       tipo: TipoReuniao.EXTRAORDINARIA,
       titulo: 'Reunião Urgente - Problema Fundação',
       data: addHours(addDays(inicioSemana, 4), 15),
@@ -293,9 +293,9 @@ const generateMockReunioes = (): Reuniao[] => {
       local: 'Sala de Crise',
       participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Consultor Externo'],
       itensPauta: [
-        { id: 'ext-1', titulo: 'Análise do problema identificado', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Maria Santos' },
-        { id: 'ext-2', titulo: 'Definição de ações corretivas', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'João Silva' },
-        { id: 'ext-3', titulo: 'Impacto no cronograma', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Pedro Souza' },
+        { id: 'demo-ext-1', titulo: 'Análise do problema identificado', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Maria Santos' },
+        { id: 'demo-ext-2', titulo: 'Definição de ações corretivas', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'João Silva' },
+        { id: 'demo-ext-3', titulo: 'Impacto no cronograma', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Pedro Souza' },
       ],
       gerarPautaAuto: false,
       status: StatusReuniao.AGENDADA,
@@ -303,9 +303,9 @@ const generateMockReunioes = (): Reuniao[] => {
   ];
 };
 
-const MOCK_HISTORICO: Reuniao[] = [
+const DEMO_HISTORICO: Reuniao[] = [
   {
-    id: 'hist-1',
+    id: 'demo-hist-1',
     tipo: TipoReuniao.MENSAL,
     titulo: 'Reunião Mensal - Novembro',
     data: new Date(hoje.getFullYear(), hoje.getMonth() - 1, 5, 10, 0),
@@ -320,7 +320,7 @@ const MOCK_HISTORICO: Reuniao[] = [
     acoesGeradas: ['5W2H-045', '5W2H-046', '5W2H-047'],
   },
   {
-    id: 'hist-2',
+    id: 'demo-hist-2',
     tipo: TipoReuniao.WEEKLY,
     titulo: 'Reunião Semanal',
     data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000),
@@ -391,7 +391,7 @@ export const ReunioesPage: React.FC = () => {
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
-      setReunioes(generateMockReunioes());
+      setReunioes(generateDemoReunioes());
       setIsLoading(false);
       return;
     }
@@ -400,7 +400,7 @@ export const ReunioesPage: React.FC = () => {
     try {
       const data = await reunioesService.getAllReunioes(usuario.empresaId);
       if (data.length === 0) {
-        setReunioes(generateMockReunioes());
+        setReunioes(generateDemoReunioes());
       } else {
         const mappedReunioes: Reuniao[] = data.map(r => ({
           id: r.id,
@@ -420,7 +420,7 @@ export const ReunioesPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar reuniões:', error);
-      setReunioes(generateMockReunioes());
+      setReunioes(generateDemoReunioes());
     } finally {
       setIsLoading(false);
     }
@@ -639,7 +639,7 @@ export const ReunioesPage: React.FC = () => {
 
   const historicoCompleto = useMemo(() => {
     const passadas = reunioes.filter(r => r.status === StatusReuniao.CONCLUIDA);
-    return [...passadas, ...MOCK_HISTORICO].sort((a, b) => 
+    return [...passadas, ...DEMO_HISTORICO].sort((a, b) => 
       new Date(b.data).getTime() - new Date(a.data).getTime()
     );
   }, [reunioes]);
@@ -1120,7 +1120,7 @@ export const ReunioesPage: React.FC = () => {
                     style={{ color: tema.primary }}
                   >
                     <option value="">+ Adicionar</option>
-                    {MOCK_PARTICIPANTES.filter(p => !formData.participantes?.includes(p.nome)).map(p => (
+                    {DEMO_PARTICIPANTES.filter(p => !formData.participantes?.includes(p.nome)).map(p => (
                       <option key={p.id} value={p.nome}>{p.nome}</option>
                     ))}
                   </select>
