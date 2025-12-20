@@ -275,45 +275,63 @@ EXCEPTION WHEN unique_violation THEN
 END $$;
 
 -- USUARIOS (8 users com governance layers)
-INSERT INTO usuarios (id, nome, email, empresa_id, camada_governanca, perfil_acesso, ativo) VALUES
-  ('b0000001-0000-0000-0000-000000000001'::uuid, 'João Silva', 'joao.silva@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'PROPONENTE', 'ADMIN', true),
-  ('b0000002-0000-0000-0000-000000000002'::uuid, 'Maria Santos', 'maria.santos@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'GERENTE_PROJETO', true),
-  ('b0000003-0000-0000-0000-000000000003'::uuid, 'Carlos Lima', 'carlos.lima@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'COORDENADOR_OBRA', true),
-  ('b0000004-0000-0000-0000-000000000004'::uuid, 'Ana Costa', 'ana.costa@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'FISCALIZACAO', 'FISCALIZACAO_LEAD', true),
-  ('b0000005-0000-0000-0000-000000000005'::uuid, 'Pedro Souza', 'pedro.souza@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'FISCALIZACAO', 'FISCALIZACAO_TECNICO', true),
-  ('b0000006-0000-0000-0000-000000000006'::uuid, 'Fernanda Oliveira', 'fernanda.oliveira@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'ENGENHEIRO_PLANEJAMENTO', true),
-  ('b0000007-0000-0000-0000-000000000007'::uuid, 'Roberto Dias', 'roberto.dias@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'MESTRE_OBRAS', true),
-  ('b0000008-0000-0000-0000-000000000008'::uuid, 'Luciana Ferreira', 'luciana.ferreira@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'PROPONENTE', 'DIRETOR', true)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  INSERT INTO usuarios (id, nome, email, empresa_id, camada_governanca, perfil_acesso, ativo) VALUES
+    ('b0000001-0000-0000-0000-000000000001'::uuid, 'João Silva', 'joao.silva@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'PROPONENTE', 'ADMIN', true),
+    ('b0000002-0000-0000-0000-000000000002'::uuid, 'Maria Santos', 'maria.santos@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'GERENTE_PROJETO', true),
+    ('b0000003-0000-0000-0000-000000000003'::uuid, 'Carlos Lima', 'carlos.lima@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'COORDENADOR_OBRA', true),
+    ('b0000004-0000-0000-0000-000000000004'::uuid, 'Ana Costa', 'ana.costa@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'FISCALIZACAO', 'FISCALIZACAO_LEAD', true),
+    ('b0000005-0000-0000-0000-000000000005'::uuid, 'Pedro Souza', 'pedro.souza@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'FISCALIZACAO', 'FISCALIZACAO_TECNICO', true),
+    ('b0000006-0000-0000-0000-000000000006'::uuid, 'Fernanda Oliveira', 'fernanda.oliveira@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'ENGENHEIRO_PLANEJAMENTO', true),
+    ('b0000007-0000-0000-0000-000000000007'::uuid, 'Roberto Dias', 'roberto.dias@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'CONTRATADA', 'MESTRE_OBRAS', true),
+    ('b0000008-0000-0000-0000-000000000008'::uuid, 'Luciana Ferreira', 'luciana.ferreira@visionplan.com', 'a0000001-0000-0000-0000-000000000001'::uuid, 'PROPONENTE', 'DIRETOR', true)
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- EPS NODES (3 nodes)
-INSERT INTO eps_nodes (id, parent_id, empresa_id, codigo, nome, descricao, nivel, ordem, ativo) VALUES
-  ('c0000001-0000-0000-0000-000000000001'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-001', 'Residencial', 'Projetos residenciais', 0, 1, true),
-  ('c0000002-0000-0000-0000-000000000002'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-002', 'Comercial', 'Projetos comerciais', 0, 2, true),
-  ('c0000003-0000-0000-0000-000000000003'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-003', 'Industrial', 'Projetos industriais', 0, 3, true)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  INSERT INTO eps_nodes (id, parent_id, empresa_id, codigo, nome, descricao, nivel, ordem, ativo) VALUES
+    ('c0000001-0000-0000-0000-000000000001'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-001', 'Residencial', 'Projetos residenciais', 0, 1, true),
+    ('c0000002-0000-0000-0000-000000000002'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-002', 'Comercial', 'Projetos comerciais', 0, 2, true),
+    ('c0000003-0000-0000-0000-000000000003'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'EPS-003', 'Industrial', 'Projetos industriais', 0, 3, true)
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- PROJETOS (3 projects)
-INSERT INTO projetos (id, eps_id, empresa_id, codigo, nome, descricao, status, data_inicio, data_termino) VALUES
-  ('d0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-001', 'Torre Alpha', 'Edifício residencial 20 pavimentos', 'em_andamento', '2025-01-15', '2026-12-31'),
-  ('d0000002-0000-0000-0000-000000000002'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-002', 'Centro Comercial Plaza', 'Shopping center 3 pisos', 'em_andamento', '2025-03-01', '2027-06-30'),
-  ('d0000003-0000-0000-0000-000000000003'::uuid, 'c0000003-0000-0000-0000-000000000003'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-003', 'Galpão Logístico Beta', 'Centro de distribuição 15.000m²', 'em_andamento', '2025-02-01', '2025-11-30')
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  INSERT INTO projetos (id, eps_id, empresa_id, codigo, nome, descricao, status, data_inicio, data_termino) VALUES
+    ('d0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-001', 'Torre Alpha', 'Edifício residencial 20 pavimentos', 'em_andamento', '2025-01-15', '2026-12-31'),
+    ('d0000002-0000-0000-0000-000000000002'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-002', 'Centro Comercial Plaza', 'Shopping center 3 pisos', 'em_andamento', '2025-03-01', '2027-06-30'),
+    ('d0000003-0000-0000-0000-000000000003'::uuid, 'c0000003-0000-0000-0000-000000000003'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'PRJ-003', 'Galpão Logístico Beta', 'Centro de distribuição 15.000m²', 'em_andamento', '2025-02-01', '2025-11-30')
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- WBS NODES (8 nodes)
-INSERT INTO wbs_nodes (id, eps_node_id, codigo, nome, descricao, nivel, ordem, ativo) VALUES
-  ('e0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-1', 'Fundações', 'Serviços de fundação', 1, 1, true),
-  ('e0000002-0000-0000-0000-000000000002'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-2', 'Estrutura', 'Estrutura de concreto armado', 1, 2, true),
-  ('e0000003-0000-0000-0000-000000000003'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-3', 'Vedações', 'Alvenaria e fechamentos', 1, 3, true),
-  ('e0000004-0000-0000-0000-000000000004'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-4', 'Instalações', 'Instalações elétricas e hidráulicas', 1, 4, true),
-  ('e0000005-0000-0000-0000-000000000005'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-5', 'Acabamentos', 'Revestimentos e acabamentos', 1, 5, true),
-  ('e0000006-0000-0000-0000-000000000006'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-6', 'Infraestrutura', 'Terraplenagem e fundações', 1, 1, true),
-  ('e0000007-0000-0000-0000-000000000007'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-7', 'Superestrutura', 'Estrutura metálica', 1, 2, true),
-  ('e0000008-0000-0000-0000-000000000008'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-8', 'MEP', 'Mechanical, Electrical, Plumbing', 1, 3, true)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  INSERT INTO wbs_nodes (id, eps_node_id, codigo, nome, descricao, nivel, ordem, ativo) VALUES
+    ('e0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-1', 'Fundações', 'Serviços de fundação', 1, 1, true),
+    ('e0000002-0000-0000-0000-000000000002'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-2', 'Estrutura', 'Estrutura de concreto armado', 1, 2, true),
+    ('e0000003-0000-0000-0000-000000000003'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-3', 'Vedações', 'Alvenaria e fechamentos', 1, 3, true),
+    ('e0000004-0000-0000-0000-000000000004'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-4', 'Instalações', 'Instalações elétricas e hidráulicas', 1, 4, true),
+    ('e0000005-0000-0000-0000-000000000005'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'WBS-5', 'Acabamentos', 'Revestimentos e acabamentos', 1, 5, true),
+    ('e0000006-0000-0000-0000-000000000006'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-6', 'Infraestrutura', 'Terraplenagem e fundações', 1, 1, true),
+    ('e0000007-0000-0000-0000-000000000007'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-7', 'Superestrutura', 'Estrutura metálica', 1, 2, true),
+    ('e0000008-0000-0000-0000-000000000008'::uuid, 'c0000002-0000-0000-0000-000000000002'::uuid, 'WBS-8', 'MEP', 'Mechanical, Electrical, Plumbing', 1, 3, true)
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ATIVIDADES CRONOGRAMA (13 activities)
-INSERT INTO atividades_cronograma (id, empresa_id, projeto_id, wbs_id, codigo, nome, tipo, data_inicio, data_termino, duracao, percentual_completo, status, responsavel, responsavel_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO atividades_cronograma (id, empresa_id, projeto_id, wbs_id, codigo, nome, tipo, data_inicio, data_termino, duracao, percentual_completo, status, responsavel, responsavel_id, created_by) VALUES
   ('f0000001-0000-0000-0000-000000000001'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-001', 'Locação da Obra', 'Tarefa', '2025-01-15', '2025-01-20', 5, 100, 'concluida', 'Maria Santos', 'b0000002-0000-0000-0000-000000000002'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
   ('f0000002-0000-0000-0000-000000000002'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-002', 'Escavação Fundações', 'Tarefa', '2025-01-21', '2025-02-10', 20, 100, 'concluida', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
   ('f0000003-0000-0000-0000-000000000003'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 'AT-003', 'Armação Fundações', 'Tarefa', '2025-02-03', '2025-02-20', 17, 85, 'em_andamento', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
@@ -327,10 +345,14 @@ INSERT INTO atividades_cronograma (id, empresa_id, projeto_id, wbs_id, codigo, n
   ('f0000011-0000-0000-0000-000000000011'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-011', 'Revestimento Interno Térreo', 'Tarefa', '2025-06-01', '2025-07-15', 44, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
   ('f0000012-0000-0000-0000-000000000012'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 'AT-012', 'Pintura Geral', 'Tarefa', '2025-07-16', '2025-08-30', 45, 0, 'nao_iniciada', 'Roberto Dias', 'b0000007-0000-0000-0000-000000000007'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
   ('f0000013-0000-0000-0000-000000000013'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, NULL, 'AT-013', 'Entrega Final', 'Marco', '2026-12-31', '2026-12-31', 0, 0, 'nao_iniciada', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- CHECKLIST TEMPLATES (3 templates)
-INSERT INTO checklist_templates (id, nome, categoria, itens, versao, empresa_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO checklist_templates (id, nome, categoria, itens, versao, empresa_id, created_by) VALUES
   ('11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'Segurança',
    '[{"id": "item-1", "descricao": "EPIs disponíveis e em bom estado", "obrigatorio": true},
      {"id": "item-2", "descricao": "Sinalização adequada", "obrigatorio": true},
@@ -352,10 +374,14 @@ INSERT INTO checklist_templates (id, nome, categoria, itens, versao, empresa_id,
      {"id": "item-3", "descricao": "Espessura de juntas adequada", "obrigatorio": true},
      {"id": "item-4", "descricao": "Amarração correta", "obrigatorio": true}]',
    '1.0', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- AUDITORIAS (5 auditorias)
-INSERT INTO auditorias (id, codigo, titulo, descricao, checklist_id, checklist_nome, projeto_id, projeto_nome, tipo, responsavel, responsavel_id, data_auditoria, status, itens, percentual_conformidade, nao_conformidades, acoes_geradas, observacoes_gerais, empresa_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO auditorias (id, codigo, titulo, descricao, checklist_id, checklist_nome, projeto_id, projeto_nome, tipo, responsavel, responsavel_id, data_auditoria, status, itens, percentual_conformidade, nao_conformidades, acoes_geradas, observacoes_gerais, empresa_id, created_by) VALUES
   ('22222222-2222-2222-2222-222222222201'::uuid, 'AUD-2025-001', 'Auditoria de Segurança - Janeiro', 'Auditoria mensal de segurança do trabalho', '11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Segurança', 'Ana Costa', 'b0000004-0000-0000-0000-000000000004'::uuid, '2025-01-25', 'concluida',
    '[{"id": "item-1", "status": "conforme"}, {"id": "item-2", "status": "conforme"}, {"id": "item-3", "status": "nao_conforme", "observacao": "2 extintores vencidos"}, {"id": "item-4", "status": "conforme"}, {"id": "item-5", "status": "conforme"}]',
    80.0, 1, ARRAY['5W2H-001'], 'Auditoria realizada com sucesso. Pendência de extintores identificada.', 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
@@ -373,10 +399,14 @@ INSERT INTO auditorias (id, codigo, titulo, descricao, checklist_id, checklist_n
 
   ('22222222-2222-2222-2222-222222222205'::uuid, 'AUD-2025-005', 'Auditoria de Segurança - Março', 'Auditoria mensal de segurança do trabalho', '11111111-1111-1111-1111-111111111101'::uuid, 'Checklist de Segurança - NR-18', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 'Segurança', 'Pedro Souza', 'b0000005-0000-0000-0000-000000000005'::uuid, '2025-03-25', 'programada',
    '[]', NULL, 0, NULL, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- SOLICITACOES DE MUDANCA (5 solicitações)
-INSERT INTO solicitacoes_mudanca (id, codigo, titulo, descricao, justificativa, tipo_mudanca, prioridade, solicitante, solicitante_id, data_solicitacao, status, projeto_id, projeto_nome, impacto_prazo, impacto_custo, nivel_impacto, historico, empresa_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO solicitacoes_mudanca (id, codigo, titulo, descricao, justificativa, tipo_mudanca, prioridade, solicitante, solicitante_id, data_solicitacao, status, projeto_id, projeto_nome, impacto_prazo, impacto_custo, nivel_impacto, historico, empresa_id, created_by) VALUES
   ('33333333-3333-3333-3333-333333333301'::uuid, 'SM-2025-001', 'Alteração de Layout - Subsolo', 'Modificar layout das vagas de garagem', 'Atender nova legislação municipal', 'escopo', 'alta', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-02-01', 'aprovada', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial Torre Alpha', 15, 85000.00, 'medio',
    '[{"id": "hist-1", "data": "2025-02-01T10:00:00Z", "acao": "submetida", "usuario": "João Silva"},
      {"id": "hist-2", "data": "2025-02-05T14:00:00Z", "acao": "em_analise", "usuario": "Maria Santos"},
@@ -400,10 +430,14 @@ INSERT INTO solicitacoes_mudanca (id, codigo, titulo, descricao, justificativa, 
   ('33333333-3333-3333-3333-333333333305'::uuid, 'SM-2025-005', 'Ampliação de Subsolos - Plaza', 'Adicionar nível de subsolo', 'Atender norma de vagas/m²', 'escopo', 'alta', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, '2025-03-01', 'submetida', 'c0000002-0000-0000-0000-000000000002'::uuid, 'Centro Comercial Plaza', 60, 2500000.00, 'alto',
    '[{"id": "hist-1", "data": "2025-03-01T09:00:00Z", "acao": "submetida", "usuario": "João Silva"}]',
    'a0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- REUNIOES (5 reuniões)
-INSERT INTO reunioes (id, tipo, titulo, descricao, frequencia, participantes, pauta_fixa, proxima_data, hora_inicio, duracao, local, ativo, empresa_id, projeto_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO reunioes (id, tipo, titulo, descricao, frequencia, participantes, pauta_fixa, proxima_data, hora_inicio, duracao, local, ativo, empresa_id, projeto_id, created_by) VALUES
   ('44444444-4444-4444-4444-444444444401'::uuid, 'daily', 'Daily Standup - Torre Alpha', 'Reunião diária de alinhamento', 'diaria', '{"João Silva", "Carlos Lima", "Maria Santos"}', '{"Verificação segurança", "Status frentes", "Impedimentos"}', '2025-12-21 07:30:00', '07:30', 15, 'Canteiro de obras', true, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
   
   ('44444444-4444-4444-4444-444444444402'::uuid, 'weekly', 'Reunião Semanal de Coordenação', 'Reunião de coordenação técnica', 'semanal', '{"João Silva", "Maria Santos", "Ana Costa", "Pedro Souza"}', '{"Avanço físico", "Restrições LPS", "Custos", "Plano ação"}', '2025-12-23 14:00:00', '14:00', 90, 'Sala de reuniões - Sede', true, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000001-0000-0000-0000-000000000001'::uuid),
@@ -413,10 +447,14 @@ INSERT INTO reunioes (id, tipo, titulo, descricao, frequencia, participantes, pa
   ('44444444-4444-4444-4444-444444444404'::uuid, 'weekly', 'Reunião de Segurança', 'Discussão de indicadores de segurança', 'semanal', '{"Pedro Souza", "Carlos Lima"}', '{"Incidentes", "Indicadores", "DDS", "Inspeções"}', '2025-12-22 08:00:00', '08:00', 60, 'Canteiro de obras', true, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000005-0000-0000-0000-000000000005'::uuid),
   
   ('44444444-4444-4444-4444-444444444405'::uuid, 'biweekly', 'Reunião de Qualidade', 'Análise de não conformidades', 'quinzenal', '{"Ana Costa", "Maria Santos", "Carlos Lima"}', '{"Auditorias", "Ações corretivas", "Indicadores"}', '2025-12-26 15:00:00', '15:00', 60, 'Sala de reuniões - Sede', true, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- RESTRICOES ISHIKAWA (12 restrições - todas as 6M categorias)
-INSERT INTO restricoes_ishikawa (id, codigo, descricao, categoria, status, atividade_id, atividade_nome, wbs_id, wbs_nome, eps_id, eps_nome, data_criacao, data_prevista, data_conclusao, responsavel, responsavel_id, impacto_caminho_critico, duracao_atividade_impactada, dias_atraso, score_impacto, reincidente, empresa_id, projeto_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO restricoes_ishikawa (id, codigo, descricao, categoria, status, atividade_id, atividade_nome, wbs_id, wbs_nome, eps_id, eps_nome, data_criacao, data_prevista, data_conclusao, responsavel, responsavel_id, impacto_caminho_critico, duracao_atividade_impactada, dias_atraso, score_impacto, reincidente, empresa_id, projeto_id, created_by) VALUES
   ('55555555-5555-5555-5555-555555555501'::uuid, 'RI-001', 'Atraso na entrega de aço CA-50', 'material', 'vencida', 'f0000003-0000-0000-0000-000000000003'::uuid, 'Armação Fundações', 'e0000001-0000-0000-0000-000000000001'::uuid, 'Fundações', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial', '2025-02-01', '2025-02-08', NULL, 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, true, 17, 12, 68, true, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000008-0000-0000-0000-000000000008'::uuid),
   
   ('55555555-5555-5555-5555-555555555502'::uuid, 'RI-002', 'Equipamento de sondagem indisponível', 'maquina', 'concluida', 'f0000002-0000-0000-0000-000000000002'::uuid, 'Escavação Fundações', 'e0000001-0000-0000-0000-000000000001'::uuid, 'Fundações', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial', '2025-01-20', '2025-01-25', '2025-01-24', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, false, 20, 0, 15, false, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000003-0000-0000-0000-000000000003'::uuid),
@@ -440,10 +478,14 @@ INSERT INTO restricoes_ishikawa (id, codigo, descricao, categoria, status, ativi
   ('55555555-5555-5555-5555-555555555511'::uuid, 'RI-011', 'Fornecedor de formas com atraso', 'material', 'em_execucao', 'f0000005-0000-0000-0000-000000000005'::uuid, 'Forma Pilares 1º Pav', 'e0000002-0000-0000-0000-000000000002'::uuid, 'Estrutura', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial', '2025-02-22', '2025-03-08', NULL, 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, true, 9, 0, 45, false, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000008-0000-0000-0000-000000000008'::uuid),
   
   ('55555555-5555-5555-5555-555555555512'::uuid, 'RI-012', 'Calibração de equipamentos topografia', 'medida', 'concluida', 'f0000001-0000-0000-0000-000000000001'::uuid, 'Locação da Obra', 'e0000001-0000-0000-0000-000000000001'::uuid, 'Fundações', 'c0000001-0000-0000-0000-000000000001'::uuid, 'Residencial', '2025-01-14', '2025-01-16', '2025-01-15', 'Maria Santos', 'b0000002-0000-0000-0000-000000000002'::uuid, false, 5, 0, 8, false, 'a0000001-0000-0000-0000-000000000001'::uuid, 'd0000001-0000-0000-0000-000000000001'::uuid, 'b0000002-0000-0000-0000-000000000002'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ACOES 5W2H (10 ações)
-INSERT INTO acoes_5w2h (id, codigo, o_que, por_que, onde, quando, quem, quem_id, como, quanto, status, prioridade, percentual_concluido, origem, origem_id, restricao_lps_id, empresa_id, projeto_id, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO acoes_5w2h (id, codigo, o_que, por_que, onde, quando, quem, quem_id, como, quanto, status, prioridade, percentual_concluido, origem, origem_id, restricao_lps_id, empresa_id, projeto_id, created_by) VALUES
   ('66666666-6666-6666-6666-666666666601'::uuid, '5W2H-001', 'Negociar entrega antecipada de aço CA-50', 'Mitigar atraso crítico', 'Fornecedor - Gerdau', '2025-02-05', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, 'Reunião virtual com gerente', 5000.00, 'em_andamento', 'alta', 50, 'restricao_ishikawa', '55555555-5555-5555-5555-555555555501'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'b0000008-0000-0000-0000-000000000008'::uuid),
   
   ('66666666-6666-6666-6666-666666666602'::uuid, '5W2H-002', 'Recrutar 5 armadores qualificados', 'Recuperar atraso', 'Canteiro de obras', '2025-02-10', 'Carlos Lima', 'b0000003-0000-0000-0000-000000000003'::uuid, 'Contato com sindicato', 15000.00, 'concluida', 'alta', 100, 'restricao_ishikawa', '55555555-5555-5555-5555-555555555503'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'b0000003-0000-0000-0000-000000000003'::uuid),
@@ -463,10 +505,14 @@ INSERT INTO acoes_5w2h (id, codigo, o_que, por_que, onde, quando, quem, quem_id,
   ('66666666-6666-6666-6666-666666666609'::uuid, '5W2H-009', 'Analisar falha corpos de prova', 'Identificar causa raiz', 'Laboratório de ensaios', '2025-02-12', 'Ana Costa', 'b0000004-0000-0000-0000-000000000004'::uuid, 'Reunir com concreteira', 1200.00, 'concluida', 'alta', 100, 'restricao_ishikawa', '55555555-5555-5555-5555-555555555506'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'b0000004-0000-0000-0000-000000000004'::uuid),
   
   ('66666666-6666-6666-6666-666666666610'::uuid, '5W2H-010', 'Antecipar entrega kit formas', 'Evitar impacto estrutura', 'Fornecedor - Formaço', '2025-02-28', 'João Silva', 'b0000001-0000-0000-0000-000000000001'::uuid, 'Pagamento antecipado', 12000.00, 'em_andamento', 'alta', 30, 'restricao_ishikawa', '55555555-5555-5555-5555-555555555511'::uuid, NULL, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'b0000008-0000-0000-0000-000000000008'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- RESTRICOES LPS (8 restrições)
-INSERT INTO restricoes_lps (id, empresa_id, projeto_id, codigo, descricao, categoria, status, prioridade, responsavel_id, responsavel_nome, data_identificacao, data_prevista, data_resolucao, atividade_id, wbs_id, impacto_cronograma, impacto_custo, observacoes, created_by) VALUES
+DO $$
+BEGIN
+  INSERT INTO restricoes_lps (id, empresa_id, projeto_id, codigo, descricao, categoria, status, prioridade, responsavel_id, responsavel_nome, data_identificacao, data_prevista, data_resolucao, atividade_id, wbs_id, impacto_cronograma, impacto_custo, observacoes, created_by) VALUES
   ('77777777-7777-7777-7777-777777777701'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'LPS-001', 'Aguardando liberação de projeto revisado', 'projeto', 'identificada', 'alta', 'b0000002-0000-0000-0000-000000000002'::uuid, 'Maria Santos', '2025-02-20', '2025-03-05', NULL, 'f0000005-0000-0000-0000-000000000005'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 5, 0, NULL, 'b0000008-0000-0000-0000-000000000008'::uuid),
   
   ('77777777-7777-7777-7777-777777777702'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'LPS-002', 'Material de formas em trânsito', 'material', 'em_tratamento', 'alta', 'b0000001-0000-0000-0000-000000000001'::uuid, 'João Silva', '2025-02-22', '2025-03-08', NULL, 'f0000005-0000-0000-0000-000000000005'::uuid, 'e0000002-0000-0000-0000-000000000002'::uuid, 7, 12000, NULL, 'b0000008-0000-0000-0000-000000000008'::uuid),
@@ -482,12 +528,16 @@ INSERT INTO restricoes_lps (id, empresa_id, projeto_id, codigo, descricao, categ
   ('77777777-7777-7777-7777-777777777707'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'LPS-007', 'Atraso entrega aço CA-50', 'material', 'removida', 'alta', 'b0000001-0000-0000-0000-000000000001'::uuid, 'João Silva', '2025-02-01', '2025-02-08', '2025-02-07', 'f0000003-0000-0000-0000-000000000003'::uuid, 'e0000001-0000-0000-0000-000000000001'::uuid, 5, 5000, 'Fornecedor alternativo acionado', 'b0000008-0000-0000-0000-000000000008'::uuid),
   
   ('77777777-7777-7777-7777-777777777708'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'c0000001-0000-0000-0000-000000000001'::uuid, 'LPS-008', 'Definição de acabamentos pelo cliente', 'projeto', 'identificada', 'baixa', 'b0000006-0000-0000-0000-000000000006'::uuid, 'Fernanda Oliveira', '2025-02-28', '2025-10-10', NULL, 'f0000012-0000-0000-0000-000000000012'::uuid, 'e0000005-0000-0000-0000-000000000005'::uuid, 0, 0, 'Reunião agendada com cliente', 'b0000006-0000-0000-0000-000000000006'::uuid)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ========================================
 -- RECURSOS (14 recursos: mão de obra, equipamentos, materiais)
 -- ========================================
-INSERT INTO recursos (id, empresa_id, codigo, nome, tipo, unidade, custo_hora, custo_uso, disponibilidade_diaria, calendario, ativo) VALUES
+DO $$
+BEGIN
+  INSERT INTO recursos (id, empresa_id, codigo, nome, tipo, unidade, custo_hora, custo_uso, disponibilidade_diaria, calendario, ativo) VALUES
   ('88888888-8888-8888-8888-888888888801'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-001', 'Pedreiro', 'mao_de_obra', 'hora', 45.00, 0, 8, 'padrao', true),
   ('88888888-8888-8888-8888-888888888802'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-002', 'Armador', 'mao_de_obra', 'hora', 55.00, 0, 8, 'padrao', true),
   ('88888888-8888-8888-8888-888888888803'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-003', 'Carpinteiro', 'mao_de_obra', 'hora', 50.00, 0, 8, 'padrao', true),
@@ -502,12 +552,16 @@ INSERT INTO recursos (id, empresa_id, codigo, nome, tipo, unidade, custo_hora, c
   ('88888888-8888-8888-8888-888888888812'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-012', 'Aço CA-50', 'material', 'kg', 8.50, 0, 999, NULL, true),
   ('88888888-8888-8888-8888-888888888813'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-013', 'Bloco Cerâmico', 'material', 'un', 2.80, 0, 999, NULL, true),
   ('88888888-8888-8888-8888-888888888814'::uuid, 'a0000001-0000-0000-0000-000000000001'::uuid, 'REC-014', 'Forma Metálica', 'equipamento', 'm2', 12.00, 30, 500, 'padrao', true)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ========================================
 -- DEPENDENCIAS DE ATIVIDADES (10 dependências)
 -- ========================================
-INSERT INTO dependencias_atividades (id, atividade_predecessora_id, atividade_sucessora_id, tipo, lag) VALUES
+DO $$
+BEGIN
+  INSERT INTO dependencias_atividades (id, atividade_predecessora_id, atividade_sucessora_id, tipo, lag) VALUES
   ('99999999-9999-9999-9999-999999999901'::uuid, 'f0000001-0000-0000-0000-000000000001'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 'FS', 0),
   ('99999999-9999-9999-9999-999999999902'::uuid, 'f0000002-0000-0000-0000-000000000002'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 'SS', 5),
   ('99999999-9999-9999-9999-999999999903'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 'f0000004-0000-0000-0000-000000000004'::uuid, 'FS', 2),
@@ -518,12 +572,16 @@ INSERT INTO dependencias_atividades (id, atividade_predecessora_id, atividade_su
   ('99999999-9999-9999-9999-999999999908'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 'f0000009-0000-0000-0000-000000000009'::uuid, 'SS', 0),
   ('99999999-9999-9999-9999-999999999909'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 'f0000010-0000-0000-0000-000000000010'::uuid, 'SS', 0),
   ('99999999-9999-9999-9999-999999999910'::uuid, 'f0000011-0000-0000-0000-000000000011'::uuid, 'f0000012-0000-0000-0000-000000000012'::uuid, 'FS', 0)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ========================================
 -- RESOURCE ALLOCATIONS (18 alocações de recursos)
 -- ========================================
-INSERT INTO resource_allocations (id, recurso_id, atividade_id, quantidade, unidades_por_dia, data_inicio, data_fim, custo_total) VALUES
+DO $$
+BEGIN
+  INSERT INTO resource_allocations (id, recurso_id, atividade_id, quantidade, unidades_por_dia, data_inicio, data_fim, custo_total) VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 4, 8, '2025-04-01', '2025-04-30', 5760.00),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000008-0000-0000-0000-000000000008'::uuid, 2, 8, '2025-04-01', '2025-04-30', 1600.00),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003'::uuid, '88888888-8888-8888-8888-888888888802'::uuid, 'f0000003-0000-0000-0000-000000000003'::uuid, 6, 8, '2025-02-03', '2025-02-20', 4752.00),
@@ -542,8 +600,11 @@ INSERT INTO resource_allocations (id, recurso_id, atividade_id, quantidade, unid
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa016'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000011-0000-0000-0000-000000000011'::uuid, 6, 8, '2025-06-01', '2025-07-15', 15840.00),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa017'::uuid, '88888888-8888-8888-8888-888888888801'::uuid, 'f0000012-0000-0000-0000-000000000012'::uuid, 4, 8, '2025-07-16', '2025-08-30', 12960.00),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa018'::uuid, '88888888-8888-8888-8888-888888888806'::uuid, 'f0000001-0000-0000-0000-000000000001'::uuid, 2, 8, '2025-01-15', '2025-01-20', 800.00)
-ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 -- ========================================
 -- FIM DO SCRIPT
 -- ========================================
+SELECT 'VisionPlan database setup complete!' as status;
