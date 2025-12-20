@@ -264,10 +264,15 @@ CREATE TABLE IF NOT EXISTS restricoes_lps (
 -- DADOS DE SEED
 -- ========================================
 
--- EMPRESA: Insere diretamente (banco limpo)
-INSERT INTO empresas (id, nome, cnpj, ativo) VALUES
-  ('a0000001-0000-0000-0000-000000000001'::uuid, 'Construtora VisionPlan Ltda', '12.345.678/0001-90', true)
-ON CONFLICT (id) DO NOTHING;
+-- EMPRESA: Tenta inserir, ignora erro se já existir
+DO $$
+BEGIN
+  INSERT INTO empresas (id, nome, cnpj, ativo) VALUES
+    ('a0000001-0000-0000-0000-000000000001'::uuid, 'Construtora VisionPlan Ltda', '12.345.678/0001-90', true);
+EXCEPTION WHEN unique_violation THEN
+  -- Ignora se já existe (por ID ou CNPJ)
+  NULL;
+END $$;
 
 -- USUARIOS (8 users com governance layers)
 INSERT INTO usuarios (id, nome, email, empresa_id, camada_governanca, perfil_acesso, ativo) VALUES
