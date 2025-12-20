@@ -52,16 +52,27 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management)
 
 ## Recent Changes (December 2025)
-*   **Comprehensive Database Seeding**: All core tables now populated with realistic test data:
-    *   1 empresa (Construtora TESTE Ltda) with 2 EPS nodes (Residencial, Comercial)
-    *   4 WBS nodes (Fundações, Estrutura, Instalações, Acabamentos)
-    *   49 hierarchical activities in atividades_cronograma spanning full construction lifecycle
-    *   38 dependencies with realistic PDM types (FS, SS, FF) and lag values
-    *   14 recursos (labor, equipment, materials) with 18 resource_allocations including intentional conflicts
-    *   10 restricoes_lps with 6M Ishikawa categories across different statuses
-    *   10 acoes_5w2h linked to restrictions
-    *   5 auditorias with conforming/non-conforming items
-    *   4 solicitacoes_mudanca in different workflow statuses
+*   **Complete Database Seed Data (December 20, 2025)**: All management tables populated with realistic construction project data:
+    *   **Core Entities**:
+        *   1 empresa (Construtora VisionPlan Ltda - ID: a0000001)
+        *   3 eps_nodes (Residencial, Comercial, Industrial - IDs: c0000001-3)
+        *   3 projetos (Torre Alpha, Centro Comercial Plaza, Galpão Logístico Beta - IDs: d0000001-3)
+    *   **Users** (8 usuarios with correct governance layers):
+        *   PROPONENTE: João Silva (ADMIN), Luciana Ferreira (DIRETOR)
+        *   CONTRATADA: Maria Santos (GERENTE_PROJETO), Carlos Lima (COORDENADOR_OBRA), Fernanda Oliveira (ENGENHEIRO_PLANEJAMENTO), Roberto Dias (MESTRE_OBRAS)
+        *   FISCALIZACAO: Ana Costa (FISCALIZACAO_LEAD), Pedro Souza (FISCALIZACAO_TECNICO)
+    *   **WBS Structure** (8 wbs_nodes): Fundações, Estrutura, Vedações, Instalações, Acabamentos (Residencial); Infraestrutura, Superestrutura, MEP (Comercial)
+    *   **Schedule** (13 atividades_cronograma): Construction activities from Locação da Obra to Entrega Final with realistic dates, durations, and progress
+    *   **Quality Management**:
+        *   3 checklist_templates (Segurança, Concreto, Alvenaria)
+        *   5 auditorias (mix of concluida, em_andamento, programada statuses)
+    *   **Change Management** (5 solicitacoes_mudanca): Various workflow statuses (aprovada, em_analise, submetida, rejeitada)
+    *   **Meetings** (5 reunioes): Daily, Weekly, Monthly, Biweekly meetings
+    *   **Ishikawa Analysis** (12 restricoes_ishikawa): All 6M categories (material, maquina, mao_de_obra, meio_ambiente, metodo, medida) with various statuses
+    *   **5W2H Actions** (10 acoes_5w2h): Linked to restricoes_ishikawa and auditorias
+    *   **LPS Constraints** (8 restricoes_lps): Various categories (projeto, material, mao_de_obra, equipamento, outros)
+    *   **Database Constraints Validated**: camada_governanca (PROPONENTE/FISCALIZACAO/CONTRATADA), perfil_acesso (ADMIN/DIRETOR/GERENTE_PROJETO/etc), tipo (Tarefa/Marco/Fase/WBS)
+    *   **FK Relationships Mapped**: auditorias/solicitacoes_mudanca/acoes_5w2h/restricoes_lps → eps_nodes.id; restricoes_ishikawa → projetos.id
 *   **SQL Migration 002**: Added 8 new tables - criterios_priorizacao, projetos_portfolio, scores_projetos, calendarios_projeto, excecoes_calendario, indicadores_lps, snapshots_evm, indicadores_qualidade (with RLS and triggers)
 *   **portfolioService.ts**: Multi-criteria weighted scoring with project ranking calculations
 *   **calendariosService.ts**: Work calendars (5x8, 6x8, 24/7) with holiday/exception management
