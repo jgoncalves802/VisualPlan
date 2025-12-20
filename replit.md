@@ -52,6 +52,16 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management)
 
 ## Recent Changes (December 2025)
+*   **Comprehensive Database Seeding**: All core tables now populated with realistic test data:
+    *   1 empresa (Construtora TESTE Ltda) with 2 EPS nodes (Residencial, Comercial)
+    *   4 WBS nodes (Fundações, Estrutura, Instalações, Acabamentos)
+    *   49 hierarchical activities in atividades_cronograma spanning full construction lifecycle
+    *   38 dependencies with realistic PDM types (FS, SS, FF) and lag values
+    *   14 recursos (labor, equipment, materials) with 18 resource_allocations including intentional conflicts
+    *   10 restricoes_lps with 6M Ishikawa categories across different statuses
+    *   10 acoes_5w2h linked to restrictions
+    *   5 auditorias with conforming/non-conforming items
+    *   4 solicitacoes_mudanca in different workflow statuses
 *   **SQL Migration 002**: Added 8 new tables - criterios_priorizacao, projetos_portfolio, scores_projetos, calendarios_projeto, excecoes_calendario, indicadores_lps, snapshots_evm, indicadores_qualidade (with RLS and triggers)
 *   **portfolioService.ts**: Multi-criteria weighted scoring with project ranking calculations
 *   **calendariosService.ts**: Work calendars (5x8, 6x8, 24/7) with holiday/exception management
@@ -59,6 +69,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **DashboardIndicadoresPage**: Integrated with indicadoresService replacing all mock data
 *   **PortfolioPage**: Integrated with portfolioService replacing MOCK_PROJETOS and CRITERIOS_PADRAO
 *   All services implement PGRST205 handling with graceful fallback to demo data when tables don't exist
+*   **Known Issue**: Some duplicate-key warnings in Kanban when mock data coexists with real database data (to be cleaned up)
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
