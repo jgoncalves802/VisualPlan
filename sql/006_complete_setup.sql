@@ -264,21 +264,10 @@ CREATE TABLE IF NOT EXISTS restricoes_lps (
 -- DADOS DE SEED
 -- ========================================
 
--- EMPRESA: Garante que exista com ID específico
-DO $$
-BEGIN
-  -- Primeiro, tenta inserir
-  INSERT INTO empresas (id, nome, cnpj, ativo) 
-  VALUES ('a0000001-0000-0000-0000-000000000001'::uuid, 'Construtora VisionPlan Ltda', '12.345.678/0001-90', true);
-EXCEPTION 
-  WHEN unique_violation THEN
-    -- Se falhar por CNPJ duplicado, atualiza o registro existente para ter o ID correto
-    UPDATE empresas 
-    SET id = 'a0000001-0000-0000-0000-000000000001'::uuid,
-        nome = 'Construtora VisionPlan Ltda',
-        ativo = true
-    WHERE cnpj = '12.345.678/0001-90';
-END $$;
+-- EMPRESA: Insere com ID específico (usa CNPJ único para evitar conflitos)
+INSERT INTO empresas (id, nome, cnpj, ativo) 
+VALUES ('a0000001-0000-0000-0000-000000000001'::uuid, 'Construtora VisionPlan Ltda', '98.765.432/0001-10', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- USUARIOS (8 users com governance layers)
 INSERT INTO usuarios (id, nome, email, empresa_id, camada_governanca, perfil_acesso, ativo) VALUES
