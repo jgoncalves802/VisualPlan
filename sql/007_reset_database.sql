@@ -2,31 +2,25 @@
 -- ATENÇÃO: Este script apaga TODOS os dados do banco!
 -- Execute com cuidado.
 
--- Desabilita constraints temporariamente para permitir DELETE em qualquer ordem
-SET session_replication_role = 'replica';
-
--- Limpa todas as tabelas de dados (na ordem de dependências)
-TRUNCATE TABLE acoes_5w2h CASCADE;
-TRUNCATE TABLE restricoes_ishikawa CASCADE;
-TRUNCATE TABLE restricoes_lps CASCADE;
-TRUNCATE TABLE auditorias CASCADE;
-TRUNCATE TABLE checklist_templates CASCADE;
-TRUNCATE TABLE solicitacoes_mudanca CASCADE;
-TRUNCATE TABLE reunioes CASCADE;
-TRUNCATE TABLE pautas_reuniao CASCADE;
-TRUNCATE TABLE resource_allocations CASCADE;
-TRUNCATE TABLE recursos CASCADE;
-TRUNCATE TABLE dependencias_atividades CASCADE;
-TRUNCATE TABLE atividades_cronograma CASCADE;
-TRUNCATE TABLE atividades CASCADE;
-TRUNCATE TABLE wbs_nodes CASCADE;
-TRUNCATE TABLE projetos CASCADE;
-TRUNCATE TABLE eps_nodes CASCADE;
-TRUNCATE TABLE usuarios CASCADE;
-TRUNCATE TABLE empresas CASCADE;
-
--- Reabilita constraints
-SET session_replication_role = 'origin';
+-- Limpa tabelas na ordem correta (filhas antes das pais)
+DELETE FROM resource_allocations;
+DELETE FROM dependencias_atividades;
+DELETE FROM acoes_5w2h;
+DELETE FROM restricoes_ishikawa;
+DELETE FROM restricoes_lps;
+DELETE FROM auditorias;
+DELETE FROM solicitacoes_mudanca;
+DELETE FROM reunioes;
+DELETE FROM pautas_reuniao;
+DELETE FROM checklist_templates;
+DELETE FROM atividades_cronograma;
+DELETE FROM atividades;
+DELETE FROM recursos;
+DELETE FROM wbs_nodes;
+DELETE FROM projetos;
+DELETE FROM eps_nodes;
+DELETE FROM usuarios;
+DELETE FROM empresas;
 
 -- Confirma limpeza
 SELECT 'Database reset complete!' as status;
