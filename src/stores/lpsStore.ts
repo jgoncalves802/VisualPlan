@@ -589,6 +589,19 @@ export const useLPSStore = create<LPSState>()(
     },
     {
       name: 'lps-storage',
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          return {
+            atividades: [],
+            restricoes: [],
+            anotacoes: [],
+            dataInicio: new Date(2024, 10, 10).toISOString(),
+            dataFim: new Date(2024, 11, 1).toISOString(),
+          };
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         atividades: state.atividades,
         restricoes: state.restricoes,

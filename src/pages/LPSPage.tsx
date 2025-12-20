@@ -133,49 +133,19 @@ export const LPSPage: React.FC = () => {
     loadWbsFromDatabase();
   }, [usuario?.empresaId, setWbsList]);
 
-  // Carregar dados mockados se não houver dados (apenas uma vez)
+  // Inicializar período se necessário (dados mock desabilitados - usando dados reais do banco)
   useEffect(() => {
     // Verificar se dataInicio é uma Date válida
     if (!(dataInicio instanceof Date) || isNaN(dataInicio.getTime())) {
-      // Se não for uma Date válida, definir período inicial
-      const inicio = new Date(2024, 10, 10); // 10/11/2024
-      const fim = new Date(2024, 11, 1); // 01/12/2024
+      // Se não for uma Date válida, definir período inicial para o mês atual
+      const hoje = new Date();
+      const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
       inicio.setHours(0, 0, 0, 0);
       fim.setHours(23, 59, 59, 999);
       setPeriodo(inicio, fim);
-      return;
     }
-
-    // Verificar se já foi inicializado (usando dataInicio como indicador)
-    const dataInicial = new Date(2024, 10, 10); // 10/11/2024
-    dataInicial.setHours(0, 0, 0, 0);
-    const dataInicioZero = new Date(dataInicio);
-    dataInicioZero.setHours(0, 0, 0, 0);
-    
-    const jaInicializado = dataInicioZero.getTime() === dataInicial.getTime() && atividades.length > 0;
-    
-    if (!jaInicializado && atividades.length === 0 && restricoes.length === 0 && anotacoes.length === 0 && wbsList.length === 0) {
-      import('../mocks/lpsMocks').then((module) => {
-        const atividadesMock = module.getAtividadesMockLPS();
-        const restricoesMock = module.getRestricoesMockLPS();
-        const anotacoesMock = module.getAnotacoesMockLPS();
-        const wbsMock = module.getWBSMockLPS();
-
-        useLPSStore.setState({
-          atividades: atividadesMock,
-          restricoes: restricoesMock,
-          anotacoes: anotacoesMock,
-          wbsList: wbsMock,
-        });
-
-        const inicio = new Date(2024, 10, 10);
-        const fim = new Date(2024, 11, 1);
-        inicio.setHours(0, 0, 0, 0);
-        fim.setHours(23, 59, 59, 999);
-        setPeriodo(inicio, fim);
-      });
-    }
-  }, [atividades.length, restricoes.length, anotacoes.length, wbsList.length, dataInicio, addAtividade, addRestricao, addAnotacao, setPeriodo]);
+  }, [dataInicio, setPeriodo]);
 
   // Sincronizar atividades do cronograma com LPS (quando disponível)
   useEffect(() => {

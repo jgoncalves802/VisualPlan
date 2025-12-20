@@ -69,7 +69,11 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **DashboardIndicadoresPage**: Integrated with indicadoresService replacing all mock data
 *   **PortfolioPage**: Integrated with portfolioService replacing MOCK_PROJETOS and CRITERIOS_PADRAO
 *   All services implement PGRST205 handling with graceful fallback to demo data when tables don't exist
-*   **Known Issue**: Some duplicate-key warnings in Kanban when mock data coexists with real database data (to be cleaned up)
+*   **Mock Data Cleanup (December 20, 2025)**:
+    *   LPSPage.tsx: Disabled automatic mock data loading, now initializes only date period
+    *   AnaliseIshikawaPage.tsx: Replaced mock data with generateDemoRestrictions() - 40 records covering all 6M categories and statuses with unique "demo-" prefixed IDs
+    *   lpsStore.ts: Added persist versioning (version: 2) with migration to purge legacy cached mocks from localStorage
+    *   **Resolved**: Duplicate-key warnings in Kanban eliminated by clearing old localStorage state
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
