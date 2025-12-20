@@ -625,8 +625,117 @@ END
 $$;
 
 -- ============================================================================
+-- 13. SEED DATA - CRITÉRIOS DE PRIORIZAÇÃO (PORTFOLIO)
+-- ============================================================================
+
+INSERT INTO criterios_priorizacao (id, empresa_id, nome, descricao, peso, inverso, ativo, ordem)
+VALUES 
+    ('crit-0001-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Alinhamento Estratégico', 'Grau de alinhamento com os objetivos estratégicos da empresa', 25, false, true, 1),
+    ('crit-0002-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'Retorno Financeiro (ROI)', 'Retorno sobre o investimento esperado', 20, false, true, 2),
+    ('crit-0003-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'Risco do Projeto', 'Nível de risco associado ao projeto', 15, true, true, 3),
+    ('crit-0004-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Complexidade Técnica', 'Grau de complexidade técnica do projeto', 10, true, true, 4),
+    ('crit-0005-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', 'Urgência', 'Urgência de execução do projeto', 15, false, true, 5),
+    ('crit-0006-0000-0000-000000000006', '11111111-1111-1111-1111-111111111111', 'Disponibilidade de Recursos', 'Disponibilidade de recursos para execução', 15, false, true, 6)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 14. SEED DATA - PROJETOS DO PORTFÓLIO
+-- ============================================================================
+
+INSERT INTO projetos_portfolio (id, empresa_id, eps_node_id, codigo, nome, descricao, gerente, orcamento, data_inicio, data_fim, status, valor_estrategico, roi_esperado, score_total, ranking, categoria, fase)
+VALUES 
+    ('port-0001-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'PRJ-001', 'Edifício Residencial TESTE', 'Construção de edifício residencial multifamiliar com 20 pavimentos', 'João Silva', 25000000, '2025-01-06', '2025-11-28', 'NO_PRAZO', 8.5, 18.5, 7.85, 1, 'Residencial', 'Construção'),
+    ('port-0002-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', NULL, 'PRJ-002', 'Shopping Center Plaza Norte', 'Construção de shopping center com 150 lojas e cinema', 'Maria Santos', 85000000, '2025-06-01', '2027-12-31', 'NO_PRAZO', 9.0, 22.0, 7.42, 2, 'Comercial', 'Projeto'),
+    ('port-0003-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', NULL, 'PRJ-003', 'Hospital Regional Oeste', 'Construção de hospital com 200 leitos', 'Pedro Souza', 120000000, '2025-09-01', '2028-06-30', 'NO_PRAZO', 9.5, 15.0, 7.28, 3, 'Saúde', 'Aprovação'),
+    ('port-0004-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', NULL, 'PRJ-004', 'Residencial Vista Mar', 'Condomínio de casas alto padrão', 'Carlos Lima', 18000000, '2025-03-01', '2026-08-31', 'EM_RISCO', 7.0, 25.0, 6.95, 4, 'Residencial', 'Construção'),
+    ('port-0005-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', NULL, 'PRJ-005', 'Centro Logístico Industrial', 'Galpões logísticos com 50.000m²', 'Ana Costa', 45000000, '2025-04-15', '2026-10-15', 'ATRASADO', 6.5, 20.0, 6.12, 5, 'Industrial', 'Construção')
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 15. SEED DATA - SCORES DOS PROJETOS
+-- ============================================================================
+
+INSERT INTO scores_projetos (projeto_id, criterio_id, score, justificativa)
+VALUES 
+    -- Edifício Residencial TESTE
+    ('port-0001-0000-0000-000000000001', 'crit-0001-0000-0000-000000000001', 8, 'Projeto alinhado com estratégia de expansão residencial'),
+    ('port-0001-0000-0000-000000000001', 'crit-0002-0000-0000-000000000002', 9, 'ROI estimado de 18.5% - excelente retorno'),
+    ('port-0001-0000-0000-000000000001', 'crit-0003-0000-0000-000000000003', 4, 'Risco moderado - terreno já adquirido'),
+    ('port-0001-0000-0000-000000000001', 'crit-0004-0000-0000-000000000004', 3, 'Complexidade baixa - projeto padrão'),
+    ('port-0001-0000-0000-000000000001', 'crit-0005-0000-0000-000000000005', 8, 'Alta urgência - vendas já iniciadas'),
+    ('port-0001-0000-0000-000000000001', 'crit-0006-0000-0000-000000000006', 7, 'Boa disponibilidade de equipe'),
+    
+    -- Shopping Center Plaza Norte
+    ('port-0002-0000-0000-000000000002', 'crit-0001-0000-0000-000000000001', 9, 'Projeto âncora para expansão comercial'),
+    ('port-0002-0000-0000-000000000002', 'crit-0002-0000-0000-000000000002', 8, 'ROI de 22% - muito bom para setor'),
+    ('port-0002-0000-0000-000000000002', 'crit-0003-0000-0000-000000000003', 6, 'Risco alto - licenciamento complexo'),
+    ('port-0002-0000-0000-000000000002', 'crit-0004-0000-0000-000000000004', 7, 'Complexidade alta - múltiplas disciplinas'),
+    ('port-0002-0000-0000-000000000002', 'crit-0005-0000-0000-000000000005', 6, 'Urgência média - prazo confortável'),
+    ('port-0002-0000-0000-000000000002', 'crit-0006-0000-0000-000000000006', 6, 'Recursos a contratar'),
+    
+    -- Hospital Regional Oeste
+    ('port-0003-0000-0000-000000000003', 'crit-0001-0000-0000-000000000001', 10, 'Projeto estratégico de responsabilidade social'),
+    ('port-0003-0000-0000-000000000003', 'crit-0002-0000-0000-000000000002', 6, 'Margem menor - contrato público'),
+    ('port-0003-0000-0000-000000000003', 'crit-0003-0000-0000-000000000003', 7, 'Risco alto - regulamentações ANVISA'),
+    ('port-0003-0000-0000-000000000003', 'crit-0004-0000-0000-000000000004', 9, 'Altíssima complexidade técnica'),
+    ('port-0003-0000-0000-000000000003', 'crit-0005-0000-0000-000000000005', 5, 'Baixa urgência - início futuro'),
+    ('port-0003-0000-0000-000000000003', 'crit-0006-0000-0000-000000000006', 5, 'Equipe especializada necessária'),
+    
+    -- Residencial Vista Mar
+    ('port-0004-0000-0000-000000000004', 'crit-0001-0000-0000-000000000001', 7, 'Alinhado parcialmente - segmento alto padrão'),
+    ('port-0004-0000-0000-000000000004', 'crit-0002-0000-0000-000000000002', 9, 'Excelente ROI de 25%'),
+    ('port-0004-0000-0000-000000000004', 'crit-0003-0000-0000-000000000003', 5, 'Risco moderado - dependência de vendas'),
+    ('port-0004-0000-0000-000000000004', 'crit-0004-0000-0000-000000000004', 4, 'Complexidade média'),
+    ('port-0004-0000-0000-000000000004', 'crit-0005-0000-0000-000000000005', 7, 'Urgência alta - atrasos existentes'),
+    ('port-0004-0000-0000-000000000004', 'crit-0006-0000-0000-000000000006', 6, 'Recursos parcialmente disponíveis'),
+    
+    -- Centro Logístico Industrial
+    ('port-0005-0000-0000-000000000005', 'crit-0001-0000-0000-000000000001', 6, 'Diversificação de portfólio'),
+    ('port-0005-0000-0000-000000000005', 'crit-0002-0000-0000-000000000002', 7, 'Bom ROI de 20%'),
+    ('port-0005-0000-0000-000000000005', 'crit-0003-0000-0000-000000000003', 5, 'Risco moderado'),
+    ('port-0005-0000-0000-000000000005', 'crit-0004-0000-0000-000000000004', 5, 'Complexidade moderada'),
+    ('port-0005-0000-0000-000000000005', 'crit-0005-0000-0000-000000000005', 8, 'Urgente - projeto atrasado'),
+    ('port-0005-0000-0000-000000000005', 'crit-0006-0000-0000-000000000006', 4, 'Falta de recursos especializados')
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 16. SEED DATA - CALENDÁRIOS DE PROJETO
+-- ============================================================================
+
+INSERT INTO calendarios_projeto (id, empresa_id, projeto_id, nome, descricao, dias_trabalho, horario_inicio, horario_fim, horas_por_dia, padrao)
+VALUES 
+    ('cal-0001-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', NULL, 'Padrão 5x8', 'Calendário padrão segunda a sexta, 8h/dia', '{1,2,3,4,5}', '08:00', '17:00', 8, true),
+    ('cal-0002-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', NULL, 'Sábado Incluso 6x8', 'Segunda a sábado, 8h/dia', '{1,2,3,4,5,6}', '07:00', '16:00', 8, false),
+    ('cal-0003-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Projeto TESTE', 'Calendário específico do projeto TESTE', '{1,2,3,4,5,6}', '07:00', '17:00', 9, false)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- 17. SEED DATA - EXCEÇÕES DE CALENDÁRIO
+-- ============================================================================
+
+INSERT INTO excecoes_calendario (calendario_id, data, tipo, descricao, horas_trabalho)
+VALUES 
+    ('cal-0001-0000-0000-000000000001', '2025-01-01', 'FERIADO', 'Confraternização Universal', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-02-03', 'FERIADO', 'Carnaval', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-02-04', 'FERIADO', 'Carnaval', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-04-18', 'FERIADO', 'Sexta-feira Santa', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-04-21', 'FERIADO', 'Tiradentes', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-05-01', 'FERIADO', 'Dia do Trabalho', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-09-07', 'FERIADO', 'Independência do Brasil', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-10-12', 'FERIADO', 'Nossa Senhora Aparecida', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-11-02', 'FERIADO', 'Finados', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-11-15', 'FERIADO', 'Proclamação da República', 0),
+    ('cal-0001-0000-0000-000000000001', '2025-12-25', 'FERIADO', 'Natal', 0),
+    -- Exceções específicas do projeto
+    ('cal-0003-0000-0000-000000000003', '2025-02-08', 'TRABALHO_EXTRA', 'Mutirão de concretagem', 10),
+    ('cal-0003-0000-0000-000000000003', '2025-03-22', 'TRABALHO_EXTRA', 'Recuperação de atraso', 8)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
 -- SEED DATA COMPLETE
 -- ============================================================================
 -- Total: 1 empresa, 6 usuarios, 2 eps_nodes, 4 wbs_nodes, 14 recursos,
 --        49 atividades, 38 dependencias, 18 alocacoes, 10 restricoes,
---        10 acoes_5w2h, 5 auditorias, 4 solicitacoes_mudanca
+--        10 acoes_5w2h, 5 auditorias, 4 solicitacoes_mudanca,
+--        6 criterios_priorizacao, 5 projetos_portfolio, 30 scores_projetos,
+--        3 calendarios_projeto, 13 excecoes_calendario
