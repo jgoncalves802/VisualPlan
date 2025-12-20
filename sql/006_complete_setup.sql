@@ -264,10 +264,10 @@ CREATE TABLE IF NOT EXISTS restricoes_lps (
 -- DADOS DE SEED
 -- ========================================
 
--- EMPRESA
+-- EMPRESA (ignora se CNPJ já existe)
 INSERT INTO empresas (id, nome, cnpj, ativo) VALUES
   ('a0000001-0000-0000-0000-000000000001'::uuid, 'Construtora VisionPlan Ltda', '12.345.678/0001-90', true)
-ON CONFLICT (id) DO UPDATE SET nome = EXCLUDED.nome;
+ON CONFLICT DO NOTHING;
 
 -- USUARIOS (8 users com governance layers)
 INSERT INTO usuarios (id, nome, email, empresa_id, camada_governanca, perfil_acesso, ativo) VALUES
