@@ -61,7 +61,7 @@ const flattenEpsTree = (nodes: EpsNode[], parentId?: string): WBSLPS[] => {
 export const LPSPage: React.FC = () => {
   const { projetoId } = useParams<{ projetoId?: string }>();
   const [searchParams] = useSearchParams();
-  const projetoIdParam = projetoId || searchParams.get('projeto') || 'proj-1';
+  const projetoIdParam = projetoId || searchParams.get('projeto') || '';
 
   // Store LPS
   const {
