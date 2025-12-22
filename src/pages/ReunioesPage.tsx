@@ -218,6 +218,25 @@ const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
 
 const hoje = new Date();
 
+const mapTipoToFrequenciaDB = (tipo: TipoReuniao): string => {
+  const frequenciaMap: Record<TipoReuniao, string> = {
+    [TipoReuniao.DAILY]: 'diaria',
+    [TipoReuniao.WEEKLY]: 'semanal',
+    [TipoReuniao.QUINZENAL]: 'quinzenal',
+    [TipoReuniao.MENSAL]: 'mensal',
+    [TipoReuniao.EXTRAORDINARIA]: 'unica',
+  };
+  return frequenciaMap[tipo] || 'unica';
+};
+
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 const DURACOES = [
   { value: 15, label: '15 minutos' },
   { value: 30, label: '30 minutos' },
@@ -418,7 +437,7 @@ export const ReunioesPage: React.FC = () => {
     if (!formData.titulo || !formData.data) return;
 
     const newReuniao: Reuniao = {
-      id: editingReuniao?.id || `reu-${Date.now()}`,
+      id: editingReuniao?.id || generateUUID(),
       tipo: formData.tipo!,
       titulo: formData.titulo,
       descricao: formData.descricao,
@@ -463,7 +482,7 @@ export const ReunioesPage: React.FC = () => {
           tipo: formData.tipo!,
           titulo: formData.titulo,
           descricao: formData.descricao,
-          frequencia: 'Avulsa',
+          frequencia: mapTipoToFrequenciaDB(formData.tipo!),
           participantes: formData.participantes || [],
           proximaData: new Date(formData.data),
           duracao: formData.duracao,
