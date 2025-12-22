@@ -322,8 +322,9 @@ export const restricoesLpsService = {
   async getProjetos(empresaId: string): Promise<{ id: string; nome: string }[]> {
     const { data, error } = await supabase
       .from('atividades_cronograma')
-      .select('projeto_id, projeto_nome:nome')
+      .select('projeto_id, nome')
       .eq('empresa_id', empresaId)
+      .is('parent_id', null)
       .not('projeto_id', 'is', null);
 
     if (error) {
@@ -336,9 +337,9 @@ export const restricoesLpsService = {
     }
 
     const uniqueProjects = new Map<string, string>();
-    (data || []).forEach((row: { projeto_id: string; projeto_nome: string }) => {
+    (data || []).forEach((row: { projeto_id: string; nome: string }) => {
       if (row.projeto_id && !uniqueProjects.has(row.projeto_id)) {
-        uniqueProjects.set(row.projeto_id, row.projeto_nome || 'Projeto sem nome');
+        uniqueProjects.set(row.projeto_id, row.nome || 'Projeto sem nome');
       }
     });
 
@@ -389,7 +390,15 @@ export const restricoesLpsService = {
     return data || [];
   },
 
-  async getAtividadeById(atividadeId: string): Promise<{ id: string; nome: string; codigo: string; projeto_id: string; wbs_id?: string } | null> {
+  async getAtividadeById(atividadeId: string): Promise<{ 
+    id: string; 
+    nome: string; 
+    codigo: string; 
+    projeto_id: string; 
+    projeto_nome?: string;
+    wbs_id?: string;
+    wbs_nome?: string;
+  } | null> {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(atividadeId)) return null;
 
@@ -403,6 +412,39 @@ export const restricoesLpsService = {
       console.error('Erro ao buscar atividade:', error);
       return null;
     }
-    return data;
+
+    if (!data) return null;
+
+    let projeto_nome: string | undefined;
+    let wbs_nome: string | undefined;
+
+    if (data.wbs_id) {
+      const { data: wbsData } = await supabase
+        .from('wbs_nodes')
+        .select('nome')
+        .eq('id', data.wbs_id)
+        .single();
+      wbs_nome = wbsData?.nome;
+    }
+
+    if (data.projeto_id) {
+      const { data: atividadeRaiz } = await supabase
+        .from('atividades_cronograma')
+        .select('nome')
+        .eq('projeto_id', data.projeto_id)
+        .is('parent_id', null)
+        .limit(1)
+        .single();
+      
+      if (atividadeRaiz?.nome) {
+        projeto_nome = atividadeRaiz.nome;
+      }
+    }
+
+    return {
+      ...data,
+      projeto_nome,
+      wbs_nome,
+    };
   },
 };
