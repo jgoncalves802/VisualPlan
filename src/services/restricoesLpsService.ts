@@ -23,53 +23,55 @@ interface RestricaoIshikawaDB {
 
 const mapStatusToIshikawa = (status: RestricaoLPS['status']): string => {
   switch (status) {
-    case 'PENDENTE': return 'NO_PRAZO';
-    case 'CONCLUIDA': return 'CONCLUIDA_NO_PRAZO';
-    case 'ATRASADA': return 'ATRASADA';
-    case 'CANCELADA': return 'VENCIDA';
-    default: return 'NO_PRAZO';
+    case 'PENDENTE': return 'no_prazo';
+    case 'CONCLUIDA': return 'concluida_no_prazo';
+    case 'ATRASADA': return 'atrasada';
+    case 'CANCELADA': return 'vencida';
+    default: return 'no_prazo';
   }
 };
 
 const mapStatusFromIshikawa = (status: string): RestricaoLPS['status'] => {
-  switch (status) {
-    case 'CONCLUIDA_NO_PRAZO': return 'CONCLUIDA';
-    case 'EM_EXECUCAO':
-    case 'NO_PRAZO':
+  const statusLower = status?.toLowerCase() || 'no_prazo';
+  switch (statusLower) {
+    case 'concluida_no_prazo': return 'CONCLUIDA';
+    case 'em_execucao':
+    case 'no_prazo':
       return 'PENDENTE';
-    case 'ATRASADA': return 'ATRASADA';
-    case 'VENCIDA': return 'CANCELADA';
+    case 'atrasada': return 'ATRASADA';
+    case 'vencida': return 'CANCELADA';
     default: return 'PENDENTE';
   }
 };
 
 const mapCategoriaToIshikawa = (tipoDetalhado?: TipoRestricaoDetalhado): string => {
   const categoriaMap: Record<string, string> = {
-    'MATERIAL': 'MATERIAL',
-    'MAO_DE_OBRA': 'MAO_DE_OBRA',
-    'MAQUINA': 'MAQUINA',
-    'EQUIPAMENTO': 'MAQUINA',
-    'DOCUMENTACAO': 'METODO',
-    'APROVACAO': 'METODO',
-    'LICENCIAMENTO': 'MEIO_AMBIENTE',
-    'SEGURANCA': 'MEIO_AMBIENTE',
-    'AMBIENTAL': 'MEIO_AMBIENTE',
-    'PARALISAR_OBRA': 'METODO',
-    'OUTRA': 'METODO',
+    'MATERIAL': 'material',
+    'MAO_DE_OBRA': 'mao_de_obra',
+    'MAQUINA': 'maquina',
+    'EQUIPAMENTO': 'maquina',
+    'DOCUMENTACAO': 'metodo',
+    'APROVACAO': 'metodo',
+    'LICENCIAMENTO': 'meio_ambiente',
+    'SEGURANCA': 'meio_ambiente',
+    'AMBIENTAL': 'meio_ambiente',
+    'PARALISAR_OBRA': 'metodo',
+    'OUTRA': 'metodo',
   };
-  return categoriaMap[tipoDetalhado || 'OUTRA'] || 'METODO';
+  return categoriaMap[tipoDetalhado || 'OUTRA'] || 'metodo';
 };
 
 const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado | undefined => {
+  const catLower = categoria?.toLowerCase() || 'metodo';
   const reverseMap: Record<string, TipoRestricaoDetalhado> = {
-    'MATERIAL': TipoRestricaoDetalhado.MATERIAL,
-    'MAO_DE_OBRA': TipoRestricaoDetalhado.MAO_DE_OBRA,
-    'MAQUINA': TipoRestricaoDetalhado.EQUIPAMENTO,
-    'METODO': TipoRestricaoDetalhado.DOCUMENTACAO,
-    'MEIO_AMBIENTE': TipoRestricaoDetalhado.AMBIENTAL,
-    'MEDIDA': TipoRestricaoDetalhado.OUTRA,
+    'material': TipoRestricaoDetalhado.MATERIAL,
+    'mao_de_obra': TipoRestricaoDetalhado.MAO_DE_OBRA,
+    'maquina': TipoRestricaoDetalhado.EQUIPAMENTO,
+    'metodo': TipoRestricaoDetalhado.DOCUMENTACAO,
+    'meio_ambiente': TipoRestricaoDetalhado.AMBIENTAL,
+    'medida': TipoRestricaoDetalhado.OUTRA,
   };
-  return reverseMap[categoria] || TipoRestricaoDetalhado.OUTRA;
+  return reverseMap[catLower] || TipoRestricaoDetalhado.OUTRA;
 };
 
 const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
@@ -91,25 +93,51 @@ const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
   categoria: db.categoria,
 });
 
-const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): RestricaoIshikawaDB => ({
-  id: r.id,
-  empresa_id: empresaId,
-  codigo: `ISH-${r.id.slice(0, 6).toUpperCase()}`,
-  descricao: r.descricao,
-  categoria: mapCategoriaToIshikawa(r.tipo_detalhado),
-  status: mapStatusToIshikawa(r.status),
-  responsavel: r.responsavel,
-  responsavel_id: r.responsavel_id,
-  data_criacao: r.data_criacao.toISOString(),
-  data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-  data_conclusao: r.data_conclusao?.toISOString().split('T')[0],
-  atividade_id: r.atividade_id,
-  wbs_id: r.wbs_id,
-  impacto_caminho_critico: r.prioridade === 'ALTA',
-  dias_atraso: r.dias_latencia || 0,
-  score_impacto: r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20,
-  reincidente: false,
-});
+const isValidUUID = (id: string | undefined | null): boolean => {
+  if (!id) return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
+const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<string, unknown> | null => {
+  if (!isValidUUID(empresaId)) {
+    console.error('empresa_id inválido para criar restrição:', empresaId);
+    return null;
+  }
+  if (!isValidUUID(r.id)) {
+    console.error('id de restrição inválido:', r.id);
+    return null;
+  }
+
+  const data: Record<string, unknown> = {
+    id: r.id,
+    empresa_id: empresaId,
+    codigo: `ISH-${r.id.slice(0, 6).toUpperCase()}`,
+    descricao: r.descricao,
+    categoria: mapCategoriaToIshikawa(r.tipo_detalhado),
+    status: mapStatusToIshikawa(r.status),
+    responsavel: r.responsavel || null,
+    data_criacao: r.data_criacao.toISOString(),
+    data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    data_conclusao: r.data_conclusao?.toISOString().split('T')[0] || null,
+    impacto_caminho_critico: r.prioridade === 'ALTA',
+    dias_atraso: r.dias_latencia || 0,
+    score_impacto: r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20,
+    reincidente: false,
+  };
+  
+  if (isValidUUID(r.responsavel_id)) {
+    data.responsavel_id = r.responsavel_id;
+  }
+  if (isValidUUID(r.atividade_id)) {
+    data.atividade_id = r.atividade_id;
+  }
+  if (isValidUUID(r.wbs_id)) {
+    data.wbs_id = r.wbs_id;
+  }
+  
+  return data;
+};
 
 export const restricoesLpsService = {
   async getAll(empresaId: string): Promise<RestricaoLPS[]> {
@@ -154,6 +182,10 @@ export const restricoesLpsService = {
 
   async create(restricao: RestricaoLPS, empresaId: string): Promise<RestricaoLPS | null> {
     const dbData = toRestricaoIshikawaDB(restricao, empresaId);
+    if (!dbData) {
+      console.error('Dados inválidos para criar restrição');
+      return null;
+    }
     
     const { data, error } = await supabase
       .from('restricoes_ishikawa')
@@ -170,18 +202,29 @@ export const restricoesLpsService = {
   },
 
   async update(id: string, restricao: Partial<RestricaoLPS>, _empresaId?: string): Promise<RestricaoLPS | null> {
+    if (!isValidUUID(id)) {
+      console.error('ID de restrição inválido para update:', id);
+      return null;
+    }
+
     const updateData: Record<string, unknown> = {};
 
     if (restricao.descricao !== undefined) updateData.descricao = restricao.descricao;
     if (restricao.tipo_detalhado !== undefined) updateData.categoria = mapCategoriaToIshikawa(restricao.tipo_detalhado);
     if (restricao.status !== undefined) updateData.status = mapStatusToIshikawa(restricao.status);
     if (restricao.prioridade !== undefined) updateData.impacto_caminho_critico = restricao.prioridade === 'ALTA';
-    if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel;
-    if (restricao.responsavel_id !== undefined) updateData.responsavel_id = restricao.responsavel_id;
+    if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || null;
+    if (restricao.responsavel_id !== undefined && isValidUUID(restricao.responsavel_id)) {
+      updateData.responsavel_id = restricao.responsavel_id;
+    }
     if (restricao.prazo_resolucao !== undefined) updateData.data_prevista = restricao.prazo_resolucao?.toISOString().split('T')[0];
-    if (restricao.data_conclusao !== undefined) updateData.data_conclusao = restricao.data_conclusao?.toISOString().split('T')[0];
-    if (restricao.atividade_id !== undefined) updateData.atividade_id = restricao.atividade_id;
-    if (restricao.wbs_id !== undefined) updateData.wbs_id = restricao.wbs_id;
+    if (restricao.data_conclusao !== undefined) updateData.data_conclusao = restricao.data_conclusao?.toISOString().split('T')[0] || null;
+    if (restricao.atividade_id !== undefined && isValidUUID(restricao.atividade_id)) {
+      updateData.atividade_id = restricao.atividade_id;
+    }
+    if (restricao.wbs_id !== undefined && isValidUUID(restricao.wbs_id)) {
+      updateData.wbs_id = restricao.wbs_id;
+    }
 
     const { data, error } = await supabase
       .from('restricoes_ishikawa')
@@ -214,6 +257,10 @@ export const restricoesLpsService = {
 
   async syncToIshikawa(restricao: RestricaoLPS, empresaId: string): Promise<void> {
     const dbData = toRestricaoIshikawaDB(restricao, empresaId);
+    if (!dbData) {
+      console.error('Dados inválidos para sincronizar restrição para Ishikawa');
+      return;
+    }
 
     const { error } = await supabase
       .from('restricoes_ishikawa')
