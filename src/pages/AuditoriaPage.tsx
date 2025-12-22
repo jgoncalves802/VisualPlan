@@ -52,208 +52,6 @@ import {
   CategoriaChecklist,
 } from '../types/gestao';
 
-const DEMO_PROJETOS = [
-  { id: 'demo-proj-1', nome: 'Edifício Corporativo Alpha' },
-  { id: 'demo-proj-2', nome: 'Residencial Vista Verde' },
-  { id: 'demo-proj-3', nome: 'Shopping Center Plaza' },
-];
-
-const DEMO_AUDITORES = [
-  { id: 'demo-auditor-1', nome: 'João Silva' },
-  { id: 'demo-auditor-2', nome: 'Maria Santos' },
-  { id: 'demo-auditor-3', nome: 'Carlos Lima' },
-  { id: 'demo-auditor-4', nome: 'Ana Costa' },
-];
-
-const generateDemoTemplates = (): ChecklistTemplate[] => {
-  return [
-    {
-      id: 'demo-tpl-1',
-      nome: 'Segurança do Trabalho',
-      categoria: CategoriaChecklist.SEGURANCA,
-      versao: '2.1',
-      dataCriacao: new Date('2024-01-15'),
-      dataAtualizacao: new Date('2024-11-20'),
-      itens: [
-        { id: 'demo-item-1', descricao: 'EPIs adequados estão sendo utilizados', obrigatorio: true },
-        { id: 'demo-item-2', descricao: 'Sinalização de segurança está visível', obrigatorio: true },
-        { id: 'demo-item-3', descricao: 'Extintores estão dentro da validade', obrigatorio: true },
-        { id: 'demo-item-4', descricao: 'Áreas de risco estão isoladas', obrigatorio: true },
-        { id: 'demo-item-5', descricao: 'Treinamento de segurança foi realizado', obrigatorio: true },
-        { id: 'demo-item-6', descricao: 'Kit de primeiros socorros está disponível', obrigatorio: false },
-        { id: 'demo-item-7', descricao: 'Rotas de evacuação estão sinalizadas', obrigatorio: true },
-        { id: 'demo-item-8', descricao: 'Documentação de segurança está atualizada', obrigatorio: true },
-      ],
-    },
-    {
-      id: 'demo-tpl-2',
-      nome: 'Qualidade de Execução - Estrutura',
-      categoria: CategoriaChecklist.QUALIDADE,
-      versao: '1.5',
-      dataCriacao: new Date('2024-02-10'),
-      dataAtualizacao: new Date('2024-10-15'),
-      itens: [
-        { id: 'demo-item-9', descricao: 'Concreto atende especificação de resistência', obrigatorio: true },
-        { id: 'demo-item-10', descricao: 'Armadura está posicionada corretamente', obrigatorio: true },
-        { id: 'demo-item-11', descricao: 'Espaçadores estão adequados', obrigatorio: true },
-        { id: 'demo-item-12', descricao: 'Formas estão alinhadas e niveladas', obrigatorio: true },
-        { id: 'demo-item-13', descricao: 'Cura do concreto está sendo realizada', obrigatorio: true },
-        { id: 'demo-item-14', descricao: 'Rastreabilidade do concreto está documentada', obrigatorio: true },
-      ],
-    },
-    {
-      id: 'demo-tpl-3',
-      nome: 'Gestão Ambiental',
-      categoria: CategoriaChecklist.AMBIENTAL,
-      versao: '1.2',
-      dataCriacao: new Date('2024-03-05'),
-      itens: [
-        { id: 'demo-item-15', descricao: 'Resíduos estão segregados corretamente', obrigatorio: true },
-        { id: 'demo-item-16', descricao: 'Área de descarte está sinalizada', obrigatorio: true },
-        { id: 'demo-item-17', descricao: 'Controle de poeira está sendo realizado', obrigatorio: true },
-        { id: 'demo-item-18', descricao: 'Água está sendo reaproveitada quando possível', obrigatorio: false },
-        { id: 'demo-item-19', descricao: 'Licenças ambientais estão vigentes', obrigatorio: true },
-      ],
-    },
-    {
-      id: 'demo-tpl-4',
-      nome: 'Instalações Elétricas',
-      categoria: CategoriaChecklist.INSTALACOES,
-      versao: '1.0',
-      dataCriacao: new Date('2024-04-20'),
-      itens: [
-        { id: 'demo-item-20', descricao: 'Eletrodutos estão instalados conforme projeto', obrigatorio: true },
-        { id: 'demo-item-21', descricao: 'Fiação está identificada corretamente', obrigatorio: true },
-        { id: 'demo-item-22', descricao: 'Quadros elétricos estão aterrados', obrigatorio: true },
-        { id: 'demo-item-23', descricao: 'Disjuntores estão dimensionados corretamente', obrigatorio: true },
-      ],
-    },
-    {
-      id: 'demo-tpl-5',
-      nome: 'Documentação Técnica',
-      categoria: CategoriaChecklist.DOCUMENTACAO,
-      versao: '1.3',
-      dataCriacao: new Date('2024-05-12'),
-      itens: [
-        { id: 'demo-item-24', descricao: 'Projetos atualizados estão disponíveis', obrigatorio: true },
-        { id: 'demo-item-25', descricao: 'Diário de obra está preenchido', obrigatorio: true },
-        { id: 'demo-item-26', descricao: 'RDOs estão arquivados corretamente', obrigatorio: true },
-        { id: 'demo-item-27', descricao: 'Ensaios de qualidade estão documentados', obrigatorio: true },
-      ],
-    },
-  ];
-};
-
-const generateDemoAuditorias = (templates: ChecklistTemplate[]): Auditoria[] => {
-  const hoje = new Date();
-  return [
-    {
-      id: 'demo-aud-1',
-      codigo: 'AUD-001',
-      titulo: 'Auditoria de Segurança - Bloco A',
-      checklistId: 'demo-tpl-1',
-      checklistNome: 'Segurança do Trabalho',
-      projetoId: 'demo-proj-1',
-      projetoNome: 'Edifício Corporativo Alpha',
-      tipo: 'Segurança',
-      responsavel: 'João Silva',
-      responsavelId: 'demo-auditor-1',
-      dataAuditoria: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000),
-      status: StatusAuditoria.CONCLUIDA,
-      percentualConformidade: 87.5,
-      naoConformidades: 1,
-      dataCriacao: new Date(hoje.getTime() - 5 * 24 * 60 * 60 * 1000),
-      itens: templates[0].itens.map((item, idx) => ({
-        id: `demo-ai-${idx}`,
-        auditoriaId: 'demo-aud-1',
-        itemChecklistId: item.id,
-        ordem: idx + 1,
-        pergunta: item.descricao,
-        status: idx === 3 ? StatusItemAuditoria.NAO_CONFORME : StatusItemAuditoria.CONFORME,
-        severidade: idx === 3 ? SeveridadeNaoConformidade.MAIOR : undefined,
-        observacao: idx === 3 ? 'Área de escavação sem proteção adequada' : undefined,
-      })),
-    },
-    {
-      id: 'demo-aud-2',
-      codigo: 'AUD-002',
-      titulo: 'Auditoria de Qualidade - Fundação',
-      checklistId: 'demo-tpl-2',
-      checklistNome: 'Qualidade de Execução - Estrutura',
-      projetoId: 'demo-proj-1',
-      projetoNome: 'Edifício Corporativo Alpha',
-      tipo: 'Qualidade',
-      responsavel: 'Maria Santos',
-      responsavelId: 'demo-auditor-2',
-      dataAuditoria: new Date(hoje.getTime() + 1 * 24 * 60 * 60 * 1000),
-      status: StatusAuditoria.EM_ANDAMENTO,
-      percentualConformidade: 66.7,
-      naoConformidades: 2,
-      dataCriacao: new Date(hoje.getTime() - 3 * 24 * 60 * 60 * 1000),
-      itens: templates[1].itens.map((item, idx) => ({
-        id: `demo-ai2-${idx}`,
-        auditoriaId: 'demo-aud-2',
-        itemChecklistId: item.id,
-        ordem: idx + 1,
-        pergunta: item.descricao,
-        status: idx < 4 ? (idx === 1 || idx === 3 ? StatusItemAuditoria.NAO_CONFORME : StatusItemAuditoria.CONFORME) : StatusItemAuditoria.PENDENTE,
-        severidade: idx === 1 ? SeveridadeNaoConformidade.CRITICA : idx === 3 ? SeveridadeNaoConformidade.MENOR : undefined,
-        observacao: idx === 1 ? 'Armadura deslocada em 5cm' : undefined,
-      })),
-    },
-    {
-      id: 'demo-aud-3',
-      codigo: 'AUD-003',
-      titulo: 'Auditoria Ambiental Mensal',
-      checklistId: 'demo-tpl-3',
-      checklistNome: 'Gestão Ambiental',
-      projetoId: 'demo-proj-2',
-      projetoNome: 'Residencial Vista Verde',
-      tipo: 'Ambiental',
-      responsavel: 'Carlos Lima',
-      responsavelId: 'demo-auditor-3',
-      dataAuditoria: new Date(hoje.getTime() + 5 * 24 * 60 * 60 * 1000),
-      status: StatusAuditoria.PLANEJADA,
-      percentualConformidade: 0,
-      naoConformidades: 0,
-      dataCriacao: new Date(),
-      itens: templates[2].itens.map((item, idx) => ({
-        id: `demo-ai3-${idx}`,
-        auditoriaId: 'demo-aud-3',
-        itemChecklistId: item.id,
-        ordem: idx + 1,
-        pergunta: item.descricao,
-        status: StatusItemAuditoria.PENDENTE,
-      })),
-    },
-    {
-      id: 'demo-aud-4',
-      codigo: 'AUD-004',
-      titulo: 'Auditoria Instalações - Pavimento 3',
-      checklistId: 'demo-tpl-4',
-      checklistNome: 'Instalações Elétricas',
-      projetoId: 'demo-proj-3',
-      projetoNome: 'Shopping Center Plaza',
-      tipo: 'Instalações',
-      responsavel: 'Ana Costa',
-      responsavelId: 'demo-auditor-4',
-      dataAuditoria: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000),
-      status: StatusAuditoria.CONCLUIDA,
-      percentualConformidade: 100,
-      naoConformidades: 0,
-      dataCriacao: new Date(hoje.getTime() - 10 * 24 * 60 * 60 * 1000),
-      itens: templates[3].itens.map((item, idx) => ({
-        id: `demo-ai4-${idx}`,
-        auditoriaId: 'demo-aud-4',
-        itemChecklistId: item.id,
-        ordem: idx + 1,
-        pergunta: item.descricao,
-        status: StatusItemAuditoria.CONFORME,
-      })),
-    },
-  ];
-};
-
 const getCategoriaIcon = (categoria: CategoriaChecklist) => {
   switch (categoria) {
     case CategoriaChecklist.SEGURANCA:
@@ -909,39 +707,39 @@ const AuditoriaPage: React.FC = () => {
     responsavelId: '',
     dataAuditoria: format(new Date(), 'yyyy-MM-dd'),
   });
+  
+  const [projetos, setProjetos] = useState<{ id: string; nome: string }[]>([]);
+  const [auditores, setAuditores] = useState<{ id: string; nome: string }[]>([]);
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
-      const demoTemplates = generateDemoTemplates();
-      setTemplates(demoTemplates);
-      setAuditorias(generateDemoAuditorias(demoTemplates));
+      setTemplates([]);
+      setAuditorias([]);
+      setProjetos([]);
+      setAuditores([]);
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
     try {
-      const [templatesData, auditoriasData] = await Promise.all([
+      const [templatesData, auditoriasData, projetosData, auditoresData] = await Promise.all([
         auditoriaService.getAllTemplates(usuario.empresaId),
         auditoriaService.getAllAuditorias(usuario.empresaId),
+        auditoriaService.getProjetosDisponiveis(usuario.empresaId),
+        auditoriaService.getAuditoresDisponiveis(usuario.empresaId),
       ]);
       
-      if (templatesData.length === 0) {
-        setTemplates(generateDemoTemplates());
-      } else {
-        setTemplates(templatesData);
-      }
-      
-      if (auditoriasData.length === 0) {
-        setAuditorias(generateDemoAuditorias(templatesData.length > 0 ? templatesData : generateDemoTemplates()));
-      } else {
-        setAuditorias(auditoriasData);
-      }
+      setTemplates(templatesData);
+      setAuditorias(auditoriasData);
+      setProjetos(projetosData);
+      setAuditores(auditoresData);
     } catch (error) {
       console.error('Erro ao carregar dados de auditoria:', error);
-      const demoTemplates = generateDemoTemplates();
-      setTemplates(demoTemplates);
-      setAuditorias(generateDemoAuditorias(demoTemplates));
+      setTemplates([]);
+      setAuditorias([]);
+      setProjetos([]);
+      setAuditores([]);
     } finally {
       setIsLoading(false);
     }
@@ -1139,8 +937,8 @@ const AuditoriaPage: React.FC = () => {
     }
 
     const template = templates.find(t => t.id === newAuditForm.checklistId);
-    const projeto = DEMO_PROJETOS.find(p => p.id === newAuditForm.projetoId);
-    const auditor = DEMO_AUDITORES.find(a => a.id === newAuditForm.responsavelId);
+    const projeto = projetos.find(p => p.id === newAuditForm.projetoId);
+    const auditor = auditores.find(a => a.id === newAuditForm.responsavelId);
 
     const itens = template?.itens.map((item, idx) => ({
       id: `ai-${Date.now()}-${idx}`,
@@ -1435,71 +1233,97 @@ const AuditoriaPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTemplates.map(template => {
-              const CatIcon = getCategoriaIcon(template.categoria);
-              return (
-                <div
-                  key={template.id}
-                  className="p-4 rounded-lg border transition-shadow hover:shadow-md"
-                  style={{ borderColor: tema.border, backgroundColor: tema.surface }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: getCategoriaColor(template.categoria) + '20' }}
-                    >
-                      <CatIcon size={20} style={{ color: getCategoriaColor(template.categoria) }} />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => {
-                          setEditingTemplate(template);
-                          setShowTemplateModal(true);
-                        }}
-                        className="p-1.5 rounded hover:bg-gray-100"
-                        title="Editar"
-                      >
-                        <Edit2 size={16} style={{ color: tema.textSecondary }} />
-                      </button>
-                      <button
-                        onClick={() => handleDuplicateTemplate(template)}
-                        className="p-1.5 rounded hover:bg-gray-100"
-                        title="Duplicar"
-                      >
-                        <Copy size={16} style={{ color: tema.textSecondary }} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="p-1.5 rounded hover:bg-red-50"
-                        title="Excluir"
-                      >
-                        <Trash2 size={16} className="text-red-500" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <h3 className="font-semibold mb-1" style={{ color: tema.text }}>
-                    {template.nome}
-                  </h3>
-                  <p
-                    className="text-sm px-2 py-0.5 rounded inline-block mb-3"
-                    style={{
-                      backgroundColor: getCategoriaColor(template.categoria) + '20',
-                      color: getCategoriaColor(template.categoria),
-                    }}
+          {filteredTemplates.length === 0 ? (
+            <div 
+              className="p-12 rounded-lg border text-center"
+              style={{ borderColor: tema.border, backgroundColor: tema.surface }}
+            >
+              <ClipboardList size={48} className="mx-auto mb-4 opacity-40" style={{ color: tema.textSecondary }} />
+              <p className="font-medium mb-2" style={{ color: tema.text }}>
+                Nenhum template de checklist encontrado
+              </p>
+              <p className="text-sm mb-4" style={{ color: tema.textSecondary }}>
+                Crie templates de checklist para usar nas auditorias de qualidade, segurança e meio ambiente.
+              </p>
+              <button
+                onClick={() => {
+                  setEditingTemplate(null);
+                  setShowTemplateModal(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors"
+                style={{ backgroundColor: tema.primary }}
+              >
+                <Plus size={16} />
+                Criar Primeiro Template
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTemplates.map(template => {
+                const CatIcon = getCategoriaIcon(template.categoria);
+                return (
+                  <div
+                    key={template.id}
+                    className="p-4 rounded-lg border transition-shadow hover:shadow-md"
+                    style={{ borderColor: tema.border, backgroundColor: tema.surface }}
                   >
-                    {getCategoriaLabel(template.categoria)}
-                  </p>
+                    <div className="flex items-start justify-between mb-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: getCategoriaColor(template.categoria) + '20' }}
+                      >
+                        <CatIcon size={20} style={{ color: getCategoriaColor(template.categoria) }} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingTemplate(template);
+                            setShowTemplateModal(true);
+                          }}
+                          className="p-1.5 rounded hover:bg-gray-100"
+                          title="Editar"
+                        >
+                          <Edit2 size={16} style={{ color: tema.textSecondary }} />
+                        </button>
+                        <button
+                          onClick={() => handleDuplicateTemplate(template)}
+                          className="p-1.5 rounded hover:bg-gray-100"
+                          title="Duplicar"
+                        >
+                          <Copy size={16} style={{ color: tema.textSecondary }} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTemplate(template.id)}
+                          className="p-1.5 rounded hover:bg-red-50"
+                          title="Excluir"
+                        >
+                          <Trash2 size={16} className="text-red-500" />
+                        </button>
+                      </div>
+                    </div>
 
-                  <div className="flex items-center justify-between text-sm" style={{ color: tema.textSecondary }}>
-                    <span>{template.itens.length} itens</span>
-                    <span>v{template.versao}</span>
+                    <h3 className="font-semibold mb-1" style={{ color: tema.text }}>
+                      {template.nome}
+                    </h3>
+                    <p
+                      className="text-sm px-2 py-0.5 rounded inline-block mb-3"
+                      style={{
+                        backgroundColor: getCategoriaColor(template.categoria) + '20',
+                        color: getCategoriaColor(template.categoria),
+                      }}
+                    >
+                      {getCategoriaLabel(template.categoria)}
+                    </p>
+
+                    <div className="flex items-center justify-between text-sm" style={{ color: tema.textSecondary }}>
+                      <span>{template.itens.length} itens</span>
+                      <span>v{template.versao}</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1733,7 +1557,17 @@ const AuditoriaPage: React.FC = () => {
                 {filteredAuditorias.length === 0 && (
                   <tr>
                     <td colSpan={10} className="p-8 text-center" style={{ color: tema.textSecondary }}>
-                      Nenhuma auditoria encontrada
+                      <div className="flex flex-col items-center gap-3 py-8">
+                        <ClipboardList size={48} className="opacity-40" />
+                        <p className="font-medium">Nenhuma auditoria encontrada</p>
+                        {templates.length > 0 && projetos.length > 0 ? (
+                          <p className="text-sm">Clique em "Nova Auditoria" para programar uma auditoria</p>
+                        ) : templates.length === 0 ? (
+                          <p className="text-sm">Crie um template de checklist primeiro na aba "Checklists"</p>
+                        ) : (
+                          <p className="text-sm">Nenhum projeto disponível. Cadastre projetos no sistema.</p>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1832,7 +1666,7 @@ const AuditoriaPage: React.FC = () => {
                   style={{ borderColor: tema.border }}
                 >
                   <option value="">Selecione um projeto</option>
-                  {DEMO_PROJETOS.map(p => (
+                  {projetos.map(p => (
                     <option key={p.id} value={p.id}>
                       {p.nome}
                     </option>
@@ -1852,7 +1686,7 @@ const AuditoriaPage: React.FC = () => {
                     style={{ borderColor: tema.border }}
                   >
                     <option value="">Selecione</option>
-                    {DEMO_AUDITORES.map(a => (
+                    {auditores.map(a => (
                       <option key={a.id} value={a.id}>
                         {a.nome}
                       </option>
