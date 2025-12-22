@@ -1,0 +1,73 @@
+injected.js:37 Tabela wbs_nodes não disponível, usando fallback
+(anonymous) @ injected.js:37Understand this warning
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome%2Ccodigo&id=in.%285dc13fb9-60c1-401f-9f99-b02238ee8bf5%2Cb73022d9-8ee4-414d-9e6b-33c3860d2c40%2Cc5567c97-b410-4eaf-b37b-1652144edec2%29&order=codigo.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+injected.js:37 Tabela wbs_nodes não disponível, usando fallback
+(anonymous) @ injected.js:37Understand this warning
+injected.js:37 addRestricaoAsync recebeu: {
+  "descricao": "teste",
+  "tipo": "S",
+  "tipo_detalhado": "MATERIAL",
+  "tipo_responsabilidade": "CONTRATADA",
+  "responsavel": "",
+  "apoio": "",
+  "data_conclusao_planejada": "2025-12-22T21:48:33.103Z",
+  "status": "PENDENTE",
+  "prioridade": "MEDIA",
+  "observacoes": "",
+  "categoria": "",
+  "impacto_previsto": "",
+  "atividade_id": "79b5e281-c982-461b-86db-714187459b3f",
+  "paralisar_obra": false,
+  "projeto_id": "70a3677f-8994-44d0-bfe9-c0c86ed91b2b",
+  "wbs_id": "5dc13fb9-60c1-401f-9f99-b02238ee8bf5",
+  "atividade_nome": "Nova Atividade",
+  "wbs_nome": "WBS 5dc13fb9",
+  "data_criacao": "2025-12-22T21:48:56.972Z",
+  "criado_por": "82dd8e30-9e4d-4bcd-a7c3-e8b3116e8f5e",
+  "criado_por_nome": "Junior Silva",
+  "historico": [],
+  "evidencias": [],
+  "andamento": []
+}
+injected.js:37 tipo_detalhado recebido: MATERIAL
+injected.js:37 novaRestricao criada com tipo_detalhado: MATERIAL
+injected.js:37 mapCategoriaToIshikawa: input="MATERIAL" => output="material"
+injected.js:37 Criando restrição com dados: {
+  "id": "a436ff7f-e9e1-4a27-a4e5-78b693704e78",
+  "empresa_id": "f6f37e93-be66-4334-9a3f-4e05c4d9bd01",
+  "codigo": "ISH-A436FF",
+  "descricao": "teste",
+  "categoria": "material",
+  "status": "no_prazo",
+  "responsavel": "Não atribuído",
+  "data_criacao": "2025-12-22T21:48:56.972Z",
+  "data_prevista": "2025-12-22",
+  "data_conclusao": null,
+  "impacto_caminho_critico": false,
+  "dias_atraso": 0,
+  "score_impacto": 50,
+  "reincidente": false,
+  "atividade_id": "79b5e281-c982-461b-86db-714187459b3f",
+  "atividade_nome": "Nova Atividade",
+  "wbs_id": "5dc13fb9-60c1-401f-9f99-b02238ee8bf5",
+  "wbs_nome": "WBS 5dc13fb9",
+  "projeto_id": "70a3677f-8994-44d0-bfe9-c0c86ed91b2b"
+}
+injected.js:37 Categoria sendo enviada: material
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/restricoes_ishikawa?select=*:1  Failed to load resource: the server responded with a status of 400 ()Understand this error
+injected.js:37 Erro ao criar restrição: Object
+(anonymous) @ injected.js:37Understand this error
+injected.js:37 Dados enviados: Object
+(anonymous) @ injected.js:37Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.b73022d9-8ee4-414d-9e6b-33c3860d2c40&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.c5567c97-b410-4eaf-b37b-1652144edec2&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.b73022d9-8ee4-414d-9e6b-33c3860d2c40&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.c5567c97-b410-4eaf-b37b-1652144edec2&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.5dc13fb9-60c1-401f-9f99-b02238ee8bf5&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.3afc30f9-d658-47cc-9a94-cc18025ac846&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.646e64c4-94d4-45b7-95f8-a6e0318aca11&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.70a3677f-8994-44d0-bfe9-c0c86ed91b2b&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.3afc30f9-d658-47cc-9a94-cc18025ac846&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.646e64c4-94d4-45b7-95f8-a6e0318aca11&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.5dc13fb9-60c1-401f-9f99-b02238ee8bf5&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/wbs_nodes?select=id%2Cnome&eps_node_id=eq.70a3677f-8994-44d0-bfe9-c0c86ed91b2b&order=nome.asc:1  Failed to load resource: the server responded with a status of 404 ()

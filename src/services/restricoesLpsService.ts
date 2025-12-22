@@ -48,27 +48,30 @@ const mapStatusFromIshikawa = (status: string): RestricaoLPS['status'] => {
 };
 
 const mapCategoriaToIshikawa = (tipoDetalhado?: TipoRestricaoDetalhado): string => {
+  // Tentar formato com capitalização inicial (ex: Material, Método)
   const categoriaMap: Record<string, string> = {
-    'MATERIAL': 'material',
-    'MAO_DE_OBRA': 'mao_de_obra',
-    'MAQUINA': 'maquina',
-    'METODO': 'metodo',
-    'MEIO_AMBIENTE': 'meio_ambiente',
-    'MEDIDA': 'medida',
+    'MATERIAL': 'Material',
+    'MAO_DE_OBRA': 'Mão de Obra',
+    'MAQUINA': 'Máquina',
+    'METODO': 'Método',
+    'MEIO_AMBIENTE': 'Meio Ambiente',
+    'MEDIDA': 'Medida',
   };
-  const resultado = categoriaMap[tipoDetalhado || 'METODO'] || 'metodo';
+  const resultado = categoriaMap[tipoDetalhado || 'METODO'] || 'Método';
   console.log(`mapCategoriaToIshikawa: input="${tipoDetalhado}" => output="${resultado}"`);
   return resultado;
 };
 
 const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado => {
-  const catLower = categoria?.toLowerCase() || 'metodo';
+  const catLower = categoria?.toLowerCase()?.normalize('NFD')?.replace(/[\u0300-\u036f]/g, '') || 'metodo';
   const reverseMap: Record<string, TipoRestricaoDetalhado> = {
     'material': TipoRestricaoDetalhado.MATERIAL,
     'mao_de_obra': TipoRestricaoDetalhado.MAO_DE_OBRA,
+    'mao de obra': TipoRestricaoDetalhado.MAO_DE_OBRA,
     'maquina': TipoRestricaoDetalhado.MAQUINA,
     'metodo': TipoRestricaoDetalhado.METODO,
     'meio_ambiente': TipoRestricaoDetalhado.MEIO_AMBIENTE,
+    'meio ambiente': TipoRestricaoDetalhado.MEIO_AMBIENTE,
     'medida': TipoRestricaoDetalhado.MEDIDA,
   };
   return reverseMap[catLower] || TipoRestricaoDetalhado.METODO;
@@ -153,9 +156,10 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
   if (r.atividade_nome) {
     data.atividade_nome = r.atividade_nome;
   }
-  if (isValidUUID(r.wbs_id)) {
-    data.wbs_id = r.wbs_id;
-  }
+  // WBS desabilitado temporariamente - tabela wbs_nodes não existe no Supabase remoto
+  // if (isValidUUID(r.wbs_id)) {
+  //   data.wbs_id = r.wbs_id;
+  // }
   if (r.wbs_nome) {
     data.wbs_nome = r.wbs_nome;
   }
