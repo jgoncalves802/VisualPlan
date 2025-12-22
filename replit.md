@@ -93,13 +93,18 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
 *   **PortfolioPage**: Integrated with portfolioService replacing MOCK_PROJETOS and CRITERIOS_PADRAO
 *   All services implement PGRST205 handling with graceful fallback to demo data when tables don't exist
 *   **Mock Data Cleanup (December 20, 2025)**:
-    *   LPSPage.tsx: Disabled automatic mock data loading, now initializes only date period
+    *   LPSPage.tsx: Disabled automatic mock data loading, now initializes only date period; removed fallback 'proj-1' ID that caused UUID validation errors
     *   AnaliseIshikawaPage.tsx: Replaced mock data with generateDemoRestrictions() - 40 records covering all 6M categories and statuses with unique "demo-" prefixed IDs; renamed mockEPS/mockWBS/mockActivities to DEMO_EPS/DEMO_WBS/DEMO_ACTIVITIES
     *   lpsStore.ts: Added persist versioning (version: 2) with migration to purge legacy cached mocks from localStorage
-    *   AuditoriaPage.tsx: Renamed MOCK_PROJETOS/MOCK_AUDITORES to DEMO_PROJETOS/DEMO_AUDITORES with demo-* prefixed IDs; generateMockTemplates → generateDemoTemplates; generateMockAuditorias → generateDemoAuditorias
     *   GestaoMudancaPage.tsx: Renamed MOCK_PROJETOS to DEMO_PROJETOS with demo-* prefixed IDs; generateMockSolicitacoes → generateDemoSolicitacoes with demo-sm-*, demo-apr-*, demo-h-* IDs
     *   ReunioesPage.tsx: Renamed MOCK_PARTICIPANTES → DEMO_PARTICIPANTES, generateMockReunioes → generateDemoReunioes, MOCK_HISTORICO → DEMO_HISTORICO with demo-* prefixed IDs
     *   **Resolved**: Duplicate-key warnings in Kanban eliminated by clearing old localStorage state
+*   **AuditoriaPage Real Database Integration (December 22, 2025)**:
+    *   Removed generateDemoTemplates() and generateDemoAuditorias() mock functions (~400 lines)
+    *   Now loads real data from Supabase via auditoriaService (templates, auditorias, projetos, auditores)
+    *   Added empty state components with user guidance when no templates or auditorias exist
+    *   Uses real eps_nodes for project dropdown and usuarios for auditor dropdown
+    *   CRUD operations (create, edit, delete) persist directly to database
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
