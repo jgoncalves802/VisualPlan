@@ -43,6 +43,11 @@ interface LPSState {
   addRestricao: (restricao: Omit<RestricaoLPS, 'id'>) => void;
   updateRestricao: (id: string, restricao: Partial<RestricaoLPS>) => void;
   deleteRestricao: (id: string) => void;
+  addRestricaoAsync: (restricao: Omit<RestricaoLPS, 'id'>, empresaId: string) => Promise<RestricaoLPS | null>;
+  updateRestricaoAsync: (id: string, restricao: Partial<RestricaoLPS>, empresaId: string) => Promise<RestricaoLPS | null>;
+  deleteRestricaoAsync: (id: string) => Promise<boolean>;
+  concluirRestricaoAsync: (id: string, userId: string, empresaId: string) => Promise<boolean>;
+  reagendarRestricaoAsync: (id: string, novaData: Date, empresaId: string, motivo?: string, impacto?: string) => Promise<void>;
   addAnotacao: (anotacao: Omit<AnotacaoLPS, 'id'>) => void;
   updateAnotacao: (id: string, anotacao: Partial<AnotacaoLPS>) => void;
   deleteAnotacao: (id: string) => void;
@@ -63,9 +68,13 @@ interface LPSState {
   saveRestricaoToSupabase: (restricao: RestricaoLPS, empresaId: string) => Promise<void>;
 }
 
-// Gerar ID único
+// Gerar UUID v4
 const generateId = (): string => {
-  return `lps-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 };
 
 export const useLPSStore = create<LPSState>()(
@@ -302,6 +311,184 @@ export const useLPSStore = create<LPSState>()(
         set((state) => ({
           restricoes: state.restricoes.filter((r) => r.id !== id),
         }));
+      },
+
+      addRestricaoAsync: async (restricao, empresaId) => {
+        const tipoDetalhado = restricao.tipo_detalhado;
+        const prioridade = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? 'ALTA' : restricao.prioridade || 'MEDIA';
+        const dataInicioLatencia = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? new Date() : undefined;
+        
+        const novaRestricao: RestricaoLPS = {
+          ...restricao,
+          id: generateId(),
+          tipo_detalhado: tipoDetalhado,
+          prioridade,
+          data_criacao: parseDate(restricao.data_criacao || new Date()),
+          data_conclusao: restricao.data_conclusao ? parseDate(restricao.data_conclusao) : undefined,
+          data_conclusao_planejada: restricao.data_conclusao_planejada
+            ? parseDate(restricao.data_conclusao_planejada)
+            : undefined,
+          prazo_resolucao: restricao.prazo_resolucao ? parseDate(restricao.prazo_resolucao) : undefined,
+          data_inicio_latencia: dataInicioLatencia,
+          historico: [],
+          evidencias: [],
+          andamento: [],
+        };
+
+        try {
+          const created = await restricoesLpsService.create(novaRestricao, empresaId);
+          if (created) {
+            set((state) => ({
+              restricoes: [...state.restricoes, created],
+            }));
+            return created;
+          }
+          set((state) => ({
+            restricoes: [...state.restricoes, novaRestricao],
+          }));
+          return novaRestricao;
+        } catch (error) {
+          console.error('Erro ao criar restrição:', error);
+          set((state) => ({
+            restricoes: [...state.restricoes, novaRestricao],
+          }));
+          return novaRestricao;
+        }
+      },
+
+      updateRestricaoAsync: async (id, restricao, empresaId) => {
+        try {
+          const updated = await restricoesLpsService.update(id, restricao, empresaId);
+          if (updated) {
+            set((state) => ({
+              restricoes: state.restricoes.map((r) =>
+                r.id === id ? { ...r, ...updated } : r
+              ),
+            }));
+            return updated;
+          }
+          get().updateRestricao(id, restricao);
+          return get().restricoes.find(r => r.id === id) || null;
+        } catch (error) {
+          console.error('Erro ao atualizar restrição:', error);
+          get().updateRestricao(id, restricao);
+          return get().restricoes.find(r => r.id === id) || null;
+        }
+      },
+
+      deleteRestricaoAsync: async (id) => {
+        try {
+          const success = await restricoesLpsService.delete(id);
+          if (success) {
+            set((state) => ({
+              restricoes: state.restricoes.filter((r) => r.id !== id),
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Erro ao excluir restrição:', error);
+          return false;
+        }
+      },
+
+      concluirRestricaoAsync: async (id, userId, empresaId) => {
+        const state = get();
+        const restricao = state.restricoes.find((r) => r.id === id);
+        if (!restricao) return false;
+        
+        if (restricao.criado_por !== userId) {
+          return false;
+        }
+        
+        const updateData: Partial<RestricaoLPS> = {
+          status: 'CONCLUIDA',
+          data_conclusao: new Date(),
+        };
+        
+        if (restricao.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA && restricao.data_inicio_latencia) {
+          const dataFimLatencia = new Date();
+          const diasLatencia = Math.ceil(
+            (dataFimLatencia.getTime() - restricao.data_inicio_latencia.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          updateData.data_fim_latencia = dataFimLatencia;
+          updateData.dias_latencia = diasLatencia;
+        }
+        
+        try {
+          const updated = await restricoesLpsService.update(id, updateData, empresaId);
+          if (updated) {
+            set((state) => ({
+              restricoes: state.restricoes.map((r) =>
+                r.id === id ? { ...r, ...updateData } : r
+              ),
+            }));
+            return true;
+          }
+          get().updateRestricao(id, updateData);
+          return true;
+        } catch (error) {
+          console.error('Erro ao concluir restrição:', error);
+          get().updateRestricao(id, updateData);
+          return true;
+        }
+      },
+
+      reagendarRestricaoAsync: async (id, novaData, empresaId, motivo, impacto) => {
+        const state = get();
+        const restricao = state.restricoes.find((r) => r.id === id);
+        if (!restricao) return;
+
+        const dataAnterior = restricao.data_conclusao_planejada || new Date();
+        const novaDataParsed = parseDate(novaData);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const novaDataParsedZero = new Date(novaDataParsed);
+        novaDataParsedZero.setHours(0, 0, 0, 0);
+
+        const novoHistorico: RestricaoHistorico = {
+          id: generateId(),
+          restricao_id: id,
+          data_anterior: parseDate(dataAnterior),
+          data_nova: novaDataParsed,
+          motivo,
+          impacto,
+          data_reagendamento: new Date(),
+          responsavel: restricao.responsavel,
+        };
+
+        const historicoAtualizado = [...(restricao.historico || []), novoHistorico];
+        const novoStatus = novaDataParsedZero < hoje
+          ? 'ATRASADA'
+          : restricao.status === 'CONCLUIDA'
+          ? restricao.status
+          : 'PENDENTE';
+
+        const updateData: Partial<RestricaoLPS> = {
+          data_conclusao_planejada: novaDataParsed,
+          status: novoStatus,
+          impacto_previsto: impacto || restricao.impacto_previsto,
+        };
+
+        try {
+          await restricoesLpsService.update(id, updateData, empresaId);
+          set((state) => ({
+            restricoes: state.restricoes.map((r) =>
+              r.id === id
+                ? { ...r, ...updateData, historico: historicoAtualizado }
+                : r
+            ),
+          }));
+        } catch (error) {
+          console.error('Erro ao reagendar restrição:', error);
+          set((state) => ({
+            restricoes: state.restricoes.map((r) =>
+              r.id === id
+                ? { ...r, ...updateData, historico: historicoAtualizado }
+                : r
+            ),
+          }));
+        }
       },
 
       addAnotacao: (anotacao) => {
@@ -636,7 +823,6 @@ export const useLPSStore = create<LPSState>()(
       },
       partialize: (state) => ({
         atividades: state.atividades,
-        restricoes: state.restricoes,
         anotacoes: state.anotacoes,
         dataInicio: state.dataInicio instanceof Date ? state.dataInicio.toISOString() : new Date(2024, 10, 10).toISOString(),
         dataFim: state.dataFim instanceof Date ? state.dataFim.toISOString() : new Date(2024, 11, 1).toISOString(),

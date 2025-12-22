@@ -28,20 +28,19 @@ export const RestricoesPage: React.FC = () => {
   // Store
   const {
     restricoes,
-    addRestricao,
-    updateRestricao,
-    deleteRestricao,
-    reagendarRestricao,
     getRestricoesPorPeriodo,
     getRestricoesAtrasadas,
     getRestricoesCriticas,
     podeConcluirRestricao,
-    concluirRestricao,
     addEvidencia,
     deleteEvidencia,
     addAndamento,
     loadRestricoesFromSupabase,
-    saveRestricaoToSupabase,
+    addRestricaoAsync,
+    updateRestricaoAsync,
+    deleteRestricaoAsync,
+    concluirRestricaoAsync,
+    reagendarRestricaoAsync,
   } = useLPSStore();
 
   // Auth store
@@ -121,21 +120,19 @@ export const RestricoesPage: React.FC = () => {
     setModalAberto('editar');
   };
 
-  const handleDeleteRestricao = (id: string) => {
+  const handleDeleteRestricao = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta restrição?')) {
-      deleteRestricao(id);
+      await deleteRestricaoAsync(id);
     }
   };
 
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
     const restricao = restricoes.find((r) => r.id === id);
-    if (!restricao) return;
+    if (!restricao || !usuario?.empresaId) return;
 
-    // Se está tentando concluir, verificar permissão
-    if (restricao.status !== 'CONCLUIDA' && usuario) {
+    if (restricao.status !== 'CONCLUIDA') {
       if (podeConcluirRestricao(id, usuario.id)) {
-        // Usar método concluirRestricao que já faz a verificação e atualiza corretamente
-        const sucesso = concluirRestricao(id, usuario.id);
+        const sucesso = await concluirRestricaoAsync(id, usuario.id, usuario.empresaId);
         if (!sucesso) {
           alert('Apenas o criador da restrição pode marcá-la como concluída.');
         }
@@ -143,11 +140,10 @@ export const RestricoesPage: React.FC = () => {
         alert('Apenas o criador da restrição pode marcá-la como concluída.');
       }
     } else {
-      // Se está desfazendo conclusão, apenas atualizar status
-      updateRestricao(id, {
+      await updateRestricaoAsync(id, {
         status: 'PENDENTE',
         data_conclusao: undefined,
-      });
+      }, usuario.empresaId);
     }
   };
 
@@ -162,43 +158,29 @@ export const RestricoesPage: React.FC = () => {
   };
 
   const handleSaveRestricao = async (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
-    // Se tem id, é edição
+    if (!usuario?.empresaId) return;
+
     if ('id' in restricao && restricao.id) {
-      // Editar restrição
       const { id, ...rest } = restricao;
-      updateRestricao(id, rest);
-      // Sincronizar com Supabase
-      if (usuario?.empresaId) {
-        const fullRestricao = restricoes.find(r => r.id === id);
-        if (fullRestricao) {
-          await saveRestricaoToSupabase({ ...fullRestricao, ...rest }, usuario.empresaId);
-        }
-      }
+      await updateRestricaoAsync(id, rest, usuario.empresaId);
     } else {
-      // Nova restrição - adicionar ao store local
-      addRestricao(restricao as Omit<RestricaoLPS, 'id'>);
-      // Após adicionar, pegar a restrição recém-criada do store e sincronizar
-      setTimeout(async () => {
-        const novaRestricao = restricoes[restricoes.length - 1];
-        if (novaRestricao && usuario?.empresaId) {
-          await saveRestricaoToSupabase(novaRestricao, usuario.empresaId);
-        }
-      }, 100);
+      await addRestricaoAsync(restricao as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
     }
     setModalAberto(null);
     setRestricaoSelecionada(null);
   };
 
-  const handleReagendarRestricao = (restricaoId: string, novaData: Date, motivo?: string, impacto?: string) => {
-    reagendarRestricao(restricaoId, novaData, motivo, impacto);
+  const handleReagendarRestricao = async (restricaoId: string, novaData: Date, motivo?: string, impacto?: string) => {
+    if (!usuario?.empresaId) return;
+    await reagendarRestricaoAsync(restricaoId, novaData, usuario.empresaId, motivo, impacto);
     setModalAberto(null);
     setRestricaoSelecionada(null);
   };
 
-  const handleMoveRestricao = (restricaoId: string, novaData: Date) => {
-    // Garantir que novaData é uma Date válida
+  const handleMoveRestricao = async (restricaoId: string, novaData: Date) => {
+    if (!usuario?.empresaId) return;
     const data = novaData instanceof Date ? novaData : new Date(novaData);
-    reagendarRestricao(restricaoId, data, 'Movida via drag and drop', undefined);
+    await reagendarRestricaoAsync(restricaoId, data, usuario.empresaId, 'Movida via drag and drop', undefined);
   };
 
   const handlePreviousWeek = () => {
