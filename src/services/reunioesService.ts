@@ -270,4 +270,45 @@ export const reunioesService = {
 
     return (data || []).map(mapReuniaoFromDB);
   },
+
+  async getParticipantesDisponiveis(empresaId: string): Promise<{ id: string; nome: string; cargo?: string }[]> {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nome, perfil_acesso')
+      .eq('empresa_id', empresaId)
+      .eq('ativo', true)
+      .order('nome', { ascending: true });
+
+    if (error) {
+      if (error.code === 'PGRST205') {
+        return [];
+      }
+      console.error('Erro ao buscar participantes:', error);
+      return [];
+    }
+
+    return (data || []).map(u => ({
+      id: u.id,
+      nome: u.nome,
+      cargo: u.perfil_acesso,
+    }));
+  },
+
+  async getProjetosDisponiveis(empresaId: string): Promise<{ id: string; nome: string }[]> {
+    const { data, error } = await supabase
+      .from('eps_nodes')
+      .select('id, nome')
+      .eq('empresa_id', empresaId)
+      .order('nome', { ascending: true });
+
+    if (error) {
+      if (error.code === 'PGRST205') {
+        return [];
+      }
+      console.error('Erro ao buscar projetos:', error);
+      return [];
+    }
+
+    return data || [];
+  },
 };

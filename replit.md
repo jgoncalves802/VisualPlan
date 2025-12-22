@@ -113,6 +113,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   Added contextual empty states: guides user to create projects first if none exist
     *   Consistent integration pattern: projetos passed as prop to MudancaModal component
     *   CRUD operations persist directly to database via gestaoMudancaService
+*   **ReunioesPage Real Database Integration (December 22, 2025)**:
+    *   Removed DEMO_PARTICIPANTES (10 mock participants), generateDemoReunioes(), and DEMO_HISTORICO (~150 lines)
+    *   Added getParticipantesDisponiveis() and getProjetosDisponiveis() methods to reunioesService.ts
+    *   Now loads real reunioes and usuarios (as participantes) from Supabase
+    *   Participant dropdown in modal form populated from database
+    *   Added contextual empty states: guides user when no meetings exist or none in current week
+    *   CRUD operations persist directly to database via reunioesService
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

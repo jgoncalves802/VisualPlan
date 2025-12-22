@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, addDays, startOfWeek, isSameDay, addHours } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Plus,
@@ -178,16 +178,6 @@ const TIPO_REUNIAO_CONFIG: Record<TipoReuniao, ConfiguracaoReuniao> = {
   },
 };
 
-const DEMO_PARTICIPANTES = [
-  { id: 'demo-part-1', nome: 'João Silva', cargo: 'Gerente de Projeto' },
-  { id: 'demo-part-2', nome: 'Maria Santos', cargo: 'Engenheira Civil' },
-  { id: 'demo-part-3', nome: 'Carlos Lima', cargo: 'Mestre de Obras' },
-  { id: 'demo-part-4', nome: 'Ana Costa', cargo: 'Coordenadora de Qualidade' },
-  { id: 'demo-part-5', nome: 'Pedro Souza', cargo: 'Engenheiro de Planejamento' },
-  { id: 'demo-part-6', nome: 'Lucas Ferreira', cargo: 'Técnico de Segurança' },
-  { id: 'demo-part-7', nome: 'Marina Oliveira', cargo: 'Arquiteta' },
-  { id: 'demo-part-8', nome: 'Roberto Dias', cargo: 'Coordenador de Suprimentos' },
-];
 
 const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
   const items: ItemPauta[] = [];
@@ -228,114 +218,6 @@ const generateAutoAgendaItems = (tipo: TipoReuniao): ItemPauta[] => {
 
 const hoje = new Date();
 
-const generateDemoReunioes = (): Reuniao[] => {
-  const inicioSemana = startOfWeek(hoje, { weekStartsOn: 1 });
-  
-  return [
-    {
-      id: 'demo-reu-1',
-      tipo: TipoReuniao.DAILY,
-      titulo: 'Daily Standup - Equipe Estrutura',
-      data: addHours(addDays(inicioSemana, 1), 8),
-      duracao: 15,
-      local: 'Sala de Reunião 1',
-      participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa'],
-      itensPauta: generateAutoAgendaItems(TipoReuniao.DAILY),
-      gerarPautaAuto: true,
-      status: StatusReuniao.CONCLUIDA,
-      notas: 'Discussão sobre atraso na entrega de aço. Ação corretiva definida.',
-      decisoes: ['Antecipar pedido de aço para próxima fase', 'Revisar cronograma do Bloco B'],
-      participantesPresentes: ['João Silva', 'Maria Santos', 'Carlos Lima'],
-    },
-    {
-      id: 'demo-reu-2',
-      tipo: TipoReuniao.WEEKLY,
-      titulo: 'Reunião Semanal de Acompanhamento',
-      data: addHours(addDays(inicioSemana, 1), 14),
-      duracao: 60,
-      local: 'Sala de Reunião Principal',
-      link: 'https://meet.google.com/abc-defg-hij',
-      participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa', 'Pedro Souza'],
-      itensPauta: generateAutoAgendaItems(TipoReuniao.WEEKLY),
-      gerarPautaAuto: true,
-      status: StatusReuniao.AGENDADA,
-    },
-    {
-      id: 'demo-reu-3',
-      tipo: TipoReuniao.DAILY,
-      titulo: 'Daily Standup - Equipe Estrutura',
-      data: addHours(addDays(inicioSemana, 2), 8),
-      duracao: 15,
-      local: 'Sala de Reunião 1',
-      participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa'],
-      itensPauta: generateAutoAgendaItems(TipoReuniao.DAILY),
-      gerarPautaAuto: true,
-      status: StatusReuniao.AGENDADA,
-    },
-    {
-      id: 'demo-reu-4',
-      tipo: TipoReuniao.QUINZENAL,
-      titulo: 'Revisão Quinzenal de Projeto',
-      data: addHours(addDays(inicioSemana, 3), 9),
-      duracao: 120,
-      local: 'Auditório',
-      participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa', 'Pedro Souza', 'Lucas Ferreira'],
-      itensPauta: generateAutoAgendaItems(TipoReuniao.QUINZENAL),
-      gerarPautaAuto: true,
-      status: StatusReuniao.AGENDADA,
-    },
-    {
-      id: 'demo-reu-5',
-      tipo: TipoReuniao.EXTRAORDINARIA,
-      titulo: 'Reunião Urgente - Problema Fundação',
-      data: addHours(addDays(inicioSemana, 4), 15),
-      duracao: 45,
-      local: 'Sala de Crise',
-      participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Consultor Externo'],
-      itensPauta: [
-        { id: 'demo-ext-1', titulo: 'Análise do problema identificado', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 15, responsavel: 'Maria Santos' },
-        { id: 'demo-ext-2', titulo: 'Definição de ações corretivas', tipo: 'DELIBERATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 20, responsavel: 'João Silva' },
-        { id: 'demo-ext-3', titulo: 'Impacto no cronograma', tipo: 'INFORMATIVO', status: StatusItemPauta.PENDENTE, incluido: true, duracaoEstimada: 10, responsavel: 'Pedro Souza' },
-      ],
-      gerarPautaAuto: false,
-      status: StatusReuniao.AGENDADA,
-    },
-  ];
-};
-
-const DEMO_HISTORICO: Reuniao[] = [
-  {
-    id: 'demo-hist-1',
-    tipo: TipoReuniao.MENSAL,
-    titulo: 'Reunião Mensal - Novembro',
-    data: new Date(hoje.getFullYear(), hoje.getMonth() - 1, 5, 10, 0),
-    duracao: 180,
-    local: 'Auditório Principal',
-    participantes: Array.from({ length: 18 }, (_, i) => `Participante ${i + 1}`),
-    participantesPresentes: Array.from({ length: 15 }, (_, i) => `Participante ${i + 1}`),
-    itensPauta: [],
-    gerarPautaAuto: true,
-    status: StatusReuniao.CONCLUIDA,
-    decisoes: ['Aprovar orçamento adicional para fase 2', 'Contratar mais 3 pedreiros', 'Revisar metas do próximo trimestre'],
-    acoesGeradas: ['5W2H-045', '5W2H-046', '5W2H-047'],
-  },
-  {
-    id: 'demo-hist-2',
-    tipo: TipoReuniao.WEEKLY,
-    titulo: 'Reunião Semanal',
-    data: new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000),
-    duracao: 60,
-    local: 'Sala Principal',
-    participantes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa', 'Pedro Souza'],
-    participantesPresentes: ['João Silva', 'Maria Santos', 'Carlos Lima', 'Ana Costa'],
-    itensPauta: [],
-    gerarPautaAuto: true,
-    status: StatusReuniao.CONCLUIDA,
-    decisoes: ['Priorizar resolução da restrição REST-012'],
-    acoesGeradas: ['5W2H-048'],
-  },
-];
-
 const DURACOES = [
   { value: 15, label: '15 minutos' },
   { value: 30, label: '30 minutos' },
@@ -367,6 +249,7 @@ export const ReunioesPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'calendario' | 'configuracao' | 'historico'>('calendario');
   const [reunioes, setReunioes] = useState<Reuniao[]>([]);
+  const [participantesDisponiveis, setParticipantesDisponiveis] = useState<{ id: string; nome: string; cargo?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [configuracoes, setConfiguracoes] = useState<Record<TipoReuniao, ConfiguracaoReuniao>>(TIPO_REUNIAO_CONFIG);
@@ -391,36 +274,39 @@ export const ReunioesPage: React.FC = () => {
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
-      setReunioes(generateDemoReunioes());
+      setReunioes([]);
+      setParticipantesDisponiveis([]);
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
     try {
-      const data = await reunioesService.getAllReunioes(usuario.empresaId);
-      if (data.length === 0) {
-        setReunioes(generateDemoReunioes());
-      } else {
-        const mappedReunioes: Reuniao[] = data.map(r => ({
-          id: r.id,
-          tipo: r.tipo,
-          titulo: r.titulo,
-          descricao: r.descricao,
-          data: r.proximaData || new Date(),
-          duracao: r.duracao || 60,
-          local: r.local,
-          link: undefined,
-          participantes: r.participantes || [],
-          itensPauta: [],
-          gerarPautaAuto: true,
-          status: r.ativo ? StatusReuniao.AGENDADA : StatusReuniao.CANCELADA,
-        }));
-        setReunioes(mappedReunioes);
-      }
+      const [reunioesData, participantesData] = await Promise.all([
+        reunioesService.getAllReunioes(usuario.empresaId),
+        reunioesService.getParticipantesDisponiveis(usuario.empresaId),
+      ]);
+
+      setParticipantesDisponiveis(participantesData);
+      
+      const mappedReunioes: Reuniao[] = reunioesData.map(r => ({
+        id: r.id,
+        tipo: r.tipo,
+        titulo: r.titulo,
+        descricao: r.descricao,
+        data: r.proximaData || new Date(),
+        duracao: r.duracao || 60,
+        local: r.local,
+        link: undefined,
+        participantes: r.participantes || [],
+        itensPauta: [],
+        gerarPautaAuto: true,
+        status: r.ativo ? StatusReuniao.AGENDADA : StatusReuniao.CANCELADA,
+      }));
+      setReunioes(mappedReunioes);
     } catch (error) {
       console.error('Erro ao carregar reuniões:', error);
-      setReunioes(generateDemoReunioes());
+      setReunioes([]);
     } finally {
       setIsLoading(false);
     }
@@ -639,7 +525,7 @@ export const ReunioesPage: React.FC = () => {
 
   const historicoCompleto = useMemo(() => {
     const passadas = reunioes.filter(r => r.status === StatusReuniao.CONCLUIDA);
-    return [...passadas, ...DEMO_HISTORICO].sort((a, b) => 
+    return passadas.sort((a, b) => 
       new Date(b.data).getTime() - new Date(a.data).getTime()
     );
   }, [reunioes]);
@@ -811,6 +697,34 @@ export const ReunioesPage: React.FC = () => {
                       </div>
                     );
                   })}
+
+                  {reunioesNaSemana.length === 0 && reunioes.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ left: '12.5%' }}>
+                      <div className="text-center p-8">
+                        <Calendar size={48} className="mx-auto mb-4 opacity-40" style={{ color: tema.textSecondary }} />
+                        <p className="font-medium mb-2" style={{ color: tema.text }}>
+                          Nenhuma reunião cadastrada
+                        </p>
+                        <p className="text-sm mb-4" style={{ color: tema.textSecondary }}>
+                          Clique em "Nova Reunião" para agendar sua primeira reunião
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {reunioesNaSemana.length === 0 && reunioes.length > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ left: '12.5%' }}>
+                      <div className="text-center p-8">
+                        <Calendar size={48} className="mx-auto mb-4 opacity-40" style={{ color: tema.textSecondary }} />
+                        <p className="font-medium mb-2" style={{ color: tema.text }}>
+                          Nenhuma reunião nesta semana
+                        </p>
+                        <p className="text-sm" style={{ color: tema.textSecondary }}>
+                          Navegue para outras semanas ou agende uma nova reunião
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1120,7 +1034,7 @@ export const ReunioesPage: React.FC = () => {
                     style={{ color: tema.primary }}
                   >
                     <option value="">+ Adicionar</option>
-                    {DEMO_PARTICIPANTES.filter(p => !formData.participantes?.includes(p.nome)).map(p => (
+                    {participantesDisponiveis.filter(p => !formData.participantes?.includes(p.nome)).map(p => (
                       <option key={p.id} value={p.nome}>{p.nome}</option>
                     ))}
                   </select>
