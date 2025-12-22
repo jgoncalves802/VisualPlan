@@ -56,7 +56,9 @@ const mapCategoriaToIshikawa = (tipoDetalhado?: TipoRestricaoDetalhado): string 
     'MEIO_AMBIENTE': 'meio_ambiente',
     'MEDIDA': 'medida',
   };
-  return categoriaMap[tipoDetalhado || 'METODO'] || 'metodo';
+  const resultado = categoriaMap[tipoDetalhado || 'METODO'] || 'metodo';
+  console.log(`mapCategoriaToIshikawa: input="${tipoDetalhado}" => output="${resultado}"`);
+  return resultado;
 };
 
 const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado => {
@@ -211,6 +213,9 @@ export const restricoesLpsService = {
       return null;
     }
     
+    console.log('Criando restrição com dados:', JSON.stringify(dbData, null, 2));
+    console.log('Categoria sendo enviada:', dbData.categoria);
+    
     const { data, error } = await supabase
       .from('restricoes_ishikawa')
       .insert(dbData)
@@ -219,6 +224,7 @@ export const restricoesLpsService = {
 
     if (error) {
       console.error('Erro ao criar restrição:', error);
+      console.error('Dados enviados:', dbData);
       return null;
     }
 
