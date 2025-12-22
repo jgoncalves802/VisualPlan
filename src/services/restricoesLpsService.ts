@@ -352,14 +352,19 @@ export const restricoesLpsService = {
   },
 
   async getWbsNodes(projetoId: string): Promise<{ id: string; nome: string; codigo: string }[]> {
+    // Primeiro, buscar wbs_id das atividades
     const { data, error } = await supabase
       .from('atividades_cronograma')
-      .select('wbs_id')
+      .select('wbs_id, wbs_codigo')
       .eq('projeto_id', projetoId)
       .not('wbs_id', 'is', null);
 
     if (error) {
-      console.error('Erro ao buscar WBS nodes:', error);
+      if (error.code === 'PGRST205') {
+        console.warn('Tabela atividades_cronograma não disponível para busca de WBS');
+        return [];
+      }
+      console.error('Erro ao buscar WBS nodes das atividades:', error);
       return [];
     }
 
@@ -367,6 +372,7 @@ export const restricoesLpsService = {
     
     if (uniqueWbsIds.length === 0) return [];
 
+    // Tentar buscar da tabela wbs_nodes
     const { data: wbsData, error: wbsError } = await supabase
       .from('wbs_nodes')
       .select('id, nome, codigo')
@@ -374,6 +380,22 @@ export const restricoesLpsService = {
       .order('codigo');
 
     if (wbsError) {
+      // Se a tabela wbs_nodes não estiver acessível, criar fallback com dados das atividades
+      if (wbsError.code === 'PGRST205') {
+        console.warn('Tabela wbs_nodes não disponível, usando fallback');
+        // Retornar dados básicos baseados nos wbs_id únicos encontrados
+        const wbsMap = new Map<string, { id: string; nome: string; codigo: string }>();
+        (data || []).forEach((r: { wbs_id: string; wbs_codigo?: string }) => {
+          if (r.wbs_id && !wbsMap.has(r.wbs_id)) {
+            wbsMap.set(r.wbs_id, {
+              id: r.wbs_id,
+              nome: r.wbs_codigo || `WBS ${r.wbs_id.slice(0, 8)}`,
+              codigo: r.wbs_codigo || '',
+            });
+          }
+        });
+        return Array.from(wbsMap.values());
+      }
       console.error('Erro ao buscar WBS nodes:', wbsError);
       return [];
     }
@@ -424,12 +446,20 @@ export const restricoesLpsService = {
     let wbs_nome: string | undefined;
 
     if (data.wbs_id) {
-      const { data: wbsData } = await supabase
+      const { data: wbsData, error: wbsError } = await supabase
         .from('wbs_nodes')
         .select('nome')
         .eq('id', data.wbs_id)
         .single();
-      wbs_nome = wbsData?.nome;
+      
+      if (wbsError) {
+        if (wbsError.code === 'PGRST205') {
+          console.warn('Tabela wbs_nodes não disponível');
+        }
+        // Fallback: buscar wbs_codigo da própria atividade se existir
+      } else {
+        wbs_nome = wbsData?.nome;
+      }
     }
 
     if (data.projeto_id) {

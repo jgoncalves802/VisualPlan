@@ -313,6 +313,9 @@ export const useLPSStore = create<LPSState>()(
         const prioridade = restricao.paralisar_obra ? 'ALTA' : restricao.prioridade || 'MEDIA';
         const dataInicioLatencia = restricao.paralisar_obra ? new Date() : undefined;
         
+        console.log('addRestricaoAsync recebeu:', JSON.stringify(restricao, null, 2));
+        console.log('tipo_detalhado recebido:', restricao.tipo_detalhado);
+        
         const novaRestricao: RestricaoLPS = {
           ...restricao,
           id: generateId(),
@@ -328,6 +331,8 @@ export const useLPSStore = create<LPSState>()(
           evidencias: [],
           andamento: [],
         };
+        
+        console.log('novaRestricao criada com tipo_detalhado:', novaRestricao.tipo_detalhado);
 
         try {
           const created = await restricoesLpsService.create(novaRestricao, empresaId);
