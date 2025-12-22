@@ -264,7 +264,10 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
     };
 
     if (restricao) {
-      onSave(dataToSave);
+      onSave({
+        ...dataToSave,
+        id: restricao.id,
+      });
     } else {
       onSave({
         ...dataToSave,
