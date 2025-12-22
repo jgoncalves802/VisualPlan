@@ -72,28 +72,42 @@ const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado => 
   return reverseMap[catLower] || TipoRestricaoDetalhado.METODO;
 };
 
-const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
-  id: db.id,
-  descricao: db.descricao,
-  tipo: TipoRestricao.RESTRICAO,
-  tipo_detalhado: mapCategoriaFromIshikawa(db.categoria),
-  wbs_id: db.wbs_id,
-  wbs_nome: db.wbs_nome,
-  responsavel: db.responsavel,
-  responsavel_id: db.responsavel_id,
-  data_conclusao: db.data_conclusao ? new Date(db.data_conclusao) : undefined,
-  data_conclusao_planejada: db.data_prevista ? new Date(db.data_prevista) : undefined,
-  data_criacao: new Date(db.data_criacao),
-  prazo_resolucao: db.data_prevista ? new Date(db.data_prevista) : undefined,
-  status: mapStatusFromIshikawa(db.status),
-  atividade_id: db.atividade_id,
-  atividade_nome: db.atividade_nome,
-  projeto_id: db.projeto_id,
-  prioridade: db.impacto_caminho_critico ? 'ALTA' : 'MEDIA',
-  paralisar_obra: db.impacto_caminho_critico || false,
-  dias_latencia: db.dias_atraso,
-  categoria: db.categoria,
-});
+const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => {
+  const scoreImpacto = db.score_impacto || 0;
+  const paralisarObra = db.impacto_caminho_critico && scoreImpacto >= 100;
+  
+  let prioridade: 'ALTA' | 'MEDIA' | 'BAIXA' = 'MEDIA';
+  if (paralisarObra || scoreImpacto >= 70) {
+    prioridade = 'ALTA';
+  } else if (scoreImpacto >= 40) {
+    prioridade = 'MEDIA';
+  } else {
+    prioridade = 'BAIXA';
+  }
+  
+  return {
+    id: db.id,
+    descricao: db.descricao,
+    tipo: TipoRestricao.RESTRICAO,
+    tipo_detalhado: mapCategoriaFromIshikawa(db.categoria),
+    wbs_id: db.wbs_id,
+    wbs_nome: db.wbs_nome,
+    responsavel: db.responsavel,
+    responsavel_id: db.responsavel_id,
+    data_conclusao: db.data_conclusao ? new Date(db.data_conclusao) : undefined,
+    data_conclusao_planejada: db.data_prevista ? new Date(db.data_prevista) : undefined,
+    data_criacao: new Date(db.data_criacao),
+    prazo_resolucao: db.data_prevista ? new Date(db.data_prevista) : undefined,
+    status: mapStatusFromIshikawa(db.status),
+    atividade_id: db.atividade_id,
+    atividade_nome: db.atividade_nome,
+    projeto_id: db.projeto_id,
+    prioridade,
+    paralisar_obra: paralisarObra,
+    dias_latencia: db.dias_atraso,
+    categoria: db.categoria,
+  };
+};
 
 const isValidUUID = (id: string | undefined | null): boolean => {
   if (!id) return false;
@@ -122,9 +136,9 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
     data_criacao: r.data_criacao.toISOString(),
     data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
     data_conclusao: r.data_conclusao?.toISOString().split('T')[0] || null,
-    impacto_caminho_critico: r.paralisar_obra || r.prioridade === 'ALTA',
+    impacto_caminho_critico: r.paralisar_obra || false,
     dias_atraso: r.dias_latencia || 0,
-    score_impacto: r.paralisar_obra ? 100 : r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20,
+    score_impacto: r.paralisar_obra ? 100 : (r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20),
     reincidente: false,
   };
   
@@ -223,7 +237,14 @@ export const restricoesLpsService = {
     if (restricao.descricao !== undefined) updateData.descricao = restricao.descricao;
     if (restricao.tipo_detalhado !== undefined) updateData.categoria = mapCategoriaToIshikawa(restricao.tipo_detalhado);
     if (restricao.status !== undefined) updateData.status = mapStatusToIshikawa(restricao.status);
-    if (restricao.prioridade !== undefined) updateData.impacto_caminho_critico = restricao.prioridade === 'ALTA';
+    
+    if (restricao.paralisar_obra !== undefined) {
+      updateData.impacto_caminho_critico = restricao.paralisar_obra;
+      updateData.score_impacto = restricao.paralisar_obra ? 100 : (restricao.prioridade === 'ALTA' ? 80 : restricao.prioridade === 'MEDIA' ? 50 : 20);
+    } else if (restricao.prioridade !== undefined) {
+      updateData.score_impacto = restricao.prioridade === 'ALTA' ? 80 : restricao.prioridade === 'MEDIA' ? 50 : 20;
+    }
+    
     if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || null;
     if (restricao.responsavel_id !== undefined && isValidUUID(restricao.responsavel_id)) {
       updateData.responsavel_id = restricao.responsavel_id;
@@ -233,8 +254,13 @@ export const restricoesLpsService = {
     if (restricao.atividade_id !== undefined && isValidUUID(restricao.atividade_id)) {
       updateData.atividade_id = restricao.atividade_id;
     }
+    if (restricao.atividade_nome !== undefined) updateData.atividade_nome = restricao.atividade_nome;
     if (restricao.wbs_id !== undefined && isValidUUID(restricao.wbs_id)) {
       updateData.wbs_id = restricao.wbs_id;
+    }
+    if (restricao.wbs_nome !== undefined) updateData.wbs_nome = restricao.wbs_nome;
+    if (restricao.projeto_id !== undefined && isValidUUID(restricao.projeto_id)) {
+      updateData.projeto_id = restricao.projeto_id;
     }
 
     const { data, error } = await supabase

@@ -236,7 +236,6 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
     
     const selectedAtividade = atividades.find(a => a.id === formData.atividade_id);
     const selectedWbs = wbsNodes.find(w => w.id === formData.wbs_id);
-    const selectedProjeto = projetos.find(p => p.id === formData.projeto_id);
     
     const dataToSave: any = {
       ...formData,
@@ -245,7 +244,6 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
       atividade_id: formData.atividade_id,
       atividade_nome: selectedAtividade?.nome,
       wbs_nome: selectedWbs?.nome,
-      projeto_nome: selectedProjeto?.nome,
     };
 
     if (restricao) {
