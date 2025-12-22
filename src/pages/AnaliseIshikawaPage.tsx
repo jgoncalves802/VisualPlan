@@ -83,94 +83,6 @@ const STATUS_LABELS: Record<StatusRestricaoIshikawa, string> = {
   [StatusRestricaoIshikawa.VENCIDA]: 'Vencida',
 };
 
-const generateDemoRestrictions = (): RestricaoIshikawa[] => {
-  return [
-    { id: 'demo-1', codigo: 'DEMO-001', descricao: 'Falta de detalhamento no projeto estrutural', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-11-25'), dataPrevista: new Date('2025-12-02'), responsavel: 'João Silva', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 15, diasAtraso: 12, scoreImpacto: 59, reincidente: true },
-    { id: 'demo-2', codigo: 'DEMO-002', descricao: 'Erro no cronograma de execução', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-11-28'), dataPrevista: new Date('2025-12-05'), responsavel: 'Maria Santos', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 20, diasAtraso: 8, scoreImpacto: 55, reincidente: false },
-    { id: 'demo-3', codigo: 'DEMO-003', descricao: 'Sequenciamento incorreto das atividades', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A003', atividadeNome: 'Alvenaria', wbsId: 'WBS-02', wbsNome: 'Vedação', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-01'), dataPrevista: new Date('2025-12-10'), responsavel: 'Carlos Lima', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 10, diasAtraso: 0, scoreImpacto: 22, reincidente: false },
-    { id: 'demo-4', codigo: 'DEMO-004', descricao: 'Falta de procedimento para concretagem', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A004', atividadeNome: 'Concretagem Laje', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-10'), dataPrevista: new Date('2025-12-18'), responsavel: 'Ana Costa', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 5, diasAtraso: 0, scoreImpacto: 34, reincidente: false },
-    { id: 'demo-5', codigo: 'DEMO-005', descricao: 'Projeto incompatível com execução', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-15'), dataPrevista: new Date('2025-12-23'), dataConclusao: new Date('2025-12-22'), responsavel: 'Pedro Souza', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 8, diasAtraso: 0, scoreImpacto: 16, reincidente: false },
-    { id: 'demo-6', codigo: 'DEMO-006', descricao: 'Equipe insuficiente para demanda', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-11-20'), dataPrevista: new Date('2025-12-03'), responsavel: 'Lucas Ferreira', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 12, diasAtraso: 15, scoreImpacto: 62, reincidente: true },
-    { id: 'demo-7', codigo: 'DEMO-007', descricao: 'Falta de treinamento em altura', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A007', atividadeNome: 'Fachada', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-02'), dataPrevista: new Date('2025-12-12'), responsavel: 'Marina Oliveira', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 10, diasAtraso: 5, scoreImpacto: 27, reincidente: false },
-    { id: 'demo-8', codigo: 'DEMO-008', descricao: 'Rotatividade alta de pedreiros', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A008', atividadeNome: 'Alvenaria Interna', wbsId: 'WBS-02', wbsNome: 'Vedação', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-10'), dataPrevista: new Date('2025-12-19'), responsavel: 'Roberto Dias', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 18, diasAtraso: 0, scoreImpacto: 39, reincidente: true },
-    { id: 'demo-9', codigo: 'DEMO-009', descricao: 'Supervisor ausente', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-18'), dataPrevista: new Date('2025-12-27'), responsavel: 'Fernanda Gomes', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 6, diasAtraso: 0, scoreImpacto: 12, reincidente: false },
-    { id: 'demo-10', codigo: 'DEMO-010', descricao: 'Equipe não qualificada para tarefa específica', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A010', atividadeNome: 'Instalações Elétricas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-22'), dataPrevista: new Date('2026-01-03'), dataConclusao: new Date('2026-01-02'), responsavel: 'Thiago Martins', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 14, diasAtraso: 0, scoreImpacto: 38, reincidente: false },
-    { id: 'demo-11', codigo: 'DEMO-011', descricao: 'Atraso na entrega de aço', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-11-22'), dataPrevista: new Date('2025-12-01'), responsavel: 'João Silva', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 15, diasAtraso: 20, scoreImpacto: 68, reincidente: true },
-    { id: 'demo-12', codigo: 'DEMO-012', descricao: 'Concreto fora da especificação', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A004', atividadeNome: 'Concretagem Laje', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-03'), dataPrevista: new Date('2025-12-11'), responsavel: 'Maria Santos', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 8, diasAtraso: 10, scoreImpacto: 51, reincidente: false },
-    { id: 'demo-13', codigo: 'DEMO-013', descricao: 'Falta de tijolos cerâmicos', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A003', atividadeNome: 'Alvenaria', wbsId: 'WBS-02', wbsNome: 'Vedação', epsId: 'EPS-02', epsNome: 'Bloco B', dataCriacao: new Date('2025-12-08'), dataPrevista: new Date('2025-12-17'), responsavel: 'Carlos Lima', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 12, diasAtraso: 0, scoreImpacto: 24, reincidente: false },
-    { id: 'demo-14', codigo: 'DEMO-014', descricao: 'Fornecedor de esquadrias atrasado', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-16'), dataPrevista: new Date('2025-12-26'), responsavel: 'Ana Costa', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 10, diasAtraso: 0, scoreImpacto: 20, reincidente: false },
-    { id: 'demo-15', codigo: 'DEMO-015', descricao: 'Material de impermeabilização incorreto', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-23'), dataPrevista: new Date('2026-01-04'), dataConclusao: new Date('2026-01-03'), responsavel: 'Pedro Souza', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 6, diasAtraso: 0, scoreImpacto: 31, reincidente: false },
-    { id: 'demo-16', codigo: 'DEMO-016', descricao: 'Tubulação PVC fora de estoque', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-02', epsNome: 'Bloco B', dataCriacao: new Date('2026-01-02'), dataPrevista: new Date('2026-01-08'), responsavel: 'Lucas Ferreira', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 8, diasAtraso: 6, scoreImpacto: 22, reincidente: false },
-    { id: 'demo-17', codigo: 'DEMO-017', descricao: 'Escavadeira em manutenção corretiva', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-01'), dataPrevista: new Date('2025-12-08'), responsavel: 'Marina Oliveira', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 10, diasAtraso: 18, scoreImpacto: 58, reincidente: false },
-    { id: 'demo-18', codigo: 'DEMO-018', descricao: 'Grua com capacidade insuficiente', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-10'), dataPrevista: new Date('2025-12-18'), responsavel: 'Roberto Dias', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 20, diasAtraso: 7, scoreImpacto: 54, reincidente: true },
-    { id: 'demo-19', codigo: 'DEMO-019', descricao: 'Betoneira quebrada', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A004', atividadeNome: 'Concretagem Laje', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-02', epsNome: 'Bloco B', dataCriacao: new Date('2025-12-17'), dataPrevista: new Date('2025-12-28'), responsavel: 'Fernanda Gomes', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 8, diasAtraso: 0, scoreImpacto: 16, reincidente: false },
-    { id: 'demo-20', codigo: 'DEMO-020', descricao: 'Elevador de carga indisponível', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-28'), dataPrevista: new Date('2026-01-07'), responsavel: 'Thiago Martins', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 5, diasAtraso: 0, scoreImpacto: 10, reincidente: false },
-    { id: 'demo-21', codigo: 'DEMO-021', descricao: 'Compressor de ar com vazamento', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-03'), dataPrevista: new Date('2026-01-10'), dataConclusao: new Date('2026-01-09'), responsavel: 'João Silva', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 6, diasAtraso: 0, scoreImpacto: 12, reincidente: false },
-    { id: 'demo-22', codigo: 'DEMO-022', descricao: 'Inspeção reprovada pela fiscalização', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-02'), dataPrevista: new Date('2025-12-09'), responsavel: 'Maria Santos', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 12, diasAtraso: 14, scoreImpacto: 62, reincidente: true },
-    { id: 'demo-23', codigo: 'DEMO-023', descricao: 'Não conformidade no teste de estanqueidade', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-08'), dataPrevista: new Date('2025-12-16'), responsavel: 'Carlos Lima', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 5, diasAtraso: 4, scoreImpacto: 14, reincidente: false },
-    { id: 'demo-24', codigo: 'DEMO-024', descricao: 'Falta de laudo técnico de solo', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-02', epsNome: 'Bloco B', dataCriacao: new Date('2025-12-15'), dataPrevista: new Date('2025-12-29'), responsavel: 'Ana Costa', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 8, diasAtraso: 0, scoreImpacto: 36, reincidente: false },
-    { id: 'demo-25', codigo: 'DEMO-025', descricao: 'Calibração de instrumentos pendente', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-26'), dataPrevista: new Date('2026-01-06'), responsavel: 'Pedro Souza', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 4, diasAtraso: 0, scoreImpacto: 8, reincidente: false },
-    { id: 'demo-26', codigo: 'DEMO-026', descricao: 'Ensaio de resistência do concreto pendente', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A004', atividadeNome: 'Concretagem Laje', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-02'), dataPrevista: new Date('2026-01-09'), dataConclusao: new Date('2026-01-08'), responsavel: 'Lucas Ferreira', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 10, diasAtraso: 0, scoreImpacto: 32, reincidente: false },
-    { id: 'demo-27', codigo: 'DEMO-027', descricao: 'Chuvas intensas paralisando obra', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.VENCIDA, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-01'), dataPrevista: new Date('2025-12-10'), responsavel: 'Marina Oliveira', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 15, diasAtraso: 10, scoreImpacto: 55, reincidente: false },
-    { id: 'demo-28', codigo: 'DEMO-028', descricao: 'Licença ambiental pendente', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-02', epsNome: 'Bloco B', dataCriacao: new Date('2025-12-05'), dataPrevista: new Date('2025-12-15'), responsavel: 'Roberto Dias', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 8, diasAtraso: 9, scoreImpacto: 25, reincidente: true },
-    { id: 'demo-29', codigo: 'DEMO-029', descricao: 'Interferência de rede elétrica aérea', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-16'), dataPrevista: new Date('2025-12-30'), responsavel: 'Fernanda Gomes', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 12, diasAtraso: 0, scoreImpacto: 34, reincidente: false },
-    { id: 'demo-30', codigo: 'DEMO-030', descricao: 'Embargo por reclamação de vizinhos', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-27'), dataPrevista: new Date('2026-01-05'), responsavel: 'Thiago Martins', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 5, diasAtraso: 0, scoreImpacto: 10, reincidente: false },
-    { id: 'demo-31', codigo: 'DEMO-031', descricao: 'Temperatura alta afetando cura do concreto', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO, atividadeId: 'A004', atividadeNome: 'Concretagem Laje', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-03'), dataPrevista: new Date('2026-01-10'), dataConclusao: new Date('2026-01-09'), responsavel: 'João Silva', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 8, diasAtraso: 0, scoreImpacto: 31, reincidente: false },
-    { id: 'demo-32', codigo: 'DEMO-032', descricao: 'Autorização do corpo de bombeiros pendente', categoria: CategoriaIshikawa.MEIO_AMBIENTE, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A005', atividadeNome: 'Instalações Hidráulicas', wbsId: 'WBS-03', wbsNome: 'Instalações', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-05'), dataPrevista: new Date('2026-01-15'), responsavel: 'Maria Santos', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 10, diasAtraso: 3, scoreImpacto: 23, reincidente: false },
-    { id: 'demo-33', codigo: 'DEMO-033', descricao: 'Revisão de projeto arquitetônico', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A001', atividadeNome: 'Fundação Bloco A', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2025-12-28'), dataPrevista: new Date('2026-01-05'), responsavel: 'João Silva', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 8, diasAtraso: 0, scoreImpacto: 20, reincidente: false },
-    { id: 'demo-34', codigo: 'DEMO-034', descricao: 'Compatibilização BIM pendente', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-02'), dataPrevista: new Date('2026-01-12'), responsavel: 'Maria Santos', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 12, diasAtraso: 0, scoreImpacto: 45, reincidente: false },
-    { id: 'demo-35', codigo: 'DEMO-035', descricao: 'Contratação de mão de obra especializada', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-03'), dataPrevista: new Date('2026-01-10'), responsavel: 'Lucas Ferreira', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 10, diasAtraso: 0, scoreImpacto: 25, reincidente: false },
-    { id: 'demo-36', codigo: 'DEMO-036', descricao: 'Planejamento de curto prazo indefinido', categoria: CategoriaIshikawa.METODO, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A003', atividadeNome: 'Alvenaria', wbsId: 'WBS-02', wbsNome: 'Vedação', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-10'), dataPrevista: new Date('2026-01-18'), responsavel: 'Carlos Lima', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 7, diasAtraso: 0, scoreImpacto: 18, reincidente: false },
-    { id: 'demo-37', codigo: 'DEMO-037', descricao: 'Férias coletivas impactando equipe', categoria: CategoriaIshikawa.MAO_DE_OBRA, status: StatusRestricaoIshikawa.NO_PRAZO, atividadeId: 'A008', atividadeNome: 'Alvenaria Interna', wbsId: 'WBS-02', wbsNome: 'Vedação', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-08'), dataPrevista: new Date('2026-01-20'), responsavel: 'Roberto Dias', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 15, diasAtraso: 0, scoreImpacto: 40, reincidente: false },
-    { id: 'demo-38', codigo: 'DEMO-038', descricao: 'Revestimento cerâmico com defeito', categoria: CategoriaIshikawa.MATERIAL, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A006', atividadeNome: 'Pintura Externa', wbsId: 'WBS-04', wbsNome: 'Acabamento', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-10'), dataPrevista: new Date('2026-01-19'), responsavel: 'Ana Costa', impactoCaminhoCritico: false, duracaoAtividadeImpactada: 9, diasAtraso: 0, scoreImpacto: 22, reincidente: false },
-    { id: 'demo-39', codigo: 'DEMO-039', descricao: 'Caminhão munck indisponível', categoria: CategoriaIshikawa.MAQUINA, status: StatusRestricaoIshikawa.ATRASADA, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-08'), dataPrevista: new Date('2026-01-15'), responsavel: 'Roberto Dias', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 12, diasAtraso: 4, scoreImpacto: 48, reincidente: false },
-    { id: 'demo-40', codigo: 'DEMO-040', descricao: 'Auditoria de qualidade pendente', categoria: CategoriaIshikawa.MEDIDA, status: StatusRestricaoIshikawa.EM_EXECUCAO, atividadeId: 'A002', atividadeNome: 'Montagem Estrutura', wbsId: 'WBS-01', wbsNome: 'Estrutura', epsId: 'EPS-01', epsNome: 'Edifício Principal', dataCriacao: new Date('2026-01-10'), dataPrevista: new Date('2026-01-17'), responsavel: 'Maria Santos', impactoCaminhoCritico: true, duracaoAtividadeImpactada: 10, diasAtraso: 0, scoreImpacto: 42, reincidente: false },
-  ];
-};
-
-const DEMO_EPS = [
-  { id: 'EPS-01', nome: 'Edifício Principal' },
-  { id: 'EPS-02', nome: 'Bloco B' },
-  { id: 'EPS-03', nome: 'Estacionamento' },
-];
-
-const DEMO_WBS: Record<string, Array<{ id: string; nome: string }>> = {
-  'EPS-01': [
-    { id: 'WBS-01', nome: 'Estrutura' },
-    { id: 'WBS-02', nome: 'Vedação' },
-    { id: 'WBS-03', nome: 'Instalações' },
-    { id: 'WBS-04', nome: 'Acabamento' },
-  ],
-  'EPS-02': [
-    { id: 'WBS-01', nome: 'Estrutura' },
-    { id: 'WBS-02', nome: 'Vedação' },
-    { id: 'WBS-03', nome: 'Instalações' },
-  ],
-  'EPS-03': [
-    { id: 'WBS-05', nome: 'Pavimentação' },
-    { id: 'WBS-06', nome: 'Sinalização' },
-  ],
-};
-
-const DEMO_ACTIVITIES: Record<string, Array<{ id: string; nome: string }>> = {
-  'WBS-01': [
-    { id: 'A001', nome: 'Fundação Bloco A' },
-    { id: 'A002', nome: 'Montagem Estrutura' },
-    { id: 'A004', nome: 'Concretagem Laje' },
-  ],
-  'WBS-02': [
-    { id: 'A003', nome: 'Alvenaria' },
-    { id: 'A008', nome: 'Alvenaria Interna' },
-  ],
-  'WBS-03': [
-    { id: 'A005', nome: 'Instalações Hidráulicas' },
-    { id: 'A010', nome: 'Instalações Elétricas' },
-  ],
-  'WBS-04': [
-    { id: 'A006', nome: 'Pintura Externa' },
-    { id: 'A007', nome: 'Fachada' },
-  ],
-};
 
 const trendData = [
   { mes: 'Ago/25', total: 28, concluidas: 8, atrasadas: 12 },
@@ -551,6 +463,10 @@ const AnaliseIshikawaPage: React.FC = () => {
   const [restrictions, setRestrictions] = useState<RestricaoIshikawa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  const [epsList, setEpsList] = useState<Array<{ id: string; nome: string }>>([]);
+  const [wbsMap, setWbsMap] = useState<Record<string, Array<{ id: string; nome: string }>>>({});
+  const [activitiesMap, setActivitiesMap] = useState<Record<string, Array<{ id: string; nome: string }>>>({});
+  
   const [periodoAtual, setPeriodoAtual] = useState(() => {
     const hoje = new Date();
     const inicio = startOfWeek(hoje, { locale: ptBR });
@@ -570,25 +486,51 @@ const AnaliseIshikawaPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoriaIshikawa | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const availableWBS = selectedEPS ? DEMO_WBS[selectedEPS] || [] : [];
-  const availableActivities = selectedWBS ? DEMO_ACTIVITIES[selectedWBS] || [] : [];
+  const availableWBS = selectedEPS ? wbsMap[selectedEPS] || [] : [];
+  const availableActivities = selectedWBS ? activitiesMap[selectedWBS] || [] : [];
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (usuario?.empresaId) {
-        const data = await restricoesIshikawaService.getAll(usuario.empresaId);
-        if (data.length > 0) {
-          setRestrictions(data);
-        } else {
-          setRestrictions(generateDemoRestrictions());
-        }
-      } else {
-        setRestrictions(generateDemoRestrictions());
-      }
+      const empresaId = usuario?.empresaId || 'a0000001';
+      
+      const [restrictionsData, epsData] = await Promise.all([
+        restricoesIshikawaService.getAll(empresaId),
+        restricoesIshikawaService.getEPSDisponiveis(empresaId),
+      ]);
+      
+      setRestrictions(restrictionsData);
+      setEpsList(epsData);
+      
+      const wbsPromises = epsData.map(async (eps) => {
+        const wbsNodes = await restricoesIshikawaService.getWBSByEPS(eps.id);
+        return { epsId: eps.id, wbsNodes };
+      });
+      
+      const wbsResults = await Promise.all(wbsPromises);
+      const newWbsMap: Record<string, Array<{ id: string; nome: string }>> = {};
+      wbsResults.forEach(result => {
+        newWbsMap[result.epsId] = result.wbsNodes;
+      });
+      setWbsMap(newWbsMap);
+      
+      const allWbsNodes = wbsResults.flatMap(r => r.wbsNodes);
+      const activitiesPromises = allWbsNodes.map(async (wbs) => {
+        const activities = await restricoesIshikawaService.getAtividadesByWBS(wbs.id);
+        return { wbsId: wbs.id, activities };
+      });
+      
+      const activitiesResults = await Promise.all(activitiesPromises);
+      const newActivitiesMap: Record<string, Array<{ id: string; nome: string }>> = {};
+      activitiesResults.forEach(result => {
+        newActivitiesMap[result.wbsId] = result.activities;
+      });
+      setActivitiesMap(newActivitiesMap);
+      
     } catch (error) {
-      console.error('Erro ao carregar restrições:', error);
-      setRestrictions(generateDemoRestrictions());
+      console.error('Erro ao carregar dados:', error);
+      setRestrictions([]);
+      setEpsList([]);
     } finally {
       setIsLoading(false);
     }
@@ -724,6 +666,31 @@ const AnaliseIshikawaPage: React.FC = () => {
     );
   }
 
+  if (restrictions.length === 0) {
+    return (
+      <div className="p-6 min-h-screen" style={{ backgroundColor: tema.background }}>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
+            Análise Ishikawa - Causa e Efeito
+          </h1>
+          <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
+            Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
+          </p>
+        </div>
+        <div className="rounded-xl shadow-sm border p-12 text-center" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
+          <AlertTriangle className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: tema.textSecondary }} />
+          <h2 className="text-xl font-semibold mb-2" style={{ color: tema.text }}>Nenhuma restrição cadastrada</h2>
+          <p className="text-sm mb-4" style={{ color: tema.textSecondary }}>
+            Não há restrições registradas no sistema. As restrições Ishikawa são identificadas durante o acompanhamento do projeto e categorizadas pela metodologia 6M (Método, Mão de Obra, Material, Máquina, Medida, Meio Ambiente).
+          </p>
+          <p className="text-xs" style={{ color: tema.textSecondary }}>
+            Acesse o módulo LPS ou Cronograma para registrar restrições que serão automaticamente classificadas aqui.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6 min-h-screen" style={{ backgroundColor: tema.background }}>
       <div>
@@ -757,7 +724,7 @@ const AnaliseIshikawaPage: React.FC = () => {
               style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
             >
               <option value="">Todos os EPS</option>
-              {DEMO_EPS.map(eps => (
+              {epsList.map(eps => (
                 <option key={eps.id} value={eps.id}>{eps.nome}</option>
               ))}
             </select>

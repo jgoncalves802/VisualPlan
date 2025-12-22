@@ -260,7 +260,7 @@ export const restricoesIshikawaService = {
     const { data, error } = await supabase
       .from('wbs_nodes')
       .select('id, nome')
-      .eq('projeto_id', epsId)
+      .eq('eps_node_id', epsId)
       .order('nome');
 
     if (error) {
