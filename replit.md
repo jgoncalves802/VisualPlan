@@ -105,6 +105,14 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   Added empty state components with user guidance when no templates or auditorias exist
     *   Uses real eps_nodes for project dropdown and usuarios for auditor dropdown
     *   CRUD operations (create, edit, delete) persist directly to database
+*   **GestaoMudancaPage Real Database Integration (December 22, 2025)**:
+    *   Removed DEMO_PROJETOS and generateDemoSolicitacoes() mock functions (~140 lines)
+    *   Added getProjetosDisponiveis() and getSolicitantes() methods to gestaoMudancaService.ts
+    *   Now loads real solicitacoes_mudanca and eps_nodes (as projetos) from Supabase
+    *   Dropdowns (project filter, modal form) populate from database
+    *   Added contextual empty states: guides user to create projects first if none exist
+    *   Consistent integration pattern: projetos passed as prop to MudancaModal component
+    *   CRUD operations persist directly to database via gestaoMudancaService
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
