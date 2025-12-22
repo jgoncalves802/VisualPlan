@@ -237,4 +237,58 @@ export const restricoesIshikawaService = {
 
     return (data || []).map(mapFromDB);
   },
+
+  async getEPSDisponiveis(empresaId: string): Promise<Array<{ id: string; nome: string }>> {
+    const { data, error } = await supabase
+      .from('eps_nodes')
+      .select('id, nome')
+      .eq('empresa_id', empresaId)
+      .order('nome');
+
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+        console.warn('Tabela eps_nodes não encontrada');
+        return [];
+      }
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async getWBSByEPS(epsId: string): Promise<Array<{ id: string; nome: string }>> {
+    const { data, error } = await supabase
+      .from('wbs_nodes')
+      .select('id, nome')
+      .eq('projeto_id', epsId)
+      .order('nome');
+
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+        console.warn('Tabela wbs_nodes não encontrada');
+        return [];
+      }
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async getAtividadesByWBS(wbsId: string): Promise<Array<{ id: string; nome: string }>> {
+    const { data, error } = await supabase
+      .from('atividades_cronograma')
+      .select('id, nome')
+      .eq('wbs_id', wbsId)
+      .order('nome');
+
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+        console.warn('Tabela atividades_cronograma não encontrada');
+        return [];
+      }
+      throw error;
+    }
+
+    return data || [];
+  },
 };
