@@ -84,14 +84,6 @@ const STATUS_LABELS: Record<StatusRestricaoIshikawa, string> = {
 };
 
 
-const trendData = [
-  { mes: 'Ago/25', total: 28, concluidas: 8, atrasadas: 12 },
-  { mes: 'Set/25', total: 32, concluidas: 10, atrasadas: 14 },
-  { mes: 'Out/25', total: 30, concluidas: 12, atrasadas: 10 },
-  { mes: 'Nov/25', total: 35, concluidas: 14, atrasadas: 13 },
-  { mes: 'Dez/25', total: 36, concluidas: 8, atrasadas: 18 },
-  { mes: 'Jan/26', total: 24, concluidas: 10, atrasadas: 8 },
-];
 
 interface CategoryDetailModalProps {
   isOpen: boolean;
@@ -613,6 +605,45 @@ const AnaliseIshikawaPage: React.FC = () => {
       };
     });
   }, [dadosPorCategoria]);
+
+  const trendData = useMemo(() => {
+    const monthMap = new Map<string, { total: number; concluidas: number; atrasadas: number }>();
+    
+    restrictions.forEach(r => {
+      const date = r.dataCriacao;
+      const monthKey = `${date.toLocaleString('pt-BR', { month: 'short' })}/${String(date.getFullYear()).slice(2)}`;
+      
+      if (!monthMap.has(monthKey)) {
+        monthMap.set(monthKey, { total: 0, concluidas: 0, atrasadas: 0 });
+      }
+      
+      const stats = monthMap.get(monthKey)!;
+      stats.total += 1;
+      
+      if (r.status === StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO) {
+        stats.concluidas += 1;
+      } else if (r.status === StatusRestricaoIshikawa.ATRASADA || r.status === StatusRestricaoIshikawa.VENCIDA) {
+        stats.atrasadas += 1;
+      }
+    });
+    
+    const sortedMonths = Array.from(monthMap.entries())
+      .sort((a, b) => {
+        const [monthA, yearA] = a[0].split('/');
+        const [monthB, yearB] = b[0].split('/');
+        if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB);
+        const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        return months.indexOf(monthA.toLowerCase()) - months.indexOf(monthB.toLowerCase());
+      })
+      .slice(-6);
+    
+    return sortedMonths.map(([mes, stats]) => ({
+      mes: mes.charAt(0).toUpperCase() + mes.slice(1),
+      total: stats.total,
+      concluidas: stats.concluidas,
+      atrasadas: stats.atrasadas,
+    }));
+  }, [restrictions]);
 
   const handleCategoryClick = (category: CategoriaIshikawa) => {
     setSelectedCategory(category);
