@@ -2,7 +2,7 @@
  * RestricaoModal - Modal para cadastrar/editar restrição
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   RestricaoLPS,
   TipoRestricao,
@@ -11,6 +11,7 @@ import {
 } from '../../../types/lps';
 import { useAuthStore } from '../../../stores/authStore';
 import { X, Save, AlertTriangle, Upload, FileText, Image } from 'lucide-react';
+import { restricoesLpsService } from '../../../services/restricoesLpsService';
 
 interface RestricaoModalProps {
   restricao: RestricaoLPS | null;
@@ -34,7 +35,6 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
   onAddAndamento,
 }) => {
   const { usuario } = useAuthStore();
-  const [arquivosSelecionados, setArquivosSelecionados] = useState<File[]>([]);
 
   // Helper para converter para Date
   const parseDate = (date: any): Date => {
@@ -75,7 +75,7 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
   const [formData, setFormData] = useState({
     descricao: '',
     tipo: TipoRestricao.RESTRICAO as TipoRestricao,
-    tipo_detalhado: undefined as TipoRestricaoDetalhado | undefined,
+    tipo_detalhado: TipoRestricaoDetalhado.METODO as TipoRestricaoDetalhado | undefined,
     tipo_responsabilidade: undefined as TipoResponsabilidade | undefined,
     responsavel: '',
     apoio: '',
@@ -87,9 +87,55 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
     categoria: '',
     impacto_previsto: '',
     atividade_id: atividadeId || undefined,
+    paralisar_obra: false,
+    projeto_id: undefined as string | undefined,
+    wbs_id: undefined as string | undefined,
   });
 
   const [tipoDetalhadoAlterado, setTipoDetalhadoAlterado] = useState(false);
+
+  const [projetos, setProjetos] = useState<{ id: string; nome: string }[]>([]);
+  const [wbsNodes, setWbsNodes] = useState<{ id: string; nome: string; codigo: string }[]>([]);
+  const [atividades, setAtividades] = useState<{ id: string; nome: string; codigo: string }[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+
+  const loadProjetos = useCallback(async () => {
+    if (!usuario?.empresa_id) return;
+    const data = await restricoesLpsService.getProjetos(usuario.empresa_id);
+    setProjetos(data);
+  }, [usuario?.empresa_id]);
+
+  const loadWbsNodes = useCallback(async (projetoId: string) => {
+    if (!projetoId) {
+      setWbsNodes([]);
+      return;
+    }
+    const data = await restricoesLpsService.getWbsNodes(projetoId);
+    setWbsNodes(data);
+  }, []);
+
+  const loadAtividades = useCallback(async (projetoId: string) => {
+    if (!projetoId) {
+      setAtividades([]);
+      return;
+    }
+    const data = await restricoesLpsService.getAtividadesByProjeto(projetoId);
+    setAtividades(data);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingData(true);
+      loadProjetos().finally(() => setLoadingData(false));
+    }
+  }, [isOpen, loadProjetos]);
+
+  useEffect(() => {
+    if (formData.projeto_id) {
+      loadWbsNodes(formData.projeto_id);
+      loadAtividades(formData.projeto_id);
+    }
+  }, [formData.projeto_id, loadWbsNodes, loadAtividades]);
 
   useEffect(() => {
     try {
@@ -111,7 +157,7 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         setFormData({
           descricao: restricao.descricao || '',
           tipo: restricao.tipo || TipoRestricao.RESTRICAO,
-          tipo_detalhado: restricao.tipo_detalhado,
+          tipo_detalhado: restricao.tipo_detalhado || TipoRestricaoDetalhado.METODO,
           tipo_responsabilidade: restricao.tipo_responsabilidade,
           responsavel: restricao.responsavel || '',
           apoio: restricao.apoio || '',
@@ -123,13 +169,16 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
           categoria: restricao.categoria || '',
           impacto_previsto: restricao.impacto_previsto || '',
           atividade_id: restricao.atividade_id || atividadeId || undefined,
+          paralisar_obra: restricao.paralisar_obra || false,
+          projeto_id: restricao.projeto_id || undefined,
+          wbs_id: restricao.wbs_id || undefined,
         });
         setTipoDetalhadoAlterado(false);
       } else {
         setFormData({
           descricao: '',
           tipo: TipoRestricao.RESTRICAO,
-          tipo_detalhado: undefined,
+          tipo_detalhado: TipoRestricaoDetalhado.METODO,
           tipo_responsabilidade: undefined,
           responsavel: '',
           apoio: '',
@@ -141,16 +190,18 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
           categoria: '',
           impacto_previsto: '',
           atividade_id: atividadeId || undefined,
+          paralisar_obra: false,
+          projeto_id: undefined,
+          wbs_id: undefined,
         });
         setTipoDetalhadoAlterado(false);
       }
     } catch (error) {
-      // Em caso de erro, inicializar com valores padrão
       console.error('Erro ao inicializar formData:', error);
       setFormData({
         descricao: '',
         tipo: TipoRestricao.RESTRICAO,
-        tipo_detalhado: undefined,
+        tipo_detalhado: TipoRestricaoDetalhado.METODO,
         tipo_responsabilidade: undefined,
         responsavel: '',
         apoio: '',
@@ -162,35 +213,44 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         categoria: '',
         impacto_previsto: '',
         atividade_id: atividadeId || undefined,
+        paralisar_obra: false,
+        projeto_id: undefined,
+        wbs_id: undefined,
       });
     }
   }, [restricao, isOpen, atividadeId]);
 
-  // Se tipo detalhado for PARALISAR_OBRA, aplicar prioridade máxima
+  // Se paralisar_obra for true, aplicar prioridade máxima
   useEffect(() => {
-    if (formData.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA && !tipoDetalhadoAlterado) {
+    if (formData.paralisar_obra && !tipoDetalhadoAlterado) {
       setFormData((prev) => ({
         ...prev,
         prioridade: 'ALTA',
       }));
       setTipoDetalhadoAlterado(true);
     }
-  }, [formData.tipo_detalhado, tipoDetalhadoAlterado]);
+  }, [formData.paralisar_obra, tipoDetalhadoAlterado]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const selectedAtividade = atividades.find(a => a.id === formData.atividade_id);
+    const selectedWbs = wbsNodes.find(w => w.id === formData.wbs_id);
+    const selectedProjeto = projetos.find(p => p.id === formData.projeto_id);
+    
     const dataToSave: any = {
       ...formData,
       data_conclusao_planejada: formData.data_conclusao_planejada,
       prazo_resolucao: formData.prazo_resolucao,
       atividade_id: formData.atividade_id,
+      atividade_nome: selectedAtividade?.nome,
+      wbs_nome: selectedWbs?.nome,
+      projeto_nome: selectedProjeto?.nome,
     };
 
     if (restricao) {
-      // Editar - não alterar criado_por
       onSave(dataToSave);
     } else {
-      // Criar - adicionar criado_por
       onSave({
         ...dataToSave,
         data_criacao: new Date(),
@@ -199,9 +259,8 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         historico: [],
         evidencias: [],
         andamento: [],
-        // Se tipo é PARALISAR_OBRA, iniciar latência
-        data_inicio_latencia:
-          formData.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? new Date() : undefined,
+        paralisar_obra: formData.paralisar_obra,
+        data_inicio_latencia: formData.paralisar_obra ? new Date() : undefined,
       } as Omit<RestricaoLPS, 'id'>);
     }
     onClose();
@@ -287,33 +346,18 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                       ...formData,
                       tipo_detalhado: valor ? (valor as TipoRestricaoDetalhado) : undefined,
                     });
-                    setTipoDetalhadoAlterado(false);
                   }}
                   className="w-full p-2 border border-gray-300 rounded"
                   required
                 >
                   <option value="">Selecione...</option>
-                  <option value={TipoRestricaoDetalhado.PARALISAR_OBRA}>
-                    Paralisar Obra (Prioridade Máxima)
-                  </option>
                   <option value={TipoRestricaoDetalhado.MATERIAL}>Material</option>
                   <option value={TipoRestricaoDetalhado.MAO_DE_OBRA}>Mão de Obra</option>
-                  <option value={TipoRestricaoDetalhado.EQUIPAMENTO}>Equipamento</option>
-                  <option value={TipoRestricaoDetalhado.DOCUMENTACAO}>Documentação</option>
-                  <option value={TipoRestricaoDetalhado.APROVACAO}>Aprovação</option>
-                  <option value={TipoRestricaoDetalhado.LICENCIAMENTO}>Licenciamento</option>
-                  <option value={TipoRestricaoDetalhado.SEGURANCA}>Segurança</option>
-                  <option value={TipoRestricaoDetalhado.AMBIENTAL}>Ambiental</option>
-                  <option value={TipoRestricaoDetalhado.OUTRA}>Outra</option>
+                  <option value={TipoRestricaoDetalhado.MAQUINA}>Máquina/Equipamento</option>
+                  <option value={TipoRestricaoDetalhado.METODO}>Método</option>
+                  <option value={TipoRestricaoDetalhado.MEIO_AMBIENTE}>Meio Ambiente</option>
+                  <option value={TipoRestricaoDetalhado.MEDIDA}>Medida</option>
                 </select>
-                {formData.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-center gap-2">
-                    <AlertTriangle size={16} />
-                    <span>
-                      Restrição de prioridade máxima. A latência do cronograma será contada a partir de agora.
-                    </span>
-                  </div>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -339,6 +383,97 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
               </div>
             </div>
 
+            {/* Paralisar Obra */}
+            <div className="p-3 border border-gray-200 rounded bg-gray-50">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.paralisar_obra}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setFormData({
+                      ...formData,
+                      paralisar_obra: checked,
+                      prioridade: checked ? 'ALTA' : formData.prioridade,
+                    });
+                    setTipoDetalhadoAlterado(false);
+                  }}
+                  className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                />
+                <div>
+                  <span className="font-medium text-gray-900">Paralisar Obra</span>
+                  <p className="text-sm text-gray-500">
+                    Restrição crítica que paralisa a execução da obra
+                  </p>
+                </div>
+              </label>
+              {formData.paralisar_obra && (
+                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-center gap-2">
+                  <AlertTriangle size={16} />
+                  <span>
+                    Prioridade máxima ativada. A latência do cronograma será contada a partir de agora.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Projeto, WBS e Atividade */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Projeto</label>
+                <select
+                  value={formData.projeto_id || ''}
+                  onChange={(e) => {
+                    const projetoId = e.target.value || undefined;
+                    setFormData({
+                      ...formData,
+                      projeto_id: projetoId,
+                      wbs_id: undefined,
+                      atividade_id: undefined,
+                    });
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  disabled={loadingData || !!atividadeId}
+                >
+                  <option value="">Selecione...</option>
+                  {projetos.map((p) => (
+                    <option key={p.id} value={p.id}>{p.nome}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">WBS</label>
+                <select
+                  value={formData.wbs_id || ''}
+                  onChange={(e) => setFormData({ ...formData, wbs_id: e.target.value || undefined })}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  disabled={!formData.projeto_id}
+                >
+                  <option value="">Selecione...</option>
+                  {wbsNodes.map((w) => (
+                    <option key={w.id} value={w.id}>{w.codigo} - {w.nome}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Atividade</label>
+                <select
+                  value={formData.atividade_id || ''}
+                  onChange={(e) => setFormData({ ...formData, atividade_id: e.target.value || undefined })}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  disabled={!formData.projeto_id || !!atividadeId}
+                >
+                  <option value="">Selecione...</option>
+                  {atividades.map((a) => (
+                    <option key={a.id} value={a.id}>{a.codigo} - {a.nome}</option>
+                  ))}
+                </select>
+                {atividadeId && (
+                  <p className="text-xs text-gray-500 mt-1">Atividade pré-selecionada</p>
+                )}
+              </div>
+            </div>
+
             {/* Prioridade e Categoria */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -349,11 +484,15 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                     setFormData({ ...formData, prioridade: e.target.value as 'ALTA' | 'MEDIA' | 'BAIXA' })
                   }
                   className="w-full p-2 border border-gray-300 rounded"
+                  disabled={formData.paralisar_obra}
                 >
                   <option value="BAIXA">Baixa</option>
                   <option value="MEDIA">Média</option>
                   <option value="ALTA">Alta</option>
                 </select>
+                {formData.paralisar_obra && (
+                  <p className="text-xs text-gray-500 mt-1">Bloqueado: Paralisar Obra ativo</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
@@ -607,9 +746,6 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                         const files = e.target.files;
                         if (files && files.length > 0) {
                           const filesArray = Array.from(files);
-                          setArquivosSelecionados(filesArray);
-                          
-                          // Fazer upload de cada arquivo
                           filesArray.forEach((file) => {
                             if (onAddEvidencia && restricao.id) {
                               onAddEvidencia(restricao.id, file);

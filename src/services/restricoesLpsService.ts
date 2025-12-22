@@ -14,7 +14,10 @@ interface RestricaoIshikawaDB {
   data_prevista: string;
   data_conclusao?: string;
   atividade_id?: string;
+  atividade_nome?: string;
   wbs_id?: string;
+  wbs_nome?: string;
+  projeto_id?: string;
   impacto_caminho_critico?: boolean;
   dias_atraso?: number;
   score_impacto?: number;
@@ -49,29 +52,24 @@ const mapCategoriaToIshikawa = (tipoDetalhado?: TipoRestricaoDetalhado): string 
     'MATERIAL': 'material',
     'MAO_DE_OBRA': 'mao_de_obra',
     'MAQUINA': 'maquina',
-    'EQUIPAMENTO': 'maquina',
-    'DOCUMENTACAO': 'metodo',
-    'APROVACAO': 'metodo',
-    'LICENCIAMENTO': 'meio_ambiente',
-    'SEGURANCA': 'meio_ambiente',
-    'AMBIENTAL': 'meio_ambiente',
-    'PARALISAR_OBRA': 'metodo',
-    'OUTRA': 'metodo',
+    'METODO': 'metodo',
+    'MEIO_AMBIENTE': 'meio_ambiente',
+    'MEDIDA': 'medida',
   };
-  return categoriaMap[tipoDetalhado || 'OUTRA'] || 'metodo';
+  return categoriaMap[tipoDetalhado || 'METODO'] || 'metodo';
 };
 
-const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado | undefined => {
+const mapCategoriaFromIshikawa = (categoria: string): TipoRestricaoDetalhado => {
   const catLower = categoria?.toLowerCase() || 'metodo';
   const reverseMap: Record<string, TipoRestricaoDetalhado> = {
     'material': TipoRestricaoDetalhado.MATERIAL,
     'mao_de_obra': TipoRestricaoDetalhado.MAO_DE_OBRA,
-    'maquina': TipoRestricaoDetalhado.EQUIPAMENTO,
-    'metodo': TipoRestricaoDetalhado.DOCUMENTACAO,
-    'meio_ambiente': TipoRestricaoDetalhado.AMBIENTAL,
-    'medida': TipoRestricaoDetalhado.OUTRA,
+    'maquina': TipoRestricaoDetalhado.MAQUINA,
+    'metodo': TipoRestricaoDetalhado.METODO,
+    'meio_ambiente': TipoRestricaoDetalhado.MEIO_AMBIENTE,
+    'medida': TipoRestricaoDetalhado.MEDIDA,
   };
-  return reverseMap[catLower] || TipoRestricaoDetalhado.OUTRA;
+  return reverseMap[catLower] || TipoRestricaoDetalhado.METODO;
 };
 
 const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
@@ -80,6 +78,7 @@ const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
   tipo: TipoRestricao.RESTRICAO,
   tipo_detalhado: mapCategoriaFromIshikawa(db.categoria),
   wbs_id: db.wbs_id,
+  wbs_nome: db.wbs_nome,
   responsavel: db.responsavel,
   responsavel_id: db.responsavel_id,
   data_conclusao: db.data_conclusao ? new Date(db.data_conclusao) : undefined,
@@ -88,7 +87,10 @@ const toRestricaoLPS = (db: RestricaoIshikawaDB): RestricaoLPS => ({
   prazo_resolucao: db.data_prevista ? new Date(db.data_prevista) : undefined,
   status: mapStatusFromIshikawa(db.status),
   atividade_id: db.atividade_id,
+  atividade_nome: db.atividade_nome,
+  projeto_id: db.projeto_id,
   prioridade: db.impacto_caminho_critico ? 'ALTA' : 'MEDIA',
+  paralisar_obra: db.impacto_caminho_critico || false,
   dias_latencia: db.dias_atraso,
   categoria: db.categoria,
 });
@@ -120,9 +122,9 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
     data_criacao: r.data_criacao.toISOString(),
     data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
     data_conclusao: r.data_conclusao?.toISOString().split('T')[0] || null,
-    impacto_caminho_critico: r.prioridade === 'ALTA',
+    impacto_caminho_critico: r.paralisar_obra || r.prioridade === 'ALTA',
     dias_atraso: r.dias_latencia || 0,
-    score_impacto: r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20,
+    score_impacto: r.paralisar_obra ? 100 : r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20,
     reincidente: false,
   };
   
@@ -132,8 +134,17 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
   if (isValidUUID(r.atividade_id)) {
     data.atividade_id = r.atividade_id;
   }
+  if (r.atividade_nome) {
+    data.atividade_nome = r.atividade_nome;
+  }
   if (isValidUUID(r.wbs_id)) {
     data.wbs_id = r.wbs_id;
+  }
+  if (r.wbs_nome) {
+    data.wbs_nome = r.wbs_nome;
+  }
+  if (isValidUUID(r.projeto_id)) {
+    data.projeto_id = r.projeto_id;
   }
   
   return data;
@@ -280,5 +291,56 @@ export const restricoesLpsService = {
     if (error) {
       console.error('Erro ao remover restrição do Ishikawa:', error);
     }
+  },
+
+  async getProjetos(empresaId: string): Promise<{ id: string; nome: string }[]> {
+    const { data, error } = await supabase
+      .from('projetos')
+      .select('id, nome')
+      .eq('empresa_id', empresaId)
+      .order('nome');
+
+    if (error) {
+      console.error('Erro ao buscar projetos:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async getWbsNodes(projetoId: string): Promise<{ id: string; nome: string; codigo: string }[]> {
+    const { data: projeto } = await supabase
+      .from('projetos')
+      .select('eps_id')
+      .eq('id', projetoId)
+      .single();
+    
+    if (!projeto?.eps_id) return [];
+
+    const { data, error } = await supabase
+      .from('wbs_nodes')
+      .select('id, nome, codigo')
+      .eq('eps_node_id', projeto.eps_id)
+      .order('codigo');
+
+    if (error) {
+      console.error('Erro ao buscar WBS nodes:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async getAtividadesByProjeto(projetoId: string): Promise<{ id: string; nome: string; codigo: string }[]> {
+    const { data, error } = await supabase
+      .from('atividades_cronograma')
+      .select('id, nome, codigo')
+      .eq('projeto_id', projetoId)
+      .eq('tipo', 'Tarefa')
+      .order('codigo');
+
+    if (error) {
+      console.error('Erro ao buscar atividades:', error);
+      return [];
+    }
+    return data || [];
   },
 };

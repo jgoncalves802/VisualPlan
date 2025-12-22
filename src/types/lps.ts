@@ -45,19 +45,15 @@ export enum TipoResponsabilidade {
 }
 
 /**
- * Tipo detalhado de restrição
+ * Tipo detalhado de restrição (categorias 6M do Ishikawa)
  */
 export enum TipoRestricaoDetalhado {
-  PARALISAR_OBRA = 'PARALISAR_OBRA',
   MATERIAL = 'MATERIAL',
   MAO_DE_OBRA = 'MAO_DE_OBRA',
-  EQUIPAMENTO = 'EQUIPAMENTO',
-  DOCUMENTACAO = 'DOCUMENTACAO',
-  APROVACAO = 'APROVACAO',
-  LICENCIAMENTO = 'LICENCIAMENTO',
-  SEGURANCA = 'SEGURANCA',
-  AMBIENTAL = 'AMBIENTAL',
-  OUTRA = 'OUTRA',
+  MAQUINA = 'MAQUINA',
+  METODO = 'METODO',
+  MEIO_AMBIENTE = 'MEIO_AMBIENTE',
+  MEDIDA = 'MEDIDA',
 }
 
 /**
@@ -191,9 +187,12 @@ export interface RestricaoLPS {
   id: string;
   descricao: string;
   tipo: TipoRestricao; // S (Sim, tem restrição) ou N (Não, sem restrição)
-  tipo_detalhado?: TipoRestricaoDetalhado; // Tipo detalhado da restrição
+  tipo_detalhado?: TipoRestricaoDetalhado; // Categoria 6M (Material, Mão de Obra, etc.)
   tipo_responsabilidade?: TipoResponsabilidade; // Preponente, Fiscalização ou Contratada
   wbs_id?: string; // Link com WBS (fase do projeto)
+  wbs_nome?: string; // Nome do WBS para exibição
+  projeto_id?: string; // Link com projeto
+  projeto_nome?: string; // Nome do projeto para exibição
   responsavel?: string;
   responsavel_id?: string;
   apoio?: string;
@@ -204,6 +203,7 @@ export interface RestricaoLPS {
   prazo_resolucao?: Date; // Prazo definido pelo responsável para resolver
   status: 'PENDENTE' | 'CONCLUIDA' | 'ATRASADA' | 'CANCELADA';
   atividade_id?: string; // Link com atividade relacionada
+  atividade_nome?: string; // Nome da atividade para exibição
   prioridade?: 'ALTA' | 'MEDIA' | 'BAIXA';
   observacoes?: string;
   historico?: RestricaoHistorico[]; // Histórico de reagendamentos
@@ -214,7 +214,8 @@ export interface RestricaoLPS {
   evidencias?: RestricaoEvidencia[]; // Evidências anexadas (PDFs, fotos)
   criado_por?: string; // ID do usuário que criou a restrição
   criado_por_nome?: string; // Nome do usuário que criou
-  data_inicio_latencia?: Date; // Data de início da latência (quando tipo é PARALISAR_OBRA)
+  paralisar_obra?: boolean; // Se true, restrição tem prioridade máxima e conta latência
+  data_inicio_latencia?: Date; // Data de início da latência (quando paralisar_obra=true)
   data_fim_latencia?: Date; // Data de fim da latência (quando restrição é resolvida)
   dias_latencia?: number; // Total de dias de latência acumulados
 }

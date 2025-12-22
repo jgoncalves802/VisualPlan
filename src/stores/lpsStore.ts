@@ -12,7 +12,6 @@ import {
   PlanejamentoLPS,
   StatusAtividadeLPS,
   TipoRestricao,
-  TipoRestricaoDetalhado,
   RestricaoHistorico,
   RestricaoEvidencia,
   RestricaoAndamento,
@@ -235,15 +234,12 @@ export const useLPSStore = create<LPSState>()(
       },
 
       addRestricao: (restricao) => {
-        // Se tipo é PARALISAR_OBRA, aplicar prioridade máxima e iniciar latência
-        const tipoDetalhado = restricao.tipo_detalhado;
-        const prioridade = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? 'ALTA' : restricao.prioridade || 'MEDIA';
-        const dataInicioLatencia = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? new Date() : undefined;
+        const prioridade = restricao.paralisar_obra ? 'ALTA' : restricao.prioridade || 'MEDIA';
+        const dataInicioLatencia = restricao.paralisar_obra ? new Date() : undefined;
         
         const novaRestricao: RestricaoLPS = {
           ...restricao,
           id: generateId(),
-          tipo_detalhado: tipoDetalhado,
           prioridade,
           data_criacao: parseDate(restricao.data_criacao || new Date()),
           data_conclusao: restricao.data_conclusao ? parseDate(restricao.data_conclusao) : undefined,
@@ -287,8 +283,8 @@ export const useLPSStore = create<LPSState>()(
             restricaoAtualizada.prazo_resolucao = parseDate(restricao.prazo_resolucao);
           }
           
-          // Se restrição está sendo concluída e é do tipo PARALISAR_OBRA, finalizar latência
-          if (restricao.status === 'CONCLUIDA' && restricaoExistente?.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA) {
+          // Se restrição está sendo concluída e tem paralisar_obra=true, finalizar latência
+          if (restricao.status === 'CONCLUIDA' && restricaoExistente?.paralisar_obra) {
             if (restricaoExistente.data_inicio_latencia) {
               const dataFimLatencia = new Date();
               const diasLatencia = Math.ceil(
@@ -314,14 +310,12 @@ export const useLPSStore = create<LPSState>()(
       },
 
       addRestricaoAsync: async (restricao, empresaId) => {
-        const tipoDetalhado = restricao.tipo_detalhado;
-        const prioridade = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? 'ALTA' : restricao.prioridade || 'MEDIA';
-        const dataInicioLatencia = tipoDetalhado === TipoRestricaoDetalhado.PARALISAR_OBRA ? new Date() : undefined;
+        const prioridade = restricao.paralisar_obra ? 'ALTA' : restricao.prioridade || 'MEDIA';
+        const dataInicioLatencia = restricao.paralisar_obra ? new Date() : undefined;
         
         const novaRestricao: RestricaoLPS = {
           ...restricao,
           id: generateId(),
-          tipo_detalhado: tipoDetalhado,
           prioridade,
           data_criacao: parseDate(restricao.data_criacao || new Date()),
           data_conclusao: restricao.data_conclusao ? parseDate(restricao.data_conclusao) : undefined,
@@ -406,7 +400,7 @@ export const useLPSStore = create<LPSState>()(
           data_conclusao: new Date(),
         };
         
-        if (restricao.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA && restricao.data_inicio_latencia) {
+        if (restricao.paralisar_obra && restricao.data_inicio_latencia) {
           const dataFimLatencia = new Date();
           const diasLatencia = Math.ceil(
             (dataFimLatencia.getTime() - restricao.data_inicio_latencia.getTime()) / (1000 * 60 * 60 * 24)
@@ -678,8 +672,8 @@ export const useLPSStore = create<LPSState>()(
           data_conclusao: new Date(),
         };
         
-        // Se é do tipo PARALISAR_OBRA, finalizar latência
-        if (restricao.tipo_detalhado === TipoRestricaoDetalhado.PARALISAR_OBRA && restricao.data_inicio_latencia) {
+        // Se tem paralisar_obra=true, finalizar latência
+        if (restricao.paralisar_obra && restricao.data_inicio_latencia) {
           const dataFimLatencia = new Date();
           const diasLatencia = Math.ceil(
             (dataFimLatencia.getTime() - restricao.data_inicio_latencia.getTime()) / (1000 * 60 * 60 * 24)
