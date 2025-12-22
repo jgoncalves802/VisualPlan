@@ -277,4 +277,34 @@ export const gestaoMudancaService = {
     const updatedHistorico = [...(current.historico || []), entry];
     return this.update(id, { historico: updatedHistorico });
   },
+
+  async getProjetosDisponiveis(empresaId: string): Promise<{ id: string; nome: string }[]> {
+    const { data, error } = await supabase
+      .from('eps_nodes')
+      .select('id, nome')
+      .eq('empresa_id', empresaId)
+      .order('nome', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar projetos:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  async getSolicitantes(empresaId: string): Promise<{ id: string; nome: string }[]> {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nome')
+      .eq('empresa_id', empresaId)
+      .order('nome', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar solicitantes:', error);
+      return [];
+    }
+
+    return data || [];
+  },
 };
