@@ -18,6 +18,7 @@ import {
   RestricaoAndamento,
   AtividadeHistoricoConclusao,
 } from '../types/lps';
+import { restricoesLpsService } from '../services/restricoesLpsService';
 
 interface LPSState {
   // Estado
@@ -58,6 +59,8 @@ interface LPSState {
   syncComRecursos: (projetoId: string) => Promise<void>;
   concluirAtividade: (id: string, userId: string, motivo?: string) => void;
   atualizarStatusAtividadeComHistorico: (id: string, novoStatus: StatusAtividadeLPS, userId: string, motivo?: string) => void;
+  loadRestricoesFromSupabase: (empresaId: string) => Promise<void>;
+  saveRestricaoToSupabase: (restricao: RestricaoLPS, empresaId: string) => Promise<void>;
 }
 
 // Gerar ID único
@@ -584,6 +587,35 @@ export const useLPSStore = create<LPSState>()(
             a.id === id ? { ...a, ...atualizacoes } : a
           ),
         }));
+      },
+
+      loadRestricoesFromSupabase: async (empresaId: string) => {
+        set({ loading: true, error: null });
+        try {
+          const restricoesDb = await restricoesLpsService.getAll(empresaId);
+          if (restricoesDb.length > 0) {
+            set({ restricoes: restricoesDb, loading: false });
+          } else {
+            set({ loading: false });
+          }
+        } catch (error: any) {
+          console.error('Erro ao carregar restrições do Supabase:', error);
+          set({ loading: false, error: error.message || 'Erro ao carregar restrições' });
+        }
+      },
+
+      saveRestricaoToSupabase: async (restricao: RestricaoLPS, empresaId: string) => {
+        try {
+          const existing = await restricoesLpsService.getById(restricao.id);
+          if (existing) {
+            await restricoesLpsService.update(restricao.id, restricao);
+          } else {
+            await restricoesLpsService.create(restricao, empresaId);
+          }
+          await restricoesLpsService.syncToIshikawa(restricao, empresaId);
+        } catch (error: any) {
+          console.error('Erro ao salvar restrição no Supabase:', error);
+        }
       },
     };
     },

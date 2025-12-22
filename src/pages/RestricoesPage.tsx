@@ -40,6 +40,8 @@ export const RestricoesPage: React.FC = () => {
     addEvidencia,
     deleteEvidencia,
     addAndamento,
+    loadRestricoesFromSupabase,
+    saveRestricaoToSupabase,
   } = useLPSStore();
 
   // Auth store
@@ -60,6 +62,13 @@ export const RestricoesPage: React.FC = () => {
     fim.setHours(23, 59, 59, 999);
     return { inicio, fim };
   });
+
+  // Carregar restrições do Supabase ao montar
+  useEffect(() => {
+    if (usuario?.empresaId) {
+      loadRestricoesFromSupabase(usuario.empresaId);
+    }
+  }, [usuario?.empresaId, loadRestricoesFromSupabase]);
 
   // Atualizar restrição selecionada quando restricoes mudarem
   useEffect(() => {
@@ -152,15 +161,29 @@ export const RestricoesPage: React.FC = () => {
     setModalAberto('reagendar');
   };
 
-  const handleSaveRestricao = (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
+  const handleSaveRestricao = async (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
     // Se tem id, é edição
     if ('id' in restricao && restricao.id) {
       // Editar restrição
       const { id, ...rest } = restricao;
       updateRestricao(id, rest);
+      // Sincronizar com Supabase
+      if (usuario?.empresaId) {
+        const fullRestricao = restricoes.find(r => r.id === id);
+        if (fullRestricao) {
+          await saveRestricaoToSupabase({ ...fullRestricao, ...rest }, usuario.empresaId);
+        }
+      }
     } else {
-      // Nova restrição
+      // Nova restrição - adicionar ao store local
       addRestricao(restricao as Omit<RestricaoLPS, 'id'>);
+      // Após adicionar, pegar a restrição recém-criada do store e sincronizar
+      setTimeout(async () => {
+        const novaRestricao = restricoes[restricoes.length - 1];
+        if (novaRestricao && usuario?.empresaId) {
+          await saveRestricaoToSupabase(novaRestricao, usuario.empresaId);
+        }
+      }, 100);
     }
     setModalAberto(null);
     setRestricaoSelecionada(null);
