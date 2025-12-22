@@ -228,8 +228,7 @@ export const auditoriaService = {
     const { data, error } = await query;
 
     if (error) {
-      if (error.code === 'PGRST205') {
-        console.warn('Tabela auditorias não encontrada, retornando array vazio');
+      if (error.code === 'PGRST205' || error.code === '42703' || error.message?.includes('does not exist')) {
         return [];
       }
       console.error('Erro ao buscar auditorias:', error);
@@ -389,7 +388,7 @@ export const auditoriaService = {
       .order('data_programada', { ascending: false });
 
     if (error) {
-      if (error.code === 'PGRST205') {
+      if (error.code === 'PGRST205' || error.code === '42703' || error.message?.includes('does not exist')) {
         return [];
       }
       console.error('Erro ao buscar auditorias por status:', error);

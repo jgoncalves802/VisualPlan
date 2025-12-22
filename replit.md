@@ -46,7 +46,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `reunioesService.ts`: Meeting scheduling and agenda management
         *   `auditoriaService.ts`: Audit templates and audits management
         *   `restricoesIshikawaService.ts`: Ishikawa analysis restrictions linked to EPS/WBS/Activities
-        *   `restricoesLpsService.ts`: LPS restrictions with automatic sync to Ishikawa analysis table
+        *   `restricoesLpsService.ts`: LPS restrictions with automatic sync to Ishikawa analysis table (async CRUD operations, UUID validation)
         *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
         *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
         *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)

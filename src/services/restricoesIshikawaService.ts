@@ -265,7 +265,6 @@ export const restricoesIshikawaService = {
 
     if (error) {
       if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
-        console.warn('Tabela wbs_nodes não encontrada');
         return [];
       }
       throw error;
