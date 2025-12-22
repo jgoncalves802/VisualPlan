@@ -157,6 +157,9 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
   if (r.wbs_nome) {
     data.wbs_nome = r.wbs_nome;
   }
+  if (isValidUUID(r.projeto_id)) {
+    data.projeto_id = r.projeto_id;
+  }
   return data;
 };
 
@@ -255,6 +258,9 @@ export const restricoesLpsService = {
       updateData.wbs_id = restricao.wbs_id;
     }
     if (restricao.wbs_nome !== undefined) updateData.wbs_nome = restricao.wbs_nome;
+    if (restricao.projeto_id !== undefined && isValidUUID(restricao.projeto_id)) {
+      updateData.projeto_id = restricao.projeto_id;
+    }
 
     const { data, error } = await supabase
       .from('restricoes_ishikawa')
