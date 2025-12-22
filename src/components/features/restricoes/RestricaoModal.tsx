@@ -100,10 +100,10 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
   const [loadingData, setLoadingData] = useState(false);
 
   const loadProjetos = useCallback(async () => {
-    if (!usuario?.empresa_id) return;
-    const data = await restricoesLpsService.getProjetos(usuario.empresa_id);
+    if (!usuario?.empresaId) return;
+    const data = await restricoesLpsService.getProjetos(usuario.empresaId);
     setProjetos(data);
-  }, [usuario?.empresa_id]);
+  }, [usuario?.empresaId]);
 
   const loadWbsNodes = useCallback(async (projetoId: string) => {
     if (!projetoId) {
@@ -136,6 +136,23 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
       loadAtividades(formData.projeto_id);
     }
   }, [formData.projeto_id, loadWbsNodes, loadAtividades]);
+
+  useEffect(() => {
+    const loadAtividadeData = async () => {
+      if (atividadeId && isOpen && !restricao) {
+        const atividade = await restricoesLpsService.getAtividadeById(atividadeId);
+        if (atividade) {
+          setFormData(prev => ({
+            ...prev,
+            atividade_id: atividade.id,
+            projeto_id: atividade.projeto_id,
+            wbs_id: atividade.wbs_id || undefined,
+          }));
+        }
+      }
+    };
+    loadAtividadeData();
+  }, [atividadeId, isOpen, restricao]);
 
   useEffect(() => {
     try {

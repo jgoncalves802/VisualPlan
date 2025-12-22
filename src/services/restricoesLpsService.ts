@@ -321,38 +321,57 @@ export const restricoesLpsService = {
 
   async getProjetos(empresaId: string): Promise<{ id: string; nome: string }[]> {
     const { data, error } = await supabase
-      .from('projetos')
-      .select('id, nome')
+      .from('atividades_cronograma')
+      .select('projeto_id, projeto_nome:nome')
       .eq('empresa_id', empresaId)
-      .order('nome');
+      .not('projeto_id', 'is', null);
 
     if (error) {
+      if (error.code === 'PGRST205') {
+        console.warn('Tabela não disponível para busca de projetos');
+        return [];
+      }
       console.error('Erro ao buscar projetos:', error);
       return [];
     }
-    return data || [];
+
+    const uniqueProjects = new Map<string, string>();
+    (data || []).forEach((row: { projeto_id: string; projeto_nome: string }) => {
+      if (row.projeto_id && !uniqueProjects.has(row.projeto_id)) {
+        uniqueProjects.set(row.projeto_id, row.projeto_nome || 'Projeto sem nome');
+      }
+    });
+
+    return Array.from(uniqueProjects.entries()).map(([id, nome]) => ({ id, nome }));
   },
 
   async getWbsNodes(projetoId: string): Promise<{ id: string; nome: string; codigo: string }[]> {
-    const { data: projeto } = await supabase
-      .from('projetos')
-      .select('eps_id')
-      .eq('id', projetoId)
-      .single();
-    
-    if (!projeto?.eps_id) return [];
-
     const { data, error } = await supabase
-      .from('wbs_nodes')
-      .select('id, nome, codigo')
-      .eq('eps_node_id', projeto.eps_id)
-      .order('codigo');
+      .from('atividades_cronograma')
+      .select('wbs_id')
+      .eq('projeto_id', projetoId)
+      .not('wbs_id', 'is', null);
 
     if (error) {
       console.error('Erro ao buscar WBS nodes:', error);
       return [];
     }
-    return data || [];
+
+    const uniqueWbsIds = [...new Set((data || []).map((r: { wbs_id: string }) => r.wbs_id).filter(Boolean))];
+    
+    if (uniqueWbsIds.length === 0) return [];
+
+    const { data: wbsData, error: wbsError } = await supabase
+      .from('wbs_nodes')
+      .select('id, nome, codigo')
+      .in('id', uniqueWbsIds)
+      .order('codigo');
+
+    if (wbsError) {
+      console.error('Erro ao buscar WBS nodes:', wbsError);
+      return [];
+    }
+    return wbsData || [];
   },
 
   async getAtividadesByProjeto(projetoId: string): Promise<{ id: string; nome: string; codigo: string }[]> {
@@ -368,5 +387,22 @@ export const restricoesLpsService = {
       return [];
     }
     return data || [];
+  },
+
+  async getAtividadeById(atividadeId: string): Promise<{ id: string; nome: string; codigo: string; projeto_id: string; wbs_id?: string } | null> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(atividadeId)) return null;
+
+    const { data, error } = await supabase
+      .from('atividades_cronograma')
+      .select('id, nome, codigo, projeto_id, wbs_id')
+      .eq('id', atividadeId)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar atividade:', error);
+      return null;
+    }
+    return data;
   },
 };
