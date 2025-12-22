@@ -120,6 +120,17 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   Participant dropdown in modal form populated from database
     *   Added contextual empty states: guides user when no meetings exist or none in current week
     *   CRUD operations persist directly to database via reunioesService
+    *   Fixed: mapTipoToFrequenciaDB() maps meeting types to valid database values (diaria, semanal, quinzenal, mensal, unica)
+    *   Fixed: generateUUID() for local fallback IDs to prevent database UUID validation errors
+*   **Known Issue: auditorias.data_programada (December 22, 2025)**:
+    *   Error 42703 "column does not exist" occurs through Supabase API despite column existing in database
+    *   Root cause: External Supabase project RLS/permissions configuration for anon/authenticated roles
+    *   Resolution: Requires GRANT SELECT permissions on auditorias table in Supabase Dashboard SQL Editor:
+        ```sql
+        GRANT SELECT ON public.auditorias TO anon, authenticated;
+        NOTIFY pgrst, 'reload schema';
+        ```
+    *   This cannot be fixed from Replit as the development database uses a different connection than the Supabase API
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
