@@ -1,0 +1,140 @@
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/atividades_cronograma?select=wbs_id%2Cwbs_codigo&projeto_id=eq.70a3677f-8994-44d0-bfe9-c0c86ed91b2b&wbs_id=not.is.null 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606
+handleMouseUp_ @ unknownUnderstand this error
+injected.js:37 Erro ao buscar WBS nodes das atividades: {code: '42703', details: null, hint: null, message: 'column atividades_cronograma.wbs_codigo does not exist'}
+(anonymous) @ injected.js:37
+getWbsNodes @ restricoesLpsService.ts:367
+await in getWbsNodes
+(anonymous) @ RestricaoModal.tsx:113
+(anonymous) @ RestricaoModal.tsx:135
+commitHookEffectListMount @ chunk-334SA7H6.js?v=6d1c649c:16915
+commitPassiveMountOnFiber @ chunk-334SA7H6.js?v=6d1c649c:18156
+commitPassiveMountEffects_complete @ chunk-334SA7H6.js?v=6d1c649c:18129
+commitPassiveMountEffects_begin @ chunk-334SA7H6.js?v=6d1c649c:18119
+commitPassiveMountEffects @ chunk-334SA7H6.js?v=6d1c649c:18109
+flushPassiveEffectsImpl @ chunk-334SA7H6.js?v=6d1c649c:19490
+flushPassiveEffects @ chunk-334SA7H6.js?v=6d1c649c:19447
+commitRootImpl @ chunk-334SA7H6.js?v=6d1c649c:19416
+commitRoot @ chunk-334SA7H6.js?v=6d1c649c:19277
+performSyncWorkOnRoot @ chunk-334SA7H6.js?v=6d1c649c:18895
+flushSyncCallbacks @ chunk-334SA7H6.js?v=6d1c649c:9119
+flushSync @ chunk-334SA7H6.js?v=6d1c649c:18959
+finishEventHandler @ chunk-334SA7H6.js?v=6d1c649c:3569
+batchedUpdates @ chunk-334SA7H6.js?v=6d1c649c:3582
+dispatchEventForPluginEventSystem @ chunk-334SA7H6.js?v=6d1c649c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-334SA7H6.js?v=6d1c649c:5478
+dispatchEvent @ chunk-334SA7H6.js?v=6d1c649c:5472
+dispatchDiscreteEvent @ chunk-334SA7H6.js?v=6d1c649c:5449
+handleMouseUp_ @ unknownUnderstand this error
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/atividades_cronograma?select=wbs_id%2Cwbs_codigo&projeto_id=eq.646e64c4-94d4-45b7-95f8-a6e0318aca11&wbs_id=not.is.null 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606
+handleMouseUp_ @ unknownUnderstand this error
+injected.js:37 Erro ao buscar WBS nodes das atividades: {code: '42703', details: null, hint: null, message: 'column atividades_cronograma.wbs_codigo does not exist'}
+(anonymous) @ injected.js:37
+getWbsNodes @ restricoesLpsService.ts:367
+await in getWbsNodes
+(anonymous) @ RestricaoModal.tsx:113
+(anonymous) @ RestricaoModal.tsx:135
+commitHookEffectListMount @ chunk-334SA7H6.js?v=6d1c649c:16915
+commitPassiveMountOnFiber @ chunk-334SA7H6.js?v=6d1c649c:18156
+commitPassiveMountEffects_complete @ chunk-334SA7H6.js?v=6d1c649c:18129
+commitPassiveMountEffects_begin @ chunk-334SA7H6.js?v=6d1c649c:18119
+commitPassiveMountEffects @ chunk-334SA7H6.js?v=6d1c649c:18109
+flushPassiveEffectsImpl @ chunk-334SA7H6.js?v=6d1c649c:19490
+flushPassiveEffects @ chunk-334SA7H6.js?v=6d1c649c:19447
+commitRootImpl @ chunk-334SA7H6.js?v=6d1c649c:19416
+commitRoot @ chunk-334SA7H6.js?v=6d1c649c:19277
+performSyncWorkOnRoot @ chunk-334SA7H6.js?v=6d1c649c:18895
+flushSyncCallbacks @ chunk-334SA7H6.js?v=6d1c649c:9119
+flushSync @ chunk-334SA7H6.js?v=6d1c649c:18959
+finishEventHandler @ chunk-334SA7H6.js?v=6d1c649c:3569
+batchedUpdates @ chunk-334SA7H6.js?v=6d1c649c:3582
+dispatchEventForPluginEventSystem @ chunk-334SA7H6.js?v=6d1c649c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-334SA7H6.js?v=6d1c649c:5478
+dispatchEvent @ chunk-334SA7H6.js?v=6d1c649c:5472
+dispatchDiscreteEvent @ chunk-334SA7H6.js?v=6d1c649c:5449
+handleMouseUp_ @ unknownUnderstand this error
+injected.js:37 addRestricaoAsync recebeu: {
+  "descricao": "teste",
+  "tipo": "S",
+  "tipo_detalhado": "MATERIAL",
+  "tipo_responsabilidade": "CONTRATADA",
+  "responsavel": "",
+  "apoio": "",
+  "data_conclusao_planejada": "2025-12-22T21:38:14.716Z",
+  "status": "PENDENTE",
+  "prioridade": "MEDIA",
+  "observacoes": "",
+  "categoria": "",
+  "impacto_previsto": "",
+  "atividade_id": "e5b87d7b-c529-4317-9cab-45a9a9542e9f",
+  "paralisar_obra": false,
+  "projeto_id": "646e64c4-94d4-45b7-95f8-a6e0318aca11",
+  "atividade_nome": "TESTE",
+  "data_criacao": "2025-12-22T21:38:38.027Z",
+  "criado_por": "82dd8e30-9e4d-4bcd-a7c3-e8b3116e8f5e",
+  "criado_por_nome": "Junior Silva",
+  "historico": [],
+  "evidencias": [],
+  "andamento": []
+}
+injected.js:37 tipo_detalhado recebido: MATERIAL
+injected.js:37 novaRestricao criada com tipo_detalhado: MATERIAL
+injected.js:37 mapCategoriaToIshikawa: input="MATERIAL" => output="material"
+injected.js:37 Criando restrição com dados: {
+  "id": "0a31fcf5-6576-45ba-81b1-3808db883136",
+  "empresa_id": "f6f37e93-be66-4334-9a3f-4e05c4d9bd01",
+  "codigo": "ISH-0A31FC",
+  "descricao": "teste",
+  "categoria": "material",
+  "status": "no_prazo",
+  "responsavel": null,
+  "data_criacao": "2025-12-22T21:38:38.027Z",
+  "data_prevista": "2025-12-22",
+  "data_conclusao": null,
+  "impacto_caminho_critico": false,
+  "dias_atraso": 0,
+  "score_impacto": 50,
+  "reincidente": false,
+  "atividade_id": "e5b87d7b-c529-4317-9cab-45a9a9542e9f",
+  "atividade_nome": "TESTE",
+  "projeto_id": "646e64c4-94d4-45b7-95f8-a6e0318aca11"
+}
+injected.js:37 Categoria sendo enviada: material
+injected.js:214  POST https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/restricoes_ishikawa?select=* 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:37 Erro ao criar restrição: {code: '23502', details: null, hint: null, message: 'null value in column "responsavel" of relation "restricoes_ishikawa" violates not-null constraint'}
+(anonymous) @ injected.js:37
+create @ restricoesLpsService.ts:226
+await in create
+addRestricaoAsync @ lpsStore.ts:338
+handleSaveRestricao @ RestricoesPage.tsx:167
+handleSubmit @ RestricaoModal.tsx:272
+callCallback2 @ chunk-334SA7H6.js?v=6d1c649c:3674
+invokeGuardedCallbackDev @ chunk-334SA7H6.js?v=6d1c649c:3699
+invokeGuardedCallback @ chunk-334SA7H6.js?v=6d1c649c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-334SA7H6.js?v=6d1c649c:3736
+executeDispatch @ chunk-334SA7H6.js?v=6d1c649c:7014
+processDispatchQueueItemsInOrder @ chunk-334SA7H6.js?v=6d1c649c:7034
+processDispatchQueue @ chunk-334SA7H6.js?v=6d1c649c:7043
+dispatchEventsForPlugins @ chunk-334SA7H6.js?v=6d1c649c:7051
+(anonymous) @ chunk-334SA7H6.js?v=6d1c649c:7174
+batchedUpdates$1 @ chunk-334SA7H6.js?v=6d1c649c:18913
+batchedUpdates @ chunk-334SA7H6.js?v=6d1c649c:3579
+dispatchEventForPluginEventSystem @ chunk-334SA7H6.js?v=6d1c649c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-334SA7H6.js?v=6d1c649c:5478
+dispatchEvent @ chunk-334SA7H6.js?v=6d1c649c:5472
+dispatchDiscreteEvent @ chunk-334SA7H6.js?v=6d1c649c:5449Understand this error
+injected.js:37 Dados enviados: {id: '0a31fcf5-6576-45ba-81b1-3808db883136', empresa_id: 'f6f37e93-be66-4334-9a3f-4e05c4d9bd01', codigo: 'ISH-0A31FC', descricao: 'teste', categoria: 'material', …}

@@ -134,7 +134,7 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
     descricao: r.descricao,
     categoria: mapCategoriaToIshikawa(r.tipo_detalhado),
     status: mapStatusToIshikawa(r.status),
-    responsavel: r.responsavel || null,
+    responsavel: r.responsavel || 'Não atribuído',
     data_criacao: r.data_criacao.toISOString(),
     data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
     data_conclusao: r.data_conclusao?.toISOString().split('T')[0] || null,
@@ -250,7 +250,7 @@ export const restricoesLpsService = {
       updateData.score_impacto = restricao.prioridade === 'ALTA' ? 80 : restricao.prioridade === 'MEDIA' ? 50 : 20;
     }
     
-    if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || null;
+    if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || 'Não atribuído';
     if (restricao.responsavel_id !== undefined && isValidUUID(restricao.responsavel_id)) {
       updateData.responsavel_id = restricao.responsavel_id;
     }
@@ -355,7 +355,7 @@ export const restricoesLpsService = {
     // Primeiro, buscar wbs_id das atividades
     const { data, error } = await supabase
       .from('atividades_cronograma')
-      .select('wbs_id, wbs_codigo')
+      .select('wbs_id')
       .eq('projeto_id', projetoId)
       .not('wbs_id', 'is', null);
 
@@ -380,21 +380,14 @@ export const restricoesLpsService = {
       .order('codigo');
 
     if (wbsError) {
-      // Se a tabela wbs_nodes não estiver acessível, criar fallback com dados das atividades
+      // Se a tabela wbs_nodes não estiver acessível, criar fallback com dados genéricos
       if (wbsError.code === 'PGRST205') {
         console.warn('Tabela wbs_nodes não disponível, usando fallback');
-        // Retornar dados básicos baseados nos wbs_id únicos encontrados
-        const wbsMap = new Map<string, { id: string; nome: string; codigo: string }>();
-        (data || []).forEach((r: { wbs_id: string; wbs_codigo?: string }) => {
-          if (r.wbs_id && !wbsMap.has(r.wbs_id)) {
-            wbsMap.set(r.wbs_id, {
-              id: r.wbs_id,
-              nome: r.wbs_codigo || `WBS ${r.wbs_id.slice(0, 8)}`,
-              codigo: r.wbs_codigo || '',
-            });
-          }
-        });
-        return Array.from(wbsMap.values());
+        return uniqueWbsIds.map((id) => ({
+          id,
+          nome: `WBS ${id.slice(0, 8)}`,
+          codigo: '',
+        }));
       }
       console.error('Erro ao buscar WBS nodes:', wbsError);
       return [];
