@@ -128,7 +128,6 @@ export const restricao5w2hSyncService = {
 
       if (updates.oQue !== undefined) restricaoUpdates.descricao = updates.oQue;
       if (updates.quem !== undefined) restricaoUpdates.responsavel = updates.quem;
-      if (updates.quemId !== undefined) restricaoUpdates.responsavel_id = updates.quemId;
       if (updates.quando !== undefined) {
         restricaoUpdates.prazo_resolucao = updates.quando;
         restricaoUpdates.data_conclusao_planejada = updates.quando;
@@ -212,6 +211,78 @@ export const restricao5w2hSyncService = {
     } catch (error) {
       console.error('Erro ao excluir ação:', error);
       return false;
+    }
+  },
+
+  async syncAllRestricoesSemAcao(empresaId: string): Promise<{ created: number; errors: number }> {
+    let created = 0;
+    let errors = 0;
+
+    try {
+      const { data: restricoes, error: restricoesError } = await supabase
+        .from('restricoes_ishikawa')
+        .select('*')
+        .eq('empresa_id', empresaId);
+
+      if (restricoesError || !restricoes) {
+        console.error('Erro ao buscar restrições:', restricoesError);
+        return { created: 0, errors: 1 };
+      }
+
+      const { data: acoesExistentes, error: acoesError } = await supabase
+        .from('acoes_5w2h')
+        .select('restricao_lps_id')
+        .eq('empresa_id', empresaId)
+        .not('restricao_lps_id', 'is', null);
+
+      if (acoesError) {
+        console.error('Erro ao buscar ações existentes:', acoesError);
+        return { created: 0, errors: 1 };
+      }
+
+      const restricoesComAcao = new Set(
+        (acoesExistentes || []).map(a => a.restricao_lps_id)
+      );
+
+      const restricoesSemAcao = restricoes.filter(r => !restricoesComAcao.has(r.id));
+
+      console.log(`Encontradas ${restricoesSemAcao.length} restrições sem ação 5W2H vinculada`);
+
+      for (const restricaoDb of restricoesSemAcao) {
+        try {
+          const restricao = {
+            id: restricaoDb.id,
+            descricao: restricaoDb.descricao,
+            tipo_detalhado: restricaoDb.categoria,
+            status: 'PENDENTE' as const,
+            prioridade: (restricaoDb.score_impacto >= 80 ? 'ALTA' : restricaoDb.score_impacto >= 50 ? 'MEDIA' : 'BAIXA') as 'ALTA' | 'MEDIA' | 'BAIXA',
+            responsavel: restricaoDb.responsavel,
+            prazo_resolucao: restricaoDb.data_prevista ? new Date(restricaoDb.data_prevista) : undefined,
+            data_conclusao_planejada: restricaoDb.data_prevista ? new Date(restricaoDb.data_prevista) : undefined,
+            observacoes: restricaoDb.observacoes,
+            wbs_nome: restricaoDb.wbs_nome,
+            atividade_nome: restricaoDb.atividade_nome,
+            projeto_id: restricaoDb.projeto_id,
+          };
+
+          const acao = await this.createAcaoFrom5W2H(restricao as any, empresaId, restricaoDb.projeto_id);
+          if (acao) {
+            created++;
+            console.log(`Ação 5W2H criada para restrição ${restricaoDb.id}`);
+          } else {
+            errors++;
+          }
+        } catch (err) {
+          console.error(`Erro ao criar ação para restrição ${restricaoDb.id}:`, err);
+          errors++;
+        }
+      }
+
+      console.log(`Sincronização concluída: ${created} criadas, ${errors} erros`);
+      return { created, errors };
+    } catch (error) {
+      console.error('Erro na sincronização em lote:', error);
+      return { created, errors: errors + 1 };
     }
   },
 };

@@ -32,6 +32,7 @@ import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
 import { acoes5w2hService } from '../services/acoes5w2hService';
 import { userService } from '../services/userService';
+import { restricao5w2hSyncService } from '../services/restricao5w2hSyncService';
 import {
   Acao5W2H,
   StatusAcao5W2H,
@@ -674,6 +675,29 @@ export const Acoes5W2HPage: React.FC = () => {
   const [acaoSelecionada, setAcaoSelecionada] = useState<Acao5W2H | null>(null);
   const [quickActionMenuOpen, setQuickActionMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncRestricoes = async () => {
+    if (!usuario?.empresaId) return;
+    
+    setIsSyncing(true);
+    try {
+      const result = await restricao5w2hSyncService.syncAllRestricoesSemAcao(usuario.empresaId);
+      if (result.created > 0) {
+        alert(`Sincronização concluída! ${result.created} ações criadas.`);
+        loadAcoes();
+      } else if (result.errors > 0) {
+        alert(`Sincronização com erros: ${result.errors} falhas.`);
+      } else {
+        alert('Todas as restrições já possuem ações 5W2H vinculadas.');
+      }
+    } catch (error) {
+      console.error('Erro na sincronização:', error);
+      alert('Erro ao sincronizar restrições.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const loadAcoes = useCallback(async () => {
     if (!usuario?.empresaId) return;
@@ -974,6 +998,15 @@ export const Acoes5W2HPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3 relative">
+            <button
+              onClick={handleSyncRestricoes}
+              disabled={isSyncing}
+              className="px-4 py-2 border rounded-lg hover:bg-orange-50 flex items-center gap-2 text-orange-600 border-orange-300 disabled:opacity-50"
+              title="Criar ações 5W2H para restrições que ainda não possuem"
+            >
+              <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+              <span className="text-sm">{isSyncing ? 'Sincronizando...' : 'Sincronizar Restrições'}</span>
+            </button>
             <button
               onClick={() => setQuickActionMenuOpen(!quickActionMenuOpen)}
               className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2"

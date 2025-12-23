@@ -257,9 +257,6 @@ export const restricoesLpsService = {
     }
     
     if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || 'Não atribuído';
-    if (restricao.responsavel_id !== undefined && isValidUUID(restricao.responsavel_id)) {
-      updateData.responsavel_id = restricao.responsavel_id;
-    }
     if (restricao.prazo_resolucao !== undefined) {
       const prazoDate = restricao.prazo_resolucao instanceof Date 
         ? restricao.prazo_resolucao.toISOString().split('T')[0]
