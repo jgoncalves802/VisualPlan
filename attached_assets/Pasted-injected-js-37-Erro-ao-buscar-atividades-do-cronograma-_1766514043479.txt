@@ -1,0 +1,50 @@
+injected.js:37 Erro ao buscar atividades do cronograma: column atividades_cronograma.percentual_concluido does not exist
+(anonymous) @ injected.js:37Understand this warning
+2date-fns.js?v=6d1c649c:1760 Uncaught RangeError: Invalid time value
+    at format (date-fns.js?v=6d1c649c:1760:11)
+    at renderEpsNode (MasterGanttView.tsx:309:41)
+    at MasterGanttView.tsx:492:32
+    at Array.map (<anonymous>)
+    at MasterGanttView (MasterGanttView.tsx:492:20)
+    at renderWithHooks (chunk-334SA7H6.js?v=6d1c649c:11548:26)
+    at updateFunctionComponent (chunk-334SA7H6.js?v=6d1c649c:14582:28)
+    at beginWork (chunk-334SA7H6.js?v=6d1c649c:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-334SA7H6.js?v=6d1c649c:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-334SA7H6.js?v=6d1c649c:3699:24)Understand this error
+injected.js:37 The above error occurred in the <MasterGanttView> component:
+
+    at MasterGanttView (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/features/cronograma/MasterGanttView.tsx:33:35)
+    at div
+    at div
+    at CronogramaPage (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/pages/CronogramaPage.tsx:43:39)
+    at RenderedRoute (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4088:5)
+    at Outlet (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4494:26)
+    at div
+    at main
+    at div
+    at LayoutShell (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/layout/LayoutShell.tsx:34:3)
+    at AppLayout (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/layout/AppLayout.tsx:42:20)
+    at ProtectedAppLayout (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/App.tsx:49:31)
+    at RenderedRoute (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4088:5)
+    at Routes (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4558:5)
+    at Router (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:4501:15)
+    at BrowserRouter (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=6d1c649c:5247:5)
+    at ToastProvider (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/components/ui/Toast.tsx:152:33)
+    at App (https://fa700cea-f5ff-4d99-a7b2-a2e9749812a0-00-30p88q55puc84.spock.replit.dev/src/App.tsx:96:27)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+(anonymous) @ injected.js:37Understand this error
+chunk-334SA7H6.js?v=6d1c649c:19413 Uncaught RangeError: Invalid time value
+    at format (date-fns.js?v=6d1c649c:1760:11)
+    at renderEpsNode (MasterGanttView.tsx:309:41)
+    at MasterGanttView.tsx:492:32
+    at Array.map (<anonymous>)
+    at MasterGanttView (MasterGanttView.tsx:492:20)
+    at renderWithHooks (chunk-334SA7H6.js?v=6d1c649c:11548:26)
+    at updateFunctionComponent (chunk-334SA7H6.js?v=6d1c649c:14582:28)
+    at beginWork (chunk-334SA7H6.js?v=6d1c649c:15924:22)
+    at beginWork$1 (chunk-334SA7H6.js?v=6d1c649c:19753:22)
+    at performUnitOfWork (chunk-334SA7H6.js?v=6d1c649c:19198:20)Understand this error
+xcllohzvlysqvpmskvah.supabase.co/rest/v1/atividades_cronograma?select=projeto_id%2Cdata_inicio%2Cdata_fim%2Cpercentual_concluido%2Cstatus&projeto_id=in.%2870a3677f-8994-44d0-bfe9-c0c86ed91b2b%2C646e64c4-94d4-45b7-95f8-a6e0318aca11%29:1  Failed to load resource: the server responded with a status of 400 ()Understand this error
+injected.js:37 Erro ao buscar atividades do cronograma: column atividades_cronograma.percentual_concluido does not exist

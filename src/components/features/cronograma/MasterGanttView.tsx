@@ -70,7 +70,7 @@ export const MasterGanttView: React.FC<MasterGanttViewProps> = ({ onSelectProjec
         if (projectIds.length > 0) {
           const { data: atividadesData, error: atividadesError } = await supabase
             .from('atividades_cronograma')
-            .select('projeto_id, data_inicio, data_fim, percentual_concluido, status')
+            .select('projeto_id, data_inicio, data_fim, progresso, status')
             .in('projeto_id', projectIds);
         
           if (atividadesError) {
@@ -96,7 +96,7 @@ export const MasterGanttView: React.FC<MasterGanttViewProps> = ({ onSelectProjec
               const summary = projectSummaries[projetoId];
               summary.total_atividades++;
               
-              if (atividade.status === 'CONCLUIDA' || atividade.percentual_concluido === 100) {
+              if (atividade.status === 'CONCLUIDA' || atividade.progresso === 100) {
                 summary.atividades_concluidas++;
               }
               
@@ -301,12 +301,12 @@ export const MasterGanttView: React.FC<MasterGanttViewProps> = ({ onSelectProjec
             className="relative flex-1 bg-gray-50"
             style={{ minWidth: `${timelineWidth}px` }}
           >
-            {isProject && projectData && (
+            {isProject && projectData && projectData.data_inicio && projectData.data_fim && (
               <div 
                 className={`absolute top-1/2 -translate-y-1/2 h-6 rounded ${getStatusColor(projectData.status)} ${getStatusBorderColor(projectData.status)} border cursor-pointer hover:opacity-90 transition-opacity shadow-sm`}
                 style={getBarStyle(projectData)}
                 onClick={() => onSelectProject(node.id, node.nome)}
-                title={`${node.nome}\n${format(projectData.data_inicio!, 'dd/MM/yyyy')} - ${format(projectData.data_fim!, 'dd/MM/yyyy')}\nProgresso: ${projectData.progresso}%`}
+                title={`${node.nome}\n${format(projectData.data_inicio, 'dd/MM/yyyy')} - ${format(projectData.data_fim, 'dd/MM/yyyy')}\nProgresso: ${projectData.progresso}%`}
               >
                 {projectData.progresso !== undefined && projectData.progresso > 0 && (
                   <div 
