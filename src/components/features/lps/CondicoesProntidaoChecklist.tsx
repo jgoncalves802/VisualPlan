@@ -5,6 +5,9 @@ import {
   LabelsCondicaoProntidao,
   CondicaoProntidao,
   ResumoProntidao,
+  TipoCondicaoProntidao,
+  AtividadeLPS,
+  StatusAtividadeLPS,
 } from '../../../types/lps';
 import { condicoesProntidaoService } from '../../../services/condicoesProntidaoService';
 import { Check, Minus, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
@@ -15,6 +18,8 @@ interface CondicoesProntidaoChecklistProps {
   onProntidaoChange?: (resumo: ResumoProntidao) => void;
   readOnly?: boolean;
   compact?: boolean;
+  atividade?: AtividadeLPS | null;
+  todasAtividades?: AtividadeLPS[];
 }
 
 export const CondicoesProntidaoChecklist: React.FC<CondicoesProntidaoChecklistProps> = ({
@@ -23,14 +28,76 @@ export const CondicoesProntidaoChecklist: React.FC<CondicoesProntidaoChecklistPr
   onProntidaoChange,
   readOnly = false,
   compact = false,
+  atividade,
+  todasAtividades = [],
 }) => {
   const [condicoes, setCondicoes] = useState<CondicaoProntidao[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
+  const verificarPredecessorasConcluidas = (): boolean => {
+    if (!atividade?.dependencias || atividade.dependencias.length === 0) {
+      return true;
+    }
+    
+    return atividade.dependencias.every(depId => {
+      const predecessora = todasAtividades.find(a => a.id === depId);
+      return predecessora?.status === StatusAtividadeLPS.CONCLUIDA;
+    });
+  };
+
+  const atualizarCondicaoPredecessoraAutomaticamente = async (condicoesAtuais: CondicaoProntidao[]) => {
+    const predecessorasConcluidas = verificarPredecessorasConcluidas();
+    const condicaoPredecessora = condicoesAtuais.find(
+      c => c.tipoCondicao === TipoCondicaoProntidao.PREDECESSORA
+    );
+    
+    if (condicaoPredecessora) {
+      const semDependencias = !atividade?.dependencias || atividade.dependencias.length === 0;
+      
+      if (semDependencias && condicaoPredecessora.status === StatusCondicaoProntidao.PENDENTE) {
+        const atualizada = await condicoesProntidaoService.atualizarStatus(
+          condicaoPredecessora.id,
+          StatusCondicaoProntidao.NAO_APLICAVEL
+        );
+        if (atualizada) {
+          return condicoesAtuais.map(c => c.id === condicaoPredecessora.id ? atualizada : c);
+        }
+      } else if (predecessorasConcluidas && condicaoPredecessora.status === StatusCondicaoProntidao.PENDENTE) {
+        const atualizada = await condicoesProntidaoService.atualizarStatus(
+          condicaoPredecessora.id,
+          StatusCondicaoProntidao.ATENDIDA
+        );
+        if (atualizada) {
+          return condicoesAtuais.map(c => c.id === condicaoPredecessora.id ? atualizada : c);
+        }
+      } else if (!predecessorasConcluidas && !semDependencias && condicaoPredecessora.status === StatusCondicaoProntidao.ATENDIDA) {
+        const atualizada = await condicoesProntidaoService.atualizarStatus(
+          condicaoPredecessora.id,
+          StatusCondicaoProntidao.PENDENTE
+        );
+        if (atualizada) {
+          return condicoesAtuais.map(c => c.id === condicaoPredecessora.id ? atualizada : c);
+        }
+      }
+    }
+    return condicoesAtuais;
+  };
+
   useEffect(() => {
     loadCondicoes();
   }, [atividadeId, empresaId]);
+
+  useEffect(() => {
+    if (condicoes.length > 0 && atividade) {
+      atualizarCondicaoPredecessoraAutomaticamente(condicoes).then(novasCondicoes => {
+        if (novasCondicoes !== condicoes) {
+          setCondicoes(novasCondicoes);
+          notifyChange(novasCondicoes);
+        }
+      });
+    }
+  }, [atividade, todasAtividades]);
 
   const loadCondicoes = async () => {
     setLoading(true);
@@ -39,6 +106,10 @@ export const CondicoesProntidaoChecklist: React.FC<CondicoesProntidaoChecklistPr
       
       if (condicoesExistentes.length === 0) {
         condicoesExistentes = await condicoesProntidaoService.inicializarCondicoes(atividadeId, empresaId);
+      }
+      
+      if (atividade) {
+        condicoesExistentes = await atualizarCondicaoPredecessoraAutomaticamente(condicoesExistentes);
       }
       
       setCondicoes(condicoesExistentes);

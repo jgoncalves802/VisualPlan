@@ -682,6 +682,7 @@ export const LPSPage: React.FC = () => {
             [atividadeId]: resumo,
           }));
         }}
+        todasAtividades={atividades}
       />
     </div>
   );
