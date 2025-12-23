@@ -26,6 +26,7 @@ import Acoes5W2HPage from './pages/Acoes5W2HPage';
 import AuditoriaPage from './pages/AuditoriaPage';
 import GestaoMudancaPage from './pages/GestaoMudancaPage';
 import { RecursosPage } from './pages/RecursosPage';
+import TakeoffPage from './pages/TakeoffPage';
 import './styles/global.css';
 
 const ProtectedAppLayout: React.FC = () => {
@@ -72,6 +73,7 @@ function App() {
             <Route path="/cronograma" element={<CronogramaPage />} />
             <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
             <Route path="/recursos" element={<RecursosPage />} />
+            <Route path="/takeoff" element={<TakeoffPage />} />
             <Route path="/gantt" element={<Navigate to="/cronograma" replace />} />
             <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/lps" element={<LPSPage />} />

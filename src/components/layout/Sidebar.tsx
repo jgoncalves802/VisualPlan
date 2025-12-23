@@ -19,6 +19,7 @@ import {
   Fish,
   Users,
   Briefcase,
+  Package,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -95,6 +96,12 @@ const menuItems: MenuItem[] = [
     label: 'Gantt / Cronograma',
     icon: <Calendar className="w-5 h-5" />,
     path: '/cronograma',
+  },
+  {
+    id: 'takeoff',
+    label: 'Take-off / Quantidades',
+    icon: <Package className="w-5 h-5" />,
+    path: '/takeoff',
   },
   {
     id: 'kanban',

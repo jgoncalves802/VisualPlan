@@ -40,7 +40,18 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **dependencias_atividades**: Activity dependencies/relationships supporting 4 PDM types and lag.
         *   **cronograma_column_configs**: Per-user, per-project column visibility and order preferences.
     *   **Performance & UX**: Implemented caching strategies (localStorage with TTL), optimistic UI updates, batch update manager, skeleton loaders, fade-in animations, scroll preservation, inline editing, and robust error handling with network resilience.
+    *   **Take-off / Quantity Surveying Module**: Complete module for managing construction quantities and physical progress tracking:
+        *   **Database Tables**: 8 tables (takeoff_disciplinas, takeoff_colunas_config, takeoff_mapas, takeoff_itens, takeoff_valores_custom, takeoff_medicoes, takeoff_vinculos, takeoff_documentos)
+        *   **Generated Columns**: peso_total, custo_total, and percentual_executado are auto-calculated by PostgreSQL
+        *   **6 Discipline Templates**: Tubulação, Elétrica, Caldeiraria, Suporte, Estrutura, Equipamentos - each with specific columns
+        *   **Excel Import**: Column mapping UI with auto-detection, preview, batch insert with validation
+        *   **Schedule Integration**: Link take-off items to activities via vinculos table with weighted progress calculation
+        *   **Dashboard**: KPIs, progress by discipline, pie chart distribution, detailed breakdown table
+        *   **Service**: `takeoffService.ts` with CRUD for all entities, batch operations, totals aggregation
+        *   **Store**: `takeoffStore.ts` with Zustand for state management, filters, selections
+        *   **Route**: `/takeoff` accessible from sidebar menu
     *   **Service Layer Architecture**: Dedicated Supabase services for each management module with PGRST205 graceful error handling:
+        *   `takeoffService.ts`: Take-off/Quantity management with discipline templates, batch imports, measurements, schedule linkage
         *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions with `updateWithSync()` for bidirectional sync
         *   `gestaoMudancaService.ts`: Change request management with workflow support
         *   `reunioesService.ts`: Meeting scheduling and agenda management
