@@ -156,10 +156,9 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
   if (r.atividade_nome) {
     data.atividade_nome = r.atividade_nome;
   }
-  // WBS desabilitado temporariamente - tabela wbs_nodes não existe no Supabase remoto
-  // if (isValidUUID(r.wbs_id)) {
-  //   data.wbs_id = r.wbs_id;
-  // }
+  if (isValidUUID(r.wbs_id)) {
+    data.wbs_id = r.wbs_id;
+  }
   if (r.wbs_nome) {
     data.wbs_nome = r.wbs_nome;
   }
