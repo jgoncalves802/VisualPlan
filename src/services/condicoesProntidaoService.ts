@@ -100,19 +100,15 @@ const formatDateForDB = (date: Date): string => {
 export const condicoesProntidaoService = {
   async getByAtividade(atividadeId: string, empresaId: string): Promise<CondicaoProntidao[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error, status } = await supabase
         .from('condicoes_prontidao')
         .select('*')
         .eq('atividade_id', atividadeId)
         .eq('empresa_id', empresaId)
         .order('tipo_condicao');
 
-      if (error) {
-        if (error.code === 'PGRST116' || error.code === 'PGRST205') {
-          const localCondicoes = getLocalCondicoes();
-          return localCondicoes.filter(c => c.atividadeId === atividadeId && c.empresaId === empresaId);
-        }
-        console.error('Erro ao buscar condições de prontidão:', error);
+      if (error || status === 404) {
+        console.warn('Tabela condicoes_prontidao não disponível, usando localStorage');
         const localCondicoes = getLocalCondicoes();
         return localCondicoes.filter(c => c.atividadeId === atividadeId && c.empresaId === empresaId);
       }
@@ -158,30 +154,27 @@ export const condicoesProntidaoService = {
       status: StatusCondicaoProntidao.PENDENTE,
     }));
 
-    const { data, error } = await supabase
+    const { data, error, status } = await supabase
       .from('condicoes_prontidao')
       .insert(novasCondicoes.map(mapToDB))
       .select();
 
-    if (error) {
-      if (error.code === 'PGRST205') {
-        const now = new Date();
-        const localCondicoes: CondicaoProntidao[] = tiposCondicao.map(tipo => ({
-          id: generateId(),
-          empresaId,
-          atividadeId,
-          tipoCondicao: tipo,
-          status: StatusCondicaoProntidao.PENDENTE,
-          createdAt: now,
-          updatedAt: now,
-        }));
-        
-        const allCondicoes = [...getLocalCondicoes(), ...localCondicoes];
-        saveLocalCondicoes(allCondicoes);
-        return localCondicoes;
-      }
-      console.error('Erro ao inicializar condições de prontidão:', error);
-      return [];
+    if (error || status === 404) {
+      console.warn('Tabela condicoes_prontidao não disponível, criando condições localmente');
+      const now = new Date();
+      const localCondicoes: CondicaoProntidao[] = tiposCondicao.map(tipo => ({
+        id: generateId(),
+        empresaId,
+        atividadeId,
+        tipoCondicao: tipo,
+        status: StatusCondicaoProntidao.PENDENTE,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      
+      const allCondicoes = [...getLocalCondicoes(), ...localCondicoes];
+      saveLocalCondicoes(allCondicoes);
+      return localCondicoes;
     }
 
     return (data || []).map(mapFromDB);
@@ -208,29 +201,27 @@ export const condicoesProntidaoService = {
       const updateData = mapToDB(updates);
       updateData.updated_at = new Date().toISOString();
 
-      const { data, error } = await supabase
+      const { data, error, status } = await supabase
         .from('condicoes_prontidao')
         .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST205') {
-          const allCondicoes = getLocalCondicoes();
-          const index = allCondicoes.findIndex(c => c.id === id);
-          if (index >= 0) {
-            const updated: CondicaoProntidao = {
-              ...allCondicoes[index],
-              ...updates,
-              updatedAt: new Date(),
-            };
-            allCondicoes[index] = updated;
-            saveLocalCondicoes(allCondicoes);
-            return updated;
-          }
+      if (error || status === 404) {
+        console.warn('Tabela condicoes_prontidao não disponível, atualizando no localStorage');
+        const allCondicoes = getLocalCondicoes();
+        const index = allCondicoes.findIndex(c => c.id === id);
+        if (index >= 0) {
+          const updated: CondicaoProntidao = {
+            ...allCondicoes[index],
+            ...updates,
+            updatedAt: new Date(),
+          };
+          allCondicoes[index] = updated;
+          saveLocalCondicoes(allCondicoes);
+          return updated;
         }
-        console.error('Erro ao atualizar condição de prontidão:', error);
         return null;
       }
 

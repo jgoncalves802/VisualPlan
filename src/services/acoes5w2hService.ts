@@ -169,6 +169,50 @@ export const acoes5w2hService = {
       .single();
 
     if (error) {
+      if (error.code === '23514' && error.message?.includes('acoes_5w2h_origem_check')) {
+        console.log('Usando RPC para inserir ação 5W2H (schema cache desatualizado)');
+        const { data: rpcId, error: rpcError } = await supabase.rpc('insert_acao_5w2h', {
+          p_codigo: acao.codigo,
+          p_o_que: acao.oQue,
+          p_por_que: acao.porQue,
+          p_onde: acao.onde || null,
+          p_quando: acao.quando instanceof Date ? acao.quando.toISOString() : acao.quando,
+          p_quem: acao.quem,
+          p_quem_id: acao.quemId || null,
+          p_como: acao.como || null,
+          p_status: acao.status,
+          p_prioridade: acao.prioridade,
+          p_origem: acao.origem,
+          p_origem_id: acao.origemId || null,
+          p_origem_descricao: acao.origemDescricao || null,
+          p_empresa_id: acao.empresaId,
+          p_projeto_id: acao.projetoId || null,
+        });
+
+        if (rpcError) {
+          console.error('Erro ao criar ação 5W2H via RPC:', rpcError);
+          throw rpcError;
+        }
+
+        return {
+          id: rpcId,
+          codigo: acao.codigo,
+          oQue: acao.oQue,
+          porQue: acao.porQue,
+          onde: acao.onde,
+          quando: acao.quando instanceof Date ? acao.quando : new Date(acao.quando as string),
+          quem: acao.quem,
+          quemId: acao.quemId,
+          como: acao.como,
+          status: acao.status,
+          prioridade: acao.prioridade,
+          origem: acao.origem,
+          origemId: acao.origemId,
+          origemDescricao: acao.origemDescricao,
+          dataCriacao: new Date(),
+        } as Acao5W2H;
+      }
+      
       console.error('Erro ao criar ação 5W2H:', error);
       throw error;
     }
