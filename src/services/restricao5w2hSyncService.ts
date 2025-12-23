@@ -51,7 +51,7 @@ export const restricao5w2hSyncService = {
         como: 'A definir - aguardando plano de ação',
         status: mapRestricaoStatusTo5W2H(restricao.status),
         prioridade: mapRestricaoPrioridadeTo5W2H(restricao.prioridade || 'MEDIA'),
-        origem: 'ISHIKAWA' as OrigemAcao,
+        origem: OrigemAcao.RESTRICAO_LPS,
         origemId: restricao.id,
         origemDescricao: `Restrição: ${restricao.descricao.substring(0, 100)}`,
         restricaoLpsId: restricao.id,
