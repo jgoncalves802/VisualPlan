@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AtividadeLPS, StatusAtividadeLPS, TipoAtividadeLPS, ResumoProntidao } from '../../../types/lps';
-import { AlertTriangle, CheckCircle, Plus, MoreVertical } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Plus, MoreVertical, Hand } from 'lucide-react';
 
 interface ActivityCardProps {
   atividade: AtividadeLPS;
@@ -173,17 +173,21 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
 
       {/* Container de badges na parte inferior */}
       <div className="absolute bottom-1.5 left-1.5 right-8 flex items-center gap-1 flex-wrap">
-        {/* Badge de restrições no formato X/Y */}
+        {/* Badge de restrições no formato X/Y com ícone de mão/pare */}
         {restricoesTotalCount > 0 && (
           <div 
-            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm ${
               restricoesCount > 0 
-                ? 'bg-amber-100 text-amber-700 border border-amber-300' 
+                ? 'bg-red-100 text-red-700 border border-red-400' 
                 : 'bg-green-100 text-green-700 border border-green-300'
             }`}
             title={`${restricoesResolvidasCount} resolvidas de ${restricoesTotalCount} restrições`}
           >
-            <AlertTriangle className="w-3 h-3" />
+            <div className={`flex items-center justify-center w-4 h-4 rounded-full ${
+              restricoesCount > 0 ? 'bg-red-500' : 'bg-green-500'
+            }`}>
+              <Hand className="w-2.5 h-2.5 text-white" />
+            </div>
             {restricoesResolvidasCount}/{restricoesTotalCount}
           </div>
         )}
