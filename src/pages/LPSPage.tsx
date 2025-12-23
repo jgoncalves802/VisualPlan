@@ -115,7 +115,7 @@ export const LPSPage: React.FC = () => {
   const [atividadeParaProntidao, setAtividadeParaProntidao] = useState<AtividadeLPS | null>(null);
   const [prontidaoMap, setProntidaoMap] = useState<Record<string, ResumoProntidao>>({});
 
-  // Carregar condições de prontidão para todas as atividades
+  // Carregar e inicializar condições de prontidão para todas as atividades
   useEffect(() => {
     const loadProntidao = async () => {
       if (!usuario?.empresaId || atividades.length === 0) return;
@@ -123,12 +123,34 @@ export const LPSPage: React.FC = () => {
       const map: Record<string, ResumoProntidao> = {};
       for (const atividade of atividades) {
         try {
-          const resumo = await condicoesProntidaoService.getResumoProntidao(atividade.id, usuario.empresaId);
-          if (resumo.totalCondicoes > 0) {
-            map[atividade.id] = resumo;
+          // Primeiro tenta buscar, se não existir, inicializa automaticamente
+          let condicoes = await condicoesProntidaoService.getByAtividade(atividade.id, usuario.empresaId);
+          
+          if (condicoes.length === 0) {
+            // Inicializa as 6 condições automaticamente
+            condicoes = await condicoesProntidaoService.inicializarCondicoes(atividade.id, usuario.empresaId);
           }
-        } catch {
-          // Ignora erros individuais
+          
+          if (condicoes.length > 0) {
+            const condicoesAtendidas = condicoes.filter(c => c.status === 'ATENDIDA').length;
+            const condicoesPendentes = condicoes.filter(c => c.status === 'PENDENTE').length;
+            const condicoesNaoAplicaveis = condicoes.filter(c => c.status === 'NAO_APLICAVEL').length;
+            const totalCondicoes = condicoes.length;
+            const condicoesRelevantes = totalCondicoes - condicoesNaoAplicaveis;
+            
+            map[atividade.id] = {
+              atividadeId: atividade.id,
+              totalCondicoes,
+              condicoesAtendidas,
+              condicoesPendentes,
+              condicoesNaoAplicaveis,
+              percentualProntidao: condicoesRelevantes > 0 ? Math.round((condicoesAtendidas / condicoesRelevantes) * 100) : 100,
+              prontaParaExecucao: condicoesPendentes === 0,
+              condicoes,
+            };
+          }
+        } catch (error) {
+          console.error('Erro ao carregar prontidão para atividade:', atividade.id, error);
         }
       }
       setProntidaoMap(map);
@@ -654,6 +676,12 @@ export const LPSPage: React.FC = () => {
         atividade={atividadeParaProntidao}
         empresaId={usuario?.empresaId || ''}
         onAddRestricao={handleAddRestricaoFromCard}
+        onProntidaoChange={(atividadeId, resumo) => {
+          setProntidaoMap(prev => ({
+            ...prev,
+            [atividadeId]: resumo,
+          }));
+        }}
       />
     </div>
   );

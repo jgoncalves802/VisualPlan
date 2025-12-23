@@ -6,6 +6,37 @@ import {
   ResumoProntidao,
 } from '../types/lps';
 
+const STORAGE_KEY = 'visionplan_condicoes_prontidao';
+
+const getLocalCondicoes = (): CondicaoProntidao[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.map((c: Record<string, unknown>) => ({
+        ...c,
+        createdAt: new Date(c.createdAt as string),
+        updatedAt: new Date(c.updatedAt as string),
+        dataPrevista: c.dataPrevista ? new Date(c.dataPrevista as string) : undefined,
+        dataAtendida: c.dataAtendida ? new Date(c.dataAtendida as string) : undefined,
+      }));
+    }
+  } catch (e) {
+    console.error('Erro ao ler condições do localStorage:', e);
+  }
+  return [];
+};
+
+const saveLocalCondicoes = (condicoes: CondicaoProntidao[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(condicoes));
+  } catch (e) {
+    console.error('Erro ao salvar condições no localStorage:', e);
+  }
+};
+
+const generateId = () => `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
 interface CondicaoProntidaoDB {
   id: string;
   empresa_id: string;
@@ -77,15 +108,20 @@ export const condicoesProntidaoService = {
         .order('tipo_condicao');
 
       if (error) {
-        if (error.code === 'PGRST116' || error.code === 'PGRST205') return [];
+        if (error.code === 'PGRST116' || error.code === 'PGRST205') {
+          const localCondicoes = getLocalCondicoes();
+          return localCondicoes.filter(c => c.atividadeId === atividadeId && c.empresaId === empresaId);
+        }
         console.error('Erro ao buscar condições de prontidão:', error);
-        return [];
+        const localCondicoes = getLocalCondicoes();
+        return localCondicoes.filter(c => c.atividadeId === atividadeId && c.empresaId === empresaId);
       }
 
       return (data || []).map(mapFromDB);
     } catch (error) {
       console.error('Erro ao buscar condições de prontidão:', error);
-      return [];
+      const localCondicoes = getLocalCondicoes();
+      return localCondicoes.filter(c => c.atividadeId === atividadeId && c.empresaId === empresaId);
     }
   },
 
@@ -128,6 +164,22 @@ export const condicoesProntidaoService = {
       .select();
 
     if (error) {
+      if (error.code === 'PGRST205') {
+        const now = new Date();
+        const localCondicoes: CondicaoProntidao[] = tiposCondicao.map(tipo => ({
+          id: generateId(),
+          empresaId,
+          atividadeId,
+          tipoCondicao: tipo,
+          status: StatusCondicaoProntidao.PENDENTE,
+          createdAt: now,
+          updatedAt: now,
+        }));
+        
+        const allCondicoes = [...getLocalCondicoes(), ...localCondicoes];
+        saveLocalCondicoes(allCondicoes);
+        return localCondicoes;
+      }
       console.error('Erro ao inicializar condições de prontidão:', error);
       return [];
     }
@@ -136,6 +188,22 @@ export const condicoesProntidaoService = {
   },
 
   async update(id: string, updates: Partial<CondicaoProntidao>): Promise<CondicaoProntidao | null> {
+    if (id.startsWith('local-')) {
+      const allCondicoes = getLocalCondicoes();
+      const index = allCondicoes.findIndex(c => c.id === id);
+      if (index >= 0) {
+        const updated: CondicaoProntidao = {
+          ...allCondicoes[index],
+          ...updates,
+          updatedAt: new Date(),
+        };
+        allCondicoes[index] = updated;
+        saveLocalCondicoes(allCondicoes);
+        return updated;
+      }
+      return null;
+    }
+    
     try {
       const updateData = mapToDB(updates);
       updateData.updated_at = new Date().toISOString();
@@ -148,6 +216,20 @@ export const condicoesProntidaoService = {
         .single();
 
       if (error) {
+        if (error.code === 'PGRST205') {
+          const allCondicoes = getLocalCondicoes();
+          const index = allCondicoes.findIndex(c => c.id === id);
+          if (index >= 0) {
+            const updated: CondicaoProntidao = {
+              ...allCondicoes[index],
+              ...updates,
+              updatedAt: new Date(),
+            };
+            allCondicoes[index] = updated;
+            saveLocalCondicoes(allCondicoes);
+            return updated;
+          }
+        }
         console.error('Erro ao atualizar condição de prontidão:', error);
         return null;
       }

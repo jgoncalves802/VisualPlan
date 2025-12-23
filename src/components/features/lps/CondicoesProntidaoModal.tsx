@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { AtividadeLPS } from '../../../types/lps';
+import { AtividadeLPS, ResumoProntidao } from '../../../types/lps';
 import { CondicoesProntidaoChecklist } from './CondicoesProntidaoChecklist';
 
 interface CondicoesProntidaoModalProps {
@@ -9,6 +9,7 @@ interface CondicoesProntidaoModalProps {
   atividade: AtividadeLPS | null;
   empresaId: string;
   onAddRestricao?: (atividade: AtividadeLPS) => void;
+  onProntidaoChange?: (atividadeId: string, resumo: ResumoProntidao) => void;
 }
 
 export const CondicoesProntidaoModal: React.FC<CondicoesProntidaoModalProps> = ({
@@ -17,8 +18,13 @@ export const CondicoesProntidaoModal: React.FC<CondicoesProntidaoModalProps> = (
   atividade,
   empresaId,
   onAddRestricao,
+  onProntidaoChange,
 }) => {
   if (!isOpen || !atividade) return null;
+
+  const handleProntidaoChange = (resumo: ResumoProntidao) => {
+    onProntidaoChange?.(atividade.id, resumo);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -40,6 +46,7 @@ export const CondicoesProntidaoModal: React.FC<CondicoesProntidaoModalProps> = (
           <CondicoesProntidaoChecklist
             atividadeId={atividade.id}
             empresaId={empresaId}
+            onProntidaoChange={handleProntidaoChange}
           />
 
           <div className="mt-4 pt-4 border-t">
