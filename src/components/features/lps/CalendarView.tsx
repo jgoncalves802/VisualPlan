@@ -150,10 +150,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getCorCategoria = (atividade: AtividadeLPS): string => {
     const restricoesAtividade = getRestricoesAtividade[atividade.id] || [];
+    
+    if (restricoesAtividade.length === 0) {
+      return 'bg-green-200 border-green-500 hover:bg-green-300';
+    }
+    
+    const temRestricoesAtrasadas = restricoesAtividade.some(
+      (r) => r.status === 'ATRASADA'
+    );
     const temRestricoesPendentes = restricoesAtividade.some(
-      (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+      (r) => r.status === 'PENDENTE'
     );
     
+    if (temRestricoesAtrasadas) {
+      return 'bg-red-200 border-red-400 hover:bg-red-300';
+    }
     if (temRestricoesPendentes) {
       return 'bg-yellow-200 border-yellow-400 hover:bg-yellow-300';
     }
@@ -209,21 +220,32 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       Arraste atividades aqui
                     </div>
                   ) : (
-                    atividadesDoDia.map((atividade) => (
-                      <ActivityCard
-                        key={atividade.id}
-                        atividade={atividade}
-                        onClick={() => onActivityClick?.(atividade)}
-                        cor={getCorCategoria(atividade)}
-                        restricoesCount={(getRestricoesAtividade[atividade.id] || []).filter(
-                          (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
-                        ).length}
-                        empresaId={empresaId}
-                        prontidao={prontidaoMap[atividade.id]}
-                        onAddRestricao={onAddRestricao}
-                        onOpenProntidao={onOpenProntidao}
-                      />
-                    ))
+                    atividadesDoDia.map((atividade) => {
+                      const restricoesAtividade = getRestricoesAtividade[atividade.id] || [];
+                      const restricoesPendentes = restricoesAtividade.filter(
+                        (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
+                      ).length;
+                      const restricoesResolvidas = restricoesAtividade.filter(
+                        (r) => r.status === 'CONCLUIDA'
+                      ).length;
+                      const restricoesTotal = restricoesAtividade.length;
+                      
+                      return (
+                        <ActivityCard
+                          key={atividade.id}
+                          atividade={atividade}
+                          onClick={() => onActivityClick?.(atividade)}
+                          cor={getCorCategoria(atividade)}
+                          restricoesCount={restricoesPendentes}
+                          restricoesTotalCount={restricoesTotal}
+                          restricoesResolvidasCount={restricoesResolvidas}
+                          empresaId={empresaId}
+                          prontidao={prontidaoMap[atividade.id]}
+                          onAddRestricao={onAddRestricao}
+                          onOpenProntidao={onOpenProntidao}
+                        />
+                      );
+                    })
                   )}
                 </div>
               </div>

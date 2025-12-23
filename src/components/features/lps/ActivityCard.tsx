@@ -15,6 +15,8 @@ interface ActivityCardProps {
   onClick?: () => void;
   cor?: string;
   restricoesCount?: number;
+  restricoesTotalCount?: number;
+  restricoesResolvidasCount?: number;
   compact?: boolean;
   empresaId?: string;
   prontidao?: ResumoProntidao | null;
@@ -27,6 +29,8 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onClick,
   cor = 'bg-green-200 border-green-500',
   restricoesCount = 0,
+  restricoesTotalCount = 0,
+  restricoesResolvidasCount = 0,
   compact = false,
   prontidao,
   onAddRestricao,
@@ -153,35 +157,46 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         <div className="absolute top-2 right-5 w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Atividade Crítica" />
       )}
 
-      {/* Badge de restrições pendentes */}
-      {restricoesCount > 0 && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
-          {restricoesCount}
-        </div>
-      )}
-
-      {/* Badge de prontidão */}
-      {prontidao && prontidao.totalCondicoes > 0 && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenProntidao?.(atividade);
-          }}
-          className={`absolute bottom-1.5 left-1.5 flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium transition-colors ${
-            prontidao.prontaParaExecucao
-              ? 'bg-green-100 text-green-700 hover:bg-green-200'
-              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-          }`}
-          title={`${prontidao.condicoesAtendidas}/${prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis} condições atendidas`}
-        >
-          {prontidao.prontaParaExecucao ? (
-            <CheckCircle className="w-3 h-3" />
-          ) : (
+      {/* Container de badges na parte inferior */}
+      <div className="absolute bottom-1.5 left-1.5 right-8 flex items-center gap-1 flex-wrap">
+        {/* Badge de restrições no formato X/Y */}
+        {restricoesTotalCount > 0 && (
+          <div 
+            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold shadow-sm ${
+              restricoesCount > 0 
+                ? 'bg-amber-100 text-amber-700 border border-amber-300' 
+                : 'bg-green-100 text-green-700 border border-green-300'
+            }`}
+            title={`${restricoesResolvidasCount} resolvidas de ${restricoesTotalCount} restrições`}
+          >
             <AlertTriangle className="w-3 h-3" />
-          )}
-          {prontidao.condicoesAtendidas}/{prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis}
-        </button>
-      )}
+            {restricoesResolvidasCount}/{restricoesTotalCount}
+          </div>
+        )}
+
+        {/* Badge de prontidão */}
+        {prontidao && prontidao.totalCondicoes > 0 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenProntidao?.(atividade);
+            }}
+            className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium transition-colors ${
+              prontidao.prontaParaExecucao
+                ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
+                : 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300'
+            }`}
+            title={`${prontidao.condicoesAtendidas}/${prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis} condições atendidas`}
+          >
+            {prontidao.prontaParaExecucao ? (
+              <CheckCircle className="w-3 h-3" />
+            ) : (
+              <AlertTriangle className="w-3 h-3" />
+            )}
+            {prontidao.condicoesAtendidas}/{prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis}
+          </button>
+        )}
+      </div>
 
       {/* Botão de menu de ações */}
       {onAddRestricao && (
