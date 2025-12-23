@@ -27,6 +27,7 @@ import {
 } from '../types/lps';
 import { CondicoesProntidaoModal } from '../components/features/lps/CondicoesProntidaoModal';
 import { condicoesProntidaoService } from '../services/condicoesProntidaoService';
+import { restricao5w2hSyncService } from '../services/restricao5w2hSyncService';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { epsService, EpsNode } from '../services/epsService';
 import {
@@ -337,9 +338,22 @@ export const LPSPage: React.FC = () => {
     if ('id' in restricaoToSave && restricaoToSave.id) {
       const { id, ...rest } = restricaoToSave;
       await updateRestricaoAsync(id, rest, usuario.empresaId);
+      
+      // Sincronizar alterações com 5W2H existente
+      await restricao5w2hSyncService.syncRestricaoTo5W2H(id, rest);
     } else {
       // Nova restrição - usar versão async para persistir no Supabase
-      await addRestricaoAsync(restricaoToSave as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
+      const novaRestricao = await addRestricaoAsync(restricaoToSave as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
+      
+      // Criar ação 5W2H automaticamente para a nova restrição
+      if (novaRestricao) {
+        await restricao5w2hSyncService.createAcaoFrom5W2H(
+          novaRestricao,
+          usuario.empresaId,
+          projetoIdParam || undefined,
+          usuario.id
+        );
+      }
     }
     setRestricaoModalOpen(false);
     setRestricaoModalAtividadeId(undefined);
