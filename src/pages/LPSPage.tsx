@@ -79,9 +79,9 @@ export const LPSPage: React.FC = () => {
     setPeriodo,
     addAtividade,
     moveAtividade,
-    addRestricao,
-    updateRestricao,
-    deleteRestricao,
+    addRestricaoAsync,
+    updateRestricaoAsync,
+    deleteRestricaoAsync,
     addAnotacao,
     updateAnotacao,
     deleteAnotacao,
@@ -265,15 +265,35 @@ export const LPSPage: React.FC = () => {
     setActivityActionsModalOpen(false);
   };
 
-  const handleSaveRestricao = (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
+  const handleSaveRestricao = async (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS> | RestricaoLPS) => {
+    if (!usuario?.empresaId) {
+      console.error('Empresa não encontrada');
+      return;
+    }
+    
+    // Validar atividade_id - se não for UUID válido, usar null
+    const isValidUUID = (id: string | undefined) => {
+      if (!id) return false;
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    };
+    
+    const restricaoToSave: typeof restricao & { atividade_id?: string; projeto_id?: string } = {
+      ...restricao,
+      atividade_id: isValidUUID(restricao.atividade_id) ? restricao.atividade_id : undefined,
+    };
+    
+    // Só adiciona projeto_id se existir (evita sobrescrever com undefined)
+    if (projetoIdParam) {
+      restricaoToSave.projeto_id = projetoIdParam;
+    }
+    
     // Se tem id, é edição
-    if ('id' in restricao && restricao.id) {
-      // Editar restrição
-      const { id, ...rest } = restricao;
-      updateRestricao(id, rest);
+    if ('id' in restricaoToSave && restricaoToSave.id) {
+      const { id, ...rest } = restricaoToSave;
+      await updateRestricaoAsync(id, rest, usuario.empresaId);
     } else {
-      // Nova restrição
-      addRestricao(restricao as Omit<RestricaoLPS, 'id'>);
+      // Nova restrição - usar versão async para persistir no Supabase
+      await addRestricaoAsync(restricaoToSave as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
     }
     setRestricaoModalOpen(false);
     setRestricaoModalAtividadeId(undefined);
@@ -294,26 +314,29 @@ export const LPSPage: React.FC = () => {
     deleteAnotacao(id);
   };
 
-  const handleAddRestricao = (restricao: Omit<RestricaoLPS, 'id'>) => {
-    addRestricao(restricao);
+  const handleAddRestricao = async (restricao: Omit<RestricaoLPS, 'id'>) => {
+    if (!usuario?.empresaId) return;
+    await addRestricaoAsync(restricao, usuario.empresaId);
   };
 
-  const handleEditRestricao = (id: string, restricao: Partial<RestricaoLPS>) => {
-    updateRestricao(id, restricao);
+  const handleEditRestricao = async (id: string, restricao: Partial<RestricaoLPS>) => {
+    if (!usuario?.empresaId) return;
+    await updateRestricaoAsync(id, restricao, usuario.empresaId);
   };
 
-  const handleDeleteRestricao = (id: string) => {
-    deleteRestricao(id);
+  const handleDeleteRestricao = async (id: string) => {
+    await deleteRestricaoAsync(id);
   };
 
-  const handleToggleRestricao = (id: string) => {
+  const handleToggleRestricao = async (id: string) => {
+    if (!usuario?.empresaId) return;
     const restricao = restricoes.find((r) => r.id === id);
     if (restricao) {
-      updateRestricao(id, {
+      await updateRestricaoAsync(id, {
         status: restricao.status === 'CONCLUIDA' ? 'PENDENTE' : 'CONCLUIDA',
         data_conclusao:
           restricao.status === 'CONCLUIDA' ? undefined : new Date(),
-      });
+      }, usuario.empresaId);
     }
   };
 
