@@ -37,6 +37,16 @@ interface Acao5W2HDB {
   created_by: string | null;
 }
 
+const mapOrigemFromDB = (origem: string): OrigemAcao => {
+  if (origem === 'RESTRICAO_LPS') return 'LPS' as OrigemAcao;
+  return origem as OrigemAcao;
+};
+
+const mapOrigemToDB = (origem: string): string => {
+  if (origem === 'LPS') return 'RESTRICAO_LPS';
+  return origem;
+};
+
 const mapFromDB = (data: Acao5W2HDB): Acao5W2H => ({
   id: data.id,
   codigo: data.codigo,
@@ -51,7 +61,7 @@ const mapFromDB = (data: Acao5W2HDB): Acao5W2H => ({
   quantoDescricao: data.quanto_descricao || undefined,
   status: data.status as StatusAcao5W2H,
   prioridade: data.prioridade as PrioridadeAcao,
-  origem: data.origem as OrigemAcao,
+  origem: mapOrigemFromDB(data.origem),
   origemId: data.origem_id || undefined,
   origemDescricao: data.origem_descricao || undefined,
   atividadeGanttId: data.atividade_gantt_id || undefined,
@@ -78,7 +88,7 @@ const mapToDB = (acao: Partial<Acao5W2H> & { empresaId: string; projetoId?: stri
   quanto_descricao: acao.quantoDescricao || null,
   status: acao.status,
   prioridade: acao.prioridade,
-  origem: acao.origem,
+  origem: acao.origem ? mapOrigemToDB(acao.origem) : null,
   origem_id: acao.origemId || null,
   origem_descricao: acao.origemDescricao || null,
   atividade_gantt_id: acao.atividadeGanttId || null,
@@ -162,6 +172,8 @@ export const acoes5w2hService = {
       data_criacao: new Date().toISOString(),
     };
 
+    console.log('Criando 5W2H com dados:', JSON.stringify(dbData, null, 2));
+
     const { data, error } = await supabase
       .from('acoes_5w2h')
       .insert(dbData)
@@ -169,50 +181,6 @@ export const acoes5w2hService = {
       .single();
 
     if (error) {
-      if (error.code === '23514' && error.message?.includes('acoes_5w2h_origem_check')) {
-        console.log('Usando RPC para inserir ação 5W2H (schema cache desatualizado)');
-        const { data: rpcId, error: rpcError } = await supabase.rpc('insert_acao_5w2h', {
-          p_codigo: acao.codigo,
-          p_o_que: acao.oQue,
-          p_por_que: acao.porQue,
-          p_onde: acao.onde || null,
-          p_quando: acao.quando instanceof Date ? acao.quando.toISOString() : acao.quando,
-          p_quem: acao.quem,
-          p_quem_id: acao.quemId || null,
-          p_como: acao.como || null,
-          p_status: acao.status,
-          p_prioridade: acao.prioridade,
-          p_origem: acao.origem,
-          p_origem_id: acao.origemId || null,
-          p_origem_descricao: acao.origemDescricao || null,
-          p_empresa_id: acao.empresaId,
-          p_projeto_id: acao.projetoId || null,
-        });
-
-        if (rpcError) {
-          console.error('Erro ao criar ação 5W2H via RPC:', rpcError);
-          throw rpcError;
-        }
-
-        return {
-          id: rpcId,
-          codigo: acao.codigo,
-          oQue: acao.oQue,
-          porQue: acao.porQue,
-          onde: acao.onde,
-          quando: acao.quando instanceof Date ? acao.quando : new Date(acao.quando as string),
-          quem: acao.quem,
-          quemId: acao.quemId,
-          como: acao.como,
-          status: acao.status,
-          prioridade: acao.prioridade,
-          origem: acao.origem,
-          origemId: acao.origemId,
-          origemDescricao: acao.origemDescricao,
-          dataCriacao: new Date(),
-        } as Acao5W2H;
-      }
-      
       console.error('Erro ao criar ação 5W2H:', error);
       throw error;
     }
