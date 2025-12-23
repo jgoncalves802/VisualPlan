@@ -20,11 +20,12 @@ import { AtividadeActionsModal } from '../components/features/cronograma/Ativida
 import { ManageDependenciesModal } from '../components/features/cronograma/ManageDependenciesModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
 import { EpsSelector } from '../components/features/cronograma/EpsSelector';
+import { MasterGanttView } from '../components/features/cronograma/MasterGanttView';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { RestricaoLPS } from '../types/lps';
-import { ArrowLeft, PanelRightOpen, PanelRightClose, Users } from 'lucide-react';
+import { ArrowLeft, PanelRightOpen, PanelRightClose, Users, List, BarChart3 } from 'lucide-react';
 import { ResourceWorkspace } from '../components/features/cronograma/ResourceWorkspace';
 import { resourceService } from '../services/resourceService';
 import type { Task } from '../lib/vision-gantt/types';
@@ -89,6 +90,7 @@ export const CronogramaPage: React.FC = () => {
   const [manageDepsAtividadeId, setManageDepsAtividadeId] = useState<string | null>(null);
   const [showResourcePanel, setShowResourcePanel] = useState(false);
   const [selectedTaskForResources, setSelectedTaskForResources] = useState<Task | null>(null);
+  const [masterView, setMasterView] = useState<'list' | 'timeline'>('list');
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -550,14 +552,46 @@ export const CronogramaPage: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
               <p className="text-sm text-gray-500 mt-1">
-                Selecione um projeto da estrutura EPS para abrir o cronograma
+                {masterView === 'list' 
+                  ? 'Selecione um projeto da estrutura EPS para abrir o cronograma'
+                  : 'Visão consolidada de todos os projetos no tempo'
+                }
               </p>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setMasterView('list')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  masterView === 'list'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                Lista
+              </button>
+              <button
+                onClick={() => setMasterView('timeline')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  masterView === 'timeline'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Timeline Master
+              </button>
             </div>
           </div>
         </div>
         
         <div className="flex-1 p-6 overflow-auto">
-          <EpsSelector onSelectProject={handleSelectProject} />
+          {masterView === 'list' ? (
+            <EpsSelector onSelectProject={handleSelectProject} />
+          ) : (
+            <MasterGanttView onSelectProject={handleSelectProject} />
+          )}
         </div>
       </div>
     );
