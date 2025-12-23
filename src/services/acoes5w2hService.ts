@@ -88,7 +88,7 @@ const mapToDB = (acao: Partial<Acao5W2H> & { empresaId: string; projetoId?: stri
   quanto_descricao: acao.quantoDescricao || null,
   status: acao.status,
   prioridade: acao.prioridade,
-  origem: acao.origem ? mapOrigemToDB(acao.origem) : null,
+  origem: mapOrigemToDB(acao.origem || 'RESTRICAO_LPS'),
   origem_id: acao.origemId || null,
   origem_descricao: acao.origemDescricao || null,
   atividade_gantt_id: acao.atividadeGanttId || null,
@@ -173,6 +173,7 @@ export const acoes5w2hService = {
     };
 
     console.log('Criando 5W2H com dados:', JSON.stringify(dbData, null, 2));
+    console.log('Origem valor:', dbData.origem, 'tipo:', typeof dbData.origem);
 
     const { data, error } = await supabase
       .from('acoes_5w2h')

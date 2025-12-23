@@ -32,7 +32,9 @@ export const ActivityActionsModal: React.FC<ActivityActionsModalProps> = ({
 }) => {
   if (!isOpen || !atividade) return null;
 
-  const restricoesAtividade = restricoes.filter((r) => r.atividade_id === atividade.id);
+  // Filtrar restrições: usar atividade_cronograma_id (UUID real) quando disponível
+  const atividadeRealId = atividade.atividade_cronograma_id || atividade.id;
+  const restricoesAtividade = restricoes.filter((r) => r.atividade_id === atividadeRealId);
   const restricoesPendentes = restricoesAtividade.filter((r) => r.status === 'PENDENTE' || r.status === 'ATRASADA');
   const restricoesConcluidas = restricoesAtividade.filter((r) => r.status === 'CONCLUIDA');
 

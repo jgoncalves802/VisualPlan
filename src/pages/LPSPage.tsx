@@ -91,6 +91,7 @@ export const LPSPage: React.FC = () => {
     deleteEvidencia,
     addAndamento,
     setWbsList,
+    loadRestricoesFromSupabase,
   } = useLPSStore();
 
   // Auth store
@@ -183,6 +184,14 @@ export const LPSPage: React.FC = () => {
     loadWbsFromDatabase();
   }, [usuario?.empresaId, setWbsList]);
 
+  // Carregar restrições do Supabase (filtrado por projeto quando disponível)
+  useEffect(() => {
+    if (usuario?.empresaId) {
+      // Carregar restrições - filtragem por projeto é feita na exibição
+      loadRestricoesFromSupabase(usuario.empresaId);
+    }
+  }, [usuario?.empresaId, loadRestricoesFromSupabase]);
+
   // Inicializar período se necessário (dados mock desabilitados - usando dados reais do banco)
   useEffect(() => {
     // Verificar se dataInicio é uma Date válida
@@ -271,15 +280,35 @@ export const LPSPage: React.FC = () => {
       return;
     }
     
-    // Validar atividade_id - se não for UUID válido, usar null
+    // Validar UUID
     const isValidUUID = (id: string | undefined) => {
       if (!id) return false;
       return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     };
     
-    const restricaoToSave: typeof restricao & { atividade_id?: string; projeto_id?: string } = {
+    // Determinar o atividade_id para o banco e manter referência local
+    const atividadeIdOriginal = restricao.atividade_id;
+    let atividadeIdParaBanco: string | undefined = undefined;
+    let atividadeNome: string | undefined = restricao.atividade_nome;
+    
+    if (atividadeIdOriginal) {
+      if (isValidUUID(atividadeIdOriginal)) {
+        // Já é um UUID válido, usar diretamente
+        atividadeIdParaBanco = atividadeIdOriginal;
+      } else if (atividadeIdOriginal.startsWith('lps-')) {
+        // Buscar a atividade LPS correspondente e usar o atividade_cronograma_id
+        const atividadeLPS = atividades.find(a => a.id === atividadeIdOriginal);
+        if (atividadeLPS?.atividade_cronograma_id && isValidUUID(atividadeLPS.atividade_cronograma_id)) {
+          atividadeIdParaBanco = atividadeLPS.atividade_cronograma_id;
+          atividadeNome = atividadeNome || atividadeLPS.nome;
+        }
+      }
+    }
+    
+    const restricaoToSave: typeof restricao & { atividade_id?: string; projeto_id?: string; atividade_nome?: string } = {
       ...restricao,
-      atividade_id: isValidUUID(restricao.atividade_id) ? restricao.atividade_id : undefined,
+      atividade_id: atividadeIdParaBanco,
+      atividade_nome: atividadeNome,
     };
     
     // Só adiciona projeto_id se existir (evita sobrescrever com undefined)
