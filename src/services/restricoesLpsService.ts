@@ -25,24 +25,27 @@ interface RestricaoIshikawaDB {
 }
 
 const mapStatusToIshikawa = (status: RestricaoLPS['status']): string => {
+  // Valores aceitos pela constraint: IDENTIFICADA, EM_TRATAMENTO, CONCLUIDA_NO_PRAZO, ATRASADA, VENCIDA, CANCELADA
   switch (status) {
-    case 'PENDENTE': return 'no_prazo';
-    case 'CONCLUIDA': return 'concluida_no_prazo';
-    case 'ATRASADA': return 'atrasada';
-    case 'CANCELADA': return 'vencida';
-    default: return 'no_prazo';
+    case 'PENDENTE': return 'IDENTIFICADA';
+    case 'CONCLUIDA': return 'CONCLUIDA_NO_PRAZO';
+    case 'ATRASADA': return 'ATRASADA';
+    case 'CANCELADA': return 'CANCELADA';
+    default: return 'IDENTIFICADA';
   }
 };
 
 const mapStatusFromIshikawa = (status: string): RestricaoLPS['status'] => {
-  const statusLower = status?.toLowerCase() || 'no_prazo';
-  switch (statusLower) {
-    case 'concluida_no_prazo': return 'CONCLUIDA';
-    case 'em_execucao':
-    case 'no_prazo':
+  const statusUpper = status?.toUpperCase() || 'IDENTIFICADA';
+  switch (statusUpper) {
+    case 'CONCLUIDA_NO_PRAZO': return 'CONCLUIDA';
+    case 'EM_TRATAMENTO':
+    case 'IDENTIFICADA':
       return 'PENDENTE';
-    case 'atrasada': return 'ATRASADA';
-    case 'vencida': return 'CANCELADA';
+    case 'ATRASADA': return 'ATRASADA';
+    case 'VENCIDA':
+    case 'CANCELADA':
+      return 'CANCELADA';
     default: return 'PENDENTE';
   }
 };
