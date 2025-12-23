@@ -261,6 +261,11 @@ export const restricoesLpsService = {
       return null;
     }
 
+    console.log('[restricoesLpsService.update] Recebido:', JSON.stringify(restricao, (_key, value) => {
+      if (value instanceof Date) return `[Date: ${value.toISOString()}]`;
+      return value;
+    }, 2));
+
     const updateData: Record<string, unknown> = {};
 
     if (restricao.descricao !== undefined) updateData.descricao = restricao.descricao;
@@ -275,12 +280,15 @@ export const restricoesLpsService = {
     }
     
     if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || 'Não atribuído';
+    
     if (restricao.prazo_resolucao !== undefined) {
       const prazoDate = formatDateForDB(restricao.prazo_resolucao);
+      console.log('[update] prazo_resolucao:', restricao.prazo_resolucao, '-> formatado:', prazoDate);
       if (prazoDate) updateData.data_prevista = prazoDate;
     }
     if (restricao.data_conclusao_planejada !== undefined) {
       const planDate = formatDateForDB(restricao.data_conclusao_planejada);
+      console.log('[update] data_conclusao_planejada:', restricao.data_conclusao_planejada, '-> formatado:', planDate);
       if (planDate) updateData.data_prevista = planDate;
     }
     if (restricao.data_conclusao !== undefined) {
@@ -296,6 +304,13 @@ export const restricoesLpsService = {
     if (restricao.wbs_nome !== undefined) updateData.wbs_nome = restricao.wbs_nome;
     if (restricao.projeto_id !== undefined && isValidUUID(restricao.projeto_id)) {
       updateData.projeto_id = restricao.projeto_id;
+    }
+
+    console.log('[restricoesLpsService.update] updateData final:', JSON.stringify(updateData, null, 2));
+
+    if (Object.keys(updateData).length === 0) {
+      console.warn('[restricoesLpsService.update] Nenhum campo para atualizar!');
+      return await this.getById(id);
     }
 
     const { data, error } = await supabase

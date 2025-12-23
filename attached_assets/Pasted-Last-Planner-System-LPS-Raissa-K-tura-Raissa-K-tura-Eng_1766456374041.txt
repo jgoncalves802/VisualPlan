@@ -1,0 +1,16 @@
+Last Planner System (LPS)
+Raissa Kétura
+Raissa Kétura
+Engenheiro Civil | Planejamento | Cronograma | Projeto | MS Project | EAP | Curva de avanço |
+
+
+November 7, 2022
+O Last Planner System ou Sistema do Último Planejador é uma das ferramentas que faz parte da metodologia Lean Construction. Essa metodologia pode mudar a maneira de gestão dos projetos. Além de fazer com que o cronograma seja o mapa fiel do projeto, vamos lá aprender mais sobre o LPS?
+
+É importante dizer que um dos maiores objetivos do LPS é ter uma interação mais eficiente com toda a equipe do projeto. Outras vantagens dessa metodologia são redução do prazo do projeto, aumento de produtividade, levantamento e prevenção de erros, redução de desperdícios e melhores resultados financeiros.
+
+O LPS se inicia com a elaboração de um cronograma que apresenta todos os marcos importantes do projeto e as datas de início e término geralmente exigidas de acordo com as necessidades do cliente. A segunda etapa do fluxo de LPS vem o “Pull Planning” ou planejamento puxado faz com que todos tenham uma visão analítica do projeto com o intuito de reduzir o prazo de execução do projeto.
+
+A terceira etapa é o “Look Ahead” com o objetivo de eliminar todas as restrições do projeto ao longo de 4 a 6 semanas. E nesse momento acontecem mapeamento das restrições, alinhamento de estratégias de execução com os principais envolvidos e planos de ações para retirada de restrições. A quarta etapa é o planejamento semanal, este planejamento estão todas as atividades possíveis de se executar na semana, considerando que todas as restrições já foram resolvidas anteriormente.
+
+E por último temos a quinta etapa onde acontecem as reuniões de check in e check out. O check in é feito antes de iniciar as atividades programadas do dia, com o encarregado e sua equipe, nelas são tiradas dúvidas de como fazer as atividades e as reuniões de check out são para conferir qual foi a aderência ao plano de atividades programada, verificando se tudo ocorreu como planejado e o que precisará ser feito para ajustar qualquer desvio.

@@ -263,6 +263,14 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
       wbs_nome: selectedWbs?.nome,
     };
 
+    console.log('[RestricaoModal] handleSubmit - formData:', {
+      data_conclusao_planejada: formData.data_conclusao_planejada,
+      prazo_resolucao: formData.prazo_resolucao,
+      isDate_conclusao: formData.data_conclusao_planejada instanceof Date,
+      isDate_prazo: formData.prazo_resolucao instanceof Date,
+    });
+    console.log('[RestricaoModal] handleSubmit - dataToSave:', dataToSave);
+
     if (restricao) {
       onSave({
         ...dataToSave,

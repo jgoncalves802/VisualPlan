@@ -1,0 +1,58 @@
+O “gerenciamento iceberg” e seu impacto na produtividade das obras
+19/03/2019
+•
+5 min de leitura
+* Bruno Bachiega
+
+Se pensarmos que a produtividade é o fluxo de produção da obra e que as condicionantes são restrições a essa produtividade, então podemos adotar uma abordagem oriunda da filosofia lean de construção, o Last Planner System (LPS)
+
+Um dos maiores desafios na execução de obras é garantir que todos os recursos estejam disponíveis e que todas as condições estejam favoráveis para que o trabalho ocorra de forma fluída, de forma a garantir a esperada produtividade das obras.
+
+Mas em obras grandes e complexas o volume de informações, ações e decisões a serem gerenciados para garantir esses recursos e condições no momento certo é tão grande que é impossível que apenas a capacidade gerencial de seus gestores dê conta do recado, o que demanda um suporte de planejamento e controle muito bem estruturado. O problema é que na realidade, esse suporte praticamente não existe. Ou não existe da forma como deveria.
+
+A falha é que toda aquela estrutura de planejamento e controle que já conhecemos das grandes obras ficam focadas em gerenciar apenas as atividades de construção em si, dando pouca ou nenhuma atenção para o gerenciamento das atividades preliminares, aquelas que darão condições para que as próprias atividades de construção possam ser executadas com a produtividade esperada.
+
+O resultado é o que eu chamo de “gerenciamento iceberg”, onde damos muita atenção para a pico aparente, mas esquecemos de dar a devida atenção à base, que é justamente aquela que sustenta todo o iceberg e que ao mesmo tempo pode afundar sua embarcação.
+
+
+
+Para contextualizar o que estou falando e entendermos as consequências desse tipo de gestão, vamos tomar como exemplo um pequeno trecho do cronograma da obra XPTO.
+
+
+
+Se olharmos para a atividade 97 do cronograma, veremos que a condição para que essa atividade inicie é que a atividade 96 esteja concluída.
+
+Mas na realidade, ter a forma instalada não é a única condição para que a concretagem da fundação possa ocorrer. Há diversas outras condições que precisam ser atendidas para que a concretagem ocorra. E para que cada condição seja atendida, diversas atividades preliminares ou condicionantes precisam ser executadas, atividades essas que não ficam aparentes no cronograma. Note no exemplo abaixo as atividades condicionantes necessárias para que o concreto esteja disponível.
+
+
+
+Agora vamos imaginar que o cronograma da obra XPTO tenha 5000 atividades. Se pensarmos não apenas nas atividades de construção, mas também em todas as atividades condicionantes que estão por trás, então na verdade teremos no mínimo 40 vezes mais atividades para gerenciar do que o cronograma nos mostra. E assim como as atividades de construção, as atividades condicionantes precisam ser identificadas, categorizadas, sequenciadas, priorizadas, terem seus prazos, responsáveis e gatilhos definidos e principalmente, serem comunicadas.
+
+Somando-se a isso o esforço de integrar cliente, equipes e fornecedores para a realização dessas atividades condicionantes, então estamos falando de um esforço gigantesco e complexo de planejamento e controle.
+
+
+
+Portanto, voltando à obra XPTO, esquecer de autorizar o acesso do caminhão de concreto na portaria das instalações de um cliente passa então a não ser mais algo tão impossível de ocorrer. Traduzindo, em ambientes de projetos altamente dinâmicos e complexos, sem um suporte forte de planejamento e controle focado nas atividades condicionantes, sempre estaremos esquecendo algo ou não tomando as ações necessárias em tempo hábil.
+
+E em obras eu já vi de tudo, das situações mais comuns até as mais inacreditáveis e improváveis, todas devido a falhas no gerenciamento de condicionantes. Atividades sendo paralisadas porque não estão atendendo requisitos de segurança do trabalho do cliente; tendo que ser refeitas porque utilizaram especificações diferentes daquelas contidas na nota de rodapé do projeto; ou sendo postergadas porque a compra do material foi interrompida para que o material de outra frente de serviço não prioritária fosse comprado primeiro; ou levando mais tempo para serem executadas porque os sanitários próximos às frentes de serviço não tinham uma periodicidade de manutenção adequada, o que aumentou o tempo de deslocamento das pessoas para encontrar um sanitário em condições de uso. Todos exemplos de condições não atendidas que resultaram em improdutividade, aumentando prazos e custos de execução.
+
+E qual o caminho para driblar a complexidade das grandes obras e estruturar um sistema de gestão que consiga garantir que todas as condições sejam atendidas no tempo certo para que o trabalho possa ser executado dentro do ritmo desejado?
+
+Bem, se pensarmos que a produtividade é o fluxo de produção da obra e que as condicionantes são restrições à essa produtividade, então podemos adotar uma abordagem oriunda da filosofia lean de construção disseminada pelo Lean Construction Institute (LCI), o Last Planner© System (LPS).
+
+
+
+Concebido a mais de duas décadas, mas ainda muito pouco conhecido e difundido no Brasil, o LPS é um sistema colaborativo de gerenciamento da construção cujo benefício é a garantia do fluxo de trabalho (produtividade) através da identificação e eliminação antecipada de restrições (condicionantes). Em suma, é uma ferramenta de gestão de riscos que torna visível a base do iceberg com uma antecedência suficiente para que possamos manobrar o barco e evitar que o mesmo colida e afunde sem precisarmos reduzir a velocidade. E uma boa notícia é que já existem softwares que dão suporte à implementação do LPS como o vPlanner, o Touchplan e o Fieldwire.
+
+
+Uso do Last Planner© System durante a execução de uma obra. Fonte: ver final do artigo.
+
+Mas o que eu quero com este artigo não é apenas apontar um problema e uma possível solução, mas sim instigar empresas e profissionais do setor de construção a saírem do comodismo e buscarem soluções inovadoras em gestão. Precisamos de soluções que nos tirem do nível do “isso tem que ser feito” e nos levem para o nível do “isso será feito”. É isso que garantirá a produtividade e os resultados. E acredito que soluções que aumentem a eficiência no gerenciamento de restrições e condicionantes é o que nos conduzirão para esse nível, tornando mais competitivo um mercado que é tão marcado pela improdutividade. Dado o nível de conhecimento, ferramentas e boas práticas de gerenciamento de projetos em que estamos atualmente, apenas iniciativa é o que falta para chegarmos lá.
+
+Até o próximo artigo.
+
+Bruno Bachiega
+
+Engenheiro Eletricista graduado pela UNESP, MBA em Gerenciamento de Projetos pela FGV e certificado PMP e PRINCE2, é especializado na gestão do planejamento e da execução de obras de construção e montagem industrial, tendo acumulado mais de 12 anos de experiência atuando em grandes empreendimentos em todo o Brasil nos segmentos de siderurgia, química, mineração e gases.
+
+Artigo publicado em 19/03/2018 no blogdaliga.com.br

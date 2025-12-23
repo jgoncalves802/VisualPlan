@@ -40,15 +40,21 @@ export const restricao5w2hSyncService = {
     try {
       const codigo = await acoes5w2hService.generateNextCodigo(empresaId);
       
+      const ondeDescricao = [
+        restricao.wbs_nome,
+        restricao.atividade_nome,
+        restricao.projeto_nome
+      ].filter(Boolean).join(' > ') || 'A definir';
+      
       const novaAcao: Omit<Acao5W2H, 'id' | 'dataCriacao'> & { empresaId: string; projetoId?: string; createdBy?: string } = {
         codigo,
         oQue: restricao.descricao,
-        porQue: `Restrição identificada: ${restricao.tipo_detalhado || 'Não especificado'}`,
-        onde: restricao.wbs_nome || restricao.atividade_nome || 'A definir',
+        porQue: restricao.impacto_previsto || `Restrição ${restricao.tipo_detalhado || 'identificada'}: Impacto potencial no cronograma`,
+        onde: ondeDescricao,
         quando: restricao.prazo_resolucao || restricao.data_conclusao_planejada || new Date(),
         quem: restricao.responsavel || 'Aguardando atribuição',
         quemId: restricao.responsavel_id,
-        como: 'A definir - aguardando plano de ação',
+        como: restricao.observacoes || 'A definir - aguardando plano de ação',
         status: mapRestricaoStatusTo5W2H(restricao.status),
         prioridade: mapRestricaoPrioridadeTo5W2H(restricao.prioridade || 'MEDIA'),
         origem: OrigemAcao.RESTRICAO_LPS,
@@ -59,8 +65,9 @@ export const restricao5w2hSyncService = {
         percentualConcluido: restricao.status === 'CONCLUIDA' ? 100 : 0,
         tags: ['Restrição', restricao.tipo_detalhado || 'METODO'],
         empresaId,
-        projetoId,
+        projetoId: projetoId || restricao.projeto_id,
         createdBy,
+        dataConclusao: restricao.data_conclusao,
       };
 
       const acaoCriada = await acoes5w2hService.create(novaAcao);
@@ -93,14 +100,31 @@ export const restricao5w2hSyncService = {
       const updateData: Partial<Acao5W2H> = {};
 
       if (updates.descricao !== undefined) updateData.oQue = updates.descricao;
+      if (updates.impacto_previsto !== undefined) updateData.porQue = updates.impacto_previsto;
       if (updates.responsavel !== undefined) updateData.quem = updates.responsavel || 'Aguardando atribuição';
       if (updates.responsavel_id !== undefined) updateData.quemId = updates.responsavel_id;
       if (updates.prazo_resolucao !== undefined) updateData.quando = updates.prazo_resolucao;
       if (updates.data_conclusao_planejada !== undefined) updateData.quando = updates.data_conclusao_planejada;
       if (updates.status !== undefined) updateData.status = mapRestricaoStatusTo5W2H(updates.status);
       if (updates.prioridade !== undefined) updateData.prioridade = mapRestricaoPrioridadeTo5W2H(updates.prioridade);
-      if (updates.observacoes !== undefined) updateData.observacoes = updates.observacoes;
+      if (updates.observacoes !== undefined) {
+        updateData.observacoes = updates.observacoes;
+        updateData.como = updates.observacoes;
+      }
       if (updates.data_conclusao !== undefined) updateData.dataConclusao = updates.data_conclusao;
+      
+      if (updates.wbs_nome || updates.atividade_nome || updates.projeto_nome) {
+        const ondeDescricao = [
+          updates.wbs_nome,
+          updates.atividade_nome,
+          updates.projeto_nome
+        ].filter(Boolean).join(' > ');
+        if (ondeDescricao) updateData.onde = ondeDescricao;
+      }
+      
+      if (updates.tipo_detalhado !== undefined) {
+        updateData.tags = ['Restrição', updates.tipo_detalhado || 'METODO'];
+      }
 
       if (updates.status === 'CONCLUIDA') {
         updateData.percentualConcluido = 100;
@@ -127,12 +151,23 @@ export const restricao5w2hSyncService = {
       const restricaoUpdates: Partial<RestricaoLPS> = {};
 
       if (updates.oQue !== undefined) restricaoUpdates.descricao = updates.oQue;
+      if (updates.porQue !== undefined) restricaoUpdates.impacto_previsto = updates.porQue;
       if (updates.quem !== undefined) restricaoUpdates.responsavel = updates.quem;
+      if (updates.quemId !== undefined) restricaoUpdates.responsavel_id = updates.quemId;
       if (updates.quando !== undefined) {
         restricaoUpdates.prazo_resolucao = updates.quando;
         restricaoUpdates.data_conclusao_planejada = updates.quando;
       }
+      if (updates.como !== undefined) restricaoUpdates.observacoes = updates.como;
       if (updates.status !== undefined) restricaoUpdates.status = map5W2HStatusToRestricao(updates.status);
+      if (updates.prioridade !== undefined) {
+        const prioridadeMap: Record<string, 'ALTA' | 'MEDIA' | 'BAIXA'> = {
+          [PrioridadeAcao.ALTA]: 'ALTA',
+          [PrioridadeAcao.MEDIA]: 'MEDIA',
+          [PrioridadeAcao.BAIXA]: 'BAIXA',
+        };
+        restricaoUpdates.prioridade = prioridadeMap[updates.prioridade] || 'MEDIA';
+      }
       if (updates.observacoes !== undefined) restricaoUpdates.observacoes = updates.observacoes;
       if (updates.dataConclusao !== undefined) restricaoUpdates.data_conclusao = updates.dataConclusao;
 
