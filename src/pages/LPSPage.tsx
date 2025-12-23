@@ -27,7 +27,6 @@ import {
 } from '../types/lps';
 import { CondicoesProntidaoModal } from '../components/features/lps/CondicoesProntidaoModal';
 import { condicoesProntidaoService } from '../services/condicoesProntidaoService';
-import { restricao5w2hSyncService } from '../services/restricao5w2hSyncService';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { epsService, EpsNode } from '../services/epsService';
 import {
@@ -337,23 +336,11 @@ export const LPSPage: React.FC = () => {
     // Se tem id, é edição
     if ('id' in restricaoToSave && restricaoToSave.id) {
       const { id, ...rest } = restricaoToSave;
+      // A sincronização com 5W2H é feita automaticamente pelo store (updateRestricaoAsync)
       await updateRestricaoAsync(id, rest, usuario.empresaId);
-      
-      // Sincronizar alterações com 5W2H existente
-      await restricao5w2hSyncService.syncRestricaoTo5W2H(id, rest);
     } else {
-      // Nova restrição - usar versão async para persistir no Supabase
-      const novaRestricao = await addRestricaoAsync(restricaoToSave as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
-      
-      // Criar ação 5W2H automaticamente para a nova restrição
-      if (novaRestricao) {
-        await restricao5w2hSyncService.createAcaoFrom5W2H(
-          novaRestricao,
-          usuario.empresaId,
-          projetoIdParam || undefined,
-          usuario.id
-        );
-      }
+      // Nova restrição - A sincronização com 5W2H é feita automaticamente pelo store (addRestricaoAsync)
+      await addRestricaoAsync(restricaoToSave as Omit<RestricaoLPS, 'id'>, usuario.empresaId);
     }
     setRestricaoModalOpen(false);
     setRestricaoModalAtividadeId(undefined);
