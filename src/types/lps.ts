@@ -280,3 +280,86 @@ export interface DragDropEvent {
   posicao_y?: number;
 }
 
+// ============================================================================
+// CONDIÇÕES DE PRONTIDÃO (MAKE-READY)
+// ============================================================================
+
+/**
+ * Tipo de condição de prontidão para atividades
+ * Baseado no Last Planner System - 6 condições obrigatórias
+ */
+export enum TipoCondicaoProntidao {
+  PREDECESSORA = 'PREDECESSORA',   // Atividade anterior concluída
+  PROJETO = 'PROJETO',             // Documentação técnica disponível
+  MATERIAL = 'MATERIAL',           // Materiais entregues no local
+  MAO_DE_OBRA = 'MAO_DE_OBRA',     // Equipe mobilizada e disponível
+  EQUIPAMENTO = 'EQUIPAMENTO',     // Ferramentas/máquinas disponíveis
+  QSSMA = 'QSSMA',                 // Requisitos de segurança atendidos
+}
+
+/**
+ * Status de uma condição de prontidão
+ */
+export enum StatusCondicaoProntidao {
+  PENDENTE = 'PENDENTE',
+  ATENDIDA = 'ATENDIDA',
+  NAO_APLICAVEL = 'NAO_APLICAVEL',
+}
+
+/**
+ * Configuração de cores para condições de prontidão
+ */
+export const CoresCondicaoProntidao: Record<TipoCondicaoProntidao, string> = {
+  [TipoCondicaoProntidao.PREDECESSORA]: '#3B82F6',   // Azul
+  [TipoCondicaoProntidao.PROJETO]: '#22C55E',        // Verde
+  [TipoCondicaoProntidao.MATERIAL]: '#EAB308',       // Amarelo
+  [TipoCondicaoProntidao.MAO_DE_OBRA]: '#F97316',    // Laranja
+  [TipoCondicaoProntidao.EQUIPAMENTO]: '#EF4444',    // Vermelho
+  [TipoCondicaoProntidao.QSSMA]: '#A855F7',          // Roxo
+};
+
+/**
+ * Labels para condições de prontidão
+ */
+export const LabelsCondicaoProntidao: Record<TipoCondicaoProntidao, string> = {
+  [TipoCondicaoProntidao.PREDECESSORA]: 'Predecessora',
+  [TipoCondicaoProntidao.PROJETO]: 'Projeto',
+  [TipoCondicaoProntidao.MATERIAL]: 'Material',
+  [TipoCondicaoProntidao.MAO_DE_OBRA]: 'Mão de Obra',
+  [TipoCondicaoProntidao.EQUIPAMENTO]: 'Equipamento',
+  [TipoCondicaoProntidao.QSSMA]: 'QSSMA',
+};
+
+/**
+ * Condição de prontidão de uma atividade
+ */
+export interface CondicaoProntidao {
+  id: string;
+  empresaId: string;
+  atividadeId: string;
+  tipoCondicao: TipoCondicaoProntidao;
+  status: StatusCondicaoProntidao;
+  responsavelId?: string;
+  responsavelNome?: string;
+  dataPrevista?: Date;
+  dataAtendida?: Date;
+  observacoes?: string;
+  restricaoId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Resumo de prontidão de uma atividade
+ */
+export interface ResumoProntidao {
+  atividadeId: string;
+  totalCondicoes: number;
+  condicoesAtendidas: number;
+  condicoesPendentes: number;
+  condicoesNaoAplicaveis: number;
+  percentualProntidao: number;
+  prontaParaExecucao: boolean;
+  condicoes: CondicaoProntidao[];
+}
+

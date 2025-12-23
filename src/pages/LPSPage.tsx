@@ -23,7 +23,12 @@ import {
   StatusAtividadeLPS,
   CategoriaAtividade,
   TipoAtividadeLPS,
+  ResumoProntidao,
 } from '../types/lps';
+import { CondicoesProntidaoModal } from '../components/features/lps/CondicoesProntidaoModal';
+import { condicoesProntidaoService } from '../services/condicoesProntidaoService';
+import { acoes5w2hService } from '../services/acoes5w2hService';
+import { StatusAcao5W2H, PrioridadeAcao, OrigemAcao } from '../types/gestao';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { epsService, EpsNode } from '../services/epsService';
 import {
@@ -106,6 +111,31 @@ export const LPSPage: React.FC = () => {
   const [printViewerOpen, setPrintViewerOpen] = useState(false);
   const [selectedWbs, setSelectedWbs] = useState<WBSLPS | null>(null);
   const [anotacoesModalOpen, setAnotacoesModalOpen] = useState(false);
+  const [condicoesProntidaoModalOpen, setCondicoesProntidaoModalOpen] = useState(false);
+  const [atividadeParaProntidao, setAtividadeParaProntidao] = useState<AtividadeLPS | null>(null);
+  const [prontidaoMap, setProntidaoMap] = useState<Record<string, ResumoProntidao>>({});
+
+  // Carregar condições de prontidão para todas as atividades
+  useEffect(() => {
+    const loadProntidao = async () => {
+      if (!usuario?.empresaId || atividades.length === 0) return;
+      
+      const map: Record<string, ResumoProntidao> = {};
+      for (const atividade of atividades) {
+        try {
+          const resumo = await condicoesProntidaoService.getResumoProntidao(atividade.id, usuario.empresaId);
+          if (resumo.totalCondicoes > 0) {
+            map[atividade.id] = resumo;
+          }
+        } catch {
+          // Ignora erros individuais
+        }
+      }
+      setProntidaoMap(map);
+    };
+    
+    loadProntidao();
+  }, [atividades, usuario?.empresaId]);
 
   // Carregar atividades do cronograma
   useEffect(() => {
@@ -264,6 +294,48 @@ export const LPSPage: React.FC = () => {
         data_conclusao:
           restricao.status === 'CONCLUIDA' ? undefined : new Date(),
       });
+    }
+  };
+
+  const handleOpenProntidao = (atividade: AtividadeLPS) => {
+    setAtividadeParaProntidao(atividade);
+    setCondicoesProntidaoModalOpen(true);
+  };
+
+  const handleAddRestricaoFromCard = (atividade: AtividadeLPS) => {
+    setRestricaoModalAtividadeId(atividade.id);
+    setRestricaoModalOpen(true);
+  };
+
+  const handleAdd5W2HFromCard = async (atividade: AtividadeLPS) => {
+    if (!usuario?.empresaId) return;
+    
+    try {
+      const codigo = await acoes5w2hService.generateNextCodigo(usuario.empresaId);
+      
+      const novaAcao = {
+        codigo,
+        oQue: `Ação para: ${atividade.nome}`,
+        porQue: 'Definir motivo',
+        onde: atividade.descricao || 'Local a definir',
+        quando: atividade.data_fim || new Date(),
+        quem: atividade.responsavel || 'A definir',
+        quemId: atividade.responsavel_id,
+        como: 'Definir plano de ação',
+        status: StatusAcao5W2H.PENDENTE,
+        prioridade: PrioridadeAcao.MEDIA,
+        origem: OrigemAcao.LPS,
+        origemId: atividade.id,
+        origemDescricao: `Atividade LPS: ${atividade.nome}`,
+        empresaId: usuario.empresaId,
+        projetoId: projetoIdParam || undefined,
+      };
+      
+      await acoes5w2hService.create(novaAcao);
+      alert(`Ação 5W2H ${codigo} criada com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao criar ação 5W2H:', error);
+      alert('Erro ao criar ação 5W2H');
     }
   };
 
@@ -442,6 +514,11 @@ export const LPSPage: React.FC = () => {
             onActivityMove={handleActivityMove}
             onActivityClick={handleActivityClick}
             mostrarFinsDeSemana={mostrarFinsDeSemana}
+            empresaId={usuario?.empresaId}
+            prontidaoMap={prontidaoMap}
+            onAddRestricao={handleAddRestricaoFromCard}
+            onAdd5W2H={handleAdd5W2HFromCard}
+            onOpenProntidao={handleOpenProntidao}
           />
         </div>
 
@@ -563,6 +640,18 @@ export const LPSPage: React.FC = () => {
         onAddAnotacao={handleAddAnotacao}
         onEditAnotacao={handleEditAnotacao}
         onDeleteAnotacao={handleDeleteAnotacao}
+      />
+
+      {/* Modal de Condições de Prontidão */}
+      <CondicoesProntidaoModal
+        isOpen={condicoesProntidaoModalOpen}
+        onClose={() => {
+          setCondicoesProntidaoModalOpen(false);
+          setAtividadeParaProntidao(null);
+        }}
+        atividade={atividadeParaProntidao}
+        empresaId={usuario?.empresaId || ''}
+        onAddRestricao={handleAddRestricaoFromCard}
       />
     </div>
   );

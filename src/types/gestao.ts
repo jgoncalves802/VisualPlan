@@ -28,6 +28,7 @@ export enum OrigemAcao {
   PDCA = 'PDCA',
   MANUAL = 'MANUAL',
   KPI_DESVIO = 'KPI_DESVIO',
+  LPS = 'LPS',
 }
 
 export enum StatusAuditoria {

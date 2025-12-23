@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import { format, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AtividadeLPS, RestricaoLPS, WBSLPS } from '../../../types/lps';
+import { AtividadeLPS, RestricaoLPS, WBSLPS, ResumoProntidao } from '../../../types/lps';
 import { ActivityCard } from './ActivityCard';
 
 interface CalendarViewProps {
@@ -19,6 +19,11 @@ interface CalendarViewProps {
   onActivityMove?: (atividadeId: string, novaData: Date) => void;
   onActivityClick?: (atividade: AtividadeLPS) => void;
   mostrarFinsDeSemana?: boolean;
+  empresaId?: string;
+  prontidaoMap?: Record<string, ResumoProntidao>;
+  onAddRestricao?: (atividade: AtividadeLPS) => void;
+  onAdd5W2H?: (atividade: AtividadeLPS) => void;
+  onOpenProntidao?: (atividade: AtividadeLPS) => void;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -31,6 +36,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onActivityMove,
   onActivityClick,
   mostrarFinsDeSemana = true,
+  empresaId,
+  prontidaoMap = {},
+  onAddRestricao,
+  onAdd5W2H,
+  onOpenProntidao,
 }) => {
   // Helper para converter para Date
   const parseDate = (date: any): Date => {
@@ -210,6 +220,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         restricoesCount={(getRestricoesAtividade[atividade.id] || []).filter(
                           (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
                         ).length}
+                        empresaId={empresaId}
+                        prontidao={prontidaoMap[atividade.id]}
+                        onAddRestricao={onAddRestricao}
+                        onAdd5W2H={onAdd5W2H}
+                        onOpenProntidao={onOpenProntidao}
                       />
                     ))
                   )}

@@ -4,10 +4,11 @@
  * Formato: Código | Nome | Responsável | Datas | Tags
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AtividadeLPS, StatusAtividadeLPS, TipoAtividadeLPS } from '../../../types/lps';
+import { AtividadeLPS, StatusAtividadeLPS, TipoAtividadeLPS, ResumoProntidao } from '../../../types/lps';
+import { AlertTriangle, CheckCircle, Plus, ClipboardList, MoreVertical } from 'lucide-react';
 
 interface ActivityCardProps {
   atividade: AtividadeLPS;
@@ -15,6 +16,11 @@ interface ActivityCardProps {
   cor?: string;
   restricoesCount?: number;
   compact?: boolean;
+  empresaId?: string;
+  prontidao?: ResumoProntidao | null;
+  onAddRestricao?: (atividade: AtividadeLPS) => void;
+  onAdd5W2H?: (atividade: AtividadeLPS) => void;
+  onOpenProntidao?: (atividade: AtividadeLPS) => void;
 }
 
 export const ActivityCard: React.FC<ActivityCardProps> = ({
@@ -23,7 +29,13 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   cor = 'bg-green-200 border-green-500',
   restricoesCount = 0,
   compact = false,
+  prontidao,
+  onAddRestricao,
+  onAdd5W2H,
+  onOpenProntidao,
 }) => {
+  const [showActions, setShowActions] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('atividade-id', atividade.id);
     e.dataTransfer.effectAllowed = 'move';
@@ -146,6 +158,80 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
       {restricoesCount > 0 && (
         <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
           {restricoesCount}
+        </div>
+      )}
+
+      {/* Badge de prontidão */}
+      {prontidao && prontidao.totalCondicoes > 0 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenProntidao?.(atividade);
+          }}
+          className={`absolute bottom-1.5 left-1.5 flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium transition-colors ${
+            prontidao.prontaParaExecucao
+              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+          }`}
+          title={`${prontidao.condicoesAtendidas}/${prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis} condições atendidas`}
+        >
+          {prontidao.prontaParaExecucao ? (
+            <CheckCircle className="w-3 h-3" />
+          ) : (
+            <AlertTriangle className="w-3 h-3" />
+          )}
+          {prontidao.condicoesAtendidas}/{prontidao.totalCondicoes - prontidao.condicoesNaoAplicaveis}
+        </button>
+      )}
+
+      {/* Botão de menu de ações */}
+      {(onAddRestricao || onAdd5W2H) && (
+        <div className="absolute bottom-1.5 right-1.5">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowActions(!showActions);
+            }}
+            className="p-1 rounded hover:bg-black/10 transition-colors"
+            title="Ações rápidas"
+          >
+            <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
+          </button>
+
+          {/* Menu dropdown de ações */}
+          {showActions && (
+            <div 
+              className="absolute bottom-full right-0 mb-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px] z-50"
+              onMouseLeave={() => setShowActions(false)}
+            >
+              {onAddRestricao && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddRestricao(atividade);
+                    setShowActions(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5 text-red-500" />
+                  Nova Restrição
+                </button>
+              )}
+              {onAdd5W2H && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAdd5W2H(atividade);
+                    setShowActions(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <ClipboardList className="w-3.5 h-3.5 text-blue-500" />
+                  Nova Ação 5W2H
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
