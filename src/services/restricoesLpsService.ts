@@ -123,6 +123,24 @@ const isValidUUID = (id: string | undefined | null): boolean => {
   return uuidRegex.test(id);
 };
 
+const formatDateForDB = (date: Date | string | undefined | null): string | null => {
+  if (!date) return null;
+  
+  let dateObj: Date;
+  if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    dateObj = new Date(date);
+  }
+  
+  if (isNaN(dateObj.getTime())) return null;
+  
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<string, unknown> | null => {
   if (!isValidUUID(empresaId)) {
     console.error('empresa_id inválido para criar restrição:', empresaId);
@@ -142,8 +160,8 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
     status: mapStatusToIshikawa(r.status),
     responsavel: r.responsavel || 'Não atribuído',
     data_criacao: r.data_criacao.toISOString(),
-    data_prevista: r.prazo_resolucao?.toISOString().split('T')[0] || r.data_conclusao_planejada?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-    data_conclusao: r.data_conclusao?.toISOString().split('T')[0] || null,
+    data_prevista: formatDateForDB(r.prazo_resolucao) || formatDateForDB(r.data_conclusao_planejada) || formatDateForDB(new Date()),
+    data_conclusao: formatDateForDB(r.data_conclusao),
     impacto_caminho_critico: r.paralisar_obra || false,
     dias_atraso: r.dias_latencia || 0,
     score_impacto: r.paralisar_obra ? 100 : (r.prioridade === 'ALTA' ? 80 : r.prioridade === 'MEDIA' ? 50 : 20),
@@ -258,22 +276,15 @@ export const restricoesLpsService = {
     
     if (restricao.responsavel !== undefined) updateData.responsavel = restricao.responsavel || 'Não atribuído';
     if (restricao.prazo_resolucao !== undefined) {
-      const prazoDate = restricao.prazo_resolucao instanceof Date 
-        ? restricao.prazo_resolucao.toISOString().split('T')[0]
-        : String(restricao.prazo_resolucao).split('T')[0];
-      updateData.data_prevista = prazoDate;
+      const prazoDate = formatDateForDB(restricao.prazo_resolucao);
+      if (prazoDate) updateData.data_prevista = prazoDate;
     }
     if (restricao.data_conclusao_planejada !== undefined) {
-      const planDate = restricao.data_conclusao_planejada instanceof Date 
-        ? restricao.data_conclusao_planejada.toISOString().split('T')[0]
-        : String(restricao.data_conclusao_planejada).split('T')[0];
-      updateData.data_prevista = planDate;
+      const planDate = formatDateForDB(restricao.data_conclusao_planejada);
+      if (planDate) updateData.data_prevista = planDate;
     }
     if (restricao.data_conclusao !== undefined) {
-      const concDate = restricao.data_conclusao instanceof Date 
-        ? restricao.data_conclusao.toISOString().split('T')[0]
-        : restricao.data_conclusao ? String(restricao.data_conclusao).split('T')[0] : null;
-      updateData.data_conclusao = concDate;
+      updateData.data_conclusao = formatDateForDB(restricao.data_conclusao);
     }
     if (restricao.atividade_id !== undefined && isValidUUID(restricao.atividade_id)) {
       updateData.atividade_id = restricao.atividade_id;
