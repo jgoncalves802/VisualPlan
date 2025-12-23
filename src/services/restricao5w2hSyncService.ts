@@ -35,9 +35,20 @@ const mapRestricaoPrioridadeTo5W2H = (prioridade: 'ALTA' | 'MEDIA' | 'BAIXA'): P
   }
 };
 
+const checkSupabaseSession = async (): Promise<boolean> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+};
+
 export const restricao5w2hSyncService = {
   async createAcaoFrom5W2H(restricao: RestricaoLPS, empresaId: string, projetoId?: string, createdBy?: string): Promise<Acao5W2H | null> {
     try {
+      const hasSession = await checkSupabaseSession();
+      if (!hasSession) {
+        console.warn('Sessão Supabase não ativa - ação 5W2H não será criada automaticamente. Faça login com usuário real do Supabase.');
+        return null;
+      }
+      
       const codigo = await acoes5w2hService.generateNextCodigo(empresaId);
       
       const ondeDescricao = [

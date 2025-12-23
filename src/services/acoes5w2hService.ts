@@ -43,7 +43,7 @@ const mapOrigemFromDB = (origem: string): OrigemAcao => {
 };
 
 const mapOrigemToDB = (origem: string): string => {
-  if (origem === 'LPS') return 'RESTRICAO_LPS';
+  if (origem === 'RESTRICAO_LPS' || origem === 'LPS') return 'LPS';
   return origem;
 };
 
@@ -88,7 +88,7 @@ const mapToDB = (acao: Partial<Acao5W2H> & { empresaId: string; projetoId?: stri
   quanto_descricao: acao.quantoDescricao || null,
   status: acao.status,
   prioridade: acao.prioridade,
-  origem: mapOrigemToDB(acao.origem || 'RESTRICAO_LPS'),
+  origem: mapOrigemToDB(acao.origem || 'LPS'),
   origem_id: acao.origemId || null,
   origem_descricao: acao.origemDescricao || null,
   atividade_gantt_id: acao.atividadeGanttId || null,

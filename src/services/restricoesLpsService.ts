@@ -141,6 +141,11 @@ const formatDateForDB = (date: Date | string | undefined | null): string | null 
   return `${year}-${month}-${day}`;
 };
 
+const checkSupabaseSession = async (): Promise<boolean> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+};
+
 const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<string, unknown> | null => {
   if (!isValidUUID(empresaId)) {
     console.error('empresa_id inválido para criar restrição:', empresaId);
@@ -231,6 +236,12 @@ export const restricoesLpsService = {
   },
 
   async create(restricao: RestricaoLPS, empresaId: string): Promise<RestricaoLPS | null> {
+    const hasSession = await checkSupabaseSession();
+    if (!hasSession) {
+      console.warn('Sessão Supabase não ativa - restrição não será persistida no banco. Faça login com usuário real do Supabase.');
+      return null;
+    }
+    
     const dbData = toRestricaoIshikawaDB(restricao, empresaId);
     if (!dbData) {
       console.error('Dados inválidos para criar restrição');
