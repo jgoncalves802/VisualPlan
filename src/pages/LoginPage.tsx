@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
       empresaId: 'empresa-001',
       camadaGovernanca: CamadaGovernanca.PROPONENTE,
       perfilAcesso: PerfilAcesso.ADMIN,
-      avatarUrl: null,
+      avatarUrl: undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
