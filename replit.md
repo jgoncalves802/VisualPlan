@@ -41,12 +41,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **cronograma_column_configs**: Per-user, per-project column visibility and order preferences.
     *   **Performance & UX**: Implemented caching strategies (localStorage with TTL), optimistic UI updates, batch update manager, skeleton loaders, fade-in animations, scroll preservation, inline editing, and robust error handling with network resilience.
     *   **Service Layer Architecture**: Dedicated Supabase services for each management module with PGRST205 graceful error handling:
-        *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions
+        *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions with `updateWithSync()` for bidirectional sync
         *   `gestaoMudancaService.ts`: Change request management with workflow support
         *   `reunioesService.ts`: Meeting scheduling and agenda management
         *   `auditoriaService.ts`: Audit templates and audits management
         *   `restricoesIshikawaService.ts`: Ishikawa analysis restrictions linked to EPS/WBS/Activities
         *   `restricoesLpsService.ts`: LPS restrictions with automatic sync to Ishikawa analysis table (async CRUD operations, UUID validation, Ishikawa 6M categories, paralisar_obra critical flag with score-based priority reconstruction)
+        *   `restricao5w2hSyncService.ts`: Bidirectional synchronization between Restrictions (Ishikawa 6M) and 5W2H actions - auto-creates 5W2H when restriction is created, syncs updates bidirectionally, and cascades deletions
         *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
         *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
         *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)

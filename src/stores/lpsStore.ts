@@ -18,6 +18,7 @@ import {
   AtividadeHistoricoConclusao,
 } from '../types/lps';
 import { restricoesLpsService } from '../services/restricoesLpsService';
+import { restricao5w2hSyncService } from '../services/restricao5w2hSyncService';
 
 interface LPSState {
   // Estado
@@ -340,6 +341,20 @@ export const useLPSStore = create<LPSState>()(
             set((state) => ({
               restricoes: [...state.restricoes, created],
             }));
+            
+            restricao5w2hSyncService.createAcaoFrom5W2H(
+              created, 
+              empresaId, 
+              created.projeto_id,
+              restricao.criado_por
+            ).then(acao => {
+              if (acao) {
+                console.log(`Ação 5W2H ${acao.codigo} criada automaticamente para restrição ${created.id}`);
+              }
+            }).catch(err => {
+              console.error('Erro ao criar ação 5W2H automática:', err);
+            });
+            
             return created;
           }
           set((state) => ({
@@ -364,6 +379,15 @@ export const useLPSStore = create<LPSState>()(
                 r.id === id ? { ...r, ...updated } : r
               ),
             }));
+            
+            restricao5w2hSyncService.syncRestricaoTo5W2H(id, restricao).then(synced => {
+              if (synced) {
+                console.log(`Ação 5W2H sincronizada com restrição ${id}`);
+              }
+            }).catch(err => {
+              console.error('Erro ao sincronizar com 5W2H:', err);
+            });
+            
             return updated;
           }
           get().updateRestricao(id, restricao);
@@ -382,6 +406,11 @@ export const useLPSStore = create<LPSState>()(
             set((state) => ({
               restricoes: state.restricoes.filter((r) => r.id !== id),
             }));
+            
+            restricao5w2hSyncService.deleteAcaoByRestricaoId(id).catch(err => {
+              console.error('Erro ao excluir ação 5W2H vinculada:', err);
+            });
+            
             return true;
           }
           return false;

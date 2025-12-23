@@ -210,6 +210,19 @@ export const acoes5w2hService = {
     return mapFromDB(data);
   },
 
+  async updateWithSync(id: string, acao: Partial<Acao5W2H>, empresaId: string): Promise<Acao5W2H | null> {
+    const updated = await this.update(id, acao);
+    
+    if (updated && updated.restricaoLpsId) {
+      const { restricao5w2hSyncService } = await import('./restricao5w2hSyncService');
+      restricao5w2hSyncService.sync5W2HToRestricao(id, acao, empresaId).catch(err => {
+        console.error('Erro ao sincronizar 5W2H para restrição:', err);
+      });
+    }
+    
+    return updated;
+  },
+
   async delete(id: string): Promise<boolean> {
     const { error } = await supabase
       .from('acoes_5w2h')
