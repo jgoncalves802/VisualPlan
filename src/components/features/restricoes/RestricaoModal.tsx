@@ -576,7 +576,8 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                   onChange={(e) => {
                     try {
                       if (e.target.value) {
-                        const novaData = new Date(e.target.value);
+                        const [year, month, day] = e.target.value.split('-').map(Number);
+                        const novaData = new Date(year, month - 1, day, 12, 0, 0);
                         if (!isNaN(novaData.getTime()) && typeof novaData.getFullYear === 'function') {
                           setFormData({
                             ...formData,
@@ -584,7 +585,6 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                           });
                         }
                       } else {
-                        // Se o campo estiver vazio, manter a data atual
                         setFormData({
                           ...formData,
                           data_conclusao_planejada: new Date(),
@@ -622,7 +622,8 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
                   onChange={(e) => {
                     try {
                       if (e.target.value) {
-                        const novaData = new Date(e.target.value);
+                        const [year, month, day] = e.target.value.split('-').map(Number);
+                        const novaData = new Date(year, month - 1, day, 12, 0, 0);
                         if (!isNaN(novaData.getTime()) && typeof novaData.getFullYear === 'function') {
                           setFormData({
                             ...formData,

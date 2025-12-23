@@ -271,12 +271,15 @@ export const RestricoesSection: React.FC<RestricoesSectionProps> = ({
                 <input
                   type="date"
                   value={format(novaRestricao.data_conclusao_planejada, 'yyyy-MM-dd')}
-                  onChange={(e) =>
-                    setNovaRestricao({
-                      ...novaRestricao,
-                      data_conclusao_planejada: new Date(e.target.value),
-                    })
-                  }
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      setNovaRestricao({
+                        ...novaRestricao,
+                        data_conclusao_planejada: new Date(year, month - 1, day, 12, 0, 0),
+                      });
+                    }
+                  }}
                   className="flex-1 p-2 border border-gray-300 rounded text-sm"
                 />
                 <button

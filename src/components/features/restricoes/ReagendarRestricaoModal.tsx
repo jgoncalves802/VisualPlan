@@ -98,12 +98,15 @@ export const ReagendarRestricaoModal: React.FC<ReagendarRestricaoModalProps> = (
               <input
                 type="date"
                 value={formatDateForInput(formData.novaData)}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    novaData: new Date(e.target.value),
-                  })
-                }
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [year, month, day] = e.target.value.split('-').map(Number);
+                    setFormData({
+                      ...formData,
+                      novaData: new Date(year, month - 1, day, 12, 0, 0),
+                    });
+                  }
+                }}
                 className="w-full p-2 border border-gray-300 rounded"
                 required
               />
