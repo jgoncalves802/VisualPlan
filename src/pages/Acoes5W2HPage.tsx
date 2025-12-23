@@ -832,11 +832,17 @@ export const Acoes5W2HPage: React.FC = () => {
 
   const handleConcluirAcao = async (id: string) => {
     try {
-      const updated = await acoes5w2hService.update(id, {
+      const acao = acoes.find(a => a.id === id);
+      const updateData = {
         status: StatusAcao5W2H.CONCLUIDA,
         dataConclusao: new Date(),
         percentualConcluido: 100,
-      });
+      };
+      
+      const updated = acao?.restricaoLpsId && usuario?.empresaId
+        ? await acoes5w2hService.updateWithSync(id, updateData, usuario.empresaId)
+        : await acoes5w2hService.update(id, updateData);
+        
       if (updated) {
         setAcoes(acoes.map((a) => (a.id === id ? updated : a)));
       }
@@ -858,7 +864,9 @@ export const Acoes5W2HPage: React.FC = () => {
     setIsSaving(true);
     try {
       if (acaoSelecionada?.id && !acaoSelecionada.id.startsWith('temp-')) {
-        const updated = await acoes5w2hService.update(acaoSelecionada.id, acaoData);
+        const updated = acaoSelecionada.restricaoLpsId
+          ? await acoes5w2hService.updateWithSync(acaoSelecionada.id, acaoData, usuario.empresaId)
+          : await acoes5w2hService.update(acaoSelecionada.id, acaoData);
         if (updated) {
           setAcoes(acoes.map((a) => (a.id === acaoSelecionada.id ? updated : a)));
         }

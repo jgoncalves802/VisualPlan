@@ -96,13 +96,15 @@ export const restricao5w2hSyncService = {
       if (updates.responsavel !== undefined) updateData.quem = updates.responsavel || 'Aguardando atribuição';
       if (updates.responsavel_id !== undefined) updateData.quemId = updates.responsavel_id;
       if (updates.prazo_resolucao !== undefined) updateData.quando = updates.prazo_resolucao;
+      if (updates.data_conclusao_planejada !== undefined) updateData.quando = updates.data_conclusao_planejada;
       if (updates.status !== undefined) updateData.status = mapRestricaoStatusTo5W2H(updates.status);
       if (updates.prioridade !== undefined) updateData.prioridade = mapRestricaoPrioridadeTo5W2H(updates.prioridade);
       if (updates.observacoes !== undefined) updateData.observacoes = updates.observacoes;
+      if (updates.data_conclusao !== undefined) updateData.dataConclusao = updates.data_conclusao;
 
       if (updates.status === 'CONCLUIDA') {
         updateData.percentualConcluido = 100;
-        updateData.dataConclusao = new Date();
+        if (!updateData.dataConclusao) updateData.dataConclusao = new Date();
       }
 
       await acoes5w2hService.update(acaoId, updateData);
@@ -127,11 +129,15 @@ export const restricao5w2hSyncService = {
       if (updates.oQue !== undefined) restricaoUpdates.descricao = updates.oQue;
       if (updates.quem !== undefined) restricaoUpdates.responsavel = updates.quem;
       if (updates.quemId !== undefined) restricaoUpdates.responsavel_id = updates.quemId;
-      if (updates.quando !== undefined) restricaoUpdates.prazo_resolucao = updates.quando;
+      if (updates.quando !== undefined) {
+        restricaoUpdates.prazo_resolucao = updates.quando;
+        restricaoUpdates.data_conclusao_planejada = updates.quando;
+      }
       if (updates.status !== undefined) restricaoUpdates.status = map5W2HStatusToRestricao(updates.status);
       if (updates.observacoes !== undefined) restricaoUpdates.observacoes = updates.observacoes;
+      if (updates.dataConclusao !== undefined) restricaoUpdates.data_conclusao = updates.dataConclusao;
 
-      if (updates.status === StatusAcao5W2H.CONCLUIDA) {
+      if (updates.status === StatusAcao5W2H.CONCLUIDA && !updates.dataConclusao) {
         restricaoUpdates.data_conclusao = new Date();
       }
 

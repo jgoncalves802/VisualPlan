@@ -260,8 +260,24 @@ export const restricoesLpsService = {
     if (restricao.responsavel_id !== undefined && isValidUUID(restricao.responsavel_id)) {
       updateData.responsavel_id = restricao.responsavel_id;
     }
-    if (restricao.prazo_resolucao !== undefined) updateData.data_prevista = restricao.prazo_resolucao?.toISOString().split('T')[0];
-    if (restricao.data_conclusao !== undefined) updateData.data_conclusao = restricao.data_conclusao?.toISOString().split('T')[0] || null;
+    if (restricao.prazo_resolucao !== undefined) {
+      const prazoDate = restricao.prazo_resolucao instanceof Date 
+        ? restricao.prazo_resolucao.toISOString().split('T')[0]
+        : String(restricao.prazo_resolucao).split('T')[0];
+      updateData.data_prevista = prazoDate;
+    }
+    if (restricao.data_conclusao_planejada !== undefined) {
+      const planDate = restricao.data_conclusao_planejada instanceof Date 
+        ? restricao.data_conclusao_planejada.toISOString().split('T')[0]
+        : String(restricao.data_conclusao_planejada).split('T')[0];
+      updateData.data_prevista = planDate;
+    }
+    if (restricao.data_conclusao !== undefined) {
+      const concDate = restricao.data_conclusao instanceof Date 
+        ? restricao.data_conclusao.toISOString().split('T')[0]
+        : restricao.data_conclusao ? String(restricao.data_conclusao).split('T')[0] : null;
+      updateData.data_conclusao = concDate;
+    }
     if (restricao.atividade_id !== undefined && isValidUUID(restricao.atividade_id)) {
       updateData.atividade_id = restricao.atividade_id;
     }
