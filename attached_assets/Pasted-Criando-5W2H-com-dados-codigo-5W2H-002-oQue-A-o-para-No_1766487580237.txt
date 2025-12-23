@@ -1,0 +1,55 @@
+Criando 5W2H com dados: {
+  "codigo": "5W2H-002",
+  "oQue": "Ação para: Nova Atividade",
+  "porQue": "Definir motivo",
+  "onde": "Local a definir",
+  "quando": "2025-12-23T00:00:00.000Z",
+  "quem": "A definir",
+  "como": "Definir plano de ação",
+  "status": "PENDENTE",
+  "prioridade": "MEDIA",
+  "origem": "LPS",
+  "origemDescricao": "Atividade LPS: Nova Atividade (lps-1766251945375-hub3vb36y)",
+  "empresaId": "f6f37e93-be66-4334-9a3f-4e05c4d9bd01"
+}
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/condicoes_prontidao?select=*&atividade_id=eq.lps-1766251945376-pr4jsrdn5&empresa_id=eq.f6f37e93-be66-4334-9a3f-4e05c4d9bd01&order=tipo_condicao.asc 404 (Not Found)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/condicoes_prontidao?select=*&atividade_id=eq.lps-1766251945376-pr4jsrdn5&empresa_id=eq.f6f37e93-be66-4334-9a3f-4e05c4d9bd01&order=tipo_condicao.asc 404 (Not Found)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:214  POST https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/acoes_5w2h?select=* 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:37 Erro ao criar ação 5W2H: {code: '23514', details: null, hint: null, message: 'new row for relation "acoes_5w2h" violates check constraint "acoes_5w2h_origem_check"'}
+(anonymous) @ injected.js:37
+create @ acoes5w2hService.ts:172
+await in create
+handleAdd5W2HFromCard @ LPSPage.tsx:360
+await in handleAdd5W2HFromCard
+onClick @ ActivityCard.tsx:225
+callCallback2 @ chunk-334SA7H6.js?v=6d1c649c:3674
+invokeGuardedCallbackDev @ chunk-334SA7H6.js?v=6d1c649c:3699
+invokeGuardedCallback @ chunk-334SA7H6.js?v=6d1c649c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-334SA7H6.js?v=6d1c649c:3736
+executeDispatch @ chunk-334SA7H6.js?v=6d1c649c:7014
+processDispatchQueueItemsInOrder @ chunk-334SA7H6.js?v=6d1c649c:7034
+processDispatchQueue @ chunk-334SA7H6.js?v=6d1c649c:7043
+dispatchEventsForPlugins @ chunk-334SA7H6.js?v=6d1c649c:7051
+(anonymous) @ chunk-334SA7H6.js?v=6d1c649c:7174
+batchedUpdates$1 @ chunk-334SA7H6.js?v=6d1c649c:18913
+batchedUpdates @ chunk-334SA7H6.js?v=6d1c649c:3579
+dispatchEventForPluginEventSystem @ chunk-334SA7H6.js?v=6d1c649c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-334SA7H6.js?v=6d1c649c:5478
+dispatchEvent @ chunk-334SA7H6.js?v=6d1c649c:5472
+dispatchDiscreteEvent @ chunk-334SA7H6.js?v=6d1c649c:5449Understand this error
+injected.js:37 Erro ao criar ação 5W2H: {code: '23514', details: null, hint: null, message: 'new row for relation "acoes_5w2h" violates check constraint "acoes_5w2h_origem_check"'}
