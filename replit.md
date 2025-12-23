@@ -47,7 +47,7 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `auditoriaService.ts`: Audit templates and audits management
         *   `restricoesIshikawaService.ts`: Ishikawa analysis restrictions linked to EPS/WBS/Activities
         *   `restricoesLpsService.ts`: LPS restrictions with automatic sync to Ishikawa analysis table (async CRUD operations, UUID validation, Ishikawa 6M categories, paralisar_obra critical flag with score-based priority reconstruction)
-        *   `restricao5w2hSyncService.ts`: Bidirectional synchronization between Restrictions (Ishikawa 6M) and 5W2H actions - auto-creates 5W2H when restriction is created, syncs updates bidirectionally, and cascades deletions
+        *   `restricao5w2hSyncService.ts`: Bidirectional synchronization between Restrictions (Ishikawa 6M) and 5W2H actions - auto-creates 5W2H when restriction is created, syncs updates bidirectionally, cascades deletions, and includes `syncAllRestricoesSemAcao()` for retroactive sync of existing restrictions without linked 5W2H actions (accessible via "Sincronizar Restrições" button in 5W2H page)
         *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
         *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
         *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)
