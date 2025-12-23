@@ -85,14 +85,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   }, [selectedWbsId, wbsList]);
 
   // Filtrar atividades por WBS selecionada
-  // Quando um WBS é selecionado, mostra atividades desse WBS e seus filhos
-  // Atividades sem wbs_id são sempre exibidas (não classificadas)
+  // Quando um WBS é selecionado, mostra apenas atividades desse WBS e seus filhos
   const atividadesFiltradas = useMemo(() => {
     if (!getDescendantWbsIds) return atividades;
     return atividades.filter((a) => {
-      // Se atividade não tem wbs_id, sempre exibe (não classificada)
-      if (!a.wbs_id) return true;
-      // Se tem wbs_id, verifica se está no filtro
+      // Quando há um filtro WBS ativo, só mostra atividades com wbs_id correspondente
+      if (!a.wbs_id) return false;
       return getDescendantWbsIds.includes(a.wbs_id);
     });
   }, [atividades, getDescendantWbsIds]);
@@ -135,28 +133,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return format(data, 'EEE', { locale: ptBR });
   };
 
+  // Criar mapa de restrições por atividade considerando diferentes formatos de ID
   const getRestricoesAtividade = useMemo(() => {
     const map: Record<string, RestricaoLPS[]> = {};
+    
+    // Primeiro, criar mapa de atividade_cronograma_id -> atividade.id
+    const cronogramaIdToAtividadeId: Record<string, string> = {};
+    atividadesFiltradas.forEach((a) => {
+      if (a.atividade_cronograma_id) {
+        cronogramaIdToAtividadeId[a.atividade_cronograma_id] = a.id;
+      }
+    });
+    
     restricoes.forEach((r) => {
       if (r.atividade_id) {
+        // Mapear pelo ID original da restrição
         if (!map[r.atividade_id]) {
           map[r.atividade_id] = [];
         }
         map[r.atividade_id].push(r);
         
-        // Também mapear com prefixo lps- para compatibilidade com atividades convertidas do cronograma
-        const lpsKey = `lps-${r.atividade_id}`;
-        if (!map[lpsKey]) {
-          map[lpsKey] = [];
+        // Também mapear pelo ID da atividade LPS (lps-xxx) se existir correspondência
+        const lpsAtividadeId = cronogramaIdToAtividadeId[r.atividade_id];
+        if (lpsAtividadeId && lpsAtividadeId !== r.atividade_id) {
+          if (!map[lpsAtividadeId]) {
+            map[lpsAtividadeId] = [];
+          }
+          map[lpsAtividadeId].push(r);
         }
-        map[lpsKey].push(r);
       }
     });
     return map;
-  }, [restricoes]);
+  }, [restricoes, atividadesFiltradas]);
 
   const getCorCategoria = (atividade: AtividadeLPS): string => {
-    const restricoesAtividade = getRestricoesAtividade[atividade.id] || [];
+    // Buscar restrições por ID da atividade ou por atividade_cronograma_id
+    const restricoesAtividade = getRestricoesAtividade[atividade.id] 
+      || (atividade.atividade_cronograma_id ? getRestricoesAtividade[atividade.atividade_cronograma_id] : [])
+      || [];
     
     if (restricoesAtividade.length === 0) {
       return 'bg-green-200 border-green-500 hover:bg-green-300';
@@ -228,7 +242,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                   ) : (
                     atividadesDoDia.map((atividade) => {
-                      const restricoesAtividade = getRestricoesAtividade[atividade.id] || [];
+                      // Buscar restrições por ID da atividade ou por atividade_cronograma_id
+                      const restricoesAtividade = getRestricoesAtividade[atividade.id] 
+                        || (atividade.atividade_cronograma_id ? getRestricoesAtividade[atividade.atividade_cronograma_id] : [])
+                        || [];
                       const restricoesPendentes = restricoesAtividade.filter(
                         (r) => r.status === 'PENDENTE' || r.status === 'ATRASADA'
                       ).length;

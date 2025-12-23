@@ -107,6 +107,7 @@ export const LPSPage: React.FC = () => {
   const [selectedActivity, setSelectedActivity] = useState<AtividadeLPS | null>(null);
   const [restricaoModalOpen, setRestricaoModalOpen] = useState(false);
   const [restricaoModalAtividadeId, setRestricaoModalAtividadeId] = useState<string | undefined>(undefined);
+  const [selectedRestricao, setSelectedRestricao] = useState<RestricaoLPS | null>(null);
   const [printViewerOpen, setPrintViewerOpen] = useState(false);
   const [selectedWbs, setSelectedWbs] = useState<WBSLPS | null>(null);
   const [anotacoesModalOpen, setAnotacoesModalOpen] = useState(false);
@@ -233,6 +234,7 @@ export const LPSPage: React.FC = () => {
           categoria: CategoriaAtividade.PRINCIPAL,
           responsavel: atividade.responsavel_nome,
           atividade_cronograma_id: atividade.id,
+          wbs_id: atividade.wbs_id,
         }));
 
       // Adicionar atividades ao store
@@ -269,6 +271,7 @@ export const LPSPage: React.FC = () => {
   };
 
   const handleAddRestricaoFromActivity = (atividadeId: string) => {
+    setSelectedRestricao(null); // Limpar restrição selecionada para criar nova
     setRestricaoModalAtividadeId(atividadeId);
     setRestricaoModalOpen(true);
     setActivityActionsModalOpen(false);
@@ -287,7 +290,8 @@ export const LPSPage: React.FC = () => {
     };
     
     // Determinar o atividade_id para o banco e manter referência local
-    const atividadeIdOriginal = restricao.atividade_id;
+    // Usar restricaoModalAtividadeId como fallback se a restrição não tem atividade_id definido
+    const atividadeIdOriginal = restricao.atividade_id || restricaoModalAtividadeId;
     let atividadeIdParaBanco: string | undefined = undefined;
     let atividadeNome: string | undefined = restricao.atividade_nome;
     
@@ -301,7 +305,20 @@ export const LPSPage: React.FC = () => {
         if (atividadeLPS?.atividade_cronograma_id && isValidUUID(atividadeLPS.atividade_cronograma_id)) {
           atividadeIdParaBanco = atividadeLPS.atividade_cronograma_id;
           atividadeNome = atividadeNome || atividadeLPS.nome;
+        } else if (atividadeLPS) {
+          // Atividade local - tentar extrair UUID do ID lps-, senão manter o ID original
+          const extractedId = atividadeIdOriginal.replace('lps-', '');
+          if (isValidUUID(extractedId)) {
+            atividadeIdParaBanco = extractedId;
+          } else {
+            // Manter o ID original quando não há UUID válido (atividade puramente local)
+            atividadeIdParaBanco = atividadeIdOriginal;
+          }
+          atividadeNome = atividadeNome || atividadeLPS.nome;
         }
+      } else {
+        // ID não reconhecido mas não vazio - manter original
+        atividadeIdParaBanco = atividadeIdOriginal;
       }
     }
     
@@ -375,6 +392,7 @@ export const LPSPage: React.FC = () => {
   };
 
   const handleAddRestricaoFromCard = (atividade: AtividadeLPS) => {
+    setSelectedRestricao(null); // Limpar restrição selecionada para criar nova
     setRestricaoModalAtividadeId(atividade.id);
     setRestricaoModalOpen(true);
   };
@@ -620,6 +638,7 @@ export const LPSPage: React.FC = () => {
         onEditRestricao={(restricao) => {
           setSelectedActivity(null);
           setActivityActionsModalOpen(false);
+          setSelectedRestricao(restricao);
           setRestricaoModalAtividadeId(restricao.atividade_id);
           setRestricaoModalOpen(true);
         }}
@@ -627,11 +646,12 @@ export const LPSPage: React.FC = () => {
 
       {/* Modal de Restrição */}
       <RestricaoModal
-        restricao={null}
+        restricao={selectedRestricao}
         isOpen={restricaoModalOpen}
         onClose={() => {
           setRestricaoModalOpen(false);
           setRestricaoModalAtividadeId(undefined);
+          setSelectedRestricao(null);
         }}
         onSave={handleSaveRestricao}
         atividadeId={restricaoModalAtividadeId}
