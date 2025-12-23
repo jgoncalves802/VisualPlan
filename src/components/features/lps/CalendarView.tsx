@@ -143,6 +143,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           map[r.atividade_id] = [];
         }
         map[r.atividade_id].push(r);
+        
+        // Também mapear com prefixo lps- para compatibilidade com atividades convertidas do cronograma
+        const lpsKey = `lps-${r.atividade_id}`;
+        if (!map[lpsKey]) {
+          map[lpsKey] = [];
+        }
+        map[lpsKey].push(r);
       }
     });
     return map;
