@@ -313,6 +313,8 @@ export const LPSPage: React.FC = () => {
     try {
       const codigo = await acoes5w2hService.generateNextCodigo(usuario.empresaId);
       
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(atividade.id);
+      
       const novaAcao = {
         codigo,
         oQue: `Ação para: ${atividade.nome}`,
@@ -320,13 +322,13 @@ export const LPSPage: React.FC = () => {
         onde: atividade.descricao || 'Local a definir',
         quando: atividade.data_fim || new Date(),
         quem: atividade.responsavel || 'A definir',
-        quemId: atividade.responsavel_id,
+        quemId: isValidUUID && atividade.responsavel_id ? atividade.responsavel_id : undefined,
         como: 'Definir plano de ação',
         status: StatusAcao5W2H.PENDENTE,
         prioridade: PrioridadeAcao.MEDIA,
         origem: OrigemAcao.LPS,
-        origemId: atividade.id,
-        origemDescricao: `Atividade LPS: ${atividade.nome}`,
+        origemId: isValidUUID ? atividade.id : undefined,
+        origemDescricao: `Atividade LPS: ${atividade.nome} (${atividade.id})`,
         empresaId: usuario.empresaId,
         projetoId: projetoIdParam || undefined,
       };
