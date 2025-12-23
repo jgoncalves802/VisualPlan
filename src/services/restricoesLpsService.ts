@@ -48,16 +48,16 @@ const mapStatusFromIshikawa = (status: string): RestricaoLPS['status'] => {
 };
 
 const mapCategoriaToIshikawa = (tipoDetalhado?: TipoRestricaoDetalhado): string => {
-  // Tentar formato com capitalização inicial (ex: Material, Método)
+  // Valores aceitos pela constraint do Supabase: MAIÚSCULAS sem acentos
   const categoriaMap: Record<string, string> = {
-    'MATERIAL': 'Material',
-    'MAO_DE_OBRA': 'Mão de Obra',
-    'MAQUINA': 'Máquina',
-    'METODO': 'Método',
-    'MEIO_AMBIENTE': 'Meio Ambiente',
-    'MEDIDA': 'Medida',
+    'MATERIAL': 'MATERIAL',
+    'MAO_DE_OBRA': 'MAO_DE_OBRA',
+    'MAQUINA': 'MAQUINA',
+    'METODO': 'METODO',
+    'MEIO_AMBIENTE': 'MEIO_AMBIENTE',
+    'MEDIDA': 'MEDIDA',
   };
-  const resultado = categoriaMap[tipoDetalhado || 'METODO'] || 'Método';
+  const resultado = categoriaMap[tipoDetalhado || 'METODO'] || 'METODO';
   console.log(`mapCategoriaToIshikawa: input="${tipoDetalhado}" => output="${resultado}"`);
   return resultado;
 };
