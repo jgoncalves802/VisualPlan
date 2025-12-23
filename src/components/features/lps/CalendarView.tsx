@@ -22,7 +22,6 @@ interface CalendarViewProps {
   empresaId?: string;
   prontidaoMap?: Record<string, ResumoProntidao>;
   onAddRestricao?: (atividade: AtividadeLPS) => void;
-  onAdd5W2H?: (atividade: AtividadeLPS) => void;
   onOpenProntidao?: (atividade: AtividadeLPS) => void;
 }
 
@@ -39,7 +38,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   empresaId,
   prontidaoMap = {},
   onAddRestricao,
-  onAdd5W2H,
   onOpenProntidao,
 }) => {
   // Helper para converter para Date
@@ -223,7 +221,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         empresaId={empresaId}
                         prontidao={prontidaoMap[atividade.id]}
                         onAddRestricao={onAddRestricao}
-                        onAdd5W2H={onAdd5W2H}
                         onOpenProntidao={onOpenProntidao}
                       />
                     ))

@@ -27,8 +27,6 @@ import {
 } from '../types/lps';
 import { CondicoesProntidaoModal } from '../components/features/lps/CondicoesProntidaoModal';
 import { condicoesProntidaoService } from '../services/condicoesProntidaoService';
-import { acoes5w2hService } from '../services/acoes5w2hService';
-import { StatusAcao5W2H, PrioridadeAcao, OrigemAcao } from '../types/gestao';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { epsService, EpsNode } from '../services/epsService';
 import {
@@ -329,42 +327,6 @@ export const LPSPage: React.FC = () => {
     setRestricaoModalOpen(true);
   };
 
-  const handleAdd5W2HFromCard = async (atividade: AtividadeLPS) => {
-    if (!usuario?.empresaId) return;
-    
-    try {
-      const codigo = await acoes5w2hService.generateNextCodigo(usuario.empresaId);
-      
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(atividade.id);
-      
-      const novaAcao = {
-        codigo,
-        oQue: `Ação para: ${atividade.nome}`,
-        porQue: 'Definir motivo',
-        onde: atividade.descricao || 'Local a definir',
-        quando: atividade.data_fim || new Date(),
-        quem: atividade.responsavel || 'A definir',
-        quemId: isValidUUID && atividade.responsavel_id ? atividade.responsavel_id : undefined,
-        como: 'Definir plano de ação',
-        status: StatusAcao5W2H.PENDENTE,
-        prioridade: PrioridadeAcao.MEDIA,
-        origem: 'LPS' as OrigemAcao,
-        origemId: isValidUUID ? atividade.id : undefined,
-        origemDescricao: `Atividade LPS: ${atividade.nome} (${atividade.id})`,
-        empresaId: usuario.empresaId,
-        projetoId: projetoIdParam || undefined,
-      };
-      
-      console.log('Criando 5W2H com dados:', JSON.stringify(novaAcao, null, 2));
-      
-      await acoes5w2hService.create(novaAcao);
-      alert(`Ação 5W2H ${codigo} criada com sucesso!`);
-    } catch (error) {
-      console.error('Erro ao criar ação 5W2H:', error);
-      alert('Erro ao criar ação 5W2H');
-    }
-  };
-
   const handleSyncCronograma = async () => {
     if (projetoIdParam) {
       await syncComCronograma(projetoIdParam);
@@ -543,7 +505,6 @@ export const LPSPage: React.FC = () => {
             empresaId={usuario?.empresaId}
             prontidaoMap={prontidaoMap}
             onAddRestricao={handleAddRestricaoFromCard}
-            onAdd5W2H={handleAdd5W2HFromCard}
             onOpenProntidao={handleOpenProntidao}
           />
         </div>

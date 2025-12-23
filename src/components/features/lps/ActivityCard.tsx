@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AtividadeLPS, StatusAtividadeLPS, TipoAtividadeLPS, ResumoProntidao } from '../../../types/lps';
-import { AlertTriangle, CheckCircle, Plus, ClipboardList, MoreVertical } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Plus, MoreVertical } from 'lucide-react';
 
 interface ActivityCardProps {
   atividade: AtividadeLPS;
@@ -19,7 +19,6 @@ interface ActivityCardProps {
   empresaId?: string;
   prontidao?: ResumoProntidao | null;
   onAddRestricao?: (atividade: AtividadeLPS) => void;
-  onAdd5W2H?: (atividade: AtividadeLPS) => void;
   onOpenProntidao?: (atividade: AtividadeLPS) => void;
 }
 
@@ -31,7 +30,6 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   compact = false,
   prontidao,
   onAddRestricao,
-  onAdd5W2H,
   onOpenProntidao,
 }) => {
   const [showActions, setShowActions] = useState(false);
@@ -186,7 +184,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
       )}
 
       {/* Botão de menu de ações */}
-      {(onAddRestricao || onAdd5W2H) && (
+      {onAddRestricao && (
         <div className="absolute bottom-1.5 right-1.5">
           <button
             onClick={(e) => {
@@ -205,32 +203,17 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
               className="absolute bottom-full right-0 mb-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px] z-50"
               onMouseLeave={() => setShowActions(false)}
             >
-              {onAddRestricao && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddRestricao(atividade);
-                    setShowActions(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5 text-red-500" />
-                  Nova Restrição
-                </button>
-              )}
-              {onAdd5W2H && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAdd5W2H(atividade);
-                    setShowActions(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  <ClipboardList className="w-3.5 h-3.5 text-blue-500" />
-                  Nova Ação 5W2H
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddRestricao(atividade);
+                  setShowActions(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-red-500" />
+                Nova Restrição
+              </button>
             </div>
           )}
         </div>
