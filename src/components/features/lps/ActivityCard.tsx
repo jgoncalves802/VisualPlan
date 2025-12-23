@@ -96,8 +96,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         atividade.tipo === TipoAtividadeLPS.CRITICA ? 'ring-2 ring-red-500' : ''
       }`}
       style={{
-        minHeight: compact ? '60px' : '90px',
+        minHeight: compact ? '60px' : '110px',
         maxWidth: '100%',
+        paddingBottom: prontidao && prontidao.totalCondicoes > 0 ? '28px' : '10px',
       }}
     >
       {/* Código da atividade */}

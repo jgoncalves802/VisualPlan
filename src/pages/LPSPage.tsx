@@ -348,12 +348,14 @@ export const LPSPage: React.FC = () => {
         como: 'Definir plano de ação',
         status: StatusAcao5W2H.PENDENTE,
         prioridade: PrioridadeAcao.MEDIA,
-        origem: OrigemAcao.LPS,
+        origem: 'LPS' as OrigemAcao,
         origemId: isValidUUID ? atividade.id : undefined,
         origemDescricao: `Atividade LPS: ${atividade.nome} (${atividade.id})`,
         empresaId: usuario.empresaId,
         projetoId: projetoIdParam || undefined,
       };
+      
+      console.log('Criando 5W2H com dados:', JSON.stringify(novaAcao, null, 2));
       
       await acoes5w2hService.create(novaAcao);
       alert(`Ação 5W2H ${codigo} criada com sucesso!`);
