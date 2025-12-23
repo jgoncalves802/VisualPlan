@@ -157,6 +157,20 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         <div className="absolute top-2 right-5 w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Atividade Crítica" />
       )}
 
+      {/* Badge de restrições no canto superior direito */}
+      {restricoesTotalCount > 0 && (
+        <div 
+          className={`absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-bold shadow-md ${
+            restricoesCount > 0 
+              ? 'bg-red-500 text-white' 
+              : 'bg-green-500 text-white'
+          }`}
+          title={`${restricoesResolvidasCount} resolvidas de ${restricoesTotalCount} restrições`}
+        >
+          {restricoesTotalCount}
+        </div>
+      )}
+
       {/* Container de badges na parte inferior */}
       <div className="absolute bottom-1.5 left-1.5 right-8 flex items-center gap-1 flex-wrap">
         {/* Badge de restrições no formato X/Y */}
