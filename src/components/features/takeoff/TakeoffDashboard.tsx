@@ -122,7 +122,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
     color: d.cor,
   }));
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+  const COLORS = ['#6B7280', '#10B981', '#F59E0B', '#EF4444', '#9CA3AF', '#4B5563'];
 
   if (!projetoId) {
     return (
@@ -141,8 +141,8 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="w-5 h-5 text-blue-600" />
+            <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+              <Package className="w-5 h-5 theme-text-secondary" />
             </div>
             <div>
               <p className="text-sm theme-text-secondary">Total de Itens</p>
@@ -208,7 +208,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
                 <XAxis type="number" domain={[0, 100]} />
                 <YAxis type="category" dataKey="nome" width={100} />
                 <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                <Bar dataKey="progresso" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="progresso" fill="#6B7280" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -313,7 +313,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-2 justify-center">
                     <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(totaisGerais.percentualMedio, 100)}%` }} />
+                      <div className="h-full bg-gray-500 rounded-full" style={{ width: `${Math.min(totaisGerais.percentualMedio, 100)}%` }} />
                     </div>
                     <span className="text-xs theme-text w-10 text-right">{totaisGerais.percentualMedio.toFixed(0)}%</span>
                   </div>

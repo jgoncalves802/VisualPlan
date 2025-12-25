@@ -183,7 +183,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
           type={col.type === 'number' || col.type === 'percentage' ? 'number' : 'text'}
           value={editData[col.key as keyof TakeoffItem] ?? value ?? ''}
           onChange={(e) => setEditData({ ...editData, [col.key]: e.target.value })}
-          className="w-full px-2 py-1 text-xs border theme-divide rounded theme-bg-primary theme-text"
+          className="w-full px-2 py-1 text-xs border rounded theme-text"
+          style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           step={col.type === 'number' ? '0.01' : undefined}
         />
       );
@@ -203,7 +204,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
         <div className="flex items-center gap-1">
           <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full ${pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-blue-500' : 'bg-gray-300'}`}
+              className={`h-full rounded-full ${pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-gray-500' : 'bg-gray-300'}`}
               style={{ width: `${Math.min(pct, 100)}%` }}
             />
           </div>
@@ -223,7 +224,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
         type={col.type === 'number' ? 'number' : 'text'}
         value={newItem[col.key as keyof CreateItemDTO] ?? ''}
         onChange={(e) => setNewItem({ ...newItem, [col.key]: e.target.value })}
-        className="w-full px-2 py-1 text-xs border theme-divide rounded theme-bg-primary theme-text"
+        className="w-full px-2 py-1 text-xs border rounded theme-text"
+        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         placeholder={col.label}
         step={col.type === 'number' ? '0.01' : undefined}
       />
@@ -233,7 +235,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
   if (isLoadingItens) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <Loader2 className="w-8 h-8 theme-text-secondary animate-spin" />
       </div>
     );
   }
@@ -261,7 +263,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
         <button
           onClick={handleAddNew}
           disabled={isAddingNew}
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 disabled:opacity-50 theme-text"
+          style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
         >
           <Plus className="w-4 h-4" />
           Novo Item
@@ -278,7 +281,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               {baseColumns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide cursor-pointer hover:theme-bg-primary"
+                  className="px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide cursor-pointer"
                   style={{ width: col.width, minWidth: col.width }}
                   onClick={() => handleSort(col.key)}
                 >
@@ -294,7 +297,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
           </thead>
           <tbody>
             {isAddingNew && (
-              <tr className="theme-bg-primary border-b theme-divide bg-green-50">
+              <tr className="border-b theme-divide" style={{ backgroundColor: 'var(--color-surface)' }}>
                 <td className="px-2 py-2">
                   <div className="flex items-center gap-1">
                     <button
@@ -326,9 +329,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               return (
                 <tr
                   key={item.id}
-                  className={`border-b theme-divide transition-colors ${
-                    isEditing ? 'bg-blue-50' : ''
-                  }`}
+                  className="border-b theme-divide transition-colors"
+                  style={{ backgroundColor: isEditing ? 'var(--color-surface-secondary)' : undefined }}
                 >
                   <td className="px-2 py-2">
                     {isEditing ? (
@@ -415,7 +417,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
                 <div className="flex items-center gap-1">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full"
+                      className="h-full bg-gray-500 rounded-full"
                       style={{ width: `${Math.min(totais.percentualMedio, 100)}%` }}
                     />
                   </div>

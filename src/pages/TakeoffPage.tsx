@@ -100,7 +100,7 @@ const TakeoffPage: React.FC = () => {
       <div className="flex-shrink-0 theme-surface border-b theme-divide px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Package className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+            <Package className="w-6 h-6 theme-text-secondary" />
             <div>
               <h1 className="text-xl font-bold theme-text">Take-off / Levantamento de Quantidades</h1>
               <p className="text-sm theme-text-secondary">Gestão de quantitativos e avanço físico</p>
@@ -130,7 +130,8 @@ const TakeoffPage: React.FC = () => {
             {selectedProjetoId && selectedDisciplinaId && (
               <button
                 onClick={() => setShowMapaModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:opacity-90 transition-opacity theme-text"
+                style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
               >
                 <Plus className="w-4 h-4" />
                 Novo Mapa
@@ -178,7 +179,8 @@ const TakeoffPage: React.FC = () => {
           {disciplinas.length === 0 && !isLoading && (
             <button
               onClick={handleInitializeDisciplinas}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm theme-text-secondary hover:theme-text rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--color-surface-secondary)' }}
             >
               <RefreshCw className="w-4 h-4" />
               Inicializar Disciplinas
@@ -193,9 +195,10 @@ const TakeoffPage: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary'
+                  ? 'theme-text'
                   : 'border-transparent theme-text-secondary hover:theme-text'
               }`}
+              style={{ borderBottomColor: activeTab === tab.id ? 'var(--color-text)' : 'transparent' }}
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
@@ -232,7 +235,7 @@ const TakeoffPage: React.FC = () => {
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  <Loader2 className="w-6 h-6 theme-text-secondary animate-spin" />
                 </div>
               ) : !selectedProjetoId ? (
                 <div className="p-6 text-center">
@@ -250,7 +253,7 @@ const TakeoffPage: React.FC = () => {
                   {selectedDisciplinaId && (
                     <button
                       onClick={() => setShowMapaModal(true)}
-                      className="text-sm text-primary hover:underline"
+                      className="text-sm theme-text-secondary hover:theme-text hover:underline"
                     >
                       Criar primeiro mapa
                     </button>
@@ -267,7 +270,7 @@ const TakeoffPage: React.FC = () => {
                       }`}
                       style={{ 
                         backgroundColor: selectedMapaId === mapa.id ? 'var(--color-surface-secondary)' : 'transparent',
-                        borderColor: selectedMapaId === mapa.id ? 'var(--color-primary)' : 'transparent'
+                        borderColor: selectedMapaId === mapa.id ? 'var(--color-text)' : 'transparent'
                       }}
                       onMouseEnter={(e) => { if (selectedMapaId !== mapa.id) e.currentTarget.style.backgroundColor = 'var(--color-surface-secondary)'; }}
                       onMouseLeave={(e) => { if (selectedMapaId !== mapa.id) e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -277,7 +280,7 @@ const TakeoffPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span
                               className="w-3 h-3 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: mapa.disciplina?.cor || '#3B82F6' }}
+                              style={{ backgroundColor: mapa.disciplina?.cor || '#6B7280' }}
                             />
                             <span className="text-sm font-medium theme-text truncate">
                               {mapa.nome}

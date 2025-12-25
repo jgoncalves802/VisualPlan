@@ -218,7 +218,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-3">
-            <FileSpreadsheet className="w-6 h-6 text-primary" />
+            <FileSpreadsheet className="w-6 h-6 theme-text-secondary" />
             <h2 className="text-lg font-semibold">Importar Excel</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -238,7 +238,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-12 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                className="border-2 border-dashed border-gray-300 rounded-xl p-12 cursor-pointer hover:border-gray-500 transition-colors"
+                style={{ backgroundColor: 'var(--color-surface)' }}
               >
                 <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-700 mb-2">
@@ -328,7 +329,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
             <div className="text-center py-12">
               {isProcessing ? (
                 <>
-                  <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+                  <Loader2 className="w-12 h-12 theme-text-secondary animate-spin mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-700">Importando itens...</p>
                 </>
               ) : importResult ? (
@@ -378,7 +379,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
               <button
                 onClick={handlePreview}
                 disabled={isProcessing || !mappings.some(m => m.target)}
-                className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2 theme-text"
+                style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Prévia
@@ -395,7 +397,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
                 </button>
                 <button
                   onClick={handleImport}
-                  className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:opacity-90 flex items-center gap-2"
+                  className="px-4 py-2 text-sm rounded-lg hover:opacity-90 flex items-center gap-2 theme-text"
+                  style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
                 >
                   Importar
                 </button>

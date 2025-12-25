@@ -57,7 +57,7 @@ const TakeoffMapaModal: React.FC<TakeoffMapaModalProps> = ({ projetoId, discipli
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
               <span
                 className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: disciplina?.cor || '#3B82F6' }}
+                style={{ backgroundColor: disciplina?.cor || '#6B7280' }}
               />
               <span className="text-sm text-gray-700">{disciplina?.nome}</span>
             </div>
@@ -72,7 +72,7 @@ const TakeoffMapaModal: React.FC<TakeoffMapaModalProps> = ({ projetoId, discipli
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Mapa de Controle - Área 2300"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400"
               required
             />
           </div>
@@ -86,7 +86,7 @@ const TakeoffMapaModal: React.FC<TakeoffMapaModalProps> = ({ projetoId, discipli
               value={versao}
               onChange={(e) => setVersao(e.target.value)}
               placeholder="1.0"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400"
             />
           </div>
 
@@ -99,7 +99,7 @@ const TakeoffMapaModal: React.FC<TakeoffMapaModalProps> = ({ projetoId, discipli
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descrição opcional do mapa..."
               rows={3}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 resize-none"
             />
           </div>
 
@@ -114,7 +114,8 @@ const TakeoffMapaModal: React.FC<TakeoffMapaModalProps> = ({ projetoId, discipli
             <button
               type="submit"
               disabled={isSubmitting || !nome.trim()}
-              className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2 theme-text"
+              style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Criar Mapa
