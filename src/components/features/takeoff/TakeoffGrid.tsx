@@ -249,7 +249,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               placeholder="Buscar itens..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 text-sm border theme-divide rounded-lg theme-bg-primary theme-text w-64"
+              className="pl-9 pr-4 py-2 text-sm border rounded-lg theme-text w-64"
+              style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
             />
           </div>
           <span className="text-sm theme-text-secondary">
