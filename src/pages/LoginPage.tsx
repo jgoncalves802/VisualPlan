@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
       nome: 'Administrador',
       email: 'admin@visionplan.com',
       ativo: true,
-      empresaId: 'empresa-001',
+      empresaId: 'a0000001-0000-0000-0000-000000000001',
       camadaGovernanca: CamadaGovernanca.PROPONENTE,
       perfilAcesso: PerfilAcesso.ADMIN,
       avatarUrl: undefined,

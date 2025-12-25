@@ -139,7 +139,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Package className="w-5 h-5 text-blue-600" />
@@ -151,7 +151,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
           </div>
         </div>
 
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
               <TrendingUp className="w-5 h-5 text-green-600" />
@@ -161,7 +161,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
               <p className="text-2xl font-bold theme-text">{totaisGerais.percentualMedio.toFixed(1)}%</p>
             </div>
           </div>
-          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="mt-2 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
             <div
               className="h-full bg-green-500 rounded-full"
               style={{ width: `${Math.min(totaisGerais.percentualMedio, 100)}%` }}
@@ -169,10 +169,10 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
           </div>
         </div>
 
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Scale className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Scale className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <p className="text-sm theme-text-secondary">Peso Total</p>
@@ -183,7 +183,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
           </div>
         </div>
 
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 rounded-lg">
               <DollarSign className="w-5 h-5 text-amber-600" />
@@ -199,7 +199,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <h3 className="text-sm font-medium theme-text mb-4">Progresso por Disciplina</h3>
           {chartDataDisciplinas.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -218,7 +218,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
           )}
         </div>
 
-        <div className="theme-bg-secondary rounded-lg p-4">
+        <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
           <h3 className="text-sm font-medium theme-text mb-4">Distribuição de Peso</h3>
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -249,7 +249,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
         </div>
       </div>
 
-      <div className="theme-bg-secondary rounded-lg p-4">
+      <div className="theme-surface rounded-lg p-4 border" style={{ borderColor: 'var(--color-border)' }}>
         <h3 className="text-sm font-medium theme-text mb-4">Detalhamento por Disciplina</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -270,7 +270,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
                 const t = totaisPorDisciplina[disc.id];
                 if (!t || t.totalItens === 0) return null;
                 return (
-                  <tr key={disc.id} className="border-b theme-divide hover:theme-bg-primary">
+                  <tr key={disc.id} className="border-b theme-divide" style={{ backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-secondary)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: disc.cor }} />
@@ -302,7 +302,7 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
               })}
             </tbody>
             <tfoot>
-              <tr className="font-medium theme-bg-primary">
+              <tr className="font-medium" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                 <td className="py-2 px-3 theme-text">TOTAL</td>
                 <td className="text-right py-2 px-3 theme-text">{totaisGerais.totalItens.toLocaleString()}</td>
                 <td className="text-right py-2 px-3 theme-text">{totaisGerais.qtdPrevistaTotal.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</td>
