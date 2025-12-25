@@ -110,6 +110,7 @@ export interface TakeoffMedicao {
   createdAt: Date;
   updatedAt: Date;
   usuario?: { id: string; nome: string };
+  item?: TakeoffItem;
 }
 
 export interface TakeoffVinculo {

@@ -16,13 +16,17 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAuthStore } from '../stores/authStore';
 import { useTakeoffStore } from '../stores/takeoffStore';
 import { useEpsStore } from '../stores/epsStore';
+import { takeoffService } from '../services/takeoffService';
 import TakeoffGrid from '../components/features/takeoff/TakeoffGrid';
 import TakeoffDashboard from '../components/features/takeoff/TakeoffDashboard';
 import TakeoffImportModal from '../components/features/takeoff/TakeoffImportModal';
 import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
+import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig } from '../types/takeoff.types';
 
 type TabType = 'dashboard' | 'mapas' | 'vinculos' | 'medicoes' | 'documentos' | 'config';
 
@@ -50,12 +54,77 @@ const TakeoffPage: React.FC = () => {
   const [showMapaModal, setShowMapaModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [vinculos, setVinculos] = useState<TakeoffVinculo[]>([]);
+  const [medicoes, setMedicoes] = useState<TakeoffMedicao[]>([]);
+  const [documentos, setDocumentos] = useState<TakeoffDocumento[]>([]);
+  const [colunasConfig, setColunasConfig] = useState<TakeoffColunaConfig[]>([]);
+  const [loadingTab, setLoadingTab] = useState(false);
+
   useEffect(() => {
     if (usuario?.empresaId) {
       loadDisciplinas(usuario.empresaId);
       loadProjetos(usuario.empresaId);
     }
   }, [usuario?.empresaId, loadDisciplinas, loadProjetos]);
+
+  useEffect(() => {
+    const loadTabData = async () => {
+      if (activeTab === 'vinculos') {
+        setLoadingTab(true);
+        try {
+          const data = await takeoffService.getAllVinculos();
+          setVinculos(data);
+        } catch (error) {
+          console.error('Erro ao carregar vínculos:', error);
+          setVinculos([]);
+        } finally {
+          setLoadingTab(false);
+        }
+      } else if (activeTab === 'medicoes') {
+        setLoadingTab(true);
+        try {
+          const data = await takeoffService.getAllMedicoes();
+          setMedicoes(data);
+        } catch (error) {
+          console.error('Erro ao carregar medições:', error);
+          setMedicoes([]);
+        } finally {
+          setLoadingTab(false);
+        }
+      } else if (activeTab === 'documentos') {
+        if (!selectedProjetoId) {
+          setDocumentos([]);
+          return;
+        }
+        setLoadingTab(true);
+        try {
+          const data = await takeoffService.getDocumentos(selectedProjetoId, selectedDisciplinaId || undefined);
+          setDocumentos(data);
+        } catch (error) {
+          console.error('Erro ao carregar documentos:', error);
+          setDocumentos([]);
+        } finally {
+          setLoadingTab(false);
+        }
+      } else if (activeTab === 'config') {
+        if (!selectedDisciplinaId) {
+          setColunasConfig([]);
+          return;
+        }
+        setLoadingTab(true);
+        try {
+          const data = await takeoffService.getColunasConfig(selectedDisciplinaId);
+          setColunasConfig(data);
+        } catch (error) {
+          console.error('Erro ao carregar colunas:', error);
+          setColunasConfig([]);
+        } finally {
+          setLoadingTab(false);
+        }
+      }
+    };
+    loadTabData();
+  }, [activeTab, selectedProjetoId, selectedDisciplinaId]);
 
   const handleInitializeDisciplinas = async () => {
     if (usuario?.empresaId) {
@@ -331,43 +400,170 @@ const TakeoffPage: React.FC = () => {
 
         {activeTab === 'vinculos' && (
           <div className="flex-1 overflow-auto p-6">
-            <div className="text-center py-12">
-              <Link2 className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
-              <h3 className="text-lg font-medium theme-text mb-2">Vínculos com Cronograma</h3>
-              <p className="text-sm theme-text-secondary">
-                Associe itens de take-off às atividades do cronograma para calcular avanço físico automaticamente
-              </p>
-            </div>
+            {loadingTab ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin theme-text-secondary" />
+              </div>
+            ) : vinculos.length === 0 ? (
+              <div className="text-center py-12">
+                <Link2 className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
+                <h3 className="text-lg font-medium theme-text mb-2">Vínculos com Cronograma</h3>
+                <p className="text-sm theme-text-secondary">
+                  Associe itens de take-off às atividades do cronograma para calcular avanço físico automaticamente
+                </p>
+              </div>
+            ) : (
+              <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                  <h3 className="text-lg font-medium theme-text">Vínculos com Cronograma</h3>
+                  <p className="text-sm theme-text-secondary mt-1">{vinculos.length} vínculos encontrados</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Item Take-off</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Atividade</th>
+                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Peso (%)</th>
+                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Progresso</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vinculos.map((v) => (
+                        <tr key={v.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
+                          <td className="py-3 px-4 theme-text">{v.item?.descricao || v.itemId}</td>
+                          <td className="py-3 px-4 theme-text-secondary">{v.atividadeId}</td>
+                          <td className="py-3 px-4 text-right theme-text">{v.peso}%</td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="px-2 py-1 text-xs rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                              {v.item?.percentualExecutado?.toFixed(1) || 0}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'medicoes' && (
           <div className="flex-1 overflow-auto p-6">
-            <div className="text-center py-12">
-              <Calendar className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
-              <h3 className="text-lg font-medium theme-text mb-2">Medições por Período</h3>
-              <p className="text-sm theme-text-secondary">
-                Registre quantidades executadas por período para acompanhar o avanço físico
-              </p>
-            </div>
+            {loadingTab ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin theme-text-secondary" />
+              </div>
+            ) : medicoes.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
+                <h3 className="text-lg font-medium theme-text mb-2">Medições por Período</h3>
+                <p className="text-sm theme-text-secondary">
+                  Registre quantidades executadas por período para acompanhar o avanço físico
+                </p>
+              </div>
+            ) : (
+              <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                  <h3 className="text-lg font-medium theme-text">Medições por Período</h3>
+                  <p className="text-sm theme-text-secondary mt-1">{medicoes.length} medições registradas</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Item</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Período</th>
+                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Qtd. Período</th>
+                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Qtd. Acumulada</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Observações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {medicoes.map((m) => (
+                        <tr key={m.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
+                          <td className="py-3 px-4 theme-text">{m.item?.descricao || m.itemId}</td>
+                          <td className="py-3 px-4 theme-text-secondary">
+                            {format(new Date(m.periodoInicio), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(m.periodoFim), 'dd/MM/yy', { locale: ptBR })}
+                          </td>
+                          <td className="py-3 px-4 text-right theme-text">{m.qtdPeriodo.toLocaleString('pt-BR')}</td>
+                          <td className="py-3 px-4 text-right theme-text font-medium">{m.qtdAcumulada?.toLocaleString('pt-BR') || '-'}</td>
+                          <td className="py-3 px-4 theme-text-secondary text-xs max-w-[200px] truncate">{m.observacoes || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'documentos' && (
           <div className="flex-1 overflow-auto p-6">
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
-              <h3 className="text-lg font-medium theme-text mb-2">Documentos de Projeto</h3>
-              <p className="text-sm theme-text-secondary">
-                Gerencie isométricos, plantas e desenhos de referência
-              </p>
-            </div>
+            {loadingTab ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin theme-text-secondary" />
+              </div>
+            ) : documentos.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
+                <h3 className="text-lg font-medium theme-text mb-2">Documentos de Projeto</h3>
+                <p className="text-sm theme-text-secondary">
+                  Gerencie isométricos, plantas e desenhos de referência
+                </p>
+              </div>
+            ) : (
+              <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                  <h3 className="text-lg font-medium theme-text">Documentos de Projeto</h3>
+                  <p className="text-sm theme-text-secondary mt-1">{documentos.length} documentos cadastrados</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Código</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Título</th>
+                        <th className="text-center py-3 px-4 font-medium theme-text-secondary">Revisão</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Tipo</th>
+                        <th className="text-center py-3 px-4 font-medium theme-text-secondary">Status</th>
+                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Emissão</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {documentos.map((d) => (
+                        <tr key={d.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
+                          <td className="py-3 px-4 font-mono text-xs theme-text">{d.codigo}</td>
+                          <td className="py-3 px-4 theme-text">{d.titulo || '-'}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="px-2 py-1 text-xs rounded font-medium" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                              Rev. {d.revisao}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 theme-text-secondary capitalize">{d.tipo || '-'}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="px-2 py-1 text-xs rounded theme-text" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}>
+                              {d.status === 'aprovado' ? 'Aprovado' : d.status === 'em_revisao' ? 'Em Revisão' : d.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 theme-text-secondary">
+                            {d.dataEmissao ? format(new Date(d.dataEmissao), 'dd/MM/yyyy', { locale: ptBR }) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'config' && (
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid gap-6 max-w-4xl">
+            <div className="grid gap-6 max-w-5xl">
               <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                 <h3 className="text-lg font-medium theme-text mb-4">Disciplinas Configuradas</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -389,6 +585,70 @@ const TakeoffPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {selectedDisciplinaId && (
+                <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                  <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                    <h3 className="text-lg font-medium theme-text">Colunas Configuradas</h3>
+                    <p className="text-sm theme-text-secondary mt-1">
+                      {colunasConfig.length} colunas para {disciplinas.find(d => d.id === selectedDisciplinaId)?.nome || 'disciplina selecionada'}
+                    </p>
+                  </div>
+                  {loadingTab ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin theme-text-secondary" />
+                    </div>
+                  ) : colunasConfig.length === 0 ? (
+                    <div className="p-6 text-center theme-text-secondary">
+                      Nenhuma coluna configurada para esta disciplina
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                            <th className="text-left py-3 px-4 font-medium theme-text-secondary">Nome</th>
+                            <th className="text-left py-3 px-4 font-medium theme-text-secondary">Código</th>
+                            <th className="text-center py-3 px-4 font-medium theme-text-secondary">Tipo</th>
+                            <th className="text-center py-3 px-4 font-medium theme-text-secondary">Obrigatória</th>
+                            <th className="text-right py-3 px-4 font-medium theme-text-secondary">Largura</th>
+                            <th className="text-right py-3 px-4 font-medium theme-text-secondary">Ordem</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {colunasConfig.map((col) => (
+                            <tr key={col.id} className="border-b" style={{ borderColor: 'var(--color-border)' }}>
+                              <td className="py-3 px-4 theme-text font-medium">{col.nome}</td>
+                              <td className="py-3 px-4 font-mono text-xs theme-text-secondary">{col.codigo}</td>
+                              <td className="py-3 px-4 text-center">
+                                <span className="px-2 py-1 text-xs rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                                  {col.tipo}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {col.obrigatoria ? (
+                                  <span className="theme-text font-medium">Sim</span>
+                                ) : (
+                                  <span className="theme-text-secondary">Não</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-right theme-text-secondary">{col.largura}px</td>
+                              <td className="py-3 px-4 text-right theme-text-secondary">{col.ordem}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!selectedDisciplinaId && (
+                <div className="p-6 text-center theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                  <Settings className="w-12 h-12 mx-auto mb-3 theme-text-secondary opacity-30" />
+                  <p className="theme-text-secondary">Selecione uma disciplina para ver as colunas configuradas</p>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -747,6 +747,49 @@ export const takeoffService = {
     }));
   },
 
+  async getAllVinculos(): Promise<TakeoffVinculo[]> {
+    const { data, error } = await supabase
+      .from('takeoff_vinculos')
+      .select('*, takeoff_itens(*)');
+
+    if (error) {
+      if (isPGRST205Error(error)) {
+        return DEMO_VINCULOS.map(v => ({ ...v, item: DEMO_ITENS.find(i => i.id === v.itemId) }));
+      }
+      console.error('Erro ao buscar vínculos:', error);
+      return [];
+    }
+
+    return (data || []).map((row) => ({
+      ...mapVinculoFromDB(row),
+      item: row.takeoff_itens ? mapItemFromDB(row.takeoff_itens) : undefined,
+    }));
+  },
+
+  async getAllMedicoes(): Promise<TakeoffMedicao[]> {
+    const { data, error } = await supabase
+      .from('takeoff_medicoes')
+      .select('*, takeoff_itens(*)')
+      .order('periodo_fim', { ascending: false });
+
+    if (error) {
+      if (isPGRST205Error(error)) {
+        return DEMO_MEDICOES.map(m => ({ 
+          ...m, 
+          usuario: { id: m.usuarioId || 'user-1', nome: 'Usuário Demo' },
+          item: DEMO_ITENS.find(i => i.id === m.itemId),
+        })).sort((a, b) => new Date(b.periodoFim).getTime() - new Date(a.periodoFim).getTime());
+      }
+      console.error('Erro ao buscar medições:', error);
+      return [];
+    }
+
+    return (data || []).map((row) => ({
+      ...mapMedicaoFromDB(row),
+      item: row.takeoff_itens ? mapItemFromDB(row.takeoff_itens) : undefined,
+    }));
+  },
+
   async deleteVinculo(id: string): Promise<boolean> {
     const { error } = await supabase.from('takeoff_vinculos').delete().eq('id', id);
     if (error) {
