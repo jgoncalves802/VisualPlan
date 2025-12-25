@@ -436,14 +436,26 @@ export const takeoffService = {
         if (filter.mapaId) {
           filteredItens = filteredItens.filter(i => i.mapaId === filter.mapaId);
         }
+        if (filter.area) {
+          filteredItens = filteredItens.filter(i => i.area === filter.area);
+        }
+        if (filter.edificacao) {
+          filteredItens = filteredItens.filter(i => i.edificacao === filter.edificacao);
+        }
         if (filter.status) {
           filteredItens = filteredItens.filter(i => i.status === filter.status);
         }
         if (filter.search) {
           const search = filter.search.toLowerCase();
-          filteredItens = filteredItens.filter(i => i.descricao.toLowerCase().includes(search));
+          filteredItens = filteredItens.filter(i => 
+            i.descricao.toLowerCase().includes(search) ||
+            (i.tag && i.tag.toLowerCase().includes(search)) ||
+            (i.itemPq && i.itemPq.toLowerCase().includes(search))
+          );
         }
-        return filteredItens;
+        return filteredItens.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       }
       console.error('Erro ao buscar itens:', error);
       return [];
