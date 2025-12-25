@@ -6,40 +6,51 @@ import {
   Save,
   X,
   Search,
-  Filter,
   ChevronDown,
   ChevronUp,
   Loader2,
+  Link2,
+  Calendar,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
-import type { TakeoffItem, CreateItemDTO, UpdateItemDTO } from '../../../types/takeoff.types';
+import TakeoffItemModal from './TakeoffItemModal';
+import TakeoffMedicaoModal from './TakeoffMedicaoModal';
+import TakeoffVinculoModal from './TakeoffVinculoModal';
+import TakeoffConfirmDialog from './TakeoffConfirmDialog';
+import type { TakeoffItem, UpdateItemDTO, TakeoffMedicao, TakeoffVinculo } from '../../../types/takeoff.types';
 
 interface TakeoffGridProps {
   mapaId: string;
   disciplinaId: string | null;
+  projetoId?: string | null;
 }
 
-const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
+const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projetoId }) => {
   const {
     itens,
     totais,
-    colunasConfig,
     isLoadingItens,
     loadItens,
     loadColunasConfig,
-    createItem,
     updateItem,
     deleteItem,
-    setFilter,
   } = useTakeoffStore();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<TakeoffItem>>({});
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newItem, setNewItem] = useState<Partial<CreateItemDTO>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<TakeoffItem | null>(null);
+  const [showMedicaoModal, setShowMedicaoModal] = useState(false);
+  const [selectedItemForMedicao, setSelectedItemForMedicao] = useState<TakeoffItem | null>(null);
+  const [showVinculoModal, setShowVinculoModal] = useState(false);
+  const [selectedItemForVinculo, setSelectedItemForVinculo] = useState<TakeoffItem | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadItens({ mapaId });
@@ -133,45 +144,53 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
     setEditData({});
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Deseja excluir este item?')) {
-      await deleteItem(id);
+  const handleDeleteClick = (id: string) => {
+    setDeletingItemId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingItemId) return;
+    setIsDeleting(true);
+    try {
+      await deleteItem(deletingItemId);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeletingItemId(null);
     }
   };
 
-  const handleAddNew = () => {
-    setIsAddingNew(true);
-    setNewItem({ mapaId, unidade: 'un' });
+  const handleOpenItemModal = (item?: TakeoffItem) => {
+    setEditingItem(item || null);
+    setShowItemModal(true);
   };
 
-  const handleCancelNew = () => {
-    setIsAddingNew(false);
-    setNewItem({});
+  const handleItemSaved = (item: TakeoffItem) => {
+    loadItens({ mapaId });
+    setShowItemModal(false);
+    setEditingItem(null);
   };
 
-  const handleSaveNew = async () => {
-    if (!newItem.descricao || !newItem.unidade) {
-      alert('Preencha pelo menos a descrição e unidade');
-      return;
-    }
+  const handleOpenMedicaoModal = (item: TakeoffItem) => {
+    setSelectedItemForMedicao(item);
+    setShowMedicaoModal(true);
+  };
 
-    await createItem({
-      mapaId,
-      descricao: newItem.descricao,
-      unidade: newItem.unidade,
-      area: newItem.area,
-      edificacao: newItem.edificacao,
-      tag: newItem.tag,
-      tipoMaterial: newItem.tipoMaterial,
-      dimensao: newItem.dimensao,
-      qtdPrevista: Number(newItem.qtdPrevista) || 0,
-      qtdTakeoff: Number(newItem.qtdTakeoff) || 0,
-      pesoUnitario: Number(newItem.pesoUnitario) || 0,
-      custoUnitario: Number(newItem.custoUnitario) || 0,
-    });
+  const handleMedicaoSaved = (_medicao: TakeoffMedicao) => {
+    loadItens({ mapaId });
+    setShowMedicaoModal(false);
+    setSelectedItemForMedicao(null);
+  };
 
-    setIsAddingNew(false);
-    setNewItem({});
+  const handleOpenVinculoModal = (item: TakeoffItem) => {
+    setSelectedItemForVinculo(item);
+    setShowVinculoModal(true);
+  };
+
+  const handleVinculoSaved = (_vinculo: TakeoffVinculo) => {
+    setShowVinculoModal(false);
+    setSelectedItemForVinculo(null);
   };
 
   const renderCell = (item: TakeoffItem, col: typeof baseColumns[0], isEditing: boolean) => {
@@ -216,22 +235,6 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
     return <span className="truncate">{String(value ?? '')}</span>;
   };
 
-  const renderNewCell = (col: typeof baseColumns[0]) => {
-    if (col.calculated) return <span className="text-gray-400">-</span>;
-
-    return (
-      <input
-        type={col.type === 'number' ? 'number' : 'text'}
-        value={newItem[col.key as keyof CreateItemDTO] ?? ''}
-        onChange={(e) => setNewItem({ ...newItem, [col.key]: e.target.value })}
-        className="w-full px-2 py-1 text-xs border rounded theme-text"
-        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
-        placeholder={col.label}
-        step={col.type === 'number' ? '0.01' : undefined}
-      />
-    );
-  };
-
   if (isLoadingItens) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -261,9 +264,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
         </div>
 
         <button
-          onClick={handleAddNew}
-          disabled={isAddingNew}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 disabled:opacity-50 theme-text"
+          onClick={() => handleOpenItemModal()}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
           style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
         >
           <Plus className="w-4 h-4" />
@@ -296,34 +298,6 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
             </tr>
           </thead>
           <tbody>
-            {isAddingNew && (
-              <tr className="border-b theme-divide" style={{ backgroundColor: 'var(--color-surface)' }}>
-                <td className="px-2 py-2">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={handleSaveNew}
-                      className="p-1 text-green-600 hover:bg-green-100 rounded"
-                      title="Salvar"
-                    >
-                      <Save className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleCancelNew}
-                      className="p-1 text-red-600 hover:bg-red-100 rounded"
-                      title="Cancelar"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-                {baseColumns.map((col) => (
-                  <td key={col.key} className="px-2 py-2" style={{ width: col.width }}>
-                    {renderNewCell(col)}
-                  </td>
-                ))}
-              </tr>
-            )}
-
             {filteredItens.map((item) => {
               const isEditing = editingId === item.id;
               return (
@@ -351,20 +325,39 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="p-1 theme-text-secondary hover:theme-text hover:bg-gray-100 rounded"
-                          title="Editar"
+                          className="p-1 theme-text-secondary hover:theme-text rounded"
+                          style={{ backgroundColor: 'transparent' }}
+                          title="Editar inline"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => handleOpenMedicaoModal(item)}
+                          className="p-1 theme-text-secondary hover:theme-text rounded"
+                          style={{ backgroundColor: 'transparent' }}
+                          title="Registrar Medição"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                        </button>
+                        {projetoId && (
+                          <button
+                            onClick={() => handleOpenVinculoModal(item)}
+                            className="p-1 theme-text-secondary hover:theme-text rounded"
+                            style={{ backgroundColor: 'transparent' }}
+                            title="Vincular ao Cronograma"
+                          >
+                            <Link2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteClick(item.id)}
                           className="p-1 text-red-500 hover:bg-red-100 rounded"
                           title="Excluir"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}
@@ -382,7 +375,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               );
             })}
 
-            {filteredItens.length === 0 && !isAddingNew && (
+            {filteredItens.length === 0 && (
               <tr>
                 <td colSpan={baseColumns.length + 1} className="px-4 py-12 text-center theme-text-secondary">
                   Nenhum item encontrado. Clique em "Novo Item" para adicionar.
@@ -428,6 +421,57 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
           </tfoot>
         </table>
       </div>
+
+      {showItemModal && (
+        <TakeoffItemModal
+          isOpen={showItemModal}
+          onClose={() => {
+            setShowItemModal(false);
+            setEditingItem(null);
+          }}
+          mapaId={mapaId}
+          disciplinaId={disciplinaId}
+          item={editingItem}
+          onSave={handleItemSaved}
+        />
+      )}
+
+      {showMedicaoModal && selectedItemForMedicao && (
+        <TakeoffMedicaoModal
+          isOpen={showMedicaoModal}
+          onClose={() => {
+            setShowMedicaoModal(false);
+            setSelectedItemForMedicao(null);
+          }}
+          item={selectedItemForMedicao}
+          onSave={handleMedicaoSaved}
+        />
+      )}
+
+      {showVinculoModal && selectedItemForVinculo && projetoId && (
+        <TakeoffVinculoModal
+          isOpen={showVinculoModal}
+          onClose={() => {
+            setShowVinculoModal(false);
+            setSelectedItemForVinculo(null);
+          }}
+          item={selectedItemForVinculo}
+          projetoId={projetoId}
+          onSave={handleVinculoSaved}
+        />
+      )}
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletingItemId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Excluir Item"
+        message="Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita."
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

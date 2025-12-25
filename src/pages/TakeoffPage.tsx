@@ -15,6 +15,8 @@ import {
   Search,
   X,
   RefreshCw,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -26,7 +28,10 @@ import TakeoffGrid from '../components/features/takeoff/TakeoffGrid';
 import TakeoffDashboard from '../components/features/takeoff/TakeoffDashboard';
 import TakeoffImportModal from '../components/features/takeoff/TakeoffImportModal';
 import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
-import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig } from '../types/takeoff.types';
+import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDisciplinaModal';
+import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
+import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
+import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina } from '../types/takeoff.types';
 
 type TabType = 'dashboard' | 'mapas' | 'vinculos' | 'medicoes' | 'documentos' | 'config';
 
@@ -52,7 +57,13 @@ const TakeoffPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('mapas');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showMapaModal, setShowMapaModal] = useState(false);
+  const [showDisciplinaModal, setShowDisciplinaModal] = useState(false);
+  const [showDocumentoModal, setShowDocumentoModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editingDisciplina, setEditingDisciplina] = useState<TakeoffDisciplina | null>(null);
+  const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [vinculos, setVinculos] = useState<TakeoffVinculo[]>([]);
   const [medicoes, setMedicoes] = useState<TakeoffMedicao[]>([]);
@@ -147,6 +158,48 @@ const TakeoffPage: React.FC = () => {
   const handleMapaSelect = (mapaId: string) => {
     setSelectedMapa(mapaId);
     setActiveTab('mapas');
+  };
+
+  const handleDisciplinaSave = (_disciplina: TakeoffDisciplina) => {
+    if (usuario?.empresaId) {
+      loadDisciplinas(usuario.empresaId);
+    }
+    setEditingDisciplina(null);
+  };
+
+  const handleEditDisciplina = (disciplina: TakeoffDisciplina) => {
+    setEditingDisciplina(disciplina);
+    setShowDisciplinaModal(true);
+  };
+
+  const handleDeleteDisciplinaClick = (disciplinaId: string) => {
+    setDeletingDisciplinaId(disciplinaId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDeleteDisciplina = async () => {
+    if (!deletingDisciplinaId) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await takeoffService.deleteDisciplina(deletingDisciplinaId);
+      if (success && usuario?.empresaId) {
+        loadDisciplinas(usuario.empresaId);
+        if (selectedDisciplinaId === deletingDisciplinaId) {
+          setSelectedDisciplina(null);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao excluir disciplina:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeletingDisciplinaId(null);
+    }
+  };
+
+  const handleDocumentoSave = (documento: TakeoffDocumento) => {
+    setDocumentos((prev) => [documento, ...prev]);
   };
 
   const tabs = [
@@ -374,7 +427,7 @@ const TakeoffPage: React.FC = () => {
 
             <div className="flex-1 overflow-hidden">
               {selectedMapaId ? (
-                <TakeoffGrid mapaId={selectedMapaId} disciplinaId={selectedDisciplinaId} />
+                <TakeoffGrid mapaId={selectedMapaId} disciplinaId={selectedDisciplinaId} projetoId={selectedProjetoId} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
@@ -510,15 +563,35 @@ const TakeoffPage: React.FC = () => {
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
                 <h3 className="text-lg font-medium theme-text mb-2">Documentos de Projeto</h3>
-                <p className="text-sm theme-text-secondary">
+                <p className="text-sm theme-text-secondary mb-4">
                   Gerencie isométricos, plantas e desenhos de referência
                 </p>
+                {selectedProjetoId && (
+                  <button
+                    onClick={() => setShowDocumentoModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Cadastrar Documento
+                  </button>
+                )}
               </div>
             ) : (
               <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                  <h3 className="text-lg font-medium theme-text">Documentos de Projeto</h3>
-                  <p className="text-sm theme-text-secondary mt-1">{documentos.length} documentos cadastrados</p>
+                <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                  <div>
+                    <h3 className="text-lg font-medium theme-text">Documentos de Projeto</h3>
+                    <p className="text-sm theme-text-secondary mt-1">{documentos.length} documentos cadastrados</p>
+                  </div>
+                  <button
+                    onClick={() => setShowDocumentoModal(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Novo Documento
+                  </button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -565,21 +638,52 @@ const TakeoffPage: React.FC = () => {
           <div className="flex-1 overflow-auto p-6">
             <div className="grid gap-6 max-w-5xl">
               <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
-                <h3 className="text-lg font-medium theme-text mb-4">Disciplinas Configuradas</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium theme-text">Disciplinas Configuradas</h3>
+                  <button
+                    onClick={() => {
+                      setEditingDisciplina(null);
+                      setShowDisciplinaModal(true);
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Nova Disciplina
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {disciplinas.map((disc) => (
                     <div
                       key={disc.id}
-                      className="flex items-center gap-3 p-3 theme-surface rounded-lg border"
+                      className="flex items-center gap-3 p-3 theme-surface rounded-lg border group"
                       style={{ borderColor: 'var(--color-border)' }}
                     >
                       <span
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 rounded-full flex-shrink-0"
                         style={{ backgroundColor: disc.cor }}
                       />
-                      <div>
-                        <div className="text-sm font-medium theme-text">{disc.nome}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium theme-text truncate">{disc.nome}</div>
                         <div className="text-xs theme-text-secondary">{disc.codigo}</div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEditDisciplina(disc)}
+                          className="p-1.5 rounded hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+                          title="Editar"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 theme-text-secondary" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDisciplinaClick(disc.id)}
+                          className="p-1.5 rounded hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 theme-text-secondary" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -668,6 +772,44 @@ const TakeoffPage: React.FC = () => {
           onClose={() => setShowMapaModal(false)}
         />
       )}
+
+      {showDisciplinaModal && usuario?.empresaId && (
+        <TakeoffDisciplinaModal
+          isOpen={showDisciplinaModal}
+          onClose={() => {
+            setShowDisciplinaModal(false);
+            setEditingDisciplina(null);
+          }}
+          onSave={handleDisciplinaSave}
+          disciplina={editingDisciplina}
+          empresaId={usuario.empresaId}
+        />
+      )}
+
+      {showDocumentoModal && selectedProjetoId && (
+        <TakeoffDocumentoModal
+          isOpen={showDocumentoModal}
+          onClose={() => setShowDocumentoModal(false)}
+          onSave={handleDocumentoSave}
+          projetoId={selectedProjetoId}
+          disciplinas={disciplinas}
+          selectedDisciplinaId={selectedDisciplinaId}
+        />
+      )}
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletingDisciplinaId(null);
+        }}
+        onConfirm={handleConfirmDeleteDisciplina}
+        title="Excluir Disciplina"
+        message="Tem certeza que deseja excluir esta disciplina? Esta ação não pode ser desfeita e todos os mapas e itens associados serão removidos."
+        confirmLabel="Excluir"
+        isLoading={isDeleting}
+        variant="danger"
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import type {
   TakeoffVinculo,
   TakeoffDocumento,
   CreateDisciplinaDTO,
+  UpdateDisciplinaDTO,
   CreateMapaDTO,
   UpdateMapaDTO,
   CreateItemDTO,
@@ -259,6 +260,42 @@ export const takeoffService = {
       return null;
     }
     return mapDisciplinaFromDB(data);
+  },
+
+  async updateDisciplina(id: string, dto: UpdateDisciplinaDTO): Promise<TakeoffDisciplina | null> {
+    const { data, error } = await supabase
+      .from('takeoff_disciplinas')
+      .update({
+        nome: dto.nome,
+        codigo: dto.codigo,
+        descricao: dto.descricao,
+        cor: dto.cor,
+        icone: dto.icone,
+        ativo: dto.ativo,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar disciplina:', error);
+      return null;
+    }
+    return mapDisciplinaFromDB(data);
+  },
+
+  async deleteDisciplina(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('takeoff_disciplinas')
+      .update({ ativo: false, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao excluir disciplina:', error);
+      return false;
+    }
+    return true;
   },
 
   async initializeDisciplinasFromTemplates(empresaId: string): Promise<void> {
