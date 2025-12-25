@@ -207,6 +207,33 @@ export const DISCIPLINA_TEMPLATES: DisciplinaTemplate[] = [
   },
 ];
 
+const DEMO_DISCIPLINAS: TakeoffDisciplina[] = [
+  { id: 'demo-tub', empresaId: 'demo', nome: 'Tubulação', codigo: 'TUB', cor: '#3B82F6', icone: 'tube', ativo: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-ele', empresaId: 'demo', nome: 'Elétrica', codigo: 'ELE', cor: '#F59E0B', icone: 'zap', ativo: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-cal', empresaId: 'demo', nome: 'Caldeiraria', codigo: 'CAL', cor: '#EF4444', icone: 'hammer', ativo: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-est', empresaId: 'demo', nome: 'Estrutura', codigo: 'EST', cor: '#10B981', icone: 'building', ativo: true, createdAt: new Date(), updatedAt: new Date() },
+];
+
+const DEMO_MAPAS: TakeoffMapa[] = [
+  { id: 'demo-mapa-1', projetoId: '', disciplinaId: 'demo-tub', nome: 'Tubulação - Área 01', versao: '1.0', status: 'aprovado', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-mapa-2', projetoId: '', disciplinaId: 'demo-tub', nome: 'Tubulação - Área 02', versao: '1.0', status: 'rascunho', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-mapa-3', projetoId: '', disciplinaId: 'demo-ele', nome: 'Elétrica - Bloco A', versao: '1.0', status: 'em_analise', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-mapa-4', projetoId: '', disciplinaId: 'demo-cal', nome: 'Caldeiraria - Equipamentos', versao: '2.0', status: 'aprovado', createdAt: new Date(), updatedAt: new Date() },
+];
+
+const DEMO_ITENS: TakeoffItem[] = [
+  { id: 'demo-item-1', mapaId: 'demo-mapa-1', descricao: 'Tubo Aço Carbono ASTM A106 Gr.B', unidade: 'm', qtdPrevista: 150, qtdTakeoff: 145.5, qtdExecutada: 87, pesoUnitario: 12.5, pesoTotal: 1818.75, custoUnitario: 250, custoTotal: 36375, percentualExecutado: 59.8, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-2', mapaId: 'demo-mapa-1', descricao: 'Tubo Inox 316L', unidade: 'm', qtdPrevista: 80, qtdTakeoff: 82, qtdExecutada: 82, pesoUnitario: 8.2, pesoTotal: 672.4, custoUnitario: 450, custoTotal: 36900, percentualExecutado: 100, status: 'concluido', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-3', mapaId: 'demo-mapa-1', descricao: 'Curva 90° LR', unidade: 'un', qtdPrevista: 24, qtdTakeoff: 24, qtdExecutada: 18, pesoUnitario: 3.5, pesoTotal: 84, custoUnitario: 180, custoTotal: 4320, percentualExecutado: 75, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-4', mapaId: 'demo-mapa-1', descricao: 'Flange WN 150#', unidade: 'un', qtdPrevista: 16, qtdTakeoff: 16, qtdExecutada: 12, pesoUnitario: 5.2, pesoTotal: 83.2, custoUnitario: 320, custoTotal: 5120, percentualExecutado: 75, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-5', mapaId: 'demo-mapa-3', descricao: 'Cabo 3x4mm² XLPE', unidade: 'm', qtdPrevista: 500, qtdTakeoff: 520, qtdExecutada: 312, pesoUnitario: 0.15, pesoTotal: 78, custoUnitario: 28, custoTotal: 14560, percentualExecutado: 60, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-6', mapaId: 'demo-mapa-3', descricao: 'Eletrocalha 100x50mm', unidade: 'm', qtdPrevista: 120, qtdTakeoff: 125, qtdExecutada: 100, pesoUnitario: 2.8, pesoTotal: 350, custoUnitario: 85, custoTotal: 10625, percentualExecutado: 80, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-7', mapaId: 'demo-mapa-4', descricao: 'Vaso de Pressão V-101', unidade: 'un', qtdPrevista: 1, qtdTakeoff: 1, qtdExecutada: 1, pesoUnitario: 12500, pesoTotal: 12500, custoUnitario: 450000, custoTotal: 450000, percentualExecutado: 100, status: 'concluido', createdAt: new Date(), updatedAt: new Date() },
+  { id: 'demo-item-8', mapaId: 'demo-mapa-4', descricao: 'Trocador de Calor E-201', unidade: 'un', qtdPrevista: 2, qtdTakeoff: 2, qtdExecutada: 1, pesoUnitario: 8200, pesoTotal: 16400, custoUnitario: 280000, custoTotal: 560000, percentualExecutado: 50, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
+];
+
+const isPGRST205Error = (error: { code?: string }) => error?.code === 'PGRST205';
+
 export const takeoffService = {
   async getDisciplinas(empresaId: string): Promise<TakeoffDisciplina[]> {
     const { data, error } = await supabase
@@ -217,6 +244,9 @@ export const takeoffService = {
       .order('nome');
 
     if (error) {
+      if (isPGRST205Error(error)) {
+        return DEMO_DISCIPLINAS;
+      }
       console.error('Erro ao buscar disciplinas:', error);
       return [];
     }
@@ -307,6 +337,16 @@ export const takeoffService = {
     const { data, error } = await query;
 
     if (error) {
+      if (isPGRST205Error(error)) {
+        const filteredMapas = disciplinaId 
+          ? DEMO_MAPAS.filter(m => m.disciplinaId === disciplinaId)
+          : DEMO_MAPAS;
+        return filteredMapas.map(m => ({
+          ...m,
+          projetoId,
+          disciplina: DEMO_DISCIPLINAS.find(d => d.id === m.disciplinaId),
+        }));
+      }
       console.error('Erro ao buscar mapas:', error);
       return [];
     }
@@ -391,6 +431,20 @@ export const takeoffService = {
     const { data, error } = await query.order('created_at');
 
     if (error) {
+      if (isPGRST205Error(error)) {
+        let filteredItens = DEMO_ITENS;
+        if (filter.mapaId) {
+          filteredItens = filteredItens.filter(i => i.mapaId === filter.mapaId);
+        }
+        if (filter.status) {
+          filteredItens = filteredItens.filter(i => i.status === filter.status);
+        }
+        if (filter.search) {
+          const search = filter.search.toLowerCase();
+          filteredItens = filteredItens.filter(i => i.descricao.toLowerCase().includes(search));
+        }
+        return filteredItens;
+      }
       console.error('Erro ao buscar itens:', error);
       return [];
     }
