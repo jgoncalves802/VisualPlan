@@ -208,7 +208,11 @@ const TakeoffDashboard: React.FC<TakeoffDashboardProps> = ({ projetoId, discipli
                 <XAxis type="number" domain={[0, 100]} />
                 <YAxis type="category" dataKey="nome" width={100} />
                 <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                <Bar dataKey="progresso" fill="#6B7280" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="progresso" radius={[0, 4, 4, 0]}>
+                  {chartDataDisciplinas.map((entry, index) => (
+                    <Cell key={`bar-${index}`} fill={entry.cor || COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
