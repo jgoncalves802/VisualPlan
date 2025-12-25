@@ -41,15 +41,18 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **cronograma_column_configs**: Per-user, per-project column visibility and order preferences.
     *   **Performance & UX**: Implemented caching strategies (localStorage with TTL), optimistic UI updates, batch update manager, skeleton loaders, fade-in animations, scroll preservation, inline editing, and robust error handling with network resilience.
     *   **Take-off / Quantity Surveying Module**: Complete module for managing construction quantities and physical progress tracking:
-        *   **Database Tables**: 8 tables (takeoff_disciplinas, takeoff_colunas_config, takeoff_mapas, takeoff_itens, takeoff_valores_custom, takeoff_medicoes, takeoff_vinculos, takeoff_documentos)
-        *   **Generated Columns**: peso_total, custo_total, and percentual_executado are auto-calculated by PostgreSQL
+        *   **Database Tables**: 8 tables in Supabase (takeoff_disciplinas, takeoff_colunas_config, takeoff_mapas, takeoff_itens, takeoff_valores_custom, takeoff_medicoes, takeoff_vinculos, takeoff_documentos)
+        *   **SQL Migrations**: Located in `supabase/migrations/` - includes table creation, indexes, triggers, RLS policies, and seed function
+        *   **RPC Function**: `initialize_takeoff_disciplinas(p_empresa_id UUID)` - seeds default disciplinas for a company
+        *   **Generated Columns**: peso_total, custo_total, and percentual_executado are auto-calculated by PostgreSQL (never insert/update directly)
         *   **6 Discipline Templates**: Tubulação, Elétrica, Caldeiraria, Suporte, Estrutura, Equipamentos - each with specific columns
         *   **Excel Import**: Column mapping UI with auto-detection, preview, batch insert with validation
         *   **Schedule Integration**: Link take-off items to activities via vinculos table with weighted progress calculation
         *   **Dashboard**: KPIs, progress by discipline, pie chart distribution, detailed breakdown table
-        *   **Service**: `takeoffService.ts` with CRUD for all entities, batch operations, totals aggregation
+        *   **Service**: `takeoffService.ts` with CRUD for all entities, batch operations, totals aggregation, RPC initialization
         *   **Store**: `takeoffStore.ts` with Zustand for state management, filters, selections
         *   **Route**: `/takeoff` accessible from sidebar menu
+        *   **Theme**: Strict neutral color scheme for UI (no blue/violet/purple), disciplina colors only in charts
     *   **Service Layer Architecture**: Dedicated Supabase services for each management module with PGRST205 graceful error handling:
         *   `takeoffService.ts`: Take-off/Quantity management with discipline templates, batch imports, measurements, schedule linkage
         *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions with `updateWithSync()` for bidirectional sync

@@ -8,7 +8,6 @@ import type {
   TakeoffVinculo,
   TakeoffDocumento,
   CreateDisciplinaDTO,
-  UpdateDisciplinaDTO,
   CreateMapaDTO,
   UpdateMapaDTO,
   CreateItemDTO,
@@ -207,72 +206,6 @@ export const DISCIPLINA_TEMPLATES: DisciplinaTemplate[] = [
   },
 ];
 
-const DEMO_DISCIPLINAS: TakeoffDisciplina[] = [
-  { id: 'demo-tub', empresaId: 'demo', nome: 'Tubulação', codigo: 'TUB', cor: '#3B82F6', icone: 'tube', ativo: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-ele', empresaId: 'demo', nome: 'Elétrica', codigo: 'ELE', cor: '#F59E0B', icone: 'zap', ativo: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-cal', empresaId: 'demo', nome: 'Caldeiraria', codigo: 'CAL', cor: '#EF4444', icone: 'hammer', ativo: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-est', empresaId: 'demo', nome: 'Estrutura', codigo: 'EST', cor: '#10B981', icone: 'building', ativo: true, createdAt: new Date(), updatedAt: new Date() },
-];
-
-const DEMO_MAPAS: TakeoffMapa[] = [
-  { id: 'demo-mapa-1', projetoId: '', disciplinaId: 'demo-tub', nome: 'Tubulação - Área 01', versao: '1.0', status: 'aprovado', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-mapa-2', projetoId: '', disciplinaId: 'demo-tub', nome: 'Tubulação - Área 02', versao: '1.0', status: 'rascunho', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-mapa-3', projetoId: '', disciplinaId: 'demo-ele', nome: 'Elétrica - Bloco A', versao: '1.0', status: 'em_analise', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-mapa-4', projetoId: '', disciplinaId: 'demo-cal', nome: 'Caldeiraria - Equipamentos', versao: '2.0', status: 'aprovado', createdAt: new Date(), updatedAt: new Date() },
-];
-
-const DEMO_ITENS: TakeoffItem[] = [
-  { id: 'demo-item-1', mapaId: 'demo-mapa-1', descricao: 'Tubo Aço Carbono ASTM A106 Gr.B', unidade: 'm', qtdPrevista: 150, qtdTakeoff: 145.5, qtdExecutada: 87, pesoUnitario: 12.5, pesoTotal: 1818.75, custoUnitario: 250, custoTotal: 36375, percentualExecutado: 59.8, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-2', mapaId: 'demo-mapa-1', descricao: 'Tubo Inox 316L', unidade: 'm', qtdPrevista: 80, qtdTakeoff: 82, qtdExecutada: 82, pesoUnitario: 8.2, pesoTotal: 672.4, custoUnitario: 450, custoTotal: 36900, percentualExecutado: 100, status: 'concluido', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-3', mapaId: 'demo-mapa-1', descricao: 'Curva 90° LR', unidade: 'un', qtdPrevista: 24, qtdTakeoff: 24, qtdExecutada: 18, pesoUnitario: 3.5, pesoTotal: 84, custoUnitario: 180, custoTotal: 4320, percentualExecutado: 75, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-4', mapaId: 'demo-mapa-1', descricao: 'Flange WN 150#', unidade: 'un', qtdPrevista: 16, qtdTakeoff: 16, qtdExecutada: 12, pesoUnitario: 5.2, pesoTotal: 83.2, custoUnitario: 320, custoTotal: 5120, percentualExecutado: 75, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-5', mapaId: 'demo-mapa-3', descricao: 'Cabo 3x4mm² XLPE', unidade: 'm', qtdPrevista: 500, qtdTakeoff: 520, qtdExecutada: 312, pesoUnitario: 0.15, pesoTotal: 78, custoUnitario: 28, custoTotal: 14560, percentualExecutado: 60, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-6', mapaId: 'demo-mapa-3', descricao: 'Eletrocalha 100x50mm', unidade: 'm', qtdPrevista: 120, qtdTakeoff: 125, qtdExecutada: 100, pesoUnitario: 2.8, pesoTotal: 350, custoUnitario: 85, custoTotal: 10625, percentualExecutado: 80, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-7', mapaId: 'demo-mapa-4', descricao: 'Vaso de Pressão V-101', unidade: 'un', qtdPrevista: 1, qtdTakeoff: 1, qtdExecutada: 1, pesoUnitario: 12500, pesoTotal: 12500, custoUnitario: 450000, custoTotal: 450000, percentualExecutado: 100, status: 'concluido', createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-item-8', mapaId: 'demo-mapa-4', descricao: 'Trocador de Calor E-201', unidade: 'un', qtdPrevista: 2, qtdTakeoff: 2, qtdExecutada: 1, pesoUnitario: 8200, pesoTotal: 16400, custoUnitario: 280000, custoTotal: 560000, percentualExecutado: 50, status: 'em_andamento', createdAt: new Date(), updatedAt: new Date() },
-];
-
-const DEMO_MEDICOES: TakeoffMedicao[] = [
-  { id: 'demo-med-1', itemId: 'demo-item-1', usuarioId: 'user-1', periodoInicio: new Date('2024-11-01'), periodoFim: new Date('2024-11-15'), qtdPeriodo: 45, qtdAcumulada: 45, observacoes: 'Primeira medição - Área 01', createdAt: new Date('2024-11-15'), updatedAt: new Date('2024-11-15') },
-  { id: 'demo-med-2', itemId: 'demo-item-1', usuarioId: 'user-1', periodoInicio: new Date('2024-11-16'), periodoFim: new Date('2024-11-30'), qtdPeriodo: 42, qtdAcumulada: 87, observacoes: 'Segunda medição', createdAt: new Date('2024-11-30'), updatedAt: new Date('2024-11-30') },
-  { id: 'demo-med-3', itemId: 'demo-item-2', usuarioId: 'user-1', periodoInicio: new Date('2024-11-01'), periodoFim: new Date('2024-11-30'), qtdPeriodo: 82, qtdAcumulada: 82, observacoes: 'Instalação completa', createdAt: new Date('2024-11-30'), updatedAt: new Date('2024-11-30') },
-  { id: 'demo-med-4', itemId: 'demo-item-5', usuarioId: 'user-2', periodoInicio: new Date('2024-12-01'), periodoFim: new Date('2024-12-15'), qtdPeriodo: 200, qtdAcumulada: 200, observacoes: 'Lançamento de cabos - Trecho A', createdAt: new Date('2024-12-15'), updatedAt: new Date('2024-12-15') },
-  { id: 'demo-med-5', itemId: 'demo-item-5', usuarioId: 'user-2', periodoInicio: new Date('2024-12-16'), periodoFim: new Date('2024-12-31'), qtdPeriodo: 112, qtdAcumulada: 312, observacoes: 'Lançamento de cabos - Trecho B', createdAt: new Date('2024-12-31'), updatedAt: new Date('2024-12-31') },
-  { id: 'demo-med-6', itemId: 'demo-item-7', usuarioId: 'user-1', periodoInicio: new Date('2024-10-01'), periodoFim: new Date('2024-10-31'), qtdPeriodo: 1, qtdAcumulada: 1, observacoes: 'Montagem do vaso V-101 concluída', createdAt: new Date('2024-10-31'), updatedAt: new Date('2024-10-31') },
-];
-
-const DEMO_VINCULOS: TakeoffVinculo[] = [
-  { id: 'demo-vinc-1', itemId: 'demo-item-1', atividadeId: 'ativ-tub-001', peso: 60, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-2', itemId: 'demo-item-1', atividadeId: 'ativ-tub-002', peso: 40, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-3', itemId: 'demo-item-2', atividadeId: 'ativ-tub-003', peso: 100, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-4', itemId: 'demo-item-5', atividadeId: 'ativ-ele-001', peso: 100, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-5', itemId: 'demo-item-6', atividadeId: 'ativ-ele-002', peso: 70, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-6', itemId: 'demo-item-6', atividadeId: 'ativ-ele-003', peso: 30, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-7', itemId: 'demo-item-7', atividadeId: 'ativ-cal-001', peso: 100, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'demo-vinc-8', itemId: 'demo-item-8', atividadeId: 'ativ-cal-002', peso: 100, createdAt: new Date(), updatedAt: new Date() },
-];
-
-const DEMO_DOCUMENTOS: TakeoffDocumento[] = [
-  { id: 'demo-doc-1', projetoId: '', disciplinaId: 'demo-tub', codigo: 'ISO-TUB-001', titulo: 'Isométrico Linha 01-P-001', revisao: 'A', tipo: 'isometrico', status: 'aprovado', dataEmissao: new Date('2024-09-15'), createdAt: new Date('2024-09-15'), updatedAt: new Date('2024-09-15') },
-  { id: 'demo-doc-2', projetoId: '', disciplinaId: 'demo-tub', codigo: 'ISO-TUB-002', titulo: 'Isométrico Linha 02-P-002', revisao: 'B', tipo: 'isometrico', status: 'aprovado', dataEmissao: new Date('2024-09-20'), createdAt: new Date('2024-09-20'), updatedAt: new Date('2024-10-05') },
-  { id: 'demo-doc-3', projetoId: '', disciplinaId: 'demo-ele', codigo: 'UNI-ELE-001', titulo: 'Diagrama Unifilar QGF', revisao: 'C', tipo: 'diagrama', status: 'aprovado', dataEmissao: new Date('2024-08-10'), createdAt: new Date('2024-08-10'), updatedAt: new Date('2024-09-25') },
-  { id: 'demo-doc-4', projetoId: '', disciplinaId: 'demo-ele', codigo: 'LAY-ELE-001', titulo: 'Layout de Bandejamento', revisao: 'A', tipo: 'layout', status: 'em_revisao', dataEmissao: new Date('2024-10-01'), observacoes: 'Pendente aprovação cliente', createdAt: new Date('2024-10-01'), updatedAt: new Date('2024-10-01') },
-  { id: 'demo-doc-5', projetoId: '', disciplinaId: 'demo-cal', codigo: 'DES-CAL-001', titulo: 'Fabricação Vaso V-101', revisao: 'D', tipo: 'fabricacao', status: 'aprovado', dataEmissao: new Date('2024-07-15'), createdAt: new Date('2024-07-15'), updatedAt: new Date('2024-08-20') },
-  { id: 'demo-doc-6', projetoId: '', disciplinaId: 'demo-cal', codigo: 'DES-CAL-002', titulo: 'Montagem Trocador E-201', revisao: 'B', tipo: 'montagem', status: 'aprovado', dataEmissao: new Date('2024-09-01'), createdAt: new Date('2024-09-01'), updatedAt: new Date('2024-09-15') },
-];
-
-const DEMO_COLUNAS: TakeoffColunaConfig[] = [
-  { id: 'demo-col-1', disciplinaId: 'demo-tub', nome: 'Linha', codigo: 'linha', tipo: 'text', ordem: 1, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 120 },
-  { id: 'demo-col-2', disciplinaId: 'demo-tub', nome: 'Isométrico', codigo: 'isometrico', tipo: 'text', ordem: 2, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 130 },
-  { id: 'demo-col-3', disciplinaId: 'demo-tub', nome: 'Diâmetro', codigo: 'diametro', tipo: 'text', ordem: 3, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 80 },
-  { id: 'demo-col-4', disciplinaId: 'demo-tub', nome: 'Material', codigo: 'material', tipo: 'text', ordem: 4, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 150 },
-  { id: 'demo-col-5', disciplinaId: 'demo-ele', nome: 'Circuito', codigo: 'circuito', tipo: 'text', ordem: 1, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 120 },
-  { id: 'demo-col-6', disciplinaId: 'demo-ele', nome: 'Cabo', codigo: 'cabo', tipo: 'text', ordem: 2, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 150 },
-  { id: 'demo-col-7', disciplinaId: 'demo-ele', nome: 'Seção (mm²)', codigo: 'secao', tipo: 'decimal', ordem: 3, casasDecimais: 2, obrigatoria: false, visivel: true, largura: 100 },
-  { id: 'demo-col-8', disciplinaId: 'demo-cal', nome: 'TAG Equipamento', codigo: 'tag_equip', tipo: 'text', ordem: 1, casasDecimais: 0, obrigatoria: false, visivel: true, largura: 130 },
-  { id: 'demo-col-9', disciplinaId: 'demo-cal', nome: 'Peso (ton)', codigo: 'peso_ton', tipo: 'decimal', ordem: 2, casasDecimais: 3, obrigatoria: false, visivel: true, largura: 100, unidade: 'ton' },
-];
-
 const isPGRST205Error = (error: { code?: string }) => error?.code === 'PGRST205';
 
 export const takeoffService = {
@@ -286,12 +219,25 @@ export const takeoffService = {
 
     if (error) {
       if (isPGRST205Error(error)) {
-        return DEMO_DISCIPLINAS;
+        console.warn('Tabela takeoff_disciplinas não encontrada. Execute as migrações SQL no Supabase.');
+        return [];
       }
       console.error('Erro ao buscar disciplinas:', error);
       return [];
     }
-    return (data || []).map(mapDisciplinaFromDB);
+    
+    if (!data || data.length === 0) {
+      await this.initializeDisciplinasFromTemplates(empresaId);
+      const { data: newData } = await supabase
+        .from('takeoff_disciplinas')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('ativo', true)
+        .order('nome');
+      return (newData || []).map(mapDisciplinaFromDB);
+    }
+    
+    return data.map(mapDisciplinaFromDB);
   },
 
   async createDisciplina(dto: CreateDisciplinaDTO): Promise<TakeoffDisciplina | null> {
@@ -316,9 +262,6 @@ export const takeoffService = {
   },
 
   async initializeDisciplinasFromTemplates(empresaId: string): Promise<void> {
-    const existing = await this.getDisciplinas(empresaId);
-    if (existing.length > 0 && existing[0].id !== 'demo-tub') return;
-
     const { error: rpcError } = await supabase.rpc('initialize_takeoff_disciplinas', {
       p_empresa_id: empresaId
     });
@@ -365,9 +308,6 @@ export const takeoffService = {
       .order('ordem');
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        return DEMO_COLUNAS.filter(c => c.disciplinaId === disciplinaId).sort((a, b) => a.ordem - b.ordem);
-      }
       console.error('Erro ao buscar colunas:', error);
       return [];
     }
@@ -388,16 +328,6 @@ export const takeoffService = {
     const { data, error } = await query;
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        const filteredMapas = disciplinaId 
-          ? DEMO_MAPAS.filter(m => m.disciplinaId === disciplinaId)
-          : DEMO_MAPAS;
-        return filteredMapas.map(m => ({
-          ...m,
-          projetoId,
-          disciplina: DEMO_DISCIPLINAS.find(d => d.id === m.disciplinaId),
-        }));
-      }
       console.error('Erro ao buscar mapas:', error);
       return [];
     }
@@ -482,32 +412,6 @@ export const takeoffService = {
     const { data, error } = await query.order('created_at');
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        let filteredItens = DEMO_ITENS;
-        if (filter.mapaId) {
-          filteredItens = filteredItens.filter(i => i.mapaId === filter.mapaId);
-        }
-        if (filter.area) {
-          filteredItens = filteredItens.filter(i => i.area === filter.area);
-        }
-        if (filter.edificacao) {
-          filteredItens = filteredItens.filter(i => i.edificacao === filter.edificacao);
-        }
-        if (filter.status) {
-          filteredItens = filteredItens.filter(i => i.status === filter.status);
-        }
-        if (filter.search) {
-          const search = filter.search.toLowerCase();
-          filteredItens = filteredItens.filter(i => 
-            i.descricao.toLowerCase().includes(search) ||
-            (i.tag && i.tag.toLowerCase().includes(search)) ||
-            (i.itemPq && i.itemPq.toLowerCase().includes(search))
-          );
-        }
-        return filteredItens.sort((a, b) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      }
       console.error('Erro ao buscar itens:', error);
       return [];
     }
@@ -700,11 +604,6 @@ export const takeoffService = {
       .order('periodo_fim', { ascending: false });
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        return DEMO_MEDICOES.filter(m => m.itemId === itemId)
-          .sort((a, b) => new Date(b.periodoFim).getTime() - new Date(a.periodoFim).getTime())
-          .map(m => ({ ...m, usuario: { id: m.usuarioId || 'user-1', nome: 'Usuário Demo' } }));
-      }
       console.error('Erro ao buscar medições:', error);
       return [];
     }
@@ -740,10 +639,6 @@ export const takeoffService = {
       .eq('atividade_id', atividadeId);
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        return DEMO_VINCULOS.filter(v => v.atividadeId === atividadeId)
-          .map(v => ({ ...v, item: DEMO_ITENS.find(i => i.id === v.itemId) }));
-      }
       console.error('Erro ao buscar vínculos:', error);
       return [];
     }
@@ -760,9 +655,6 @@ export const takeoffService = {
       .select('*, takeoff_itens(*)');
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        return DEMO_VINCULOS.map(v => ({ ...v, item: DEMO_ITENS.find(i => i.id === v.itemId) }));
-      }
       console.error('Erro ao buscar vínculos:', error);
       return [];
     }
@@ -780,13 +672,6 @@ export const takeoffService = {
       .order('periodo_fim', { ascending: false });
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        return DEMO_MEDICOES.map(m => ({ 
-          ...m, 
-          usuario: { id: m.usuarioId || 'user-1', nome: 'Usuário Demo' },
-          item: DEMO_ITENS.find(i => i.id === m.itemId),
-        })).sort((a, b) => new Date(b.periodoFim).getTime() - new Date(a.periodoFim).getTime());
-      }
       console.error('Erro ao buscar medições:', error);
       return [];
     }
@@ -837,12 +722,6 @@ export const takeoffService = {
     const { data, error } = await query;
 
     if (error) {
-      if (isPGRST205Error(error)) {
-        const filteredDocs = disciplinaId 
-          ? DEMO_DOCUMENTOS.filter(d => d.disciplinaId === disciplinaId)
-          : DEMO_DOCUMENTOS;
-        return filteredDocs.map(d => ({ ...d, projetoId })).sort((a, b) => a.codigo.localeCompare(b.codigo));
-      }
       console.error('Erro ao buscar documentos:', error);
       return [];
     }
