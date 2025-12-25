@@ -112,13 +112,15 @@ const TakeoffPage: React.FC = () => {
               <>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm theme-bg-secondary theme-text rounded-lg hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-2 px-3 py-2 text-sm theme-text rounded-lg hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
                 >
                   <Upload className="w-4 h-4" />
                   Importar Excel
                 </button>
                 <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm theme-bg-secondary theme-text rounded-lg hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-2 px-3 py-2 text-sm theme-text rounded-lg hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
                 >
                   <Download className="w-4 h-4" />
                   Exportar
@@ -143,7 +145,8 @@ const TakeoffPage: React.FC = () => {
             <select
               value={selectedProjetoId || ''}
               onChange={(e) => handleProjetoChange(e.target.value)}
-              className="px-3 py-1.5 text-sm border theme-divide rounded-lg theme-bg-secondary theme-text"
+              className="px-3 py-1.5 text-sm border rounded-lg theme-text"
+              style={{ backgroundColor: 'var(--color-surface-secondary)', borderColor: 'var(--color-border)' }}
             >
               <option value="">Selecione um projeto</option>
               {projetos.map((projeto) => (
@@ -159,7 +162,8 @@ const TakeoffPage: React.FC = () => {
             <select
               value={selectedDisciplinaId || ''}
               onChange={(e) => handleDisciplinaChange(e.target.value || null)}
-              className="px-3 py-1.5 text-sm border theme-divide rounded-lg theme-bg-secondary theme-text"
+              className="px-3 py-1.5 text-sm border rounded-lg theme-text"
+              style={{ backgroundColor: 'var(--color-surface-secondary)', borderColor: 'var(--color-border)' }}
               disabled={!selectedProjetoId}
             >
               <option value="">Todas</option>

@@ -240,7 +240,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 p-3 border-b theme-divide theme-bg-secondary flex items-center justify-between">
+      <div className="flex-shrink-0 p-3 border-b theme-divide flex items-center justify-between" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-secondary" />
@@ -270,7 +270,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10">
-            <tr className="theme-bg-secondary">
+            <tr style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
               <th className="w-20 px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide">
                 Ações
               </th>
@@ -325,7 +325,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               return (
                 <tr
                   key={item.id}
-                  className={`border-b theme-divide hover:theme-bg-secondary transition-colors ${
+                  className={`border-b theme-divide transition-colors ${
                     isEditing ? 'bg-blue-50' : ''
                   }`}
                 >
@@ -387,7 +387,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId }) => {
               </tr>
             )}
           </tbody>
-          <tfoot className="sticky bottom-0 theme-bg-secondary border-t-2 theme-divide font-medium">
+          <tfoot className="sticky bottom-0 border-t-2 theme-divide font-medium" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
             <tr>
               <td className="px-2 py-2 text-xs theme-text">TOTAL</td>
               <td colSpan={6} className="px-2 py-2 text-xs theme-text">
