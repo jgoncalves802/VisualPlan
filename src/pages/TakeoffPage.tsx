@@ -97,10 +97,10 @@ const TakeoffPage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 theme-bg-primary border-b theme-divide px-6 py-4">
+      <div className="flex-shrink-0 theme-surface border-b theme-divide px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Package className="w-6 h-6 text-primary" />
+            <Package className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
             <div>
               <h1 className="text-xl font-bold theme-text">Take-off / Levantamento de Quantidades</h1>
               <p className="text-sm theme-text-secondary">Gestão de quantitativos e avanço físico</p>
@@ -203,7 +203,7 @@ const TakeoffPage: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         {activeTab === 'mapas' && (
           <>
-            <div className="w-72 flex-shrink-0 border-r theme-divide theme-bg-secondary overflow-y-auto">
+            <div className="w-72 flex-shrink-0 border-r theme-divide theme-surface overflow-y-auto">
               <div className="p-3 border-b theme-divide">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-secondary" />
@@ -212,7 +212,8 @@ const TakeoffPage: React.FC = () => {
                     placeholder="Buscar mapa..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-sm border theme-divide rounded-lg theme-bg-primary theme-text"
+                    className="w-full pl-9 pr-8 py-2 text-sm border rounded-lg theme-text"
+                    style={{ backgroundColor: 'var(--color-surface-secondary)', borderColor: 'var(--color-border)' }}
                   />
                   {searchTerm && (
                     <button
@@ -257,9 +258,15 @@ const TakeoffPage: React.FC = () => {
                     <button
                       key={mapa.id}
                       onClick={() => handleMapaSelect(mapa.id)}
-                      className={`w-full p-3 text-left hover:theme-bg-primary transition-colors ${
-                        selectedMapaId === mapa.id ? 'theme-bg-primary border-l-2 border-primary' : ''
+                      className={`w-full p-3 text-left transition-colors ${
+                        selectedMapaId === mapa.id ? 'border-l-2' : ''
                       }`}
+                      style={{ 
+                        backgroundColor: selectedMapaId === mapa.id ? 'var(--color-surface-secondary)' : 'transparent',
+                        borderColor: selectedMapaId === mapa.id ? 'var(--color-primary)' : 'transparent'
+                      }}
+                      onMouseEnter={(e) => { if (selectedMapaId !== mapa.id) e.currentTarget.style.backgroundColor = 'var(--color-surface-secondary)'; }}
+                      onMouseLeave={(e) => { if (selectedMapaId !== mapa.id) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
@@ -276,7 +283,7 @@ const TakeoffPage: React.FC = () => {
                             <span className="text-xs theme-text-secondary">
                               {mapa.disciplina?.nome}
                             </span>
-                            <span className="text-xs px-1.5 py-0.5 rounded theme-bg-primary theme-text-secondary">
+                            <span className="text-xs px-1.5 py-0.5 rounded theme-text-secondary" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                               v{mapa.versao}
                             </span>
                           </div>
@@ -354,13 +361,14 @@ const TakeoffPage: React.FC = () => {
         {activeTab === 'config' && (
           <div className="flex-1 overflow-auto p-6">
             <div className="grid gap-6 max-w-4xl">
-              <div className="theme-bg-secondary rounded-lg p-6">
+              <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                 <h3 className="text-lg font-medium theme-text mb-4">Disciplinas Configuradas</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {disciplinas.map((disc) => (
                     <div
                       key={disc.id}
-                      className="flex items-center gap-3 p-3 theme-bg-primary rounded-lg"
+                      className="flex items-center gap-3 p-3 theme-surface rounded-lg border"
+                      style={{ borderColor: 'var(--color-border)' }}
                     >
                       <span
                         className="w-4 h-4 rounded-full"
