@@ -317,33 +317,40 @@ export const takeoffService = {
 
   async initializeDisciplinasFromTemplates(empresaId: string): Promise<void> {
     const existing = await this.getDisciplinas(empresaId);
-    if (existing.length > 0) return;
+    if (existing.length > 0 && existing[0].id !== 'demo-tub') return;
 
-    for (const template of DISCIPLINA_TEMPLATES) {
-      const disciplina = await this.createDisciplina({
-        empresaId,
-        nome: template.nome,
-        codigo: template.codigo,
-        cor: template.cor,
-        icone: template.icone,
-      });
+    const { error: rpcError } = await supabase.rpc('initialize_takeoff_disciplinas', {
+      p_empresa_id: empresaId
+    });
 
-      if (disciplina) {
-        for (const coluna of template.colunas) {
-          await supabase.from('takeoff_colunas_config').insert({
-            disciplina_id: disciplina.id,
-            nome: coluna.nome,
-            codigo: coluna.codigo,
-            tipo: coluna.tipo,
-            formula: coluna.formula,
-            opcoes: coluna.opcoes,
-            unidade: coluna.unidade,
-            casas_decimais: coluna.casasDecimais,
-            obrigatoria: coluna.obrigatoria,
-            visivel: coluna.visivel,
-            ordem: coluna.ordem,
-            largura: coluna.largura,
-          });
+    if (rpcError) {
+      console.warn('RPC não disponível, usando inserção direta:', rpcError.message);
+      for (const template of DISCIPLINA_TEMPLATES) {
+        const disciplina = await this.createDisciplina({
+          empresaId,
+          nome: template.nome,
+          codigo: template.codigo,
+          cor: template.cor,
+          icone: template.icone,
+        });
+
+        if (disciplina) {
+          for (const coluna of template.colunas) {
+            await supabase.from('takeoff_colunas_config').insert({
+              disciplina_id: disciplina.id,
+              nome: coluna.nome,
+              codigo: coluna.codigo,
+              tipo: coluna.tipo,
+              formula: coluna.formula,
+              opcoes: coluna.opcoes,
+              unidade: coluna.unidade,
+              casas_decimais: coluna.casasDecimais,
+              obrigatoria: coluna.obrigatoria,
+              visivel: coluna.visivel,
+              ordem: coluna.ordem,
+              largura: coluna.largura,
+            });
+          }
         }
       }
     }
