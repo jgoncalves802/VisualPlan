@@ -17,6 +17,7 @@ import {
   BarChart3,
   FileText,
   Hammer,
+  Package,
 } from 'lucide-react';
 
 const allRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD'];
@@ -41,6 +42,7 @@ export const AppLayout: React.FC = () => {
       label: 'Planejamento',
       items: [
         { icon: Calendar, label: 'Cronograma', path: '/cronograma', roles: managementRoles },
+        { icon: Package, label: 'Take-off', path: '/takeoff', roles: managementRoles },
         { icon: Hammer, label: 'Recursos', path: '/recursos', roles: managementRoles },
         { icon: FileText, label: 'LPS', path: '/lps', roles: managementRoles },
       ]
