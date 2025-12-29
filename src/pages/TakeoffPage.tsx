@@ -64,6 +64,9 @@ const TakeoffPage: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingDisciplina, setEditingDisciplina] = useState<TakeoffDisciplina | null>(null);
   const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
+  const [editingDocumento, setEditingDocumento] = useState<TakeoffDocumento | null>(null);
+  const [deletingDocumentoId, setDeletingDocumentoId] = useState<string | null>(null);
+  const [showDeleteDocumentoConfirm, setShowDeleteDocumentoConfirm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -213,7 +216,40 @@ const TakeoffPage: React.FC = () => {
   };
 
   const handleDocumentoSave = (documento: TakeoffDocumento) => {
-    setDocumentos((prev) => [documento, ...prev]);
+    if (editingDocumento) {
+      setDocumentos((prev) => prev.map(d => d.id === documento.id ? documento : d));
+      setEditingDocumento(null);
+    } else {
+      setDocumentos((prev) => [documento, ...prev]);
+    }
+  };
+
+  const handleEditDocumento = (documento: TakeoffDocumento) => {
+    setEditingDocumento(documento);
+    setShowDocumentoModal(true);
+  };
+
+  const handleDeleteDocumentoClick = (documentoId: string) => {
+    setDeletingDocumentoId(documentoId);
+    setShowDeleteDocumentoConfirm(true);
+  };
+
+  const handleConfirmDeleteDocumento = async () => {
+    if (!deletingDocumentoId || !selectedProjetoId) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await takeoffService.deleteDocumento(deletingDocumentoId, selectedProjetoId);
+      if (success) {
+        setDocumentos((prev) => prev.filter(d => d.id !== deletingDocumentoId));
+      }
+    } catch (error) {
+      console.error('Erro ao excluir documento:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDocumentoConfirm(false);
+      setDeletingDocumentoId(null);
+    }
   };
 
   const tabs = [
@@ -675,11 +711,12 @@ const TakeoffPage: React.FC = () => {
                         <th className="text-left py-3 px-4 font-medium theme-text-secondary">Tipo</th>
                         <th className="text-center py-3 px-4 font-medium theme-text-secondary">Status</th>
                         <th className="text-left py-3 px-4 font-medium theme-text-secondary">Emissão</th>
+                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {documentos.map((d) => (
-                        <tr key={d.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
+                        <tr key={d.id} className="border-b hover:bg-opacity-50 group" style={{ borderColor: 'var(--color-border)' }}>
                           <td className="py-3 px-4 font-mono text-xs theme-text">{d.codigo}</td>
                           <td className="py-3 px-4 theme-text">{d.titulo || '-'}</td>
                           <td className="py-3 px-4 text-center">
@@ -695,6 +732,26 @@ const TakeoffPage: React.FC = () => {
                           </td>
                           <td className="py-3 px-4 theme-text-secondary">
                             {d.dataEmissao ? format(new Date(d.dataEmissao), 'dd/MM/yyyy', { locale: ptBR }) : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEditDocumento(d)}
+                                className="p-1.5 rounded hover:opacity-80 transition-opacity"
+                                style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+                                title="Editar"
+                              >
+                                <Edit2 className="w-3.5 h-3.5 theme-text-secondary" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDocumentoClick(d.id)}
+                                className="p-1.5 rounded hover:opacity-80 transition-opacity"
+                                style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -861,11 +918,15 @@ const TakeoffPage: React.FC = () => {
       {showDocumentoModal && selectedProjetoId && (
         <TakeoffDocumentoModal
           isOpen={showDocumentoModal}
-          onClose={() => setShowDocumentoModal(false)}
+          onClose={() => {
+            setShowDocumentoModal(false);
+            setEditingDocumento(null);
+          }}
           onSave={handleDocumentoSave}
           projetoId={selectedProjetoId}
           disciplinas={disciplinas}
           selectedDisciplinaId={selectedDisciplinaId}
+          documento={editingDocumento}
         />
       )}
 
@@ -878,6 +939,20 @@ const TakeoffPage: React.FC = () => {
         onConfirm={handleConfirmDeleteDisciplina}
         title="Excluir Disciplina"
         message="Tem certeza que deseja excluir esta disciplina? Esta ação não pode ser desfeita e todos os mapas e itens associados serão removidos."
+        confirmLabel="Excluir"
+        isLoading={isDeleting}
+        variant="danger"
+      />
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteDocumentoConfirm}
+        onClose={() => {
+          setShowDeleteDocumentoConfirm(false);
+          setDeletingDocumentoId(null);
+        }}
+        onConfirm={handleConfirmDeleteDocumento}
+        title="Excluir Documento"
+        message="Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         isLoading={isDeleting}
         variant="danger"

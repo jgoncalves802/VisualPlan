@@ -30,6 +30,7 @@ interface TakeoffDocumentoModalProps {
   projetoId: string;
   disciplinas: TakeoffDisciplina[];
   selectedDisciplinaId?: string | null;
+  documento?: TakeoffDocumento | null;
 }
 
 const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
@@ -39,7 +40,9 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
   projetoId,
   disciplinas,
   selectedDisciplinaId,
+  documento,
 }) => {
+  const isEditing = !!documento;
   const [formData, setFormData] = useState({
     codigo: '',
     titulo: '',
@@ -55,19 +58,32 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        codigo: '',
-        titulo: '',
-        disciplinaId: selectedDisciplinaId || '',
-        revisao: 'A',
-        tipo: 'isometrico',
-        status: 'emitido',
-        dataEmissao: format(new Date(), 'yyyy-MM-dd'),
-        observacoes: '',
-      });
+      if (documento) {
+        setFormData({
+          codigo: documento.codigo || '',
+          titulo: documento.titulo || '',
+          disciplinaId: documento.disciplinaId || selectedDisciplinaId || '',
+          revisao: documento.revisao || 'A',
+          tipo: documento.tipo || 'isometrico',
+          status: documento.status || 'emitido',
+          dataEmissao: documento.dataEmissao ? format(new Date(documento.dataEmissao), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+          observacoes: documento.observacoes || '',
+        });
+      } else {
+        setFormData({
+          codigo: '',
+          titulo: '',
+          disciplinaId: selectedDisciplinaId || '',
+          revisao: 'A',
+          tipo: 'isometrico',
+          status: 'emitido',
+          dataEmissao: format(new Date(), 'yyyy-MM-dd'),
+          observacoes: '',
+        });
+      }
       setError(null);
     }
-  }, [isOpen, selectedDisciplinaId]);
+  }, [isOpen, selectedDisciplinaId, documento]);
 
   if (!isOpen) return null;
 
@@ -82,28 +98,50 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
 
     setIsLoading(true);
     try {
-      const createData: CreateDocumentoDTO = {
-        projetoId,
-        disciplinaId: formData.disciplinaId || undefined,
-        codigo: formData.codigo,
-        titulo: formData.titulo || undefined,
-        revisao: formData.revisao,
-        tipo: formData.tipo,
-        dataEmissao: new Date(formData.dataEmissao),
-        observacoes: formData.observacoes || undefined,
-      };
+      if (isEditing && documento) {
+        const updateData = {
+          disciplinaId: formData.disciplinaId || null,
+          codigo: formData.codigo,
+          titulo: formData.titulo || null,
+          revisao: formData.revisao,
+          tipo: formData.tipo,
+          status: formData.status,
+          dataEmissao: new Date(formData.dataEmissao),
+          observacoes: formData.observacoes || null,
+        };
 
-      const result = await takeoffService.createDocumento(createData);
+        const result = await takeoffService.updateDocumento(documento.id, projetoId, updateData);
 
-      if (result) {
-        onSave(result);
-        onClose();
+        if (result) {
+          onSave(result);
+          onClose();
+        } else {
+          setError('Erro ao atualizar documento. Tente novamente.');
+        }
       } else {
-        setError('Erro ao cadastrar documento. Tente novamente.');
+        const createData: CreateDocumentoDTO = {
+          projetoId,
+          disciplinaId: formData.disciplinaId || undefined,
+          codigo: formData.codigo,
+          titulo: formData.titulo || undefined,
+          revisao: formData.revisao,
+          tipo: formData.tipo,
+          dataEmissao: new Date(formData.dataEmissao),
+          observacoes: formData.observacoes || undefined,
+        };
+
+        const result = await takeoffService.createDocumento(createData);
+
+        if (result) {
+          onSave(result);
+          onClose();
+        } else {
+          setError('Erro ao cadastrar documento. Tente novamente.');
+        }
       }
     } catch (err) {
-      console.error('Erro ao cadastrar documento:', err);
-      setError('Erro ao cadastrar documento. Tente novamente.');
+      console.error('Erro ao salvar documento:', err);
+      setError(isEditing ? 'Erro ao atualizar documento. Tente novamente.' : 'Erro ao cadastrar documento. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +166,7 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-3">
             <FileText className="w-5 h-5 theme-text-secondary" />
-            <h3 className="text-lg font-semibold theme-text">Cadastrar Documento</h3>
+            <h3 className="text-lg font-semibold theme-text">{isEditing ? 'Editar Documento' : 'Cadastrar Documento'}</h3>
           </div>
           <button
             onClick={onClose}
@@ -296,7 +334,7 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
               style={{ backgroundColor: '#374151' }}
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Cadastrar Documento
+              {isEditing ? 'Salvar Alterações' : 'Cadastrar Documento'}
             </button>
           </div>
         </form>

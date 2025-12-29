@@ -788,6 +788,56 @@ export const takeoffService = {
     return mapDocumentoFromDB(data);
   },
 
+  async updateDocumento(id: string, projetoId: string, updates: Partial<{
+    disciplinaId: string | null;
+    codigo: string;
+    titulo: string | null;
+    revisao: string;
+    tipo: string;
+    status: string;
+    dataEmissao: Date;
+    observacoes: string | null;
+  }>): Promise<TakeoffDocumento | null> {
+    const dbUpdates: Record<string, unknown> = {};
+    
+    if (updates.disciplinaId !== undefined) dbUpdates.disciplina_id = updates.disciplinaId;
+    if (updates.codigo !== undefined) dbUpdates.codigo = updates.codigo;
+    if (updates.titulo !== undefined) dbUpdates.titulo = updates.titulo;
+    if (updates.revisao !== undefined) dbUpdates.revisao = updates.revisao;
+    if (updates.tipo !== undefined) dbUpdates.tipo = updates.tipo;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.dataEmissao !== undefined) dbUpdates.data_emissao = updates.dataEmissao.toISOString();
+    if (updates.observacoes !== undefined) dbUpdates.observacoes = updates.observacoes;
+
+    const { data, error } = await supabase
+      .from('takeoff_documentos')
+      .update(dbUpdates)
+      .eq('id', id)
+      .eq('projeto_id', projetoId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar documento:', error);
+      return null;
+    }
+    return mapDocumentoFromDB(data);
+  },
+
+  async deleteDocumento(id: string, projetoId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('takeoff_documentos')
+      .delete()
+      .eq('id', id)
+      .eq('projeto_id', projetoId);
+
+    if (error) {
+      console.error('Erro ao excluir documento:', error);
+      return false;
+    }
+    return true;
+  },
+
   async getAreasDisponiveis(mapaId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from('takeoff_itens')
