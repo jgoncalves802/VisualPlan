@@ -55,6 +55,8 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **Theme**: Strict neutral color scheme for UI (no blue/violet/purple), disciplina colors only in charts
         *   **Modal Components**: Full CRUD via modals - TakeoffItemModal (create/edit items), TakeoffMedicaoModal (register measurements), TakeoffVinculoModal (link items to schedule activities), TakeoffDisciplinaModal, TakeoffDocumentoModal, TakeoffConfirmDialog
         *   **Grid Actions**: Inline edit, register measurement, schedule linkage (conditional on project selection), and delete with confirmation dialog
+        *   **Toolbar Dropdown Menu**: "Adicionar" dropdown with quick access to create Mapa, Documento, and Disciplina - enabled only when project is selected, with conditional options based on disciplina selection
+        *   **Access Control**: All CRUD operations respect empresa_id isolation (from authenticated user) and project selection requirements
     *   **Service Layer Architecture**: Dedicated Supabase services for each management module with PGRST205 graceful error handling:
         *   `takeoffService.ts`: Take-off/Quantity management with discipline templates, batch imports, measurements, schedule linkage
         *   `acoes5w2hService.ts`: CRUD operations for 5W2H actions with `updateWithSync()` for bidirectional sync
