@@ -45,10 +45,10 @@ const TakeoffVinculoModal: React.FC<TakeoffVinculoModalProps> = ({
       try {
         const { data, error } = await supabase
           .from('atividades_cronograma')
-          .select('id, nome, wbs_path, data_inicio, data_fim, progresso_real')
+          .select('id, nome, edt, data_inicio, data_fim, progresso, tipo')
           .eq('projeto_id', projetoId)
-          .eq('tipo', 'Tarefa')
-          .order('wbs_path');
+          .neq('tipo', 'Marco')
+          .order('edt');
 
         if (error) {
           console.error('Erro ao carregar atividades:', error);
@@ -57,10 +57,10 @@ const TakeoffVinculoModal: React.FC<TakeoffVinculoModalProps> = ({
           const mapped = (data || []).map((row) => ({
             id: row.id,
             nome: row.nome,
-            wbsPath: row.wbs_path,
+            wbsPath: row.edt,
             dataInicio: row.data_inicio ? new Date(row.data_inicio) : undefined,
             dataFim: row.data_fim ? new Date(row.data_fim) : undefined,
-            progresso: row.progresso_real,
+            progresso: row.progresso,
           }));
           setAtividades(mapped);
           setFilteredAtividades(mapped);
