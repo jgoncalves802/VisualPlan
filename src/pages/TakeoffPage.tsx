@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Package, 
   Plus, 
@@ -12,11 +12,13 @@ import {
   BarChart3,
   Loader2,
   ChevronRight,
+  ChevronDown,
   Search,
   X,
   RefreshCw,
   Edit2,
   Trash2,
+  Layers,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -64,6 +66,18 @@ const TakeoffPage: React.FC = () => {
   const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
+        setShowAddMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [vinculos, setVinculos] = useState<TakeoffVinculo[]>([]);
   const [medicoes, setMedicoes] = useState<TakeoffMedicao[]>([]);
@@ -249,16 +263,74 @@ const TakeoffPage: React.FC = () => {
                 </button>
               </>
             )}
-            {selectedProjetoId && selectedDisciplinaId && (
+
+            <div className="relative" ref={addMenuRef}>
               <button
-                onClick={() => setShowMapaModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:opacity-90 transition-opacity theme-text"
+                onClick={() => setShowAddMenu(!showAddMenu)}
+                disabled={!selectedProjetoId}
+                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-opacity theme-text disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                title={!selectedProjetoId ? 'Selecione um projeto para habilitar' : 'Criar novo item'}
               >
                 <Plus className="w-4 h-4" />
-                Novo Mapa
+                Adicionar
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAddMenu ? 'rotate-180' : ''}`} />
               </button>
-            )}
+
+              {showAddMenu && selectedProjetoId && (
+                <div 
+                  className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg border z-50 py-1"
+                  style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+                >
+                  <button
+                    onClick={() => {
+                      if (selectedDisciplinaId) {
+                        setShowMapaModal(true);
+                        setShowAddMenu(false);
+                      }
+                    }}
+                    disabled={!selectedDisciplinaId}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: 'transparent' }}
+                  >
+                    <LayoutGrid className="w-4 h-4 theme-text-secondary" />
+                    <div className="flex-1">
+                      <span className="theme-text">Novo Mapa de Controle</span>
+                      {!selectedDisciplinaId && (
+                        <p className="text-xs theme-text-secondary">Selecione uma disciplina</p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowDocumentoModal(true);
+                      setShowAddMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'transparent' }}
+                  >
+                    <FileText className="w-4 h-4 theme-text-secondary" />
+                    <span className="theme-text">Novo Documento</span>
+                  </button>
+
+                  <div className="border-t my-1" style={{ borderColor: 'var(--color-border)' }} />
+
+                  <button
+                    onClick={() => {
+                      setEditingDisciplina(null);
+                      setShowDisciplinaModal(true);
+                      setShowAddMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'transparent' }}
+                  >
+                    <Layers className="w-4 h-4 theme-text-secondary" />
+                    <span className="theme-text">Nova Disciplina</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
