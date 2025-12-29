@@ -47,7 +47,7 @@ const TakeoffVinculoModal: React.FC<TakeoffVinculoModalProps> = ({
           .from('atividades_cronograma')
           .select('id, nome, wbs_path, data_inicio, data_fim, progresso_real')
           .eq('projeto_id', projetoId)
-          .eq('tipo', 'atividade')
+          .eq('tipo', 'Tarefa')
           .order('wbs_path');
 
         if (error) {
