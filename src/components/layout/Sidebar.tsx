@@ -104,6 +104,12 @@ const menuItems: MenuItem[] = [
     path: '/takeoff',
   },
   {
+    id: 'medicoes',
+    label: 'Medições',
+    icon: <Calendar className="w-5 h-5" />,
+    path: '/medicoes',
+  },
+  {
     id: 'kanban',
     label: 'Kanban de Execução',
     icon: <Kanban className="w-5 h-5" />,

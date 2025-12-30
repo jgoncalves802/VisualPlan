@@ -27,6 +27,7 @@ import AuditoriaPage from './pages/AuditoriaPage';
 import GestaoMudancaPage from './pages/GestaoMudancaPage';
 import { RecursosPage } from './pages/RecursosPage';
 import TakeoffPage from './pages/TakeoffPage';
+import MedicoesPage from './pages/MedicoesPage';
 import './styles/global.css';
 
 const ProtectedAppLayout: React.FC = () => {
@@ -74,6 +75,7 @@ function App() {
             <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
             <Route path="/recursos" element={<RecursosPage />} />
             <Route path="/takeoff" element={<TakeoffPage />} />
+            <Route path="/medicoes" element={<MedicoesPage />} />
             <Route path="/gantt" element={<Navigate to="/cronograma" replace />} />
             <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/lps" element={<LPSPage />} />

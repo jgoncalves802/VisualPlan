@@ -70,6 +70,20 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
         *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)
         *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management)
+        *   `medicoesService.ts`: Measurement periods and progress tracking with 3-level approval workflow (Supervisor, Fiscal, Proponente)
+    *   **Medições Module** (NEW): Complete measurement period management for construction billing:
+        *   **Database Tables**: 5 tables in Supabase (medicoes_config, medicoes_periodos, medicoes_avancos, medicoes_aprovacoes, medicoes_restricoes)
+        *   **SQL Migration**: Located in `supabase/migrations/20241230_medicoes_module.sql`
+        *   **Period Configuration**: Configurable start/end days per measurement period (e.g., day 1 to day 25)
+        *   **Contractual Terms**: prazo_contratual_inicio/fim fields added to eps_nodes table
+        *   **Auto-generated Periods**: Based on contract duration, system generates measurement periods automatically
+        *   **Progress Tracking**: Captures progress from both schedule (cronograma) and take-off (mapa_controle) sources
+        *   **3-Level Approval Workflow**: Supervisor → Fiscal → Proponente with status tracking
+        *   **Restrictions Integration**: Links LPS/Ishikawa material restrictions to measurement periods
+        *   **Service**: `medicoesService.ts` with CRUD for config, periods, progress, approvals, and restrictions sync
+        *   **Types**: `medicoes.types.ts` with full TypeScript interfaces for all entities
+        *   **Route**: `/medicoes` accessible from sidebar menu
+        *   **Page Tabs**: Períodos, Avanços, Aprovações, Relatórios, Configurações
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
