@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { RestricaoLPS } from '../../../types/lps';
 import { X, Save, AlertTriangle } from 'lucide-react';
+import { parseDateOnly, formatDateOnlyRequired } from '../../../utils/dateHelpers';
 
 interface ReagendarRestricaoModalProps {
   restricao: RestricaoLPS | null;
@@ -100,11 +101,13 @@ export const ReagendarRestricaoModal: React.FC<ReagendarRestricaoModalProps> = (
                 value={formatDateForInput(formData.novaData)}
                 onChange={(e) => {
                   if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-').map(Number);
-                    setFormData({
-                      ...formData,
-                      novaData: new Date(year, month - 1, day, 12, 0, 0),
-                    });
+                    const parsed = parseDateOnly(e.target.value);
+                    if (parsed) {
+                      setFormData({
+                        ...formData,
+                        novaData: parsed,
+                      });
+                    }
                   }
                 }}
                 className="w-full p-2 border border-gray-300 rounded"
@@ -216,6 +219,10 @@ function parseDate(date: any): Date {
       return date;
     }
     if (typeof date === 'string') {
+      // Use parseDateOnly for date-only strings (yyyy-MM-dd)
+      const localParsed = parseDateOnly(date);
+      if (localParsed) return localParsed;
+      // Fallback for datetime strings
       const parsed = new Date(date);
       if (isNaN(parsed.getTime()) || typeof parsed.getFullYear !== 'function') {
         return new Date();
@@ -242,23 +249,12 @@ function formatDateForInput(date: any): string {
     
     // Verificação final de segurança
     if (!(dateObj instanceof Date) || isNaN(dateObj.getTime()) || typeof dateObj.getFullYear !== 'function') {
-      const fallbackDate = new Date();
-      const year = fallbackDate.getFullYear();
-      const month = String(fallbackDate.getMonth() + 1).padStart(2, '0');
-      const day = String(fallbackDate.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return formatDateOnlyRequired(new Date());
     }
     
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return formatDateOnlyRequired(dateObj);
   } catch (error) {
-    const fallbackDate = new Date();
-    const year = fallbackDate.getFullYear();
-    const month = String(fallbackDate.getMonth() + 1).padStart(2, '0');
-    const day = String(fallbackDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return formatDateOnlyRequired(new Date());
   }
 }
 

@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { RestricaoLPS, TipoRestricao } from '../../../types/lps';
 import { Plus, X, Edit2, Trash2, CheckCircle2, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { parseDateOnly, formatDateOnlyRequired } from '../../../utils/dateHelpers';
 
 interface RestricoesSectionProps {
   restricoes: RestricaoLPS[];
@@ -43,7 +44,13 @@ export const RestricoesSection: React.FC<RestricoesSectionProps> = ({
   const parseDate = (date: any): Date => {
     if (!date) return new Date();
     if (date instanceof Date) return date;
-    if (typeof date === 'string') return new Date(date);
+    if (typeof date === 'string') {
+      // Use parseDateOnly for date-only strings (yyyy-MM-dd)
+      const parsed = parseDateOnly(date);
+      if (parsed) return parsed;
+      // Fallback for datetime strings
+      return new Date(date);
+    }
     return new Date();
   };
 
@@ -270,14 +277,16 @@ export const RestricoesSection: React.FC<RestricoesSectionProps> = ({
               <div className="flex gap-2">
                 <input
                   type="date"
-                  value={format(novaRestricao.data_conclusao_planejada, 'yyyy-MM-dd')}
+                  value={formatDateOnlyRequired(novaRestricao.data_conclusao_planejada)}
                   onChange={(e) => {
                     if (e.target.value) {
-                      const [year, month, day] = e.target.value.split('-').map(Number);
-                      setNovaRestricao({
-                        ...novaRestricao,
-                        data_conclusao_planejada: new Date(year, month - 1, day, 12, 0, 0),
-                      });
+                      const parsed = parseDateOnly(e.target.value);
+                      if (parsed) {
+                        setNovaRestricao({
+                          ...novaRestricao,
+                          data_conclusao_planejada: parsed,
+                        });
+                      }
                     }
                   }}
                   className="flex-1 p-2 border border-gray-300 rounded text-sm"

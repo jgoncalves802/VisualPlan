@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { parseDateOnly } from '../utils/dateHelpers';
 import { gestaoMudancaService } from '../services/gestaoMudancaService';
 import {
   SolicitacaoMudanca,
@@ -879,10 +880,16 @@ const GestaoMudancaPage: React.FC = () => {
       
       let matchesDate = true;
       if (dateFrom) {
-        matchesDate = matchesDate && new Date(sol.dataSolicitacao) >= new Date(dateFrom);
+        const fromDate = parseDateOnly(dateFrom);
+        if (fromDate) {
+          matchesDate = matchesDate && new Date(sol.dataSolicitacao) >= fromDate;
+        }
       }
       if (dateTo) {
-        matchesDate = matchesDate && new Date(sol.dataSolicitacao) <= new Date(dateTo);
+        const toDate = parseDateOnly(dateTo);
+        if (toDate) {
+          matchesDate = matchesDate && new Date(sol.dataSolicitacao) <= toDate;
+        }
       }
 
       return matchesSearch && matchesStatus && matchesTipo && matchesPrioridade && matchesProjeto && matchesDate;

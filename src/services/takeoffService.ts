@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { parseDateOnly } from '../utils/dateHelpers';
 import type {
   TakeoffDisciplina,
   TakeoffColunaConfig,
@@ -58,7 +59,7 @@ const mapMapaFromDB = (row: Record<string, unknown>): TakeoffMapa => ({
   versao: row.versao as string,
   status: row.status as TakeoffMapa['status'],
   descricao: row.descricao as string | undefined,
-  dataReferencia: row.data_referencia ? new Date(row.data_referencia as string) : undefined,
+  dataReferencia: parseDateOnly(row.data_referencia as string) ?? undefined,
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
@@ -94,8 +95,8 @@ const mapMedicaoFromDB = (row: Record<string, unknown>): TakeoffMedicao => ({
   id: row.id as string,
   itemId: row.item_id as string,
   usuarioId: row.usuario_id as string | undefined,
-  periodoInicio: new Date(row.periodo_inicio as string),
-  periodoFim: new Date(row.periodo_fim as string),
+  periodoInicio: parseDateOnly(row.periodo_inicio as string) ?? new Date(),
+  periodoFim: parseDateOnly(row.periodo_fim as string) ?? new Date(),
   qtdPeriodo: Number(row.qtd_periodo) || 0,
   qtdAcumulada: row.qtd_acumulada ? Number(row.qtd_acumulada) : undefined,
   observacoes: row.observacoes as string | undefined,
@@ -121,7 +122,7 @@ const mapDocumentoFromDB = (row: Record<string, unknown>): TakeoffDocumento => (
   revisao: row.revisao as string,
   tipo: row.tipo as string | undefined,
   status: row.status as TakeoffDocumento['status'],
-  dataEmissao: row.data_emissao ? new Date(row.data_emissao as string) : undefined,
+  dataEmissao: parseDateOnly(row.data_emissao as string) ?? undefined,
   observacoes: row.observacoes as string | undefined,
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),

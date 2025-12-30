@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { parseDateOnly } from '../utils/dateHelpers';
 import { auditoriaService } from '../services/auditoriaService';
 import {
   Auditoria,
@@ -963,7 +964,7 @@ const AuditoriaPage: React.FC = () => {
           tipo: template?.categoria || 'Geral',
           responsavel: auditor?.nome || '',
           responsavelId: newAuditForm.responsavelId,
-          dataAuditoria: new Date(newAuditForm.dataAuditoria),
+          dataAuditoria: parseDateOnly(newAuditForm.dataAuditoria) || new Date(),
           status: StatusAuditoria.PLANEJADA,
           itens,
           percentualConformidade: 0,
@@ -986,7 +987,7 @@ const AuditoriaPage: React.FC = () => {
           tipo: template?.categoria || 'Geral',
           responsavel: auditor?.nome || '',
           responsavelId: newAuditForm.responsavelId,
-          dataAuditoria: new Date(newAuditForm.dataAuditoria),
+          dataAuditoria: parseDateOnly(newAuditForm.dataAuditoria) || new Date(),
           status: StatusAuditoria.PLANEJADA,
           percentualConformidade: 0,
           naoConformidades: 0,
@@ -1008,7 +1009,7 @@ const AuditoriaPage: React.FC = () => {
         tipo: template?.categoria || 'Geral',
         responsavel: auditor?.nome || '',
         responsavelId: newAuditForm.responsavelId,
-        dataAuditoria: new Date(newAuditForm.dataAuditoria),
+        dataAuditoria: parseDateOnly(newAuditForm.dataAuditoria) || new Date(),
         status: StatusAuditoria.PLANEJADA,
         percentualConformidade: 0,
         naoConformidades: 0,

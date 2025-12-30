@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { parseDateOnly } from '../utils/dateHelpers';
 import {
   CondicaoProntidao,
   TipoCondicaoProntidao,
@@ -17,8 +18,8 @@ const getLocalCondicoes = (): CondicaoProntidao[] => {
         ...c,
         createdAt: new Date(c.createdAt as string),
         updatedAt: new Date(c.updatedAt as string),
-        dataPrevista: c.dataPrevista ? new Date(c.dataPrevista as string) : undefined,
-        dataAtendida: c.dataAtendida ? new Date(c.dataAtendida as string) : undefined,
+        dataPrevista: c.dataPrevista ? parseDateOnly(c.dataPrevista as string) ?? undefined : undefined,
+        dataAtendida: c.dataAtendida ? parseDateOnly(c.dataAtendida as string) ?? undefined : undefined,
       }));
     }
   } catch (e) {
@@ -61,8 +62,8 @@ const mapFromDB = (data: CondicaoProntidaoDB): CondicaoProntidao => ({
   status: data.status as StatusCondicaoProntidao,
   responsavelId: data.responsavel_id,
   responsavelNome: data.responsavel_nome,
-  dataPrevista: data.data_prevista ? new Date(data.data_prevista) : undefined,
-  dataAtendida: data.data_atendida ? new Date(data.data_atendida) : undefined,
+  dataPrevista: parseDateOnly(data.data_prevista as string) ?? undefined,
+  dataAtendida: parseDateOnly(data.data_atendida as string) ?? undefined,
   observacoes: data.observacoes,
   restricaoId: data.restricao_id,
   createdAt: new Date(data.created_at),

@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { AtividadeMock } from '../../../types/cronograma';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { parseDateOnly } from '../../../utils/dateHelpers';
 
 interface TaskModalProps {
   open: boolean;
@@ -147,11 +148,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   // Calcula duração automaticamente ao mudar datas
   useEffect(() => {
     if (formData.data_inicio && formData.data_fim) {
-      const inicio = new Date(formData.data_inicio);
-      const fim = new Date(formData.data_fim);
-      const diffTime = Math.abs(fim.getTime() - inicio.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setFormData((prev) => ({ ...prev, duracao_dias: diffDays }));
+      const inicio = parseDateOnly(formData.data_inicio);
+      const fim = parseDateOnly(formData.data_fim);
+      if (inicio && fim) {
+        const diffTime = Math.abs(fim.getTime() - inicio.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setFormData((prev) => ({ ...prev, duracao_dias: diffDays }));
+      }
     }
   }, [formData.data_inicio, formData.data_fim]);
 
@@ -172,9 +175,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     }
 
     if (formData.data_inicio && formData.data_fim) {
-      const inicio = new Date(formData.data_inicio);
-      const fim = new Date(formData.data_fim);
-      if (fim < inicio) {
+      const inicio = parseDateOnly(formData.data_inicio);
+      const fim = parseDateOnly(formData.data_fim);
+      if (inicio && fim && fim < inicio) {
         newErrors.data_fim = 'Data de fim deve ser após data de início';
       }
     }

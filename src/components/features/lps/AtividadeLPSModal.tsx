@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, Clock, AlertCircle } from 'lucide-react';
 import { AtividadeLPS, StatusAtividadeLPS, TipoAtividadeLPS } from '../../../types/lps';
-import { format } from 'date-fns';
+import { parseDateOnly, formatDateOnlyRequired } from '../../../utils/dateHelpers';
 
 interface AtividadeLPSModalProps {
   atividade: AtividadeLPS | null;
@@ -28,16 +28,28 @@ export const AtividadeLPSModal: React.FC<AtividadeLPSModalProps> = ({
 
   useEffect(() => {
     if (atividade) {
+      let dataInicio = '';
+      if (atividade.data_inicio) {
+        if (typeof atividade.data_inicio === 'string') {
+          dataInicio = atividade.data_inicio.split('T')[0];
+        } else if (atividade.data_inicio instanceof Date) {
+          dataInicio = formatDateOnlyRequired(atividade.data_inicio);
+        }
+      }
+      let dataFim = '';
+      if (atividade.data_fim) {
+        if (typeof atividade.data_fim === 'string') {
+          dataFim = atividade.data_fim.split('T')[0];
+        } else if (atividade.data_fim instanceof Date) {
+          dataFim = formatDateOnlyRequired(atividade.data_fim);
+        }
+      }
       setFormData({
         nome: atividade.nome || '',
         descricao: atividade.descricao || '',
         responsavel: atividade.responsavel || '',
-        data_inicio: atividade.data_inicio 
-          ? format(new Date(atividade.data_inicio), 'yyyy-MM-dd') 
-          : '',
-        data_fim: atividade.data_fim 
-          ? format(new Date(atividade.data_fim), 'yyyy-MM-dd') 
-          : '',
+        data_inicio: dataInicio,
+        data_fim: dataFim,
         status: atividade.status || StatusAtividadeLPS.PLANEJADA,
         tipo: atividade.tipo || TipoAtividadeLPS.NORMAL,
       });
@@ -50,8 +62,8 @@ export const AtividadeLPSModal: React.FC<AtividadeLPSModalProps> = ({
     e.preventDefault();
     onSave({
       ...formData,
-      data_inicio: formData.data_inicio ? new Date(formData.data_inicio) : undefined,
-      data_fim: formData.data_fim ? new Date(formData.data_fim) : undefined,
+      data_inicio: formData.data_inicio ? parseDateOnly(formData.data_inicio) ?? undefined : undefined,
+      data_fim: formData.data_fim ? parseDateOnly(formData.data_fim) ?? undefined : undefined,
     });
   };
 

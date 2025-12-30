@@ -3,6 +3,7 @@ import { X, Loader2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { takeoffService } from '../../../services/takeoffService';
 import type { TakeoffMedicao, CreateMedicaoDTO, TakeoffItem } from '../../../types/takeoff.types';
+import { parseDateOnly } from '../../../utils/dateHelpers';
 
 interface TakeoffMedicaoModalProps {
   isOpen: boolean;
@@ -63,8 +64,8 @@ const TakeoffMedicaoModal: React.FC<TakeoffMedicaoModalProps> = ({
       const createData: CreateMedicaoDTO = {
         itemId: item.id,
         usuarioId,
-        periodoInicio: new Date(formData.periodoInicio),
-        periodoFim: new Date(formData.periodoFim),
+        periodoInicio: parseDateOnly(formData.periodoInicio) || new Date(),
+        periodoFim: parseDateOnly(formData.periodoFim) || new Date(),
         qtdPeriodo: formData.qtdPeriodo,
         observacoes: formData.observacoes || undefined,
       };

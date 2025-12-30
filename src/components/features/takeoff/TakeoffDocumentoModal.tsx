@@ -3,6 +3,7 @@ import { X, Loader2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { takeoffService } from '../../../services/takeoffService';
 import type { TakeoffDocumento, CreateDocumentoDTO, TakeoffDisciplina } from '../../../types/takeoff.types';
+import { parseDateOnly, formatDateOnlyRequired } from '../../../utils/dateHelpers';
 
 const TIPOS_DOCUMENTO = [
   { value: 'isometrico', label: 'Isométrico' },
@@ -59,6 +60,14 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       if (documento) {
+        let dataEmissaoStr = formatDateOnlyRequired(new Date());
+        if (documento.dataEmissao) {
+          if (typeof documento.dataEmissao === 'string') {
+            dataEmissaoStr = documento.dataEmissao.split('T')[0];
+          } else if (documento.dataEmissao instanceof Date) {
+            dataEmissaoStr = formatDateOnlyRequired(documento.dataEmissao);
+          }
+        }
         setFormData({
           codigo: documento.codigo || '',
           titulo: documento.titulo || '',
@@ -66,7 +75,7 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
           revisao: documento.revisao || 'A',
           tipo: documento.tipo || 'isometrico',
           status: documento.status || 'emitido',
-          dataEmissao: documento.dataEmissao ? format(new Date(documento.dataEmissao), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+          dataEmissao: dataEmissaoStr,
           observacoes: documento.observacoes || '',
         });
       } else {
@@ -106,7 +115,7 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
           revisao: formData.revisao,
           tipo: formData.tipo,
           status: formData.status,
-          dataEmissao: new Date(formData.dataEmissao),
+          dataEmissao: parseDateOnly(formData.dataEmissao) || new Date(),
           observacoes: formData.observacoes || null,
         };
 
@@ -126,7 +135,7 @@ const TakeoffDocumentoModal: React.FC<TakeoffDocumentoModalProps> = ({
           titulo: formData.titulo || undefined,
           revisao: formData.revisao,
           tipo: formData.tipo,
-          dataEmissao: new Date(formData.dataEmissao),
+          dataEmissao: parseDateOnly(formData.dataEmissao) || new Date(),
           observacoes: formData.observacoes || undefined,
         };
 

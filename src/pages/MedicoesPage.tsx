@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { parseDateOnly } from '../utils/dateHelpers';
 import { useAuthStore } from '../stores/authStore';
 import { useEpsStore } from '../stores/epsStore';
 import { medicoesService } from '../services/medicoesService';
@@ -152,8 +153,8 @@ const MedicoesPage: React.FC = () => {
         empresaId: usuario.empresaId,
         diaInicioPeriodo: configForm.diaInicio,
         diaFimPeriodo: configForm.diaFim,
-        prazoContratualInicio: configForm.prazoInicio ? new Date(configForm.prazoInicio) : undefined,
-        prazoContratualFim: configForm.prazoFim ? new Date(configForm.prazoFim) : undefined,
+        prazoContratualInicio: configForm.prazoInicio ? parseDateOnly(configForm.prazoInicio) ?? undefined : undefined,
+        prazoContratualFim: configForm.prazoFim ? parseDateOnly(configForm.prazoFim) ?? undefined : undefined,
       });
 
       setConfig(configData);
@@ -181,8 +182,8 @@ const MedicoesPage: React.FC = () => {
       const periodosGerados = medicoesService.generatePeriodos(
         configForm.diaInicio,
         configForm.diaFim,
-        new Date(configForm.prazoInicio),
-        new Date(configForm.prazoFim)
+        parseDateOnly(configForm.prazoInicio)!,
+        parseDateOnly(configForm.prazoFim)!
       );
 
       const dtos = periodosGerados.map(p => ({

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { parseDateOnly, getInputDateValue } from '../utils/dateHelpers';
 import { acoes5w2hService } from '../services/acoes5w2hService';
 import { userService } from '../services/userService';
 import { restricao5w2hSyncService } from '../services/restricao5w2hSyncService';
@@ -358,9 +359,9 @@ const AcaoModal: React.FC<AcaoModalProps> = ({ isOpen, onClose, onSave, acao, re
               </label>
               <input
                 type="date"
-                value={formData.quando ? format(formData.quando, 'yyyy-MM-dd') : ''}
+                value={formData.quando ? getInputDateValue(formData.quando) : ''}
                 onChange={(e) =>
-                  setFormData({ ...formData, quando: e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined })
+                  setFormData({ ...formData, quando: e.target.value ? parseDateOnly(e.target.value) ?? undefined : undefined })
                 }
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent"
                 required

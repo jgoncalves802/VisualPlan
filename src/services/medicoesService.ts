@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { parseDateOnly } from '../utils/dateHelpers';
 import type {
   MedicoesConfig,
   MedicoesPeriodo,
@@ -22,8 +23,8 @@ const mapConfigFromDB = (row: Record<string, unknown>): MedicoesConfig => ({
   empresaId: row.empresa_id as string,
   diaInicioPeriodo: row.dia_inicio_periodo as number,
   diaFimPeriodo: row.dia_fim_periodo as number,
-  prazoContratualInicio: row.prazo_contratual_inicio ? new Date(row.prazo_contratual_inicio as string) : undefined,
-  prazoContratualFim: row.prazo_contratual_fim ? new Date(row.prazo_contratual_fim as string) : undefined,
+  prazoContratualInicio: parseDateOnly(row.prazo_contratual_inicio as string) ?? undefined,
+  prazoContratualFim: parseDateOnly(row.prazo_contratual_fim as string) ?? undefined,
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
@@ -33,8 +34,8 @@ const mapPeriodoFromDB = (row: Record<string, unknown>): MedicoesPeriodo => ({
   projetoId: row.projeto_id as string,
   empresaId: row.empresa_id as string,
   numero: row.numero as number,
-  dataInicio: new Date(row.data_inicio as string),
-  dataFim: new Date(row.data_fim as string),
+  dataInicio: parseDateOnly(row.data_inicio as string) ?? new Date(),
+  dataFim: parseDateOnly(row.data_fim as string) ?? new Date(),
   status: row.status as MedicoesPeriodo['status'],
   valorPrevisto: Number(row.valor_previsto) || 0,
   valorMedido: Number(row.valor_medido) || 0,

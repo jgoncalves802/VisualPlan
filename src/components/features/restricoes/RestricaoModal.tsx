@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '../../../stores/authStore';
 import { X, Save, AlertTriangle, Upload, FileText, Image } from 'lucide-react';
 import { restricoesLpsService } from '../../../services/restricoesLpsService';
+import { parseDateOnly } from '../../../utils/dateHelpers';
 
 interface RestricaoModalProps {
   restricao: RestricaoLPS | null;
@@ -52,6 +53,10 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         return date;
       }
       if (typeof date === 'string') {
+        // Use parseDateOnly for date-only strings (yyyy-MM-dd)
+        const localParsed = parseDateOnly(date);
+        if (localParsed) return localParsed;
+        // Fallback for datetime strings
         const parsed = new Date(date);
         if (isNaN(parsed.getTime()) || typeof parsed.getFullYear !== 'function') {
           return new Date();
