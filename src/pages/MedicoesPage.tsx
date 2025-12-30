@@ -215,10 +215,9 @@ const MedicoesPage: React.FC = () => {
 
   const periodoAtual = useMemo(() => {
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
     return periodos.find(p => {
-      const inicio = new Date(p.dataInicio);
-      const fim = new Date(p.dataFim);
-      return hoje >= inicio && hoje <= fim;
+      return hoje >= p.dataInicio && hoje <= p.dataFim;
     });
   }, [periodos]);
 

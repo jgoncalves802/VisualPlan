@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { parseDateOnlyRequired } from '../utils/dateHelpers';
 import {
   Plus,
   Settings,
@@ -70,8 +71,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Construção de torre comercial de 30 andares',
     gerente: 'João Silva',
     orcamento: 45000000,
-    dataInicio: new Date('2024-01-15'),
-    dataFim: new Date('2026-06-30'),
+    dataInicio: parseDateOnlyRequired('2024-01-15'),
+    dataFim: parseDateOnlyRequired('2026-06-30'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 9 },
@@ -90,8 +91,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Condomínio residencial com 200 unidades',
     gerente: 'Maria Santos',
     orcamento: 28000000,
-    dataInicio: new Date('2024-03-01'),
-    dataFim: new Date('2025-12-31'),
+    dataInicio: parseDateOnlyRequired('2024-03-01'),
+    dataFim: parseDateOnlyRequired('2025-12-31'),
     status: StatusProjeto.EM_RISCO,
     scores: [
       { criterioId: 'roi', score: 7 },
@@ -110,8 +111,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Centro comercial com 150 lojas',
     gerente: 'Carlos Lima',
     orcamento: 85000000,
-    dataInicio: new Date('2024-06-01'),
-    dataFim: new Date('2027-12-31'),
+    dataInicio: parseDateOnlyRequired('2024-06-01'),
+    dataFim: parseDateOnlyRequired('2027-12-31'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 10 },
@@ -130,8 +131,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Hospital com 300 leitos',
     gerente: 'Ana Costa',
     orcamento: 120000000,
-    dataInicio: new Date('2024-02-01'),
-    dataFim: new Date('2028-06-30'),
+    dataInicio: parseDateOnlyRequired('2024-02-01'),
+    dataFim: parseDateOnlyRequired('2028-06-30'),
     status: StatusProjeto.CRITICO,
     scores: [
       { criterioId: 'roi', score: 6 },
@@ -150,8 +151,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Centro logístico de 50.000m²',
     gerente: 'Pedro Souza',
     orcamento: 35000000,
-    dataInicio: new Date('2024-07-01'),
-    dataFim: new Date('2025-10-31'),
+    dataInicio: parseDateOnlyRequired('2024-07-01'),
+    dataFim: parseDateOnlyRequired('2025-10-31'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 8 },
@@ -170,8 +171,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Centro educacional profissionalizante',
     gerente: 'Fernanda Gomes',
     orcamento: 18000000,
-    dataInicio: new Date('2024-04-01'),
-    dataFim: new Date('2025-08-31'),
+    dataInicio: parseDateOnlyRequired('2024-04-01'),
+    dataFim: parseDateOnlyRequired('2025-08-31'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 5 },
@@ -190,8 +191,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Modernização de edifício histórico',
     gerente: 'Roberto Dias',
     orcamento: 22000000,
-    dataInicio: new Date('2024-08-01'),
-    dataFim: new Date('2025-12-31'),
+    dataInicio: parseDateOnlyRequired('2024-08-01'),
+    dataFim: parseDateOnlyRequired('2025-12-31'),
     status: StatusProjeto.EM_RISCO,
     scores: [
       { criterioId: 'roi', score: 6 },
@@ -210,8 +211,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Complexo industrial com 10 galpões',
     gerente: 'Lucas Ferreira',
     orcamento: 65000000,
-    dataInicio: new Date('2024-09-01'),
-    dataFim: new Date('2027-03-31'),
+    dataInicio: parseDateOnlyRequired('2024-09-01'),
+    dataFim: parseDateOnlyRequired('2027-03-31'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 9 },
@@ -230,8 +231,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Complexo esportivo multiuso',
     gerente: 'Marina Oliveira',
     orcamento: 42000000,
-    dataInicio: new Date('2024-05-01'),
-    dataFim: new Date('2026-09-30'),
+    dataInicio: parseDateOnlyRequired('2024-05-01'),
+    dataFim: parseDateOnlyRequired('2026-09-30'),
     status: StatusProjeto.EM_RISCO,
     scores: [
       { criterioId: 'roi', score: 4 },
@@ -250,8 +251,8 @@ const MOCK_PROJETOS: ProjetoPrioritizado[] = [
     descricao: 'Residencial de alto padrão com 50 unidades',
     gerente: 'Thiago Martins',
     orcamento: 95000000,
-    dataInicio: new Date('2024-10-01'),
-    dataFim: new Date('2027-06-30'),
+    dataInicio: parseDateOnlyRequired('2024-10-01'),
+    dataFim: parseDateOnlyRequired('2027-06-30'),
     status: StatusProjeto.NO_PRAZO,
     scores: [
       { criterioId: 'roi', score: 10 },
