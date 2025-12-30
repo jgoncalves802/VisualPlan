@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom';
 import { useCronograma } from '../hooks/useCronograma';
 import { useResources } from '../hooks/useResources';
 import { VisualizacaoCronograma } from '../types/cronograma';
+import { useToast } from '../components/ui/Toast';
 
 import { CronogramaToolbar } from '../components/features/cronograma/CronogramaToolbar';
 import { CronogramaFilters } from '../components/features/cronograma/CronogramaFilters';
@@ -61,6 +62,7 @@ export const CronogramaPage: React.FC = () => {
   const { calendarios, calendario_padrao } = useCronogramaStore();
   const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
   const { usuario } = useAuthStore();
+  const toast = useToast();
   
   const handleSelectProject = (projectId: string, projectName: string) => {
     setSelectedProjetoId(projectId);
@@ -357,14 +359,12 @@ export const CronogramaPage: React.FC = () => {
                   }}
                   onAtividadeCreate={async (afterTaskId, parentWbsId) => {
                     try {
-                      // When creating under a WBS node, set wbs_id but leave parent_id NULL
-                      // (parent_id FK only allows references to atividades_cronograma, not eps_nodes)
-                      // Pass afterTaskId to insert in correct position
+                      console.log('[CronogramaPage] Creating activity with projeto_id:', projetoId, 'wbs_id:', parentWbsId);
                       await adicionarAtividade({
                         nome: 'Nova Atividade',
                         projeto_id: projetoId,
                         wbs_id: parentWbsId || undefined,
-                        parent_id: undefined, // NULL - WBS nodes are not activity parents
+                        parent_id: undefined,
                         data_inicio: new Date().toISOString().split('T')[0],
                         data_fim: new Date(Date.now() + 86400000).toISOString().split('T')[0],
                         duracao_dias: 1,
@@ -372,8 +372,11 @@ export const CronogramaPage: React.FC = () => {
                         status: 'A Fazer',
                         tipo: 'Tarefa',
                       } as any, afterTaskId);
+                      toast.success('Atividade criada com sucesso!');
                     } catch (error) {
-                      console.error('Erro ao criar atividade:', error);
+                      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+                      console.error('[CronogramaPage] Erro ao criar atividade:', errorMsg, error);
+                      toast.error(`Erro ao criar atividade: ${errorMsg}`);
                     }
                   }}
                   onDependenciaCreate={async (dep) => {
@@ -429,16 +432,25 @@ export const CronogramaPage: React.FC = () => {
         atividadeId={atividadeSelecionada}
         projetoId={projetoId!}
         onSave={async (dados) => {
-          if (atividadeSelecionada) {
-            await atualizarAtividade(atividadeSelecionada, dados);
-          } else {
-            await adicionarAtividade({
-              ...dados,
-              projeto_id: projetoId,
-            } as any);
+          try {
+            if (atividadeSelecionada) {
+              await atualizarAtividade(atividadeSelecionada, dados);
+              toast.success('Atividade atualizada com sucesso!');
+            } else {
+              console.log('[CronogramaPage] TaskModal: Creating activity with projeto_id:', projetoId);
+              await adicionarAtividade({
+                ...dados,
+                projeto_id: projetoId,
+              } as any);
+              toast.success('Atividade criada com sucesso!');
+            }
+            setModalTaskOpen(false);
+            setAtividadeSelecionada(null);
+          } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+            console.error('[CronogramaPage] Erro ao salvar atividade:', errorMsg, error);
+            toast.error(`Erro ao salvar atividade: ${errorMsg}`);
           }
-          setModalTaskOpen(false);
-          setAtividadeSelecionada(null);
         }}
       />
 

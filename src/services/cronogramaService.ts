@@ -79,20 +79,50 @@ export const getAtividades = async (projetoId: string): Promise<AtividadeMock[]>
 export const createAtividade = async (
   atividade: Omit<AtividadeMock, 'id' | 'created_at' | 'updated_at'>
 ): Promise<AtividadeMock> => {
+  console.log('[cronogramaService] createAtividade called with:', {
+    projeto_id: atividade.projeto_id,
+    nome: atividade.nome,
+    tipo: atividade.tipo,
+    wbs_id: atividade.wbs_id,
+  });
+
   // Get current user's empresa_id
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
+    console.error('[cronogramaService] User not authenticated');
     throw new Error('Usuário não autenticado');
   }
+  console.log('[cronogramaService] User authenticated:', userData.user.id);
 
-  const { data: userProfile } = await supabase
+  const { data: userProfile, error: profileError } = await supabase
     .from('usuarios')
     .select('empresa_id')
     .eq('id', userData.user.id)
     .single();
 
+  if (profileError) {
+    console.error('[cronogramaService] Error fetching user profile:', profileError);
+  }
+
   if (!userProfile?.empresa_id) {
+    console.error('[cronogramaService] User has no empresa_id');
     throw new Error('Usuário não possui empresa associada');
+  }
+  console.log('[cronogramaService] User empresa_id:', userProfile.empresa_id);
+
+  // Verify project exists
+  if (atividade.projeto_id) {
+    const { data: projeto, error: projetoError } = await supabase
+      .from('eps_nodes')
+      .select('id, nome')
+      .eq('id', atividade.projeto_id)
+      .single();
+    
+    if (projetoError || !projeto) {
+      console.error('[cronogramaService] Project not found:', atividade.projeto_id, projetoError);
+      throw new Error(`Projeto não encontrado: ${atividade.projeto_id}`);
+    }
+    console.log('[cronogramaService] Project verified:', projeto.nome);
   }
 
   const { data, error } = await supabase
