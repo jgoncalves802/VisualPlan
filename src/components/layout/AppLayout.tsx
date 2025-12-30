@@ -18,6 +18,7 @@ import {
   FileText,
   Hammer,
   Package,
+  Ruler,
 } from 'lucide-react';
 
 const allRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD'];
@@ -60,6 +61,7 @@ export const AppLayout: React.FC = () => {
       id: 'gestao',
       label: 'Gestão & Controle',
       items: [
+        { icon: Ruler, label: 'Medições', path: '/medicoes', roles: managementRoles },
         { icon: ClipboardCheck, label: 'Auditorias', path: '/auditorias', roles: managementRoles },
         { icon: GitBranch, label: 'Mudanças', path: '/mudancas', roles: managementRoles },
         { icon: Users, label: 'Reuniões', path: '/reunioes', roles: managementRoles },
