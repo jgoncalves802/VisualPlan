@@ -121,7 +121,16 @@ export interface TakeoffVinculo {
   createdAt: Date;
   updatedAt: Date;
   item?: TakeoffItem;
-  atividade?: { id: string; nome: string; progresso: number };
+  atividade?: { 
+    id: string; 
+    codigo?: string;
+    nome: string; 
+    progresso: number;
+  };
+  mapa?: {
+    id: string;
+    nome: string;
+  };
 }
 
 export interface CreateDisciplinaDTO {

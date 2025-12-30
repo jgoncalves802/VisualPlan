@@ -19,6 +19,8 @@ import {
   Edit2,
   Trash2,
   Layers,
+  Unlink,
+  Save,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,8 +36,250 @@ import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDiscip
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
 import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina } from '../types/takeoff.types';
+import { useToast } from '../components/ui/Toast';
 
 type TabType = 'dashboard' | 'mapas' | 'vinculos' | 'medicoes' | 'documentos' | 'config';
+
+// =====================================================
+// VinculosTab Component - Grouped by Mapa with inline editing
+// =====================================================
+interface VinculosTabProps {
+  vinculos: TakeoffVinculo[];
+  onRefresh: () => Promise<void>;
+}
+
+const VinculosTab: React.FC<VinculosTabProps> = ({ vinculos, onRefresh }) => {
+  const toast = useToast();
+  const [expandedMapas, setExpandedMapas] = useState<Set<string>>(new Set(['__no_mapa__']));
+  const [editingVinculoId, setEditingVinculoId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<{ peso: number }>({ peso: 100 });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Group vinculos by mapa
+  const vinculosByMapa = React.useMemo(() => {
+    const grouped: Record<string, { mapaNome: string; vinculos: TakeoffVinculo[] }> = {};
+    
+    vinculos.forEach(v => {
+      const mapaId = v.mapa?.id || '__no_mapa__';
+      const mapaNome = v.mapa?.nome || 'Sem Mapa';
+      
+      if (!grouped[mapaId]) {
+        grouped[mapaId] = { mapaNome, vinculos: [] };
+      }
+      grouped[mapaId].vinculos.push(v);
+    });
+    
+    return grouped;
+  }, [vinculos]);
+
+  const toggleMapa = (mapaId: string) => {
+    setExpandedMapas(prev => {
+      const next = new Set(prev);
+      if (next.has(mapaId)) {
+        next.delete(mapaId);
+      } else {
+        next.add(mapaId);
+      }
+      return next;
+    });
+  };
+
+  const handleStartEdit = (vinculo: TakeoffVinculo) => {
+    setEditingVinculoId(vinculo.id);
+    setEditValues({ peso: vinculo.peso });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingVinculoId(null);
+    setEditValues({ peso: 100 });
+  };
+
+  const handleSaveEdit = async (vinculoId: string) => {
+    setIsSaving(true);
+    try {
+      await takeoffService.updateVinculo(vinculoId, { peso: editValues.peso });
+      await onRefresh();
+      setEditingVinculoId(null);
+      toast.success('Peso atualizado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao atualizar vínculo:', err);
+      toast.error('Erro ao atualizar peso');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteVinculo = async (vinculoId: string) => {
+    if (!window.confirm('Deseja remover este vínculo?')) return;
+    
+    setIsSaving(true);
+    try {
+      await takeoffService.deleteVinculo(vinculoId);
+      await onRefresh();
+      toast.success('Vínculo removido!');
+    } catch (err) {
+      console.error('Erro ao excluir vínculo:', err);
+      toast.error('Erro ao remover vínculo');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const mapaIds = Object.keys(vinculosByMapa);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium theme-text">Vínculos com Cronograma</h3>
+          <p className="text-sm theme-text-secondary mt-1">{vinculos.length} vínculos em {mapaIds.length} mapa(s)</p>
+        </div>
+        <button
+          onClick={onRefresh}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm theme-text-secondary hover:theme-text rounded-lg transition"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Atualizar
+        </button>
+      </div>
+
+      {mapaIds.map(mapaId => {
+        const { mapaNome, vinculos: mapaVinculos } = vinculosByMapa[mapaId];
+        const isExpanded = expandedMapas.has(mapaId);
+        
+        return (
+          <div key={mapaId} className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+            {/* Mapa Header */}
+            <button
+              onClick={() => toggleMapa(mapaId)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+            >
+              <div className="flex items-center gap-3">
+                {isExpanded ? (
+                  <ChevronDown className="w-5 h-5 theme-text-secondary" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 theme-text-secondary" />
+                )}
+                <Layers className="w-5 h-5 theme-text-secondary" />
+                <span className="font-medium theme-text">{mapaNome}</span>
+                <span className="px-2 py-0.5 text-xs rounded-full theme-text-secondary" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                  {mapaVinculos.length} itens
+                </span>
+              </div>
+            </button>
+
+            {/* Mapa Content */}
+            {isExpanded && (
+              <div className="border-t" style={{ borderColor: 'var(--color-border)' }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                      <th className="text-left py-2 px-4 font-medium theme-text-secondary">Item Take-off</th>
+                      <th className="text-left py-2 px-4 font-medium theme-text-secondary">Código</th>
+                      <th className="text-left py-2 px-4 font-medium theme-text-secondary">Atividade</th>
+                      <th className="text-right py-2 px-4 font-medium theme-text-secondary">Peso (%)</th>
+                      <th className="text-right py-2 px-4 font-medium theme-text-secondary">Peso (Un.)</th>
+                      <th className="text-right py-2 px-4 font-medium theme-text-secondary">Progresso</th>
+                      <th className="text-center py-2 px-4 font-medium theme-text-secondary w-24">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mapaVinculos.map((v) => {
+                      const isEditing = editingVinculoId === v.id;
+                      const pesoUnidades = v.item ? (v.item.qtdPrevista * v.peso / 100) : 0;
+                      
+                      return (
+                        <tr key={v.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800/50" style={{ borderColor: 'var(--color-border)' }}>
+                          <td className="py-2 px-4 theme-text max-w-[200px] truncate" title={v.item?.descricao}>
+                            {v.item?.descricao || v.itemId}
+                          </td>
+                          <td className="py-2 px-4">
+                            <span className="px-2 py-0.5 text-xs font-mono rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                              {v.atividade?.codigo || '-'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 theme-text-secondary max-w-[180px] truncate" title={v.atividade?.nome}>
+                            {v.atividade?.nome || v.atividadeId.slice(0, 8) + '...'}
+                          </td>
+                          <td className="py-2 px-4 text-right">
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editValues.peso}
+                                onChange={(e) => setEditValues({ peso: Number(e.target.value) })}
+                                className="w-16 px-2 py-1 text-right text-sm border rounded theme-text"
+                                style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}
+                              />
+                            ) : (
+                              <span className="theme-text">{v.peso}%</span>
+                            )}
+                          </td>
+                          <td className="py-2 px-4 text-right theme-text-secondary">
+                            {isEditing 
+                              ? ((v.item?.qtdPrevista || 0) * editValues.peso / 100).toFixed(2)
+                              : pesoUnidades.toFixed(2)
+                            } {v.item?.unidade}
+                          </td>
+                          <td className="py-2 px-4 text-right">
+                            <span className="px-2 py-0.5 text-xs rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                              {v.item?.percentualExecutado?.toFixed(1) || 0}%
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    onClick={() => handleSaveEdit(v.id)}
+                                    disabled={isSaving}
+                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                                    title="Salvar"
+                                  >
+                                    <Save className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="p-1.5 text-gray-500 hover:bg-gray-100 rounded transition"
+                                    title="Cancelar"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleStartEdit(v)}
+                                    className="p-1.5 theme-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                                    title="Editar peso"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteVinculo(v.id)}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
+                                    title="Remover vínculo"
+                                  >
+                                    <Unlink className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const TakeoffPage: React.FC = () => {
   const { usuario } = useAuthStore();
@@ -574,38 +818,15 @@ const TakeoffPage: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                  <h3 className="text-lg font-medium theme-text">Vínculos com Cronograma</h3>
-                  <p className="text-sm theme-text-secondary mt-1">{vinculos.length} vínculos encontrados</p>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
-                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Item Take-off</th>
-                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Atividade</th>
-                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Peso (%)</th>
-                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Progresso</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {vinculos.map((v) => (
-                        <tr key={v.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
-                          <td className="py-3 px-4 theme-text">{v.item?.descricao || v.itemId}</td>
-                          <td className="py-3 px-4 theme-text-secondary">{v.atividadeId}</td>
-                          <td className="py-3 px-4 text-right theme-text">{v.peso}%</td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="px-2 py-1 text-xs rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
-                              {v.item?.percentualExecutado?.toFixed(1) || 0}%
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <VinculosTab 
+                vinculos={vinculos} 
+                onRefresh={async () => {
+                  setLoadingTab(true);
+                  const data = await takeoffService.getAllVinculos();
+                  setVinculos(data);
+                  setLoadingTab(false);
+                }}
+              />
             )}
           </div>
         )}

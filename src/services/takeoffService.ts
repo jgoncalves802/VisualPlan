@@ -689,16 +689,47 @@ export const takeoffService = {
   async getAllVinculos(): Promise<TakeoffVinculo[]> {
     const { data, error } = await supabase
       .from('takeoff_vinculos')
-      .select('*, takeoff_itens(*)');
+      .select(`
+        *,
+        takeoff_itens(*, takeoff_mapas(id, nome))
+      `);
 
     if (error) {
       console.error('Erro ao buscar vínculos:', error);
       return [];
     }
 
+    // Get unique atividade IDs to fetch from atividades_cronograma
+    const atividadeIds = [...new Set((data || []).map(row => row.atividade_id).filter(Boolean))];
+    
+    // Fetch atividade data
+    let atividadesMap: Record<string, { id: string; codigo?: string; nome: string; progresso: number }> = {};
+    if (atividadeIds.length > 0) {
+      const { data: atividades } = await supabase
+        .from('atividades_cronograma')
+        .select('id, codigo, nome, progresso')
+        .in('id', atividadeIds);
+      
+      if (atividades) {
+        atividades.forEach(a => {
+          atividadesMap[a.id] = {
+            id: a.id,
+            codigo: a.codigo,
+            nome: a.nome,
+            progresso: Number(a.progresso) || 0,
+          };
+        });
+      }
+    }
+
     return (data || []).map((row) => ({
       ...mapVinculoFromDB(row),
       item: row.takeoff_itens ? mapItemFromDB(row.takeoff_itens) : undefined,
+      atividade: row.atividade_id ? atividadesMap[row.atividade_id] : undefined,
+      mapa: row.takeoff_itens?.takeoff_mapas ? {
+        id: row.takeoff_itens.takeoff_mapas.id,
+        nome: row.takeoff_itens.takeoff_mapas.nome,
+      } : undefined,
     }));
   },
 
@@ -717,6 +748,25 @@ export const takeoffService = {
       ...mapMedicaoFromDB(row),
       item: row.takeoff_itens ? mapItemFromDB(row.takeoff_itens) : undefined,
     }));
+  },
+
+  async updateVinculo(id: string, dto: { peso?: number; atividadeId?: string }): Promise<TakeoffVinculo | null> {
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (dto.peso !== undefined) updates.peso = dto.peso;
+    if (dto.atividadeId !== undefined) updates.atividade_id = dto.atividadeId;
+
+    const { data, error } = await supabase
+      .from('takeoff_vinculos')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar vínculo:', error);
+      return null;
+    }
+    return mapVinculoFromDB(data);
   },
 
   async deleteVinculo(id: string): Promise<boolean> {
