@@ -422,7 +422,7 @@ export const dashboardExecutivoService = {
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return this.getMockCurvaS();
+        return [];
       }
 
       const atividadesPorMes: Record<string, { planejado: number; realizado: number; total: number }> = {};
@@ -454,7 +454,7 @@ export const dashboardExecutivoService = {
       });
     } catch (e) {
       console.warn('Erro ao gerar Curva S:', e);
-      return this.getMockCurvaS();
+      return [];
     }
   },
 
@@ -567,13 +567,13 @@ export const dashboardExecutivoService = {
 
       if (error) {
         if (error.code === 'PGRST205') {
-          return this.getMockPPCHistorico();
+          return [];
         }
-        return this.getMockPPCHistorico();
+        return [];
       }
 
       if (!data || data.length === 0) {
-        return this.getMockPPCHistorico();
+        return [];
       }
 
       return data.reverse().map(d => ({
@@ -582,7 +582,8 @@ export const dashboardExecutivoService = {
         meta: 80,
       }));
     } catch (e) {
-      return this.getMockPPCHistorico();
+      console.warn('Erro ao buscar histórico PPC:', e);
+      return [];
     }
   },
 

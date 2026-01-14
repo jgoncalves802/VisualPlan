@@ -18,7 +18,11 @@ import {
   ChevronDown,
   Building2,
   FolderKanban,
+  Calendar,
+  Activity,
+  FileWarning,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -417,35 +421,52 @@ const DashboardExecutivoPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
             <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Curva S - Avanço Físico</h4>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={curvaS}>
-                <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
-                <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
-                <YAxis tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }}
-                  formatter={(value: number) => [`${value}%`, '']}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="planejado"
-                  stroke={tema.secondary}
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="Planejado"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="realizado"
-                  stroke={tema.primary}
-                  strokeWidth={3}
-                  dot={{ fill: tema.primary, r: 4 }}
-                  name="Realizado"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {curvaS.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={curvaS}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
+                  <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
+                  <YAxis tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }}
+                    formatter={(value: number) => [`${value}%`, '']}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="planejado"
+                    stroke={tema.secondary}
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="Planejado"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="realizado"
+                    stroke={tema.primary}
+                    strokeWidth={3}
+                    dot={{ fill: tema.primary, r: 4 }}
+                    name="Realizado"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[250px]" style={{ color: tema.textSecondary }}>
+                <Calendar className="w-12 h-12 mb-3" style={{ color: tema.border }} />
+                <p className="font-medium mb-1" style={{ color: tema.text }}>Sem dados para a Curva S</p>
+                <p className="text-sm text-center max-w-xs">
+                  Cadastre atividades no cronograma com datas de início para visualizar o avanço físico.
+                </p>
+                <Link 
+                  to="/cronograma" 
+                  className="mt-3 text-sm font-medium hover:underline"
+                  style={{ color: tema.primary }}
+                >
+                  Ir para Cronograma
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
@@ -518,16 +539,33 @@ const DashboardExecutivoPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
             <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>PPC Semanal</h4>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={ppcHistorico}>
-                <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
-                <XAxis dataKey="semana" tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
-                <Tooltip contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }} />
-                <Bar dataKey="ppc" fill={tema.primary} radius={[4, 4, 0, 0]} name="PPC" />
-                <Line type="monotone" dataKey="meta" stroke={tema.warning} strokeDasharray="5 5" />
-              </BarChart>
-            </ResponsiveContainer>
+            {ppcHistorico.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={ppcHistorico}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
+                  <XAxis dataKey="semana" tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
+                  <Tooltip contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }} />
+                  <Bar dataKey="ppc" fill={tema.primary} radius={[4, 4, 0, 0]} name="PPC" />
+                  <Line type="monotone" dataKey="meta" stroke={tema.warning} strokeDasharray="5 5" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[200px]" style={{ color: tema.textSecondary }}>
+                <Activity className="w-10 h-10 mb-3" style={{ color: tema.border }} />
+                <p className="font-medium mb-1" style={{ color: tema.text }}>Sem histórico de PPC</p>
+                <p className="text-sm text-center max-w-xs">
+                  O histórico de PPC é gerado automaticamente a partir das restrições concluídas semanalmente.
+                </p>
+                <Link 
+                  to="/ishikawa" 
+                  className="mt-3 text-sm font-medium hover:underline"
+                  style={{ color: tema.primary }}
+                >
+                  Ir para Análise Ishikawa
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
@@ -545,7 +583,20 @@ const DashboardExecutivoPage: React.FC = () => {
                   />
                 ))
               ) : (
-                <p className="text-center py-4" style={{ color: tema.textSecondary }}>Nenhuma restrição cadastrada</p>
+                <div className="flex flex-col items-center justify-center py-6">
+                  <FileWarning className="w-10 h-10 mb-3" style={{ color: tema.border }} />
+                  <p className="font-medium mb-1" style={{ color: tema.text }}>Sem restrições cadastradas</p>
+                  <p className="text-sm text-center max-w-xs" style={{ color: tema.textSecondary }}>
+                    Registre restrições para acompanhar impedimentos e suas categorias.
+                  </p>
+                  <Link 
+                    to="/ishikawa" 
+                    className="mt-3 text-sm font-medium hover:underline"
+                    style={{ color: tema.primary }}
+                  >
+                    Ir para Análise Ishikawa
+                  </Link>
+                </div>
               )}
             </div>
             <div className="mt-4 flex items-center justify-between text-sm">
