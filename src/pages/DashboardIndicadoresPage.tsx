@@ -42,6 +42,7 @@ import {
 import KPICard from '../components/ui/KPICard';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { SetorDashboard } from '../types/gestao';
 import {
   indicadoresService,
@@ -232,13 +233,16 @@ const DashboardIndicadoresPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold theme-text">
-            Dashboard de Indicadores
-          </h1>
-          <p className="text-sm theme-text-secondary mt-1">
-            Última atualização: {lastUpdate}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold theme-text">
+              Dashboard de Indicadores
+            </h1>
+            <p className="text-sm theme-text-secondary mt-1">
+              Última atualização: {lastUpdate}
+            </p>
+          </div>
+          <ProjetoSelector compact />
         </div>
         <button
           onClick={togglePresentationMode}

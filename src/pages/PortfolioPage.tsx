@@ -40,6 +40,7 @@ import {
 } from 'recharts';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import KPICard from '../components/ui/KPICard';
 import {
   StatusProjeto,
@@ -778,13 +779,16 @@ const PortfolioPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
-            Priorização de Portfólio
-          </h1>
-          <p className="text-sm" style={{ color: tema.textSecondary }}>
-            Matriz de Priorização Multi-Critério
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
+              Priorização de Portfólio
+            </h1>
+            <p className="text-sm" style={{ color: tema.textSecondary }}>
+              Matriz de Priorização Multi-Critério
+            </p>
+          </div>
+          <ProjetoSelector compact />
         </div>
         <div className="flex items-center gap-3">
           <button

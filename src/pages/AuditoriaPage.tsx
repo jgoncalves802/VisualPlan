@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { parseDateOnly } from '../utils/dateHelpers';
 import { auditoriaService } from '../services/auditoriaService';
 import {
@@ -1132,13 +1133,16 @@ const AuditoriaPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6" style={{ backgroundColor: tema.background, minHeight: '100vh' }}>
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
-            Auditorias de Qualidade
-          </h1>
-          <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-            Gerencie checklists e auditorias de qualidade do projeto
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
+              Auditorias de Qualidade
+            </h1>
+            <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
+              Gerencie checklists e auditorias de qualidade do projeto
+            </p>
+          </div>
+          <ProjetoSelector compact />
         </div>
         <button
           onClick={() => setShowNewAuditModal(true)}

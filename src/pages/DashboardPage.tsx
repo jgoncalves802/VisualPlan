@@ -12,6 +12,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import KPICard from '../components/ui/KPICard';
 import { useAuthStore } from '../stores/authStore';
 import { useTemaStore } from '../stores/temaStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution } from '../services/dashboardService';
 
 const DEFAULT_KPIS: DashboardKPIs = {
@@ -102,13 +103,16 @@ const DashboardPage: React.FC = () => {
     <div className="p-6 space-y-6 h-full overflow-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold theme-text">
-            Dashboard {usuario?.camadaGovernanca}
-          </h1>
-          <p className="text-sm theme-text-secondary mt-1">
-            Visão geral dos indicadores do projeto
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold theme-text">
+              Dashboard {usuario?.camadaGovernanca}
+            </h1>
+            <p className="text-sm theme-text-secondary mt-1">
+              Visão geral dos indicadores do projeto
+            </p>
+          </div>
+          <ProjetoSelector compact />
         </div>
         <button
           onClick={togglePresentationMode}

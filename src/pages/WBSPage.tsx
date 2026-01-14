@@ -25,6 +25,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { epsService, EpsNode } from '../services/epsService';
 import { wbsEditorService, WbsEditor } from '../services/wbsEditorService';
 import { userObsAssignmentService, UserObsAssignment } from '../services/userObsAssignmentService';
@@ -634,14 +635,17 @@ export const WBSPage: React.FC = () => {
     <div className="flex flex-col h-full w-full bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <FolderTree className="w-7 h-7 text-purple-600" />
-              WBS - Todos os Projetos
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Estrutura hierárquica de projetos e pacotes de trabalho
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FolderTree className="w-7 h-7 text-purple-600" />
+                WBS - Todos os Projetos
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Estrutura hierárquica de projetos e pacotes de trabalho
+              </p>
+            </div>
+            <ProjetoSelector compact />
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-lg">

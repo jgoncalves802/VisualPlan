@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { parseDateOnly } from '../utils/dateHelpers';
 import { gestaoMudancaService } from '../services/gestaoMudancaService';
 import {
@@ -1117,6 +1118,7 @@ const GestaoMudancaPage: React.FC = () => {
           <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
             Gestão da Mudança
           </h1>
+          <ProjetoSelector compact />
         </div>
         <button
           onClick={() => openModal(null, 'create')}

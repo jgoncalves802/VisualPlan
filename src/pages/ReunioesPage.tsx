@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { reunioesService } from '../services/reunioesService';
 import { TipoReuniao } from '../types/gestao';
 
@@ -581,9 +582,12 @@ export const ReunioesPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-          Matriz de Reuniões
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+            Matriz de Reuniões
+          </h1>
+          <ProjetoSelector compact />
+        </div>
         <button
           onClick={() => handleOpenModal()}
           disabled={isSaving}

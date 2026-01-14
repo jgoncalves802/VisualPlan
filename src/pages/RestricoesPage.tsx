@@ -13,6 +13,7 @@ import { RestricaoHistoryModal } from '../components/features/restricoes/Restric
 import { ReagendarRestricaoModal } from '../components/features/restricoes/ReagendarRestricaoModal';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { RestricaoLPS } from '../types/lps';
 import {
   Calendar,
@@ -218,11 +219,14 @@ export const RestricoesPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestão de Restrições</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Cadastro, controle e análise de restrições do projeto
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Gestão de Restrições</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Cadastro, controle e análise de restrições do projeto
+              </p>
+            </div>
+            <ProjetoSelector compact />
           </div>
           <div className="flex items-center gap-2">
             <button

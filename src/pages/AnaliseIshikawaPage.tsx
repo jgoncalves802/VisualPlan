@@ -29,6 +29,7 @@ import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import {
   CategoriaIshikawa,
   StatusRestricaoIshikawa,
@@ -724,13 +725,16 @@ const AnaliseIshikawaPage: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6 min-h-screen" style={{ backgroundColor: tema.background }}>
-      <div>
-        <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
-          Análise Ishikawa - Causa e Efeito
-        </h1>
-        <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-          Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
+            Análise Ishikawa - Causa e Efeito
+          </h1>
+          <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
+            Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
+          </p>
+        </div>
+        <ProjetoSelector compact />
       </div>
 
       <TimeNavigator
