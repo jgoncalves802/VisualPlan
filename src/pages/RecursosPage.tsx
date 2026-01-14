@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useResources } from '../hooks/useResources';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { ResourceHistogram } from '../components/features/recursos/ResourceHistogram';
 import { SCurveChart, SCurveDataPoint } from '../components/features/recursos/SCurveChart';
@@ -54,9 +55,10 @@ const categoryLabels: Record<string, string> = {
 
 export function RecursosPage() {
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const empresaId = usuario?.empresaId || '';
   
-  const { resources, allocations, isLoading, error, refresh } = useResources(empresaId);
+  const { resources, allocations, isLoading, error, refresh } = useResources(empresaId, projetoSelecionado?.id);
   
   const [activeTab, setActiveTab] = useState('visao-geral');
   const [searchTerm, setSearchTerm] = useState('');

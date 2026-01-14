@@ -160,6 +160,7 @@ interface MudancaModalProps {
   onApprove?: (solicitacao: SolicitacaoMudanca) => void;
   onReject?: (solicitacao: SolicitacaoMudanca) => void;
   projetos: { id: string; nome: string }[];
+  projetoSelecionadoId?: string;
 }
 
 const MudancaModal: React.FC<MudancaModalProps> = ({
@@ -172,13 +173,14 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
   onApprove,
   onReject,
   projetos,
+  projetoSelecionadoId,
 }) => {
   const { tema } = useTemaStore();
   const [activeSection, setActiveSection] = useState<number>(1);
   const [formData, setFormData] = useState<Partial<SolicitacaoMudanca>>({
     titulo: '',
     tipoMudanca: TipoMudanca.ESCOPO,
-    projetoId: '',
+    projetoId: projetoSelecionadoId || '',
     prioridade: PrioridadeAcao.MEDIA,
     descricao: '',
     justificativa: '',
@@ -198,7 +200,7 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
       setFormData({
         titulo: '',
         tipoMudanca: TipoMudanca.ESCOPO,
-        projetoId: '',
+        projetoId: projetoSelecionadoId || '',
         prioridade: PrioridadeAcao.MEDIA,
         descricao: '',
         justificativa: '',
@@ -210,7 +212,7 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
         impactoEstimado: ImpactoMudanca.MEDIO,
       });
     }
-  }, [solicitacao, mode]);
+  }, [solicitacao, mode, projetoSelecionadoId]);
 
   const addRisco = () => {
     if (newRisco.trim()) {
@@ -1461,6 +1463,7 @@ const GestaoMudancaPage: React.FC = () => {
         onApprove={handleApprove}
         onReject={handleReject}
         projetos={projetos}
+        projetoSelecionadoId={projetoSelecionado?.id}
       />
     </div>
   );

@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { 
   Clock, 
   User, 
@@ -24,8 +23,10 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import { useCronogramaStore } from '../stores/cronogramaStore';
 import { useLPSStore } from '../stores/lpsStore';
+import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { 
   ItemKanban, 
   TipoItemKanban, 
@@ -44,7 +45,8 @@ import { AtividadeLPSModal } from '../components/features/lps/AtividadeLPSModal'
 const KanbanPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
-  const { projetoId } = useParams<{ projetoId?: string }>();
+  const { projetoSelecionado } = useProjetoStore();
+  const projetoId = projetoSelecionado?.id;
   
   const { atividades, carregarAtividades, atualizarAtividade } = useCronogramaStore();
   const { 
@@ -534,12 +536,20 @@ const KanbanPage: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kanban de Execução</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Kanban de Execução
+              {projetoSelecionado && (
+                <span className="text-lg font-normal text-gray-500 ml-2">
+                  — {projetoSelecionado.nome}
+                </span>
+              )}
+            </h1>
             <p className="text-sm text-gray-500 mt-1">
               Gerencie atividades, restrições e ações conforme PMBOK
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <ProjetoSelector compact />
             <button
               onClick={() => setMostrarFiltros(!mostrarFiltros)}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 flex items-center gap-2"

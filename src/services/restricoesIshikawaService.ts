@@ -296,4 +296,21 @@ export const restricoesIshikawaService = {
 
     return data || [];
   },
+
+  async getWBSByProjeto(projetoId: string): Promise<Array<{ id: string; nome: string }>> {
+    const { data, error } = await supabase
+      .from('wbs_nodes')
+      .select('id, nome')
+      .eq('eps_node_id', projetoId)
+      .order('nome');
+
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+
+    return data || [];
+  },
 };

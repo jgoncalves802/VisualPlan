@@ -19,7 +19,7 @@ export interface UseResourcesReturn {
   calculateHistogram: (resourceId: string, startDate: Date, endDate: Date) => any[];
 }
 
-export function useResources(empresaId: string, _projetoId?: string): UseResourcesReturn {
+export function useResources(empresaId: string, projetoId?: string): UseResourcesReturn {
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourceTypes, setResourceTypes] = useState<ResourceType[]>([]);
   const [allocations, setAllocations] = useState<ResourceAllocation[]>([]);
@@ -42,7 +42,7 @@ export function useResources(empresaId: string, _projetoId?: string): UseResourc
       setResources(resourcesData);
       setResourceTypes(typesData);
 
-      const allocationsData = await resourceService.getAllocations(empresaId);
+      const allocationsData = await resourceService.getAllocations(empresaId, projetoId);
       setAllocations(allocationsData);
 
       const conflictsList = await resourceService.getConflicts(empresaId, true);
@@ -52,13 +52,13 @@ export function useResources(empresaId: string, _projetoId?: string): UseResourc
     } finally {
       setIsLoading(false);
     }
-  }, [empresaId]);
+  }, [empresaId, projetoId]);
 
   useEffect(() => {
     if (empresaId) {
       loadResources();
     }
-  }, [empresaId, loadResources]);
+  }, [empresaId, projetoId, loadResources]);
 
   const createResource = useCallback(async (
     resource: Omit<Resource, 'id' | 'createdAt' | 'updatedAt' | 'resourceType'>

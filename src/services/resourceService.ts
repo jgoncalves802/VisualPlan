@@ -515,7 +515,7 @@ export const resourceService = {
     }
   },
 
-  async getAllocations(empresaId: string, atividadeId?: string): Promise<ResourceAllocation[]> {
+  async getAllocations(empresaId: string, projetoId?: string): Promise<ResourceAllocation[]> {
     let query = supabase
       .from('resource_allocations')
       .select(`
@@ -525,8 +525,8 @@ export const resourceService = {
       .eq('empresa_id', empresaId)
       .eq('ativo', true);
 
-    if (atividadeId) {
-      query = query.eq('atividade_id', atividadeId);
+    if (projetoId) {
+      query = query.eq('projeto_id', projetoId);
     }
 
     const { data, error } = await query.order('data_inicio');

@@ -97,6 +97,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **curva_s**: S-Curve data with multi-baseline support - supports types: planejado, previsto, realizado, baseline_1, baseline_2, etc.
         *   **TypeScript Types**: `curvaS.types.ts` and `userPreferences.types.ts` with full interfaces
         *   **Services**: `curvaSService.ts` (CRUD for baselines, curva_s, snapshots, indicators) and `userPreferencesService.ts` (user preferences with localStorage migration)
+    *   **Global Project Filtering Architecture** (2025-01-14):
+        *   **Pattern**: All modules use `useProjetoStore` (projetoStore.ts) for consistent project selection
+        *   **ProjetoSelector Component**: Compact dropdown added to page headers for project switching
+        *   **Modules Updated**: Gestão da Mudança, Análise Ishikawa, Recursos, Kanban, Auditorias
+        *   **Service Pattern**: Services accept optional `projetoId` parameter for filtering (e.g., `resourceService.getAllocations(empresaId, projetoId)`)
+        *   **Auto-population**: Creating new records auto-fills projeto_id from selected project
+        *   **Ishikawa Simplification**: Removed EPS filter, WBS loads directly via `getWBSByProjeto()`
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

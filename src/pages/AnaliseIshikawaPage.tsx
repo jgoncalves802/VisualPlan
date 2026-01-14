@@ -458,8 +458,7 @@ const AnaliseIshikawaPage: React.FC = () => {
   const [restrictions, setRestrictions] = useState<RestricaoIshikawa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  const [epsList, setEpsList] = useState<Array<{ id: string; nome: string }>>([]);
-  const [wbsMap, setWbsMap] = useState<Record<string, Array<{ id: string; nome: string }>>>({});
+  const [wbsList, setWbsList] = useState<Array<{ id: string; nome: string }>>([]);
   const [activitiesMap, setActivitiesMap] = useState<Record<string, Array<{ id: string; nome: string }>>>({});
   
   const [periodoAtual, setPeriodoAtual] = useState(() => {
@@ -472,7 +471,6 @@ const AnaliseIshikawaPage: React.FC = () => {
   });
   const [timeViewMode, setTimeViewMode] = useState<TimeViewMode>('semana');
   
-  const [selectedEPS, setSelectedEPS] = useState<string>('');
   const [selectedWBS, setSelectedWBS] = useState<string>('');
   const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [statusFilters, setStatusFilters] = useState<StatusRestricaoIshikawa[]>([]);
@@ -481,7 +479,6 @@ const AnaliseIshikawaPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoriaIshikawa | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const availableWBS = selectedEPS ? wbsMap[selectedEPS] || [] : [];
   const availableActivities = selectedWBS ? activitiesMap[selectedWBS] || [] : [];
 
   const loadData = useCallback(async () => {
@@ -489,28 +486,16 @@ const AnaliseIshikawaPage: React.FC = () => {
     try {
       const empresaId = usuario?.empresaId || 'a0000001';
       
-      const [restrictionsData, epsData] = await Promise.all([
-        restricoesIshikawaService.getAll(empresaId, projetoSelecionado?.id),
-        restricoesIshikawaService.getEPSDisponiveis(empresaId),
-      ]);
-      
+      const restrictionsData = await restricoesIshikawaService.getAll(empresaId, projetoSelecionado?.id);
       setRestrictions(restrictionsData);
-      setEpsList(epsData);
       
-      const wbsPromises = epsData.map(async (eps) => {
-        const wbsNodes = await restricoesIshikawaService.getWBSByEPS(eps.id);
-        return { epsId: eps.id, wbsNodes };
-      });
+      let wbsNodes: Array<{ id: string; nome: string }> = [];
+      if (projetoSelecionado?.id) {
+        wbsNodes = await restricoesIshikawaService.getWBSByProjeto(projetoSelecionado.id);
+      }
+      setWbsList(wbsNodes);
       
-      const wbsResults = await Promise.all(wbsPromises);
-      const newWbsMap: Record<string, Array<{ id: string; nome: string }>> = {};
-      wbsResults.forEach(result => {
-        newWbsMap[result.epsId] = result.wbsNodes;
-      });
-      setWbsMap(newWbsMap);
-      
-      const allWbsNodes = wbsResults.flatMap(r => r.wbsNodes);
-      const activitiesPromises = allWbsNodes.map(async (wbs) => {
+      const activitiesPromises = wbsNodes.map(async (wbs) => {
         const activities = await restricoesIshikawaService.getAtividadesByWBS(wbs.id);
         return { wbsId: wbs.id, activities };
       });
@@ -525,7 +510,7 @@ const AnaliseIshikawaPage: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setRestrictions([]);
-      setEpsList([]);
+      setWbsList([]);
     } finally {
       setIsLoading(false);
     }
@@ -537,14 +522,13 @@ const AnaliseIshikawaPage: React.FC = () => {
 
   const filteredRestrictions = useMemo(() => {
     return restrictions.filter(r => {
-      if (selectedEPS && r.epsId !== selectedEPS) return false;
       if (selectedWBS && r.wbsId !== selectedWBS) return false;
       if (selectedActivity && r.atividadeId !== selectedActivity) return false;
       if (statusFilters.length > 0 && !statusFilters.includes(r.status)) return false;
       if (!isWithinInterval(r.dataPrevista, { start: periodoAtual.inicio, end: periodoAtual.fim })) return false;
       return true;
     });
-  }, [restrictions, selectedEPS, selectedWBS, selectedActivity, statusFilters, periodoAtual]);
+  }, [restrictions, selectedWBS, selectedActivity, statusFilters, periodoAtual]);
 
   const dadosPorCategoria = useMemo((): DadosIshikawa[] => {
     const categories = Object.values(CategoriaIshikawa);
@@ -654,7 +638,6 @@ const AnaliseIshikawaPage: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSelectedEPS('');
     setSelectedWBS('');
     setSelectedActivity('');
     setStatusFilters([]);
@@ -765,25 +748,6 @@ const AnaliseIshikawaPage: React.FC = () => {
       <div className="rounded-xl shadow-sm border p-4" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium mb-1" style={{ color: tema.textSecondary }}>EPS</label>
-            <select
-              value={selectedEPS}
-              onChange={(e) => {
-                setSelectedEPS(e.target.value);
-                setSelectedWBS('');
-                setSelectedActivity('');
-              }}
-              className="w-full px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
-            >
-              <option value="">Todos os EPS</option>
-              {epsList.map(eps => (
-                <option key={eps.id} value={eps.id}>{eps.nome}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-medium mb-1" style={{ color: tema.textSecondary }}>WBS</label>
             <select
               value={selectedWBS}
@@ -793,10 +757,10 @@ const AnaliseIshikawaPage: React.FC = () => {
               }}
               className="w-full px-3 py-2 rounded-lg border text-sm"
               style={{ borderColor: tema.border, backgroundColor: tema.surface, color: tema.text }}
-              disabled={!selectedEPS}
+              disabled={!projetoSelecionado}
             >
               <option value="">Todos os WBS</option>
-              {availableWBS.map(wbs => (
+              {wbsList.map(wbs => (
                 <option key={wbs.id} value={wbs.id}>{wbs.nome}</option>
               ))}
             </select>
