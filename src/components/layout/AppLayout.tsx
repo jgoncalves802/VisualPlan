@@ -19,6 +19,8 @@ import {
   Hammer,
   Package,
   Ruler,
+  CalendarCheck,
+  CheckSquare,
 } from 'lucide-react';
 
 const allRoles = ['ADMIN', 'DIRETOR', 'GERENTE_PROJETO', 'ENGENHEIRO_PLANEJAMENTO', 'COORDENADOR_OBRA', 'COLABORADOR', 'ENCARREGADO', 'MESTRE_OBRAS', 'FISCALIZACAO_LEAD'];
@@ -53,6 +55,8 @@ export const AppLayout: React.FC = () => {
       label: 'Execução',
       items: [
         { icon: KanbanSquare, label: 'Kanban', path: '/kanban', roles: allRoles },
+        { icon: CalendarCheck, label: 'Programação Semanal', path: '/programacao-semanal', roles: managementRoles },
+        { icon: CheckSquare, label: 'Check-in/Check-out', path: '/checkin-checkout', roles: managementRoles },
         { icon: AlertTriangle, label: 'Restrições', path: '/restricoes', roles: managementRoles },
         { icon: ListChecks, label: 'Ações 5W2H', path: '/acoes', roles: managementRoles },
       ]
