@@ -15,6 +15,9 @@ import {
   Layers,
   Package,
   AlertCircle,
+  ChevronDown,
+  Building2,
+  FolderKanban,
 } from 'lucide-react';
 import {
   LineChart,
@@ -45,18 +48,27 @@ import {
   AuditoriaResumo,
   ProjetoRanking,
 } from '../services/dashboardExecutivoService';
+import { epsService, EpsNode } from '../services/epsService';
 import { formatDateOnly } from '../utils/dateHelpers';
 
 interface ProjetoSelecionado {
-  id?: string;
-  nome?: string;
+  id: string | undefined;
+  nome: string;
 }
 
 const DashboardExecutivoPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const { tema } = useTemaStore();
   const empresaId = usuario?.empresaId;
-  const [projetoSelecionado] = useState<ProjetoSelecionado | null>(null);
+  
+  const [projetos, setProjetos] = useState<EpsNode[]>([]);
+  const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoSelecionado>({ id: undefined, nome: 'Todos os Projetos' });
+  const [showProjetoDropdown, setShowProjetoDropdown] = useState(false);
+  
+  const handleSelectProjeto = (projeto: ProjetoSelecionado) => {
+    setProjetoSelecionado(projeto);
+    setShowProjetoDropdown(false);
+  };
 
   const [isLoading, setIsLoading] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
@@ -70,6 +82,20 @@ const DashboardExecutivoPage: React.FC = () => {
   const [acoesRecentes, setAcoesRecentes] = useState<Acao5W2HResumo[]>([]);
   const [auditoriasRecentes, setAuditoriasRecentes] = useState<AuditoriaResumo[]>([]);
   const [portfolioRanking, setPortfolioRanking] = useState<ProjetoRanking[]>([]);
+
+  useEffect(() => {
+    const loadProjetos = async () => {
+      if (!empresaId) return;
+      try {
+        const nodes = await epsService.getByEmpresa(empresaId);
+        const projetosAtivos = nodes.filter(n => n.nivel === 1 && n.ativo);
+        setProjetos(projetosAtivos);
+      } catch (error) {
+        console.error('Erro ao carregar projetos:', error);
+      }
+    };
+    loadProjetos();
+  }, [empresaId]);
 
   const loadData = useCallback(async () => {
     if (!empresaId) {
@@ -168,27 +194,85 @@ const DashboardExecutivoPage: React.FC = () => {
     <div className="p-6 space-y-6 h-full overflow-auto" style={{ backgroundColor: tema.background }}>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
             Dashboard Executivo
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {projetoSelecionado ? `Projeto: ${projetoSelecionado.nome}` : 'Visão geral de todos os projetos'}
-            {' • '}
+          <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
             Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <button
+              onClick={() => setShowProjetoDropdown(!showProjetoDropdown)}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all"
+              style={{ 
+                borderColor: tema.primary,
+                backgroundColor: tema.surface,
+                color: tema.text
+              }}
+            >
+              {projetoSelecionado.id ? (
+                <FolderKanban size={18} style={{ color: tema.primary }} />
+              ) : (
+                <Building2 size={18} style={{ color: tema.primary }} />
+              )}
+              <span className="font-medium max-w-[200px] truncate">{projetoSelecionado.nome}</span>
+              <ChevronDown size={16} className={`transition-transform ${showProjetoDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            {showProjetoDropdown && (
+              <div 
+                className="absolute right-0 mt-2 w-72 rounded-lg shadow-xl z-50 border overflow-hidden"
+                style={{ backgroundColor: tema.surface, borderColor: tema.border }}
+              >
+                <div className="py-1">
+                  <button
+                    onClick={() => handleSelectProjeto({ id: undefined, nome: 'Todos os Projetos' })}
+                    className={`w-full text-left px-4 py-3 flex items-center space-x-3 transition-colors hover:bg-gray-50 ${!projetoSelecionado.id ? 'bg-gray-50' : ''}`}
+                  >
+                    <Building2 size={18} style={{ color: tema.primary }} />
+                    <div>
+                      <p className="font-medium" style={{ color: tema.text }}>Todos os Projetos</p>
+                      <p className="text-xs" style={{ color: tema.textSecondary }}>Visão consolidada da empresa</p>
+                    </div>
+                  </button>
+                  {projetos.length > 0 && (
+                    <div className="border-t" style={{ borderColor: tema.border }}>
+                      <p className="px-4 py-2 text-xs font-semibold uppercase" style={{ color: tema.textSecondary }}>
+                        Projetos Ativos
+                      </p>
+                      {projetos.map(p => (
+                        <button
+                          key={p.id}
+                          onClick={() => handleSelectProjeto({ id: p.id, nome: p.nome })}
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 transition-colors hover:bg-gray-50 ${projetoSelecionado.id === p.id ? 'bg-gray-50' : ''}`}
+                        >
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.cor || tema.primary }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate" style={{ color: tema.text }}>{p.nome}</p>
+                            <p className="text-xs truncate" style={{ color: tema.textSecondary }}>{p.codigo}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={loadData}
-            className="btn btn-outline flex items-center space-x-2"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors hover:bg-gray-50"
+            style={{ borderColor: tema.border, color: tema.text }}
             disabled={isLoading}
           >
-            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} style={{ color: tema.primary }} />
             <span>Atualizar</span>
           </button>
           <button
             onClick={togglePresentationMode}
-            className="btn btn-outline flex items-center space-x-2"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors"
+            style={{ backgroundColor: tema.primary, color: '#ffffff' }}
           >
             {presentationMode ? <X size={18} /> : <Maximize2 size={18} />}
             <span>{presentationMode ? 'Sair' : 'Apresentação'}</span>
@@ -244,73 +328,74 @@ const DashboardExecutivoPage: React.FC = () => {
       <DashboardSection
         title="Cronograma & EVM"
         icon={BarChart3}
-        iconColor="#374151"
-        iconBgColor="#F3F4F6"
+        iconColor={tema.primary}
+        iconBgColor={`${tema.primary}15`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Curva S - Avanço Físico</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Curva S - Avanço Físico</h4>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={curvaS}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="periodo" tick={{ fontSize: 12 }} stroke="#6B7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
+                <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
+                <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
+                <YAxis tick={{ fontSize: 12, fill: tema.textSecondary }} stroke={tema.border} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}
+                  contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }}
                   formatter={(value: number) => [`${value}%`, '']}
                 />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="planejado"
-                  stroke="#6B7280"
+                  stroke={tema.secondary}
                   strokeWidth={2}
+                  strokeDasharray="5 5"
                   dot={false}
                   name="Planejado"
                 />
                 <Line
                   type="monotone"
                   dataKey="realizado"
-                  stroke="#374151"
-                  strokeWidth={2}
-                  dot={{ fill: '#374151', r: 3 }}
+                  stroke={tema.primary}
+                  strokeWidth={3}
+                  dot={{ fill: tema.primary, r: 4 }}
                   name="Realizado"
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Atividades Críticas</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Atividades Críticas</h4>
             <div className="overflow-x-auto max-h-[220px]">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-2 font-medium text-gray-600">Código</th>
-                    <th className="text-left py-2 px-2 font-medium text-gray-600">Atividade</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-600">%</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-600">Atraso</th>
+                <thead className="sticky top-0" style={{ backgroundColor: tema.surface }}>
+                  <tr style={{ borderBottom: `1px solid ${tema.border}` }}>
+                    <th className="text-left py-2 px-2 font-medium" style={{ color: tema.textSecondary }}>Código</th>
+                    <th className="text-left py-2 px-2 font-medium" style={{ color: tema.textSecondary }}>Atividade</th>
+                    <th className="text-right py-2 px-2 font-medium" style={{ color: tema.textSecondary }}>%</th>
+                    <th className="text-right py-2 px-2 font-medium" style={{ color: tema.textSecondary }}>Atraso</th>
                   </tr>
                 </thead>
                 <tbody>
                   {atividadesCriticas.length > 0 ? (
                     atividadesCriticas.map((a) => (
-                      <tr key={a.id} className="border-b border-gray-100 hover:bg-gray-100">
-                        <td className="py-2 px-2 font-mono text-xs text-gray-700">{a.codigo}</td>
-                        <td className="py-2 px-2 text-gray-800 truncate max-w-[200px]">{a.nome}</td>
-                        <td className="py-2 px-2 text-right text-gray-700">{a.percentual}%</td>
+                      <tr key={a.id} className="hover:opacity-80" style={{ borderBottom: `1px solid ${tema.border}` }}>
+                        <td className="py-2 px-2 font-mono text-xs" style={{ color: tema.primary }}>{a.codigo}</td>
+                        <td className="py-2 px-2 truncate max-w-[200px]" style={{ color: tema.text }}>{a.nome}</td>
+                        <td className="py-2 px-2 text-right" style={{ color: tema.textSecondary }}>{a.percentual}%</td>
                         <td className="py-2 px-2 text-right">
                           {a.atraso > 0 ? (
-                            <span className="text-red-600 font-medium">{a.atraso}d</span>
+                            <span className="font-medium" style={{ color: tema.danger }}>{a.atraso}d</span>
                           ) : (
-                            <span className="text-green-600">-</span>
+                            <span style={{ color: tema.success }}>-</span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                      <td colSpan={4} className="py-4 text-center" style={{ color: tema.textSecondary }}>
                         Nenhuma atividade crítica encontrada
                       </td>
                     </tr>
@@ -321,19 +406,19 @@ const DashboardExecutivoPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-4">Marcos do Projeto</h4>
+        <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+          <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Marcos do Projeto</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {marcos.length > 0 ? (
               marcos.slice(0, 6).map((m) => (
-                <div key={m.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                  <p className="text-xs font-medium text-gray-800 truncate mb-1">{m.nome}</p>
-                  <p className="text-xs text-gray-500 mb-2">{formatDateOnly(new Date(m.data))}</p>
+                <div key={m.id} className="rounded-lg p-3" style={{ backgroundColor: tema.background, border: `1px solid ${tema.border}` }}>
+                  <p className="text-xs font-medium truncate mb-1" style={{ color: tema.text }}>{m.nome}</p>
+                  <p className="text-xs mb-2" style={{ color: tema.textSecondary }}>{formatDateOnly(new Date(m.data))}</p>
                   {getMarcoStatusBadge(m.status)}
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center text-gray-500 py-4">
+              <div className="col-span-full text-center py-4" style={{ color: tema.textSecondary }}>
                 Nenhum marco cadastrado
               </div>
             )}
@@ -344,26 +429,26 @@ const DashboardExecutivoPage: React.FC = () => {
       <DashboardSection
         title="LPS & Restrições"
         icon={AlertCircle}
-        iconColor="#6B7280"
-        iconBgColor="#F9FAFB"
+        iconColor={tema.warning}
+        iconBgColor={`${tema.warning}15`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">PPC Semanal</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>PPC Semanal</h4>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={ppcHistorico}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="semana" tick={{ fontSize: 11 }} stroke="#6B7280" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#6B7280" />
-                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }} />
-                <Bar dataKey="ppc" fill="#374151" radius={[4, 4, 0, 0]} name="PPC" />
-                <Line type="monotone" dataKey="meta" stroke="#9CA3AF" strokeDasharray="5 5" />
+                <CartesianGrid strokeDasharray="3 3" stroke={tema.border} />
+                <XAxis dataKey="semana" tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tema.textSecondary }} stroke={tema.border} />
+                <Tooltip contentStyle={{ backgroundColor: tema.surface, border: `1px solid ${tema.border}` }} />
+                <Bar dataKey="ppc" fill={tema.primary} radius={[4, 4, 0, 0]} name="PPC" />
+                <Line type="monotone" dataKey="meta" stroke={tema.warning} strokeDasharray="5 5" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Restrições por Categoria (Ishikawa 6M)</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Restrições por Categoria (Ishikawa 6M)</h4>
             <div className="space-y-3">
               {kpis?.restricoesPorCategoria && kpis.restricoesPorCategoria.length > 0 ? (
                 kpis.restricoesPorCategoria.map((r) => (
@@ -377,12 +462,12 @@ const DashboardExecutivoPage: React.FC = () => {
                   />
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">Nenhuma restrição cadastrada</p>
+                <p className="text-center py-4" style={{ color: tema.textSecondary }}>Nenhuma restrição cadastrada</p>
               )}
             </div>
             <div className="mt-4 flex items-center justify-between text-sm">
-              <span className="text-gray-600">TMR (Tempo Médio Remoção)</span>
-              <span className="font-semibold text-gray-800">{kpis?.tmr?.toFixed(1) || 0} dias</span>
+              <span style={{ color: tema.textSecondary }}>TMR (Tempo Médio Remoção)</span>
+              <span className="font-semibold" style={{ color: tema.text }}>{kpis?.tmr?.toFixed(1) || 0} dias</span>
             </div>
           </div>
         </div>
@@ -391,31 +476,31 @@ const DashboardExecutivoPage: React.FC = () => {
       <DashboardSection
         title="Medições & Take-off"
         icon={Package}
-        iconColor="#4B5563"
-        iconBgColor="#F3F4F6"
+        iconColor={tema.secondary}
+        iconBgColor={`${tema.secondary}15`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Período de Medição Atual</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Período de Medição Atual</h4>
             {kpis?.medicaoAtual ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Período</span>
-                  <span className="font-semibold text-gray-800">#{kpis.medicaoAtual.periodoNumero}</span>
+                  <span style={{ color: tema.textSecondary }}>Período</span>
+                  <span className="font-semibold" style={{ color: tema.primary }}>#{kpis.medicaoAtual.periodoNumero}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Vigência</span>
-                  <span className="text-gray-800">
+                  <span style={{ color: tema.textSecondary }}>Vigência</span>
+                  <span style={{ color: tema.text }}>
                     {formatDateOnly(new Date(kpis.medicaoAtual.dataInicio))} - {formatDateOnly(new Date(kpis.medicaoAtual.dataFim))}
                   </span>
                 </div>
                 <ProgressBar
                   label="Avanço Acumulado"
                   value={kpis.medicaoAtual.avancoAcumulado}
-                  color="#374151"
+                  color={tema.primary}
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Status</span>
+                  <span style={{ color: tema.textSecondary }}>Status</span>
                   <StatusBadge
                     status={kpis.medicaoAtual.statusAprovacao === 'aprovado' ? 'success' : 'warning'}
                     text={kpis.medicaoAtual.statusAprovacao}
@@ -423,30 +508,30 @@ const DashboardExecutivoPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-center text-gray-500 py-4">Nenhum período de medição configurado</p>
+              <p className="text-center py-4" style={{ color: tema.textSecondary }}>Nenhum período de medição configurado</p>
             )}
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Avanço por Disciplina (Take-off)</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Avanço por Disciplina (Take-off)</h4>
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Avanço Geral</span>
-                <span className="font-bold text-lg text-gray-800">{kpis?.takeoffAvancoGeral?.toFixed(1) || 0}%</span>
+                <span style={{ color: tema.textSecondary }}>Avanço Geral</span>
+                <span className="font-bold text-lg" style={{ color: tema.primary }}>{kpis?.takeoffAvancoGeral?.toFixed(1) || 0}%</span>
               </div>
-              <ProgressBar value={kpis?.takeoffAvancoGeral || 0} showValue={false} color="#374151" />
+              <ProgressBar value={kpis?.takeoffAvancoGeral || 0} showValue={false} color={tema.primary} />
             </div>
             <div className="space-y-2">
               {kpis?.takeoffPorDisciplina && kpis.takeoffPorDisciplina.length > 0 ? (
                 kpis.takeoffPorDisciplina.slice(0, 4).map((d) => (
                   <div key={d.disciplina} className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-sm text-gray-700 flex-1">{d.disciplina}</span>
-                    <span className="text-sm font-medium text-gray-800">{d.avanco}%</span>
+                    <span className="text-sm flex-1" style={{ color: tema.text }}>{d.disciplina}</span>
+                    <span className="text-sm font-medium" style={{ color: tema.primary }}>{d.avanco}%</span>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-2">Nenhuma disciplina configurada</p>
+                <p className="text-center py-2" style={{ color: tema.textSecondary }}>Nenhuma disciplina configurada</p>
               )}
             </div>
           </div>
@@ -456,64 +541,64 @@ const DashboardExecutivoPage: React.FC = () => {
       <DashboardSection
         title="Gestão & Qualidade"
         icon={FileCheck}
-        iconColor="#374151"
-        iconBgColor="#F9FAFB"
+        iconColor={tema.success}
+        iconBgColor={`${tema.success}15`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Ações 5W2H Pendentes</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Ações 5W2H Pendentes</h4>
             <div className="space-y-3 max-h-[200px] overflow-auto">
               {acoesRecentes.length > 0 ? (
                 acoesRecentes.map((a) => (
-                  <div key={a.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                    <p className="text-sm font-medium text-gray-800 truncate">{a.titulo}</p>
+                  <div key={a.id} className="rounded-lg p-3" style={{ backgroundColor: tema.background, border: `1px solid ${tema.border}` }}>
+                    <p className="text-sm font-medium truncate" style={{ color: tema.text }}>{a.titulo}</p>
                     <div className="flex items-center justify-between mt-2 text-xs">
-                      <span className="text-gray-500">{a.responsavel}</span>
-                      <span className="text-gray-600">{formatDateOnly(new Date(a.prazo))}</span>
+                      <span style={{ color: tema.textSecondary }}>{a.responsavel}</span>
+                      <span style={{ color: tema.primary }}>{formatDateOnly(new Date(a.prazo))}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">Nenhuma ação pendente</p>
+                <p className="text-center py-4" style={{ color: tema.textSecondary }}>Nenhuma ação pendente</p>
               )}
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Solicitações de Mudança</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Solicitações de Mudança</h4>
             <div className="text-center py-4">
-              <div className="text-4xl font-bold text-gray-800 mb-1">{kpis?.mudancasPendentes || 0}</div>
-              <p className="text-sm text-gray-500">pendentes de análise</p>
-              <div className="mt-4 text-sm text-gray-600">
+              <div className="text-4xl font-bold mb-1" style={{ color: tema.primary }}>{kpis?.mudancasPendentes || 0}</div>
+              <p className="text-sm" style={{ color: tema.textSecondary }}>pendentes de análise</p>
+              <div className="mt-4 text-sm" style={{ color: tema.text }}>
                 Total: {kpis?.mudancasTotal || 0} mudanças
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Auditorias Recentes</h4>
+          <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Auditorias Recentes</h4>
             <div className="space-y-3 max-h-[200px] overflow-auto">
               {auditoriasRecentes.length > 0 ? (
                 auditoriasRecentes.map((a) => (
-                  <div key={a.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                    <p className="text-sm font-medium text-gray-800 truncate">{a.titulo}</p>
+                  <div key={a.id} className="rounded-lg p-3" style={{ backgroundColor: tema.background, border: `1px solid ${tema.border}` }}>
+                    <p className="text-sm font-medium truncate" style={{ color: tema.text }}>{a.titulo}</p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">{formatDateOnly(new Date(a.data))}</span>
+                      <span className="text-xs" style={{ color: tema.textSecondary }}>{formatDateOnly(new Date(a.data))}</span>
                       <div className="flex items-center space-x-1">
-                        <span className="text-sm font-semibold text-gray-700">{a.conformidade.toFixed(0)}%</span>
+                        <span className="text-sm font-semibold" style={{ color: tema.success }}>{a.conformidade.toFixed(0)}%</span>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">Nenhuma auditoria recente</p>
+                <p className="text-center py-4" style={{ color: tema.textSecondary }}>Nenhuma auditoria recente</p>
               )}
             </div>
             {kpis?.conformidadeMedia !== undefined && kpis.conformidadeMedia > 0 && (
-              <div className="mt-4 pt-3 border-t border-gray-200">
+              <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${tema.border}` }}>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Conformidade Média</span>
-                  <span className="font-semibold text-gray-800">{kpis.conformidadeMedia.toFixed(1)}%</span>
+                  <span style={{ color: tema.textSecondary }}>Conformidade Média</span>
+                  <span className="font-semibold" style={{ color: tema.success }}>{kpis.conformidadeMedia.toFixed(1)}%</span>
                 </div>
               </div>
             )}
@@ -524,40 +609,46 @@ const DashboardExecutivoPage: React.FC = () => {
       <DashboardSection
         title="Portfolio de Projetos"
         icon={Layers}
-        iconColor="#6B7280"
-        iconBgColor="#F3F4F6"
+        iconColor={tema.accent}
+        iconBgColor={`${tema.accent}15`}
       >
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-4">Ranking de Priorização</h4>
+        <div className="rounded-lg p-4" style={{ backgroundColor: tema.surface }}>
+          <h4 className="text-sm font-semibold mb-4" style={{ color: tema.text }}>Ranking de Priorização</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 font-medium text-gray-600">#</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-600">Projeto</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">Score</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">SPI</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">CPI</th>
+                <tr style={{ borderBottom: `1px solid ${tema.border}` }}>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: tema.textSecondary }}>#</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{ color: tema.textSecondary }}>Projeto</th>
+                  <th className="text-right py-2 px-3 font-medium" style={{ color: tema.textSecondary }}>Score</th>
+                  <th className="text-right py-2 px-3 font-medium" style={{ color: tema.textSecondary }}>SPI</th>
+                  <th className="text-right py-2 px-3 font-medium" style={{ color: tema.textSecondary }}>CPI</th>
                 </tr>
               </thead>
               <tbody>
                 {portfolioRanking.length > 0 ? (
-                  portfolioRanking.map((p) => (
-                    <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-100">
+                  portfolioRanking.map((p, index) => (
+                    <tr key={p.id} className="hover:opacity-80" style={{ borderBottom: `1px solid ${tema.border}` }}>
                       <td className="py-2 px-3">
-                        <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center text-xs font-bold">
+                        <span 
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ 
+                            backgroundColor: index === 0 ? tema.primary : index === 1 ? tema.secondary : tema.accent,
+                            color: '#ffffff'
+                          }}
+                        >
                           {p.prioridade}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-gray-800 font-medium">{p.nome}</td>
-                      <td className="py-2 px-3 text-right font-semibold text-gray-700">{p.score.toFixed(1)}</td>
-                      <td className="py-2 px-3 text-right text-gray-600">{p.spi.toFixed(2)}</td>
-                      <td className="py-2 px-3 text-right text-gray-600">{p.cpi.toFixed(2)}</td>
+                      <td className="py-2 px-3 font-medium" style={{ color: tema.text }}>{p.nome}</td>
+                      <td className="py-2 px-3 text-right font-semibold" style={{ color: tema.primary }}>{p.score.toFixed(1)}</td>
+                      <td className="py-2 px-3 text-right" style={{ color: p.spi >= 1 ? tema.success : p.spi >= 0.9 ? tema.warning : tema.danger }}>{p.spi.toFixed(2)}</td>
+                      <td className="py-2 px-3 text-right" style={{ color: p.cpi >= 1 ? tema.success : p.cpi >= 0.9 ? tema.warning : tema.danger }}>{p.cpi.toFixed(2)}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-4 text-center text-gray-500">
+                    <td colSpan={5} className="py-4 text-center" style={{ color: tema.textSecondary }}>
                       Nenhum projeto no portfolio
                     </td>
                   </tr>
