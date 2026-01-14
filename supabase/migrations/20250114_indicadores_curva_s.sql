@@ -196,9 +196,17 @@ CREATE TABLE IF NOT EXISTS curva_s (
   observacoes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by UUID REFERENCES auth.users(id),
-  UNIQUE(projeto_id, data_referencia, tipo_curva, COALESCE(baseline_id, '00000000-0000-0000-0000-000000000000'))
+  created_by UUID REFERENCES auth.users(id)
 );
+
+-- Índice único para garantir unicidade considerando baseline_id NULL
+CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_with_baseline 
+  ON curva_s(projeto_id, data_referencia, tipo_curva, baseline_id) 
+  WHERE baseline_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_without_baseline 
+  ON curva_s(projeto_id, data_referencia, tipo_curva) 
+  WHERE baseline_id IS NULL;
 
 -- =====================================================
 -- ÍNDICES
