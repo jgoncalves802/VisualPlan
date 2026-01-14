@@ -151,7 +151,7 @@ const DISCIPLINA_COLORS: Record<string, string> = {
 };
 
 export const dashboardExecutivoService = {
-  async getKPIs(empresaId: string, projetoId?: string): Promise<DashboardExecutivoKPIs> {
+  async getKPIs(empresaId: string, projetoId?: string, wbsId?: string): Promise<DashboardExecutivoKPIs> {
     try {
       const [
         cronogramaData,
@@ -163,7 +163,7 @@ export const dashboardExecutivoService = {
         takeoffData,
         medicaoData,
       ] = await Promise.all([
-        this.getCronogramaMetrics(empresaId, projetoId),
+        this.getCronogramaMetrics(empresaId, projetoId, wbsId),
         restricoesIshikawaService.getAll(empresaId),
         this.getRestricaoLpsMetrics(empresaId),
         acoes5w2hService.getAll(empresaId),
@@ -240,7 +240,7 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getCronogramaMetrics(empresaId: string, projetoId?: string) {
+  async getCronogramaMetrics(empresaId: string, projetoId?: string, wbsId?: string) {
     try {
       let query = supabase
         .from('atividades_cronograma')
@@ -249,6 +249,10 @@ export const dashboardExecutivoService = {
 
       if (projetoId) {
         query = query.eq('projeto_id', projetoId);
+      }
+      
+      if (wbsId) {
+        query = query.eq('wbs_id', wbsId);
       }
 
       const { data, error } = await query;
@@ -400,7 +404,7 @@ export const dashboardExecutivoService = {
     }));
   },
 
-  async getCurvaS(empresaId: string, projetoId?: string): Promise<CurvaSItem[]> {
+  async getCurvaS(empresaId: string, projetoId?: string, wbsId?: string): Promise<CurvaSItem[]> {
     try {
       let query = supabase
         .from('atividades_cronograma')
@@ -409,6 +413,10 @@ export const dashboardExecutivoService = {
 
       if (projetoId) {
         query = query.eq('projeto_id', projetoId);
+      }
+      
+      if (wbsId) {
+        query = query.eq('wbs_id', wbsId);
       }
 
       const { data, error } = await query;
@@ -450,7 +458,7 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getAtividadesCriticas(empresaId: string, projetoId?: string, limit = 10): Promise<AtividadeCritica[]> {
+  async getAtividadesCriticas(empresaId: string, projetoId?: string, wbsId?: string, limit = 10): Promise<AtividadeCritica[]> {
     try {
       let query = supabase
         .from('atividades_cronograma')
@@ -462,6 +470,10 @@ export const dashboardExecutivoService = {
 
       if (projetoId) {
         query = query.eq('projeto_id', projetoId);
+      }
+      
+      if (wbsId) {
+        query = query.eq('wbs_id', wbsId);
       }
 
       const { data, error } = await query;
@@ -491,7 +503,7 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getMarcos(empresaId: string, projetoId?: string): Promise<Marco[]> {
+  async getMarcos(empresaId: string, projetoId?: string, wbsId?: string): Promise<Marco[]> {
     try {
       let query = supabase
         .from('atividades_cronograma')
@@ -502,6 +514,10 @@ export const dashboardExecutivoService = {
 
       if (projetoId) {
         query = query.eq('projeto_id', projetoId);
+      }
+      
+      if (wbsId) {
+        query = query.eq('wbs_id', wbsId);
       }
 
       const { data, error } = await query;

@@ -56,18 +56,32 @@ interface ProjetoSelecionado {
   nome: string;
 }
 
+interface WbsSelecionado {
+  id: string | undefined;
+  nome: string;
+}
+
 const DashboardExecutivoPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const { tema } = useTemaStore();
   const empresaId = usuario?.empresaId;
   
   const [projetos, setProjetos] = useState<EpsNode[]>([]);
+  const [wbsNodes, setWbsNodes] = useState<EpsNode[]>([]);
   const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoSelecionado>({ id: undefined, nome: 'Todos os Projetos' });
+  const [wbsSelecionado, setWbsSelecionado] = useState<WbsSelecionado>({ id: undefined, nome: 'Toda WBS' });
   const [showProjetoDropdown, setShowProjetoDropdown] = useState(false);
+  const [showWbsDropdown, setShowWbsDropdown] = useState(false);
   
   const handleSelectProjeto = (projeto: ProjetoSelecionado) => {
     setProjetoSelecionado(projeto);
+    setWbsSelecionado({ id: undefined, nome: 'Toda WBS' });
     setShowProjetoDropdown(false);
+  };
+  
+  const handleSelectWbs = (wbs: WbsSelecionado) => {
+    setWbsSelecionado(wbs);
+    setShowWbsDropdown(false);
   };
 
   const [isLoading, setIsLoading] = useState(true);
@@ -88,7 +102,7 @@ const DashboardExecutivoPage: React.FC = () => {
       if (!empresaId) return;
       try {
         const nodes = await epsService.getByEmpresa(empresaId);
-        const projetosAtivos = nodes.filter(n => n.nivel === 1 && n.ativo);
+        const projetosAtivos = nodes.filter(n => n.parentId === null && n.ativo);
         setProjetos(projetosAtivos);
       } catch (error) {
         console.error('Erro ao carregar projetos:', error);
@@ -96,6 +110,23 @@ const DashboardExecutivoPage: React.FC = () => {
     };
     loadProjetos();
   }, [empresaId]);
+
+  useEffect(() => {
+    const loadWbsNodes = async () => {
+      if (!empresaId || !projetoSelecionado.id) {
+        setWbsNodes([]);
+        return;
+      }
+      try {
+        const nodes = await epsService.getByEmpresa(empresaId);
+        const wbsFilhos = nodes.filter(n => n.parentId === projetoSelecionado.id && n.ativo);
+        setWbsNodes(wbsFilhos);
+      } catch (error) {
+        console.error('Erro ao carregar WBS:', error);
+      }
+    };
+    loadWbsNodes();
+  }, [empresaId, projetoSelecionado.id]);
 
   const loadData = useCallback(async () => {
     if (!empresaId) {
@@ -106,6 +137,7 @@ const DashboardExecutivoPage: React.FC = () => {
     setIsLoading(true);
     try {
       const projetoId = projetoSelecionado?.id;
+      const wbsId = wbsSelecionado?.id;
 
       const [
         kpisData,
@@ -117,10 +149,10 @@ const DashboardExecutivoPage: React.FC = () => {
         auditoriasData,
         portfolioData,
       ] = await Promise.all([
-        dashboardExecutivoService.getKPIs(empresaId, projetoId),
-        dashboardExecutivoService.getCurvaS(empresaId, projetoId),
-        dashboardExecutivoService.getAtividadesCriticas(empresaId, projetoId),
-        dashboardExecutivoService.getMarcos(empresaId, projetoId),
+        dashboardExecutivoService.getKPIs(empresaId, projetoId, wbsId),
+        dashboardExecutivoService.getCurvaS(empresaId, projetoId, wbsId),
+        dashboardExecutivoService.getAtividadesCriticas(empresaId, projetoId, wbsId),
+        dashboardExecutivoService.getMarcos(empresaId, projetoId, wbsId),
         dashboardExecutivoService.getPPCHistorico(empresaId, projetoId),
         dashboardExecutivoService.getAcoesRecentes(empresaId, projetoId),
         dashboardExecutivoService.getAuditoriasRecentes(empresaId, projetoId),
@@ -141,7 +173,7 @@ const DashboardExecutivoPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [empresaId, projetoSelecionado?.id]);
+  }, [empresaId, projetoSelecionado?.id, wbsSelecionado?.id]);
 
   useEffect(() => {
     loadData();
@@ -260,6 +292,57 @@ const DashboardExecutivoPage: React.FC = () => {
               </div>
             )}
           </div>
+          {projetoSelecionado.id && wbsNodes.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowWbsDropdown(!showWbsDropdown)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all"
+                style={{ 
+                  borderColor: tema.secondary,
+                  backgroundColor: tema.surface,
+                  color: tema.text
+                }}
+              >
+                <Layers size={18} style={{ color: tema.secondary }} />
+                <span className="font-medium max-w-[150px] truncate">{wbsSelecionado.nome}</span>
+                <ChevronDown size={16} className={`transition-transform ${showWbsDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showWbsDropdown && (
+                <div 
+                  className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl z-50 border overflow-hidden"
+                  style={{ backgroundColor: tema.surface, borderColor: tema.border }}
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={() => handleSelectWbs({ id: undefined, nome: 'Toda WBS' })}
+                      className={`w-full text-left px-4 py-2 flex items-center space-x-3 transition-colors hover:bg-gray-50 ${!wbsSelecionado.id ? 'bg-gray-50' : ''}`}
+                    >
+                      <Layers size={16} style={{ color: tema.secondary }} />
+                      <span className="font-medium" style={{ color: tema.text }}>Toda WBS</span>
+                    </button>
+                    <div className="border-t" style={{ borderColor: tema.border }}>
+                      <p className="px-4 py-2 text-xs font-semibold uppercase" style={{ color: tema.textSecondary }}>
+                        Estrutura do Projeto
+                      </p>
+                      {wbsNodes.map(w => (
+                        <button
+                          key={w.id}
+                          onClick={() => handleSelectWbs({ id: w.id, nome: w.nome })}
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 transition-colors hover:bg-gray-50 ${wbsSelecionado.id === w.id ? 'bg-gray-50' : ''}`}
+                        >
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: w.cor || tema.secondary }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-sm" style={{ color: tema.text }}>{w.nome}</p>
+                            <p className="text-xs truncate" style={{ color: tema.textSecondary }}>{w.codigo}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <button
             onClick={loadData}
             className="flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors hover:bg-gray-50"
