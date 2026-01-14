@@ -429,10 +429,33 @@ export const takeoffService = {
   },
 
   async getItens(filter: TakeoffFilter): Promise<TakeoffItem[]> {
+    let mapaIds: string[] | undefined;
+
+    if (filter.projetoId || filter.disciplinaId) {
+      let mapaQuery = supabase.from('takeoff_mapas').select('id');
+      if (filter.projetoId) {
+        mapaQuery = mapaQuery.eq('projeto_id', filter.projetoId);
+      }
+      if (filter.disciplinaId) {
+        mapaQuery = mapaQuery.eq('disciplina_id', filter.disciplinaId);
+      }
+      const { data: mapas, error: mapasError } = await mapaQuery;
+      if (mapasError) {
+        console.error('Erro ao buscar mapas para filtro:', mapasError);
+        return [];
+      }
+      mapaIds = (mapas || []).map(m => m.id);
+      if (mapaIds.length === 0) {
+        return [];
+      }
+    }
+
     let query = supabase.from('takeoff_itens').select('*');
 
     if (filter.mapaId) {
       query = query.eq('mapa_id', filter.mapaId);
+    } else if (mapaIds && mapaIds.length > 0) {
+      query = query.in('mapa_id', mapaIds);
     }
     if (filter.area) {
       query = query.eq('area', filter.area);
