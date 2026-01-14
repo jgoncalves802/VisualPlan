@@ -1119,6 +1119,11 @@ const GestaoMudancaPage: React.FC = () => {
           <GitBranch size={28} style={{ color: tema.primary }} />
           <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
             Gestão da Mudança
+            {projetoSelecionado && (
+              <span className="text-lg font-normal ml-2" style={{ color: tema.textSecondary }}>
+                — {projetoSelecionado.nome}
+              </span>
+            )}
           </h1>
           <ProjetoSelector compact />
         </div>

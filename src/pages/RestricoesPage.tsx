@@ -223,9 +223,16 @@ export const RestricoesPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Gestão de Restrições</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Gestão de Restrições
+                {projetoSelecionado && (
+                  <span className="text-lg font-normal ml-2 text-gray-500">
+                    — {projetoSelecionado.nome}
+                  </span>
+                )}
+              </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Cadastro, controle e análise de restrições do projeto
+                {projetoSelecionado ? 'Restrições do projeto selecionado' : 'Cadastro, controle e análise de restrições do projeto'}
               </p>
             </div>
             <ProjetoSelector compact />

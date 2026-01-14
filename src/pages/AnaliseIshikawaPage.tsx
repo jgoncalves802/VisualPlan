@@ -703,19 +703,30 @@ const AnaliseIshikawaPage: React.FC = () => {
   if (restrictions.length === 0) {
     return (
       <div className="p-6 min-h-screen" style={{ backgroundColor: tema.background }}>
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
-            Análise Ishikawa - Causa e Efeito
-          </h1>
-          <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-            Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
-          </p>
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
+              Análise Ishikawa - Causa e Efeito
+              {projetoSelecionado && (
+                <span className="text-xl font-normal ml-2" style={{ color: tema.textSecondary }}>
+                  — {projetoSelecionado.nome}
+                </span>
+              )}
+            </h1>
+            <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
+              {projetoSelecionado ? 'Restrições do projeto selecionado' : 'Análise de Restrições por Categoria (Metodologia Kaizen - 6M)'}
+            </p>
+          </div>
+          <ProjetoSelector compact />
         </div>
         <div className="rounded-xl shadow-sm border p-12 text-center" style={{ backgroundColor: tema.surface, borderColor: tema.border }}>
           <AlertTriangle className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: tema.textSecondary }} />
           <h2 className="text-xl font-semibold mb-2" style={{ color: tema.text }}>Nenhuma restrição cadastrada</h2>
           <p className="text-sm mb-4" style={{ color: tema.textSecondary }}>
-            Não há restrições registradas no sistema. As restrições Ishikawa são identificadas durante o acompanhamento do projeto e categorizadas pela metodologia 6M (Método, Mão de Obra, Material, Máquina, Medida, Meio Ambiente).
+            {projetoSelecionado 
+              ? `Não há restrições registradas para o projeto "${projetoSelecionado.nome}".`
+              : 'Não há restrições registradas no sistema.'
+            } As restrições Ishikawa são identificadas durante o acompanhamento do projeto e categorizadas pela metodologia 6M.
           </p>
           <p className="text-xs" style={{ color: tema.textSecondary }}>
             Acesse o módulo LPS ou Cronograma para registrar restrições que serão automaticamente classificadas aqui.
@@ -731,9 +742,14 @@ const AnaliseIshikawaPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
             Análise Ishikawa - Causa e Efeito
+            {projetoSelecionado && (
+              <span className="text-xl font-normal ml-2" style={{ color: tema.textSecondary }}>
+                — {projetoSelecionado.nome}
+              </span>
+            )}
           </h1>
           <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-            Análise de Restrições por Categoria (Metodologia Kaizen - 6M)
+            {projetoSelecionado ? 'Restrições do projeto selecionado' : 'Análise de Restrições por Categoria (Metodologia Kaizen - 6M)'}
           </p>
         </div>
         <ProjetoSelector compact />

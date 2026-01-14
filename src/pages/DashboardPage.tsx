@@ -109,9 +109,14 @@ const DashboardPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold theme-text">
               Dashboard {usuario?.camadaGovernanca}
+              {projetoSelecionado && (
+                <span className="text-xl font-normal ml-2 theme-text-secondary">
+                  — {projetoSelecionado.nome}
+                </span>
+              )}
             </h1>
             <p className="text-sm theme-text-secondary mt-1">
-              Visão geral dos indicadores do projeto
+              {projetoSelecionado ? `Projeto: ${projetoSelecionado.nome}` : 'Visão geral dos indicadores do projeto'}
             </p>
           </div>
           <ProjetoSelector compact />

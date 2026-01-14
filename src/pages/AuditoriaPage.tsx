@@ -1139,9 +1139,14 @@ const AuditoriaPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold" style={{ color: tema.text }}>
               Auditorias de Qualidade
+              {projetoSelecionado && (
+                <span className="text-xl font-normal ml-2" style={{ color: tema.textSecondary }}>
+                  — {projetoSelecionado.nome}
+                </span>
+              )}
             </h1>
             <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-              Gerencie checklists e auditorias de qualidade do projeto
+              {projetoSelecionado ? 'Auditorias do projeto selecionado' : 'Gerencie checklists e auditorias de qualidade do projeto'}
             </p>
           </div>
           <ProjetoSelector compact />

@@ -272,7 +272,6 @@ export const ReunioesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'calendario' | 'configuracao' | 'historico'>('calendario');
   const [reunioes, setReunioes] = useState<Reuniao[]>([]);
   const [participantesDisponiveis, setParticipantesDisponiveis] = useState<{ id: string; nome: string; cargo?: string }[]>([]);
-  const [projetosDisponiveis, setProjetosDisponiveis] = useState<{ id: string; nome: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [configuracoes, setConfiguracoes] = useState<Record<TipoReuniao, ConfiguracaoReuniao>>(TIPO_REUNIAO_CONFIG);
@@ -299,21 +298,18 @@ export const ReunioesPage: React.FC = () => {
     if (!usuario?.empresaId) {
       setReunioes([]);
       setParticipantesDisponiveis([]);
-      setProjetosDisponiveis([]);
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
     try {
-      const [reunioesData, participantesData, projetosData] = await Promise.all([
+      const [reunioesData, participantesData] = await Promise.all([
         reunioesService.getAllReunioes(usuario.empresaId, projetoSelecionado?.id),
         reunioesService.getParticipantesDisponiveis(usuario.empresaId),
-        reunioesService.getProjetosDisponiveis(usuario.empresaId),
       ]);
 
       setParticipantesDisponiveis(participantesData);
-      setProjetosDisponiveis(projetosData);
       
       const mappedReunioes: Reuniao[] = reunioesData.map(r => ({
         id: r.id,
@@ -587,6 +583,11 @@ export const ReunioesPage: React.FC = () => {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
             Matriz de Reuniões
+            {projetoSelecionado && (
+              <span className="text-lg font-normal ml-2" style={{ color: 'var(--color-text-secondary)' }}>
+                — {projetoSelecionado.nome}
+              </span>
+            )}
           </h1>
           <ProjetoSelector compact />
         </div>

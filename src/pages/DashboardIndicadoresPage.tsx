@@ -241,9 +241,14 @@ const DashboardIndicadoresPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold theme-text">
               Dashboard de Indicadores
+              {projetoSelecionado && (
+                <span className="text-xl font-normal ml-2 theme-text-secondary">
+                  — {projetoSelecionado.nome}
+                </span>
+              )}
             </h1>
             <p className="text-sm theme-text-secondary mt-1">
-              Última atualização: {lastUpdate}
+              {projetoSelecionado ? `Projeto: ${projetoSelecionado.nome}` : 'Todos os projetos'} • Última atualização: {lastUpdate}
             </p>
           </div>
           <ProjetoSelector compact />

@@ -997,9 +997,14 @@ export const Acoes5W2HPage: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold" style={{ color: tema.text }}>
                 Plano de Ação 5W2H
+                {projetoSelecionado && (
+                  <span className="text-lg font-normal ml-2" style={{ color: tema.textSecondary }}>
+                    — {projetoSelecionado.nome}
+                  </span>
+                )}
               </h1>
               <p className="text-sm mt-1" style={{ color: tema.textSecondary }}>
-                Gestão de ações corretivas e preventivas
+                {projetoSelecionado ? 'Ações do projeto selecionado' : 'Gestão de ações corretivas e preventivas'}
               </p>
             </div>
             <ProjetoSelector compact />
