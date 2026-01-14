@@ -34,6 +34,15 @@ export interface RestricaoDistribution {
   color: string;
 }
 
+export interface AtividadeCritica {
+  id: string;
+  codigo: string;
+  nome: string;
+  status: string;
+  progresso: number;
+  dataFim: string;
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   'METODO': '#8B5CF6',
   'MAO_DE_OBRA': '#3B82F6',
@@ -182,7 +191,7 @@ export const dashboardService = {
     try {
       let query = supabase
         .from('atividades_cronograma')
-        .select('data_inicio, data_fim, progresso, custo_planejado')
+        .select('data_inicio, data_fim, progresso, custo_planejado, duracao_dias')
         .eq('empresa_id', empresaId);
 
       if (projetoId) {
@@ -207,9 +216,12 @@ export const dashboardService = {
             monthlyData[monthKey] = { planejado: 0, realizado: 0 };
           }
           
-          const custoAtividade = activity.custo_planejado || 0;
-          monthlyData[monthKey].planejado += custoAtividade;
-          monthlyData[monthKey].realizado += custoAtividade * ((activity.progresso || 0) / 100);
+          const valorAtividade = (activity.custo_planejado && activity.custo_planejado > 0) 
+            ? activity.custo_planejado
+            : (activity.duracao_dias || 1);
+          
+          monthlyData[monthKey].planejado += valorAtividade;
+          monthlyData[monthKey].realizado += valorAtividade * ((activity.progresso || 0) / 100);
         }
       });
 
@@ -217,14 +229,20 @@ export const dashboardService = {
       let accPlanejado = 0;
       let accRealizado = 0;
 
+      const totalPlanejado = Object.values(monthlyData).reduce((sum, m) => sum + m.planejado, 0);
+
       return sortedKeys.map(key => {
         const month = key.split('-')[1];
         accPlanejado += monthlyData[key].planejado;
         accRealizado += monthlyData[key].realizado;
+        
+        const planejadoPercent = totalPlanejado > 0 ? (accPlanejado / totalPlanejado) * 100 : 0;
+        const realizadoPercent = totalPlanejado > 0 ? (accRealizado / totalPlanejado) * 100 : 0;
+        
         return {
           mes: monthNames[parseInt(month) - 1],
-          planejado: Math.round(accPlanejado),
-          realizado: Math.round(accRealizado),
+          planejado: Math.round(planejadoPercent),
+          realizado: Math.round(realizadoPercent),
         };
       });
     } catch (e) {
@@ -254,6 +272,40 @@ export const dashboardService = {
       }));
     } catch (e) {
       console.warn('Erro ao buscar restrições por categoria:', e);
+      return [];
+    }
+  },
+
+  async getAtividadesCriticas(empresaId: string, projetoId?: string): Promise<AtividadeCritica[]> {
+    try {
+      let query = supabase
+        .from('atividades_cronograma')
+        .select('id, codigo, nome, status, progresso, data_fim, e_critica')
+        .eq('empresa_id', empresaId)
+        .eq('e_critica', true)
+        .order('data_fim', { ascending: true })
+        .limit(10);
+
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
+      }
+
+      const { data, error } = await query;
+
+      if (error || !data) {
+        return [];
+      }
+
+      return data.map(a => ({
+        id: a.id,
+        codigo: a.codigo || '-',
+        nome: a.nome || 'Sem nome',
+        status: a.status || 'EM_ANDAMENTO',
+        progresso: a.progresso || 0,
+        dataFim: a.data_fim || '',
+      }));
+    } catch (e) {
+      console.warn('Erro ao buscar atividades críticas:', e);
       return [];
     }
   },

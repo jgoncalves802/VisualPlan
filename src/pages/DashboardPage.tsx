@@ -14,7 +14,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useTemaStore } from '../stores/temaStore';
 import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
-import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution } from '../services/dashboardService';
+import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution, AtividadeCritica } from '../services/dashboardService';
 
 const EMPTY_KPIS: DashboardKPIs = {
   percentualPAC: 0,
@@ -41,6 +41,7 @@ const DashboardPage: React.FC = () => {
   const [kpiData, setKpiData] = useState<DashboardKPIs>(EMPTY_KPIS);
   const [curvaS, setCurvaS] = useState<CurvaSData[]>([]);
   const [restricoesPorTipo, setRestricoesPorTipo] = useState<RestricaoDistribution[]>([]);
+  const [atividadesCriticas, setAtividadesCriticas] = useState<AtividadeCritica[]>([]);
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
@@ -50,15 +51,17 @@ const DashboardPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const [kpis, curva, restricoes] = await Promise.all([
+      const [kpis, curva, restricoes, atividades] = await Promise.all([
         dashboardService.getKPIs(usuario.empresaId, projetoSelecionado?.id),
         dashboardService.getCurvaS(usuario.empresaId, projetoSelecionado?.id),
         dashboardService.getRestricoesPorCategoria(usuario.empresaId, projetoSelecionado?.id),
+        dashboardService.getAtividadesCriticas(usuario.empresaId, projetoSelecionado?.id),
       ]);
 
       setKpiData(kpis);
       setCurvaS(curva);
       setRestricoesPorTipo(restricoes);
+      setAtividadesCriticas(atividades);
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -226,47 +229,62 @@ const DashboardPage: React.FC = () => {
         <h3 className="text-lg font-semibold theme-text mb-4">
           Atividades Críticas
         </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b theme-border-primary">
-                <th className="text-left py-3 px-4 theme-text-secondary font-medium">Código</th>
-                <th className="text-left py-3 px-4 theme-text-secondary font-medium">Atividade</th>
-                <th className="text-left py-3 px-4 theme-text-secondary font-medium">Status</th>
-                <th className="text-left py-3 px-4 theme-text-secondary font-medium">Progresso</th>
-                <th className="text-left py-3 px-4 theme-text-secondary font-medium">Previsão</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <tr key={i} className="border-b theme-border-primary hover:bg-gray-50">
-                  <td className="py-3 px-4 theme-text font-mono text-sm">1.2.{i}.1</td>
-                  <td className="py-3 px-4 theme-text">Execução de Estrutura P{i}</td>
-                  <td className="py-3 px-4">
-                    <span className="badge badge-warning">Em Andamento</span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                        <div 
-                          className="h-2 rounded-full"
-                          style={{ 
-                            width: `${45 + i * 5}%`,
-                            backgroundColor: tema.success
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm theme-text">{45 + i * 5}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 theme-text-secondary text-sm">
-                    {new Date(2024, 11, 15 + i).toLocaleDateString('pt-BR')}
-                  </td>
+        {atividadesCriticas.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b theme-border-primary">
+                  <th className="text-left py-3 px-4 theme-text-secondary font-medium">Código</th>
+                  <th className="text-left py-3 px-4 theme-text-secondary font-medium">Atividade</th>
+                  <th className="text-left py-3 px-4 theme-text-secondary font-medium">Status</th>
+                  <th className="text-left py-3 px-4 theme-text-secondary font-medium">Progresso</th>
+                  <th className="text-left py-3 px-4 theme-text-secondary font-medium">Previsão</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {atividadesCriticas.map((atividade) => {
+                  const statusLabel = atividade.status === 'CONCLUIDA' ? 'Concluída' 
+                    : atividade.status === 'NAO_INICIADA' ? 'Não Iniciada' 
+                    : 'Em Andamento';
+                  const statusClass = atividade.status === 'CONCLUIDA' ? 'badge-success' 
+                    : atividade.status === 'NAO_INICIADA' ? 'badge-secondary' 
+                    : 'badge-warning';
+                  
+                  return (
+                    <tr key={atividade.id} className="border-b theme-border-primary hover:bg-gray-50">
+                      <td className="py-3 px-4 theme-text font-mono text-sm">{atividade.codigo}</td>
+                      <td className="py-3 px-4 theme-text">{atividade.nome}</td>
+                      <td className="py-3 px-4">
+                        <span className={`badge ${statusClass}`}>{statusLabel}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                            <div 
+                              className="h-2 rounded-full"
+                              style={{ 
+                                width: `${atividade.progresso}%`,
+                                backgroundColor: tema.success
+                              }}
+                            />
+                          </div>
+                          <span className="text-sm theme-text">{atividade.progresso}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 theme-text-secondary text-sm">
+                        {atividade.dataFim ? new Date(atividade.dataFim).toLocaleDateString('pt-BR') : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-[150px] text-gray-500">
+            <p>Sem atividades críticas cadastradas</p>
+          </div>
+        )}
       </div>
     </div>
   );
