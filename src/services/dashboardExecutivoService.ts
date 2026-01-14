@@ -534,14 +534,20 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getPPCHistorico(empresaId: string, semanas = 8): Promise<PPCHistorico[]> {
+  async getPPCHistorico(empresaId: string, projetoId?: string, semanas = 8): Promise<PPCHistorico[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('ppc_historico')
         .select('*')
         .eq('empresa_id', empresaId)
         .order('data_referencia', { ascending: false })
         .limit(semanas);
+
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         if (error.code === 'PGRST205') {
@@ -564,12 +570,15 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getAcoesRecentes(empresaId: string, limit = 5): Promise<Acao5W2HResumo[]> {
+  async getAcoesRecentes(empresaId: string, _projetoId?: string, limit = 5): Promise<Acao5W2HResumo[]> {
     try {
       const acoes = await acoes5w2hService.getAll(empresaId);
       
-      const ordenadas = acoes
-        .filter((a: Acao5W2H) => a.status !== StatusAcao5W2H.CONCLUIDA && a.status !== StatusAcao5W2H.CANCELADA)
+      const filtradas = acoes.filter((a: Acao5W2H) => 
+        a.status !== StatusAcao5W2H.CONCLUIDA && a.status !== StatusAcao5W2H.CANCELADA
+      );
+
+      const ordenadas = filtradas
         .sort((a: Acao5W2H, b: Acao5W2H) => new Date(a.quando).getTime() - new Date(b.quando).getTime())
         .slice(0, limit);
 
@@ -587,11 +596,16 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getAuditoriasRecentes(empresaId: string, limit = 5): Promise<AuditoriaResumo[]> {
+  async getAuditoriasRecentes(empresaId: string, projetoId?: string, limit = 5): Promise<AuditoriaResumo[]> {
     try {
       const auditorias = await auditoriaService.getAllAuditorias(empresaId);
       
-      const recentes = auditorias
+      let filtradas = auditorias;
+      if (projetoId) {
+        filtradas = auditorias.filter(a => a.projetoId === projetoId);
+      }
+      
+      const recentes = filtradas
         .sort((a, b) => new Date(b.dataAuditoria).getTime() - new Date(a.dataAuditoria).getTime())
         .slice(0, limit);
 
@@ -608,11 +622,16 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getPortfolioRanking(empresaId: string, limit = 5): Promise<ProjetoRanking[]> {
+  async getPortfolioRanking(empresaId: string, projetoId?: string, limit = 5): Promise<ProjetoRanking[]> {
     try {
       const projetos = await portfolioService.getProjetos(empresaId);
       
-      return projetos
+      let filtrados = projetos;
+      if (projetoId) {
+        filtrados = projetos.filter(p => p.id === projetoId);
+      }
+      
+      return filtrados
         .sort((a, b) => (b.scoreTotal || 0) - (a.scoreTotal || 0))
         .slice(0, limit)
         .map((p, index) => ({

@@ -121,10 +121,10 @@ const DashboardExecutivoPage: React.FC = () => {
         dashboardExecutivoService.getCurvaS(empresaId, projetoId),
         dashboardExecutivoService.getAtividadesCriticas(empresaId, projetoId),
         dashboardExecutivoService.getMarcos(empresaId, projetoId),
-        dashboardExecutivoService.getPPCHistorico(empresaId),
-        dashboardExecutivoService.getAcoesRecentes(empresaId),
-        dashboardExecutivoService.getAuditoriasRecentes(empresaId),
-        dashboardExecutivoService.getPortfolioRanking(empresaId),
+        dashboardExecutivoService.getPPCHistorico(empresaId, projetoId),
+        dashboardExecutivoService.getAcoesRecentes(empresaId, projetoId),
+        dashboardExecutivoService.getAuditoriasRecentes(empresaId, projetoId),
+        dashboardExecutivoService.getPortfolioRanking(empresaId, projetoId),
       ]);
 
       setKpis(kpisData);
