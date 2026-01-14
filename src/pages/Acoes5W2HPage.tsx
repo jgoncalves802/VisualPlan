@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { parseDateOnly, getInputDateValue } from '../utils/dateHelpers';
 import { acoes5w2hService } from '../services/acoes5w2hService';
@@ -660,6 +661,7 @@ const QuickActionMenu: React.FC<QuickActionMenuProps> = ({ isOpen, onClose, onSe
 export const Acoes5W2HPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [acoes, setAcoes] = useState<Acao5W2H[]>([]);
   const [responsaveis, setResponsaveis] = useState<{ id: string; nome: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -706,14 +708,14 @@ export const Acoes5W2HPage: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const data = await acoes5w2hService.getAll(usuario.empresaId);
+      const data = await acoes5w2hService.getAll(usuario.empresaId, projetoSelecionado?.id);
       setAcoes(data);
     } catch (error) {
       console.error('Erro ao carregar ações:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   const loadResponsaveis = useCallback(async () => {
     if (!usuario?.empresaId) return;

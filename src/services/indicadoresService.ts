@@ -142,14 +142,14 @@ export const indicadoresService = {
 
       if (error) {
         if (error.code === 'PGRST205') {
-          return await this.calculateEVMFromActivities(empresaId);
+          return await this.calculateEVMFromActivities(empresaId, projetoId);
         }
         console.warn('Erro ao buscar snapshot EVM:', error);
-        return await this.calculateEVMFromActivities(empresaId);
+        return await this.calculateEVMFromActivities(empresaId, projetoId);
       }
 
       if (!data || data.length === 0) {
-        return await this.calculateEVMFromActivities(empresaId);
+        return await this.calculateEVMFromActivities(empresaId, projetoId);
       }
 
       const snapshot = data[0];
@@ -172,12 +172,18 @@ export const indicadoresService = {
     }
   },
 
-  async calculateEVMFromActivities(empresaId: string): Promise<IndicadorEVM> {
+  async calculateEVMFromActivities(empresaId: string, projetoId?: string): Promise<IndicadorEVM> {
     try {
-      const { data } = await supabase
+      let query = supabase
         .from('atividades_cronograma')
         .select('bcws, bcwp, acwp, custo_orcado')
         .eq('empresa_id', empresaId);
+      
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
+      }
+      
+      const { data } = await query;
 
       if (!data || data.length === 0) {
         return DEFAULT_EVM;
@@ -228,14 +234,14 @@ export const indicadoresService = {
 
       if (error) {
         if (error.code === 'PGRST205') {
-          return await this.calculateLPSFromRestrictions(empresaId);
+          return await this.calculateLPSFromRestrictions(empresaId, projetoId);
         }
         console.warn('Erro ao buscar indicadores LPS:', error);
-        return await this.calculateLPSFromRestrictions(empresaId);
+        return await this.calculateLPSFromRestrictions(empresaId, projetoId);
       }
 
       if (!data || data.length === 0) {
-        return await this.calculateLPSFromRestrictions(empresaId);
+        return await this.calculateLPSFromRestrictions(empresaId, projetoId);
       }
 
       const indicador = data[0];
@@ -252,9 +258,9 @@ export const indicadoresService = {
     }
   },
 
-  async calculateLPSFromRestrictions(empresaId: string): Promise<IndicadorLPS> {
+  async calculateLPSFromRestrictions(empresaId: string, projetoId?: string): Promise<IndicadorLPS> {
     try {
-      const restricoes = await restricoesIshikawaService.getAll(empresaId);
+      const restricoes = await restricoesIshikawaService.getAll(empresaId, projetoId);
 
       if (restricoes.length === 0) {
         return DEFAULT_LPS;
@@ -311,13 +317,13 @@ export const indicadoresService = {
 
       if (error) {
         if (error.code === 'PGRST205') {
-          return await this.calculateQualidadeFromAuditorias(empresaId);
+          return await this.calculateQualidadeFromAuditorias(empresaId, projetoId);
         }
-        return await this.calculateQualidadeFromAuditorias(empresaId);
+        return await this.calculateQualidadeFromAuditorias(empresaId, projetoId);
       }
 
       if (!data || data.length === 0) {
-        return await this.calculateQualidadeFromAuditorias(empresaId);
+        return await this.calculateQualidadeFromAuditorias(empresaId, projetoId);
       }
 
       const indicador = data[0];
@@ -333,9 +339,9 @@ export const indicadoresService = {
     }
   },
 
-  async calculateQualidadeFromAuditorias(empresaId: string): Promise<IndicadorQualidade> {
+  async calculateQualidadeFromAuditorias(empresaId: string, projetoId?: string): Promise<IndicadorQualidade> {
     try {
-      const auditorias = await auditoriaService.getAllAuditorias(empresaId);
+      const auditorias = await auditoriaService.getAllAuditorias(empresaId, projetoId);
 
       if (auditorias.length === 0) {
         return DEFAULT_QUALIDADE;
@@ -360,12 +366,18 @@ export const indicadoresService = {
     }
   },
 
-  async getRecursos(empresaId: string): Promise<IndicadorRecursos> {
+  async getRecursos(empresaId: string, projetoId?: string): Promise<IndicadorRecursos> {
     try {
-      const { data: recursos } = await supabase
+      let recursosQuery = supabase
         .from('resources')
         .select('id, capacidade_maxima')
         .eq('empresa_id', empresaId);
+      
+      if (projetoId) {
+        recursosQuery = recursosQuery.eq('projeto_id', projetoId);
+      }
+
+      const { data: recursos } = await recursosQuery;
 
       const { data: alocacoes } = await supabase
         .from('resource_allocations')
@@ -390,11 +402,11 @@ export const indicadoresService = {
     }
   },
 
-  async getGestao(empresaId: string): Promise<IndicadorGestao> {
+  async getGestao(empresaId: string, projetoId?: string): Promise<IndicadorGestao> {
     try {
       const [acoes, mudancas] = await Promise.all([
-        acoes5w2hService.getAll(empresaId),
-        gestaoMudancaService.getAll(empresaId),
+        acoes5w2hService.getAll(empresaId, projetoId),
+        gestaoMudancaService.getAll(empresaId, projetoId),
       ]);
 
       const acoesAbertas = acoes.filter(a =>
@@ -504,11 +516,11 @@ export const indicadoresService = {
     ];
   },
 
-  async getAtividadesAtrasadas(empresaId: string, limit: number = 5): Promise<AtividadeAtrasada[]> {
+  async getAtividadesAtrasadas(empresaId: string, projetoId?: string, limit: number = 5): Promise<AtividadeAtrasada[]> {
     try {
       const hoje = new Date().toISOString().split('T')[0];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('atividades_cronograma')
         .select('id, nome, data_termino_prevista, responsavel')
         .eq('empresa_id', empresaId)
@@ -516,6 +528,12 @@ export const indicadoresService = {
         .lt('percentual_completo', 100)
         .order('data_termino_prevista', { ascending: true })
         .limit(limit);
+      
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
+      }
+      
+      const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
         return this.generateDefaultAtividadesAtrasadas();
@@ -546,9 +564,9 @@ export const indicadoresService = {
     ];
   },
 
-  async getRestricoesPorTipo(empresaId: string): Promise<RestricaoPorTipo[]> {
+  async getRestricoesPorTipo(empresaId: string, projetoId?: string): Promise<RestricaoPorTipo[]> {
     try {
-      const restricoes = await restricoesIshikawaService.getAll(empresaId);
+      const restricoes = await restricoesIshikawaService.getAll(empresaId, projetoId);
 
       if (restricoes.length === 0) {
         return this.generateDefaultRestricoesPorTipo();
@@ -591,13 +609,19 @@ export const indicadoresService = {
     ];
   },
 
-  async getAlocacaoRecursos(empresaId: string): Promise<AlocacaoRecurso[]> {
+  async getAlocacaoRecursos(empresaId: string, projetoId?: string): Promise<AlocacaoRecurso[]> {
     try {
-      const { data: recursos } = await supabase
+      let recursosQuery = supabase
         .from('resources')
         .select('id, nome, capacidade_maxima')
         .eq('empresa_id', empresaId)
         .limit(5);
+      
+      if (projetoId) {
+        recursosQuery = recursosQuery.eq('projeto_id', projetoId);
+      }
+      
+      const { data: recursos } = await recursosQuery;
 
       if (!recursos || recursos.length === 0) {
         return this.generateDefaultAlocacaoRecursos();
@@ -634,9 +658,9 @@ export const indicadoresService = {
     ];
   },
 
-  async getAuditoriasRecentes(empresaId: string, limit: number = 4): Promise<AuditoriaRecente[]> {
+  async getAuditoriasRecentes(empresaId: string, projetoId?: string, limit: number = 4): Promise<AuditoriaRecente[]> {
     try {
-      const auditorias = await auditoriaService.getAllAuditorias(empresaId);
+      const auditorias = await auditoriaService.getAllAuditorias(empresaId, projetoId);
 
       if (auditorias.length === 0) {
         return this.generateDefaultAuditoriasRecentes();
@@ -662,9 +686,9 @@ export const indicadoresService = {
     ];
   },
 
-  async getAcoesRecentes(empresaId: string, limit: number = 5): Promise<AcaoRecente[]> {
+  async getAcoesRecentes(empresaId: string, projetoId?: string, limit: number = 5): Promise<AcaoRecente[]> {
     try {
-      const acoes = await acoes5w2hService.getAll(empresaId);
+      const acoes = await acoes5w2hService.getAll(empresaId, projetoId);
 
       if (acoes.length === 0) {
         return this.generateDefaultAcoesRecentes();

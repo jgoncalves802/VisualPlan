@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { reunioesService } from '../services/reunioesService';
 import { TipoReuniao } from '../types/gestao';
@@ -267,6 +268,7 @@ const TIPO_ITEM_ICONS: Record<string, React.ReactNode> = {
 export const ReunioesPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [activeTab, setActiveTab] = useState<'calendario' | 'configuracao' | 'historico'>('calendario');
   const [reunioes, setReunioes] = useState<Reuniao[]>([]);
   const [participantesDisponiveis, setParticipantesDisponiveis] = useState<{ id: string; nome: string; cargo?: string }[]>([]);
@@ -305,7 +307,7 @@ export const ReunioesPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [reunioesData, participantesData, projetosData] = await Promise.all([
-        reunioesService.getAllReunioes(usuario.empresaId),
+        reunioesService.getAllReunioes(usuario.empresaId, projetoSelecionado?.id),
         reunioesService.getParticipantesDisponiveis(usuario.empresaId),
         reunioesService.getProjetosDisponiveis(usuario.empresaId),
       ]);
@@ -334,7 +336,7 @@ export const ReunioesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   useEffect(() => {
     loadData();

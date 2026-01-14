@@ -29,6 +29,7 @@ import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import {
   CategoriaIshikawa,
@@ -453,6 +454,7 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
 const AnaliseIshikawaPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [restrictions, setRestrictions] = useState<RestricaoIshikawa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -488,7 +490,7 @@ const AnaliseIshikawaPage: React.FC = () => {
       const empresaId = usuario?.empresaId || 'a0000001';
       
       const [restrictionsData, epsData] = await Promise.all([
-        restricoesIshikawaService.getAll(empresaId),
+        restricoesIshikawaService.getAll(empresaId, projetoSelecionado?.id),
         restricoesIshikawaService.getEPSDisponiveis(empresaId),
       ]);
       
@@ -527,7 +529,7 @@ const AnaliseIshikawaPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   useEffect(() => {
     loadData();

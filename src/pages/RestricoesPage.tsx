@@ -13,6 +13,7 @@ import { RestricaoHistoryModal } from '../components/features/restricoes/Restric
 import { ReagendarRestricaoModal } from '../components/features/restricoes/ReagendarRestricaoModal';
 import { useLPSStore } from '../stores/lpsStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { RestricaoLPS } from '../types/lps';
 import {
@@ -46,6 +47,7 @@ export const RestricoesPage: React.FC = () => {
 
   // Auth store
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
 
   // Estado local
   const [viewMode, setViewMode] = useState<'calendario' | 'tabela'>('calendario');
@@ -63,12 +65,12 @@ export const RestricoesPage: React.FC = () => {
     return { inicio, fim };
   });
 
-  // Carregar restrições do Supabase ao montar
+  // Carregar restrições do Supabase ao montar ou quando mudar o projeto selecionado
   useEffect(() => {
     if (usuario?.empresaId) {
-      loadRestricoesFromSupabase(usuario.empresaId);
+      loadRestricoesFromSupabase(usuario.empresaId, projetoSelecionado?.id);
     }
-  }, [usuario?.empresaId, loadRestricoesFromSupabase]);
+  }, [usuario?.empresaId, projetoSelecionado?.id, loadRestricoesFromSupabase]);
 
   // Atualizar restrição selecionada quando restricoes mudarem
   useEffect(() => {

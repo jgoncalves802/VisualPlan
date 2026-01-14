@@ -86,12 +86,18 @@ function mapToDB(restricao: Partial<RestricaoIshikawa>, empresaId: string): Part
 }
 
 export const restricoesIshikawaService = {
-  async getAll(empresaId: string): Promise<RestricaoIshikawa[]> {
-    const { data, error } = await supabase
+  async getAll(empresaId: string, projetoId?: string): Promise<RestricaoIshikawa[]> {
+    let query = supabase
       .from('restricoes_ishikawa')
       .select('*')
       .eq('empresa_id', empresaId)
       .order('data_criacao', { ascending: false });
+
+    if (projetoId) {
+      query = query.eq('projeto_id', projetoId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {

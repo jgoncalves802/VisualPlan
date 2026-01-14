@@ -64,7 +64,7 @@ interface LPSState {
   syncComRecursos: (projetoId: string) => Promise<void>;
   concluirAtividade: (id: string, userId: string, motivo?: string) => void;
   atualizarStatusAtividadeComHistorico: (id: string, novoStatus: StatusAtividadeLPS, userId: string, motivo?: string) => void;
-  loadRestricoesFromSupabase: (empresaId: string) => Promise<void>;
+  loadRestricoesFromSupabase: (empresaId: string, projetoId?: string) => Promise<void>;
   saveRestricaoToSupabase: (restricao: RestricaoLPS, empresaId: string) => Promise<void>;
 }
 
@@ -804,14 +804,14 @@ export const useLPSStore = create<LPSState>()(
         }));
       },
 
-      loadRestricoesFromSupabase: async (empresaId: string) => {
+      loadRestricoesFromSupabase: async (empresaId: string, projetoId?: string) => {
         set({ loading: true, error: null });
         try {
-          const restricoesDb = await restricoesLpsService.getAll(empresaId);
+          const restricoesDb = await restricoesLpsService.getAll(empresaId, projetoId);
           if (restricoesDb.length > 0) {
             set({ restricoes: restricoesDb, loading: false });
           } else {
-            set({ loading: false });
+            set({ restricoes: [], loading: false });
           }
         } catch (error: any) {
           console.error('Erro ao carregar restrições do Supabase:', error);

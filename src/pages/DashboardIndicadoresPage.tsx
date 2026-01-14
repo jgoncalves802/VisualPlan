@@ -42,6 +42,7 @@ import {
 import KPICard from '../components/ui/KPICard';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { SetorDashboard } from '../types/gestao';
 import {
@@ -114,6 +115,7 @@ const CollapsibleSector: React.FC<SectorProps> = ({
 const DashboardIndicadoresPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const empresaId = usuario?.empresaId;
   const [loading, setLoading] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
@@ -142,10 +144,12 @@ const DashboardIndicadoresPage: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-  }, [empresaId]);
+  }, [empresaId, projetoSelecionado?.id]);
 
   const loadDashboardData = async () => {
     if (!empresaId) return;
+    
+    const projetoId = projetoSelecionado?.id;
     
     setLoading(true);
     try {
@@ -153,18 +157,18 @@ const DashboardIndicadoresPage: React.FC = () => {
         evm, lps, qualidade, recursos, gestao,
         curva, ppc, atrasadas, alocacao, auditorias, acoes, restricoes
       ] = await Promise.all([
-        indicadoresService.getEVM(empresaId),
-        indicadoresService.getLPS(empresaId),
-        indicadoresService.getQualidade(empresaId),
-        indicadoresService.getRecursos(empresaId),
-        indicadoresService.getGestao(empresaId),
-        indicadoresService.getCurvaS(empresaId),
-        indicadoresService.getPPCSemanal(empresaId),
-        indicadoresService.getAtividadesAtrasadas(empresaId),
-        indicadoresService.getAlocacaoRecursos(empresaId),
-        indicadoresService.getAuditoriasRecentes(empresaId),
-        indicadoresService.getAcoesRecentes(empresaId),
-        indicadoresService.getRestricoesPorTipo(empresaId),
+        indicadoresService.getEVM(empresaId, projetoId),
+        indicadoresService.getLPS(empresaId, projetoId),
+        indicadoresService.getQualidade(empresaId, projetoId),
+        indicadoresService.getRecursos(empresaId, projetoId),
+        indicadoresService.getGestao(empresaId, projetoId),
+        indicadoresService.getCurvaS(empresaId, projetoId),
+        indicadoresService.getPPCSemanal(empresaId, projetoId),
+        indicadoresService.getAtividadesAtrasadas(empresaId, projetoId),
+        indicadoresService.getAlocacaoRecursos(empresaId, projetoId),
+        indicadoresService.getAuditoriasRecentes(empresaId, projetoId),
+        indicadoresService.getAcoesRecentes(empresaId, projetoId),
+        indicadoresService.getRestricoesPorTipo(empresaId, projetoId),
       ]);
 
       setEvmData(evm);

@@ -195,12 +195,18 @@ const toRestricaoIshikawaDB = (r: RestricaoLPS, empresaId: string): Record<strin
 };
 
 export const restricoesLpsService = {
-  async getAll(empresaId: string): Promise<RestricaoLPS[]> {
-    const { data, error } = await supabase
+  async getAll(empresaId: string, projetoId?: string): Promise<RestricaoLPS[]> {
+    let query = supabase
       .from('restricoes_ishikawa')
       .select('*')
       .eq('empresa_id', empresaId)
       .order('data_criacao', { ascending: false });
+
+    if (projetoId) {
+      query = query.eq('projeto_id', projetoId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       if (error.code === 'PGRST205') {

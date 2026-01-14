@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { parseDateOnly } from '../utils/dateHelpers';
 import { auditoriaService } from '../services/auditoriaService';
@@ -688,6 +689,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onSave, 
 const AuditoriaPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [activeTab, setActiveTab] = useState<TabType>('auditorias');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusAuditoria | 'all'>('all');
@@ -727,7 +729,7 @@ const AuditoriaPage: React.FC = () => {
     try {
       const [templatesData, auditoriasData, projetosData, auditoresData] = await Promise.all([
         auditoriaService.getAllTemplates(usuario.empresaId),
-        auditoriaService.getAllAuditorias(usuario.empresaId),
+        auditoriaService.getAllAuditorias(usuario.empresaId, projetoSelecionado?.id),
         auditoriaService.getProjetosDisponiveis(usuario.empresaId),
         auditoriaService.getAuditoresDisponiveis(usuario.empresaId),
       ]);
@@ -745,7 +747,7 @@ const AuditoriaPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   useEffect(() => {
     loadData();

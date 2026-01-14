@@ -12,6 +12,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import KPICard from '../components/ui/KPICard';
 import { useAuthStore } from '../stores/authStore';
 import { useTemaStore } from '../stores/temaStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution } from '../services/dashboardService';
 
@@ -52,6 +53,7 @@ const DEFAULT_RESTRICOES: RestricaoDistribution[] = [
 const DashboardPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const { tema } = useTemaStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [presentationMode, setPresentationMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [kpiData, setKpiData] = useState<DashboardKPIs>(DEFAULT_KPIS);
@@ -67,9 +69,9 @@ const DashboardPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [kpis, curva, restricoes] = await Promise.all([
-        dashboardService.getKPIs(usuario.empresaId),
+        dashboardService.getKPIs(usuario.empresaId, projetoSelecionado?.id),
         dashboardService.getCurvaS(usuario.empresaId),
-        dashboardService.getRestricoesPorCategoria(usuario.empresaId),
+        dashboardService.getRestricoesPorCategoria(usuario.empresaId, projetoSelecionado?.id),
       ]);
 
       const hasRealKPIData = kpis.atividadesTotal > 0 || kpis.acoesTotal > 0 || kpis.restricoesTotal > 0;
@@ -84,7 +86,7 @@ const DashboardPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   useEffect(() => {
     loadData();

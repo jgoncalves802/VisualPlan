@@ -53,13 +53,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const dashboardService = {
-  async getKPIs(empresaId: string): Promise<DashboardKPIs> {
+  async getKPIs(empresaId: string, projetoId?: string): Promise<DashboardKPIs> {
     try {
       const [acoes, restricoes, mudancas, auditorias] = await Promise.all([
-        acoes5w2hService.getAll(empresaId),
-        restricoesIshikawaService.getAll(empresaId),
-        gestaoMudancaService.getAll(empresaId),
-        auditoriaService.getAllAuditorias(empresaId),
+        acoes5w2hService.getAll(empresaId, projetoId),
+        restricoesIshikawaService.getAll(empresaId, projetoId),
+        gestaoMudancaService.getAll(empresaId, projetoId),
+        auditoriaService.getAllAuditorias(empresaId, projetoId),
       ]);
 
       const acoesAbertas = acoes.filter((a: Acao5W2H) => 
@@ -200,9 +200,9 @@ export const dashboardService = {
     }
   },
 
-  async getRestricoesPorCategoria(empresaId: string): Promise<RestricaoDistribution[]> {
+  async getRestricoesPorCategoria(empresaId: string, projetoId?: string): Promise<RestricaoDistribution[]> {
     try {
-      const restricoes = await restricoesIshikawaService.getAll(empresaId);
+      const restricoes = await restricoesIshikawaService.getAll(empresaId, projetoId);
       
       if (restricoes.length === 0) {
         return generateMockRestricoesPorCategoria();

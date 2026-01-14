@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTemaStore } from '../stores/temaStore';
 import { useAuthStore } from '../stores/authStore';
+import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { parseDateOnly } from '../utils/dateHelpers';
 import { gestaoMudancaService } from '../services/gestaoMudancaService';
@@ -826,6 +827,7 @@ const MudancaModal: React.FC<MudancaModalProps> = ({
 const GestaoMudancaPage: React.FC = () => {
   const { tema } = useTemaStore();
   const { usuario } = useAuthStore();
+  const { projetoSelecionado } = useProjetoStore();
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoMudanca[]>([]);
   const [projetos, setProjetos] = useState<{ id: string; nome: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -852,7 +854,7 @@ const GestaoMudancaPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [solicitacoesData, projetosData] = await Promise.all([
-        gestaoMudancaService.getAll(usuario.empresaId),
+        gestaoMudancaService.getAll(usuario.empresaId, projetoSelecionado?.id),
         gestaoMudancaService.getProjetosDisponiveis(usuario.empresaId),
       ]);
       setSolicitacoes(solicitacoesData);
@@ -864,7 +866,7 @@ const GestaoMudancaPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [usuario?.empresaId]);
+  }, [usuario?.empresaId, projetoSelecionado?.id]);
 
   useEffect(() => {
     loadData();
