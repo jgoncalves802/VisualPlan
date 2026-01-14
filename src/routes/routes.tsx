@@ -4,6 +4,7 @@ import MainLayout from '../components/layout/Layout';
 import { LoginPage } from '../pages/Login';
 import DashboardPage from '../pages/DashboardPage';
 import DashboardIndicadoresPage from '../pages/DashboardIndicadoresPage';
+import DashboardExecutivoPage from '../pages/DashboardExecutivoPage';
 import Acoes5W2HPage from '../pages/Acoes5W2HPage';
 import { CronogramaPage } from '../pages/CronogramaPage';
 import KanbanPage from '../pages/KanbanPage';
@@ -76,7 +77,8 @@ export const AppRoutes: React.FC = () => {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardExecutivoPage />} />
+          <Route path="dashboard-basico" element={<DashboardPage />} />
           <Route path="indicadores" element={<DashboardIndicadoresPage />} />
           <Route path="acoes" element={<Acoes5W2HPage />} />
           <Route path="projetos" element={<PlaceholderPage title="Projetos" />} />
