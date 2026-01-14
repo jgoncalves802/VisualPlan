@@ -428,7 +428,7 @@ export const checkinCheckoutService = {
     try {
       const { data: atividades, error } = await supabase
         .from('atividades_cronograma')
-        .select('id, codigo, nome, responsavel_nome, data_inicio, data_fim, duracao')
+        .select('id, codigo, nome, responsavel_nome, data_inicio, data_fim, duracao_dias')
         .eq('empresa_id', empresaId)
         .eq('projeto_id', projetoId)
         .in('status', ['nao_iniciada', 'em_andamento', 'pendente'])
@@ -452,7 +452,7 @@ export const checkinCheckoutService = {
       const result: AtividadeParaProgramar[] = [];
 
       for (const a of (atividades || [])) {
-        let duracaoDias = a.duracao || 1;
+        let duracaoDias = a.duracao_dias || 1;
         if (!duracaoDias && a.data_inicio && a.data_fim) {
           duracaoDias = Math.max(1, differenceInCalendarDays(parseISO(a.data_fim), parseISO(a.data_inicio)) + 1);
         }

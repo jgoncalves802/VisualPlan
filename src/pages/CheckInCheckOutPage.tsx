@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, getWeek, getYear, addDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, getWeek, getYear, addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuthStore } from '../stores/authStore';
 import { useProjetoStore } from '../stores/projetoStore';
@@ -18,6 +18,7 @@ import {
   CAUSAS_6M_CORES,
 } from '../types/checkinCheckout.types';
 import { takeoffService } from '../services/takeoffService';
+import { supabase } from '../services/supabase';
 import {
   Calendar,
   ChevronLeft,
@@ -107,10 +108,25 @@ export const CheckInCheckOutPage: React.FC = () => {
         for (const ativ of ativs) {
           if (ativ.atividade_cronograma_id) {
             const vinculos = await takeoffService.getVinculosByAtividade(ativ.atividade_cronograma_id);
+            
+            // Fetch cronograma activity to get duration
+            const { data: cronogramaAtiv } = await supabase
+              .from('atividades_cronograma')
+              .select('duracao_dias, data_inicio, data_fim')
+              .eq('id', ativ.atividade_cronograma_id)
+              .single();
+            
+            let duracao = cronogramaAtiv?.duracao_dias || 1;
+            if (!duracao && cronogramaAtiv?.data_inicio && cronogramaAtiv?.data_fim) {
+              duracao = Math.max(1, differenceInCalendarDays(
+                parseISO(cronogramaAtiv.data_fim), 
+                parseISO(cronogramaAtiv.data_inicio)
+              ) + 1);
+            }
+            
             const itens: TakeoffItemVinculado[] = vinculos.map(v => {
               const item = (v as any).takeoff_itens;
               const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
-              const duracao = 5;
               const qtdDiaria = duracao > 0 ? qtdTotal / duracao : qtdTotal;
               return {
                 id: v.id,
