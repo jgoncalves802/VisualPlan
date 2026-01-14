@@ -188,10 +188,10 @@ export const LPSPage: React.FC = () => {
   // Carregar restrições do Supabase (filtrado por projeto quando disponível)
   useEffect(() => {
     if (usuario?.empresaId) {
-      // Carregar restrições - filtragem por projeto é feita na exibição
-      loadRestricoesFromSupabase(usuario.empresaId);
+      // Carregar restrições - filtra por projeto se disponível
+      loadRestricoesFromSupabase(usuario.empresaId, projetoIdParam || undefined);
     }
-  }, [usuario?.empresaId, loadRestricoesFromSupabase]);
+  }, [usuario?.empresaId, projetoIdParam, loadRestricoesFromSupabase]);
 
   // Inicializar período se necessário (dados mock desabilitados - usando dados reais do banco)
   useEffect(() => {

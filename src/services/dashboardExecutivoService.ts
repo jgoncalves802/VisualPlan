@@ -164,10 +164,10 @@ export const dashboardExecutivoService = {
         medicaoData,
       ] = await Promise.all([
         this.getCronogramaMetrics(empresaId, projetoId, wbsId),
-        restricoesIshikawaService.getAll(empresaId),
-        this.getRestricaoLpsMetrics(empresaId),
-        acoes5w2hService.getAll(empresaId),
-        gestaoMudancaService.getAll(empresaId),
+        restricoesIshikawaService.getAll(empresaId, projetoId),
+        this.getRestricaoLpsMetrics(empresaId, projetoId),
+        acoes5w2hService.getAll(empresaId, projetoId),
+        gestaoMudancaService.getAll(empresaId, projetoId),
         auditoriaService.getAllAuditorias(empresaId),
         this.getTakeoffMetrics(empresaId, projetoId),
         this.getMedicaoAtual(empresaId, projetoId),
@@ -300,9 +300,9 @@ export const dashboardExecutivoService = {
     }
   },
 
-  async getRestricaoLpsMetrics(empresaId: string) {
+  async getRestricaoLpsMetrics(empresaId: string, projetoId?: string) {
     try {
-      const restricoes = await restricoesLpsService.getAll(empresaId);
+      const restricoes = await restricoesLpsService.getAll(empresaId, projetoId);
       
       const concluidas = restricoes.filter((r: RestricaoLPS) => r.status === 'CONCLUIDA');
       const ppc = restricoes.length > 0 ? (concluidas.length / restricoes.length) * 100 : 0;
