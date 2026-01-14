@@ -298,19 +298,36 @@ export const restricoesIshikawaService = {
   },
 
   async getWBSByProjeto(projetoId: string): Promise<Array<{ id: string; nome: string }>> {
-    const { data, error } = await supabase
+    const { data: epsData, error: epsError } = await supabase
+      .from('eps_nodes')
+      .select('id, nome')
+      .eq('parent_id', projetoId)
+      .eq('ativo', true)
+      .order('nome');
+
+    if (epsError) {
+      console.warn('Erro ao buscar WBS de eps_nodes:', epsError);
+    }
+
+    const epsNodes = epsData || [];
+
+    const { data: wbsData, error: wbsError } = await supabase
       .from('wbs_nodes')
       .select('id, nome')
       .eq('eps_node_id', projetoId)
       .order('nome');
 
-    if (error) {
-      if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
-        return [];
-      }
-      throw error;
+    if (wbsError && wbsError.code !== 'PGRST205') {
+      console.warn('Erro ao buscar WBS de wbs_nodes:', wbsError);
     }
 
-    return data || [];
+    const wbsNodes = wbsData || [];
+
+    const combined = [...epsNodes, ...wbsNodes];
+    const uniqueNodes = combined.filter((node, index, self) =>
+      index === self.findIndex(n => n.id === node.id)
+    );
+
+    return uniqueNodes;
   },
 };
