@@ -728,7 +728,7 @@ const AuditoriaPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [templatesData, auditoriasData, projetosData, auditoresData] = await Promise.all([
-        auditoriaService.getAllTemplates(usuario.empresaId),
+        auditoriaService.getAllTemplates(usuario.empresaId, projetoSelecionado?.id),
         auditoriaService.getAllAuditorias(usuario.empresaId, projetoSelecionado?.id),
         auditoriaService.getProjetosDisponiveis(usuario.empresaId),
         auditoriaService.getAuditoresDisponiveis(usuario.empresaId),

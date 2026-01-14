@@ -113,16 +113,22 @@ const mapAuditoriaFromDB = (data: AuditoriaDB): Auditoria => {
 };
 
 export const auditoriaService = {
-  async getAllTemplates(empresaId: string): Promise<ChecklistTemplate[]> {
-    const { data, error } = await supabase
+  async getAllTemplates(empresaId: string, projetoId?: string): Promise<ChecklistTemplate[]> {
+    let query = supabase
       .from('checklist_templates')
       .select('*')
       .eq('empresa_id', empresaId)
       .order('nome', { ascending: true });
 
+    if (projetoId) {
+      query = query.or(`projeto_id.eq.${projetoId},projeto_id.is.null`);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
-      if (error.code === 'PGRST205') {
-        console.warn('Tabela checklist_templates não encontrada, retornando array vazio');
+      if (error.code === 'PGRST205' || error.code === '42703') {
+        console.warn('Tabela checklist_templates não encontrada ou coluna projeto_id ausente, retornando array vazio');
         return [];
       }
       console.error('Erro ao buscar templates:', error);
