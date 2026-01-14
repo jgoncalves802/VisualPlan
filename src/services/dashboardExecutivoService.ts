@@ -380,10 +380,14 @@ export const dashboardExecutivoService = {
 
   async getMedicaoAtual(empresaId: string, projetoId?: string): Promise<MedicaoResumo | null> {
     try {
+      const hoje = new Date().toISOString().split('T')[0];
+      
       let query = supabase
         .from('medicoes_periodos')
         .select('*')
         .eq('empresa_id', empresaId)
+        .lte('data_inicio', hoje)
+        .gte('data_fim', hoje)
         .order('numero', { ascending: false })
         .limit(1);
 
