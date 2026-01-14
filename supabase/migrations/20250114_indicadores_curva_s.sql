@@ -202,15 +202,6 @@ CREATE TABLE IF NOT EXISTS curva_s (
 -- =====================================================
 -- ÍNDICES
 -- =====================================================
-
--- Índices únicos para curva_s (garantir unicidade considerando baseline_id NULL)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_with_baseline 
-  ON curva_s(projeto_id, data_referencia, tipo_curva, baseline_id) 
-  WHERE baseline_id IS NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_without_baseline 
-  ON curva_s(projeto_id, data_referencia, tipo_curva) 
-  WHERE baseline_id IS NULL;
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user ON user_preferences(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_empresa ON user_preferences(empresa_id);
 
@@ -235,6 +226,15 @@ CREATE INDEX IF NOT EXISTS idx_curva_s_empresa ON curva_s(empresa_id);
 CREATE INDEX IF NOT EXISTS idx_curva_s_baseline ON curva_s(baseline_id);
 CREATE INDEX IF NOT EXISTS idx_curva_s_tipo ON curva_s(tipo_curva);
 CREATE INDEX IF NOT EXISTS idx_curva_s_projeto_tipo ON curva_s(projeto_id, tipo_curva);
+
+-- Índices únicos para curva_s (garantir unicidade considerando baseline_id NULL)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_with_baseline 
+  ON curva_s(projeto_id, data_referencia, tipo_curva, baseline_id) 
+  WHERE baseline_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_without_baseline 
+  ON curva_s(projeto_id, data_referencia, tipo_curva) 
+  WHERE baseline_id IS NULL;
 
 -- =====================================================
 -- ROW LEVEL SECURITY
