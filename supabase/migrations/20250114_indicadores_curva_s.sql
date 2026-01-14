@@ -199,7 +199,11 @@ CREATE TABLE IF NOT EXISTS curva_s (
   created_by UUID REFERENCES auth.users(id)
 );
 
--- Índice único para garantir unicidade considerando baseline_id NULL
+-- =====================================================
+-- ÍNDICES
+-- =====================================================
+
+-- Índices únicos para curva_s (garantir unicidade considerando baseline_id NULL)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_with_baseline 
   ON curva_s(projeto_id, data_referencia, tipo_curva, baseline_id) 
   WHERE baseline_id IS NOT NULL;
@@ -207,10 +211,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_with_baseline
 CREATE UNIQUE INDEX IF NOT EXISTS idx_curva_s_unique_without_baseline 
   ON curva_s(projeto_id, data_referencia, tipo_curva) 
   WHERE baseline_id IS NULL;
-
--- =====================================================
--- ÍNDICES
--- =====================================================
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user ON user_preferences(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_empresa ON user_preferences(empresa_id);
 
