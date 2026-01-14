@@ -20,6 +20,8 @@ import {
   Users,
   Briefcase,
   Package,
+  CalendarCheck,
+  CheckSquare,
 } from 'lucide-react';
 import classNames from 'classnames';
 import { useUIStore } from '../../stores/uiStore';
@@ -120,6 +122,18 @@ const menuItems: MenuItem[] = [
     label: 'LPS',
     icon: <ListTodo className="w-5 h-5" />,
     path: '/lps',
+  },
+  {
+    id: 'programacao-semanal',
+    label: 'Programação Semanal',
+    icon: <CalendarCheck className="w-5 h-5" />,
+    path: '/programacao-semanal',
+  },
+  {
+    id: 'checkin-checkout',
+    label: 'Check-in / Check-out',
+    icon: <CheckSquare className="w-5 h-5" />,
+    path: '/checkin-checkout',
   },
   {
     id: 'restricoes',

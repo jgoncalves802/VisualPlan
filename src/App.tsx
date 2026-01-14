@@ -29,6 +29,8 @@ import GestaoMudancaPage from './pages/GestaoMudancaPage';
 import { RecursosPage } from './pages/RecursosPage';
 import TakeoffPage from './pages/TakeoffPage';
 import MedicoesPage from './pages/MedicoesPage';
+import ProgramacaoSemanalPage from './pages/ProgramacaoSemanalPage';
+import CheckInCheckOutPage from './pages/CheckInCheckOutPage';
 import './styles/global.css';
 
 const ProtectedAppLayout: React.FC = () => {
@@ -82,6 +84,8 @@ function App() {
             <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/lps" element={<LPSPage />} />
             <Route path="/lps/:projetoId" element={<LPSPage />} />
+            <Route path="/programacao-semanal" element={<ProgramacaoSemanalPage />} />
+            <Route path="/checkin-checkout" element={<CheckInCheckOutPage />} />
             <Route path="/restricoes" element={<RestricoesPage />} />
             <Route path="/restricoes/:projetoId" element={<RestricoesPage />} />
             <Route path="/acoes" element={<Acoes5W2HPage />} />
