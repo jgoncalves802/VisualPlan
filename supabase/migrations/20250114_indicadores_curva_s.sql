@@ -246,61 +246,61 @@ ALTER TABLE indicadores_qualidade ENABLE ROW LEVEL SECURITY;
 ALTER TABLE baselines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE curva_s ENABLE ROW LEVEL SECURITY;
 
--- user_preferences policies
+-- user_preferences policies (acesso por user_id)
 DROP POLICY IF EXISTS "user_prefs_select" ON user_preferences;
 DROP POLICY IF EXISTS "user_prefs_all" ON user_preferences;
 CREATE POLICY "user_prefs_select" ON user_preferences FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "user_prefs_all" ON user_preferences FOR ALL USING (auth.uid() = user_id);
 
--- snapshots_evm policies
+-- snapshots_evm policies (acesso autenticado)
 DROP POLICY IF EXISTS "evm_select" ON snapshots_evm;
-DROP POLICY IF EXISTS "evm_all" ON snapshots_evm;
-CREATE POLICY "evm_select" ON snapshots_evm FOR SELECT USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "evm_all" ON snapshots_evm FOR ALL USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
+DROP POLICY IF EXISTS "evm_insert" ON snapshots_evm;
+DROP POLICY IF EXISTS "evm_update" ON snapshots_evm;
+DROP POLICY IF EXISTS "evm_delete" ON snapshots_evm;
+CREATE POLICY "evm_select" ON snapshots_evm FOR SELECT TO authenticated USING (true);
+CREATE POLICY "evm_insert" ON snapshots_evm FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "evm_update" ON snapshots_evm FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "evm_delete" ON snapshots_evm FOR DELETE TO authenticated USING (true);
 
--- indicadores_lps policies
+-- indicadores_lps policies (acesso autenticado)
 DROP POLICY IF EXISTS "lps_select" ON indicadores_lps;
-DROP POLICY IF EXISTS "lps_all" ON indicadores_lps;
-CREATE POLICY "lps_select" ON indicadores_lps FOR SELECT USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "lps_all" ON indicadores_lps FOR ALL USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
+DROP POLICY IF EXISTS "lps_insert" ON indicadores_lps;
+DROP POLICY IF EXISTS "lps_update" ON indicadores_lps;
+DROP POLICY IF EXISTS "lps_delete" ON indicadores_lps;
+CREATE POLICY "lps_select" ON indicadores_lps FOR SELECT TO authenticated USING (true);
+CREATE POLICY "lps_insert" ON indicadores_lps FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "lps_update" ON indicadores_lps FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "lps_delete" ON indicadores_lps FOR DELETE TO authenticated USING (true);
 
--- indicadores_qualidade policies
+-- indicadores_qualidade policies (acesso autenticado)
 DROP POLICY IF EXISTS "qualidade_select" ON indicadores_qualidade;
-DROP POLICY IF EXISTS "qualidade_all" ON indicadores_qualidade;
-CREATE POLICY "qualidade_select" ON indicadores_qualidade FOR SELECT USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "qualidade_all" ON indicadores_qualidade FOR ALL USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
+DROP POLICY IF EXISTS "qualidade_insert" ON indicadores_qualidade;
+DROP POLICY IF EXISTS "qualidade_update" ON indicadores_qualidade;
+DROP POLICY IF EXISTS "qualidade_delete" ON indicadores_qualidade;
+CREATE POLICY "qualidade_select" ON indicadores_qualidade FOR SELECT TO authenticated USING (true);
+CREATE POLICY "qualidade_insert" ON indicadores_qualidade FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "qualidade_update" ON indicadores_qualidade FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "qualidade_delete" ON indicadores_qualidade FOR DELETE TO authenticated USING (true);
 
--- baselines policies
+-- baselines policies (acesso autenticado)
 DROP POLICY IF EXISTS "baselines_select" ON baselines;
-DROP POLICY IF EXISTS "baselines_all" ON baselines;
-CREATE POLICY "baselines_select" ON baselines FOR SELECT USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "baselines_all" ON baselines FOR ALL USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
+DROP POLICY IF EXISTS "baselines_insert" ON baselines;
+DROP POLICY IF EXISTS "baselines_update" ON baselines;
+DROP POLICY IF EXISTS "baselines_delete" ON baselines;
+CREATE POLICY "baselines_select" ON baselines FOR SELECT TO authenticated USING (true);
+CREATE POLICY "baselines_insert" ON baselines FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "baselines_update" ON baselines FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "baselines_delete" ON baselines FOR DELETE TO authenticated USING (true);
 
--- curva_s policies
+-- curva_s policies (acesso autenticado)
 DROP POLICY IF EXISTS "curva_s_select" ON curva_s;
-DROP POLICY IF EXISTS "curva_s_all" ON curva_s;
-CREATE POLICY "curva_s_select" ON curva_s FOR SELECT USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
-CREATE POLICY "curva_s_all" ON curva_s FOR ALL USING (
-  empresa_id IN (SELECT empresa_id FROM profiles WHERE user_id = auth.uid())
-);
+DROP POLICY IF EXISTS "curva_s_insert" ON curva_s;
+DROP POLICY IF EXISTS "curva_s_update" ON curva_s;
+DROP POLICY IF EXISTS "curva_s_delete" ON curva_s;
+CREATE POLICY "curva_s_select" ON curva_s FOR SELECT TO authenticated USING (true);
+CREATE POLICY "curva_s_insert" ON curva_s FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "curva_s_update" ON curva_s FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "curva_s_delete" ON curva_s FOR DELETE TO authenticated USING (true);
 
 -- =====================================================
 -- TRIGGERS para updated_at
