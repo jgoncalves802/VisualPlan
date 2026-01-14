@@ -69,8 +69,10 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   `dashboardService.ts`: KPI aggregation from multiple services with smart fallback to demo data
         *   `portfolioService.ts`: Project portfolio management with multi-criteria scoring and ranking
         *   `calendariosService.ts`: Work calendars with exceptions (holidays, work days, overtime)
-        *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management)
+        *   `indicadoresService.ts`: Comprehensive KPI calculations (EVM, LPS, Quality, Resources, Management) with fallback calculators from activities/restrictions
         *   `medicoesService.ts`: Measurement periods and progress tracking with 3-level approval workflow (Supervisor, Fiscal, Proponente)
+        *   `curvaSService.ts`: Curva S and Baselines CRUD with multi-baseline support for variance analysis
+        *   `userPreferencesService.ts`: User preferences persistence with automatic localStorage migration to database
     *   **Medições Module** (NEW): Complete measurement period management for construction billing:
         *   **Database Tables**: 5 tables in Supabase (medicoes_config, medicoes_periodos, medicoes_avancos, medicoes_aprovacoes, medicoes_restricoes)
         *   **SQL Migration**: Located in `supabase/migrations/20241230_medicoes_module.sql`
@@ -84,6 +86,17 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **Types**: `medicoes.types.ts` with full TypeScript interfaces for all entities
         *   **Route**: `/medicoes` accessible from sidebar menu
         *   **Page Tabs**: Períodos, Avanços, Aprovações, Relatórios, Configurações
+    *   **Indicadores Module** (NEW 2025-01-14): Complete indicator tables for EVM, LPS, Quality, and S-Curve analysis:
+        *   **Database Tables**: 6 tables in Supabase (user_preferences, snapshots_evm, indicadores_lps, indicadores_qualidade, baselines, curva_s)
+        *   **SQL Migration**: Located in `supabase/migrations/20250114_indicadores_curva_s.sql`
+        *   **user_preferences**: User preference persistence migrated from localStorage to database
+        *   **snapshots_evm**: Periodic EVM snapshots with PV, EV, AC, BAC, SPI, CPI, EAC, VAC, TCPI calculations
+        *   **indicadores_lps**: Weekly LPS indicators (PPC, TMR, 6M causes, lookahead metrics)
+        *   **indicadores_qualidade**: Quality indicators (audits, NCs, inspections, rework, safety)
+        *   **baselines**: Project baselines with single-active trigger (only one active baseline per project)
+        *   **curva_s**: S-Curve data with multi-baseline support - supports types: planejado, previsto, realizado, baseline_1, baseline_2, etc.
+        *   **TypeScript Types**: `curvaS.types.ts` and `userPreferences.types.ts` with full interfaces
+        *   **Services**: `curvaSService.ts` (CRUD for baselines, curva_s, snapshots, indicators) and `userPreferencesService.ts` (user preferences with localStorage migration)
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

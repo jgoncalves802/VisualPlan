@@ -131,7 +131,7 @@ export const indicadoresService = {
         .from('snapshots_evm')
         .select('*')
         .eq('empresa_id', empresaId)
-        .order('data_referencia', { ascending: false })
+        .order('data_status', { ascending: false })
         .limit(1);
 
       if (projetoId) {
@@ -223,7 +223,7 @@ export const indicadoresService = {
         .from('indicadores_lps')
         .select('*')
         .eq('empresa_id', empresaId)
-        .order('data_referencia', { ascending: false })
+        .order('data_inicio', { ascending: false })
         .limit(1);
 
       if (projetoId) {

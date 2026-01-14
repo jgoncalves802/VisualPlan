@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Palette, Save, RefreshCw, Keyboard, RotateCcw, Edit2, Check, X } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
+import { useAuthStore } from '../stores/authStore';
 import { 
   useKeyboardShortcutsStore, 
   SHORTCUT_CATEGORIES,
   type KeyboardShortcut 
 } from '../stores/keyboardShortcutsStore';
+import { userPreferencesService } from '../services/userPreferencesService';
 
 type ConfigTab = 'tema' | 'atalhos';
 
@@ -132,11 +134,31 @@ export const ConfiguracoesPage: React.FC = () => {
   const usuario = useAppStore((state) => state.usuario);
   const tema = useAppStore((state) => state.tema);
   const setTema = useAppStore((state) => state.setTema);
+  const { usuario: authUsuario } = useAuthStore();
   
   const [activeTab, setActiveTab] = useState<ConfigTab>('tema');
   const [corPrimaria, setCorPrimaria] = useState(tema.corPrimaria);
   const [corSecundaria, setCorSecundaria] = useState(tema.corSecundaria);
   const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      const userId = authUsuario?.id;
+      if (!userId) return;
+      
+      try {
+        const prefs = await userPreferencesService.getPreferences(userId);
+        if (prefs) {
+          if (prefs.cor_primaria) setCorPrimaria(prefs.cor_primaria);
+          if (prefs.cor_secundaria) setCorSecundaria(prefs.cor_secundaria);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar preferências:', err);
+      }
+    };
+    
+    loadPreferences();
+  }, [authUsuario?.id]);
 
   const { 
     setShortcut, 
@@ -164,7 +186,12 @@ export const ConfiguracoesPage: React.FC = () => {
         corSecundaria,
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (authUsuario?.id && authUsuario?.empresaId) {
+        await userPreferencesService.updatePreferences(authUsuario.id, {
+          cor_primaria: corPrimaria,
+          cor_secundaria: corSecundaria,
+        });
+      }
       
       alert('Tema salvo com sucesso!');
     } catch (error) {

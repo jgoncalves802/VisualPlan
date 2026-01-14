@@ -63,21 +63,47 @@ class UserPreferencesService {
   async updatePreferences(userId: string, updates: Partial<UserPreferencesDTO>): Promise<UserPreferences> {
     const existing = await this.getPreferences(userId);
     
-    if (existing) {
+    if (existing && existing.empresa_id) {
       const merged = { ...existing, ...updates };
       return this.upsertPreferences(merged as UserPreferencesDTO);
     }
     
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('empresa_id')
-      .eq('user_id', userId)
-      .single();
+    let empresaId = existing?.empresa_id || '';
+    
+    if (!empresaId) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('empresa_id')
+          .eq('user_id', userId)
+          .single();
+        
+        if (!error && profile?.empresa_id) {
+          empresaId = profile.empresa_id;
+        }
+      } catch (err) {
+        console.warn('Não foi possível buscar empresa_id do profile:', err);
+      }
+    }
+    
+    if (!empresaId) {
+      console.warn('empresa_id não encontrado - salvando apenas em localStorage');
+      const localPrefs = {
+        id: 'local',
+        user_id: userId,
+        empresa_id: '',
+        ...DEFAULT_USER_PREFERENCES,
+        ...updates,
+      } as UserPreferences;
+      this.saveToLocalStorage(localPrefs as unknown as UserPreferencesDTO);
+      return localPrefs;
+    }
     
     const newPrefs: UserPreferencesDTO = {
       user_id: userId,
-      empresa_id: profile?.empresa_id || '',
+      empresa_id: empresaId,
       ...DEFAULT_USER_PREFERENCES,
+      ...(existing || {}),
       ...updates,
     };
     

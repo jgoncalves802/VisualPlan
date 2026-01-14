@@ -50,15 +50,26 @@ class CurvaSService {
     return data;
   }
 
-  async createBaseline(dto: BaselineDTO): Promise<Baseline> {
-    const { data, error } = await supabase
-      .from('baselines')
-      .insert(dto)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+  async createBaseline(dto: BaselineDTO): Promise<Baseline | null> {
+    try {
+      const { data, error } = await supabase
+        .from('baselines')
+        .insert(dto)
+        .select()
+        .single();
+      
+      if (error) {
+        if (error.code === '42P01' || error.code === 'PGRST205') {
+          console.warn('Tabela baselines não existe ainda');
+          return null;
+        }
+        throw error;
+      }
+      return data;
+    } catch (err) {
+      console.error('Erro ao criar baseline:', err);
+      throw err;
+    }
   }
 
   async updateBaseline(id: string, updates: Partial<BaselineDTO>): Promise<Baseline> {
@@ -127,7 +138,13 @@ class CurvaSService {
       .eq('baseline_id', baselineId)
       .order('periodo_ordem', { ascending: true });
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.code === 'PGRST205') {
+        console.warn('Tabela curva_s não existe ou está vazia');
+        return [];
+      }
+      throw error;
+    }
     return data || [];
   }
 
