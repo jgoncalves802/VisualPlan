@@ -333,20 +333,45 @@ export const dashboardExecutivoService = {
 
   async getTakeoffMetrics(empresaId: string, projetoId?: string) {
     try {
-      const filter = { empresaId, projetoId };
+      const filter = { projetoId };
       const totais = await takeoffService.getTotais(filter);
       
       const avancoGeral = totais.percentualMedio || 0;
       
       const disciplinas = await takeoffService.getDisciplinas(empresaId);
-      const porDisciplina: DisciplinaAvancoItem[] = disciplinas.map(d => ({
-        disciplina: d.nome,
-        avanco: 0,
-        meta: 100,
-        color: DISCIPLINA_COLORS[d.nome] || '#6B7280',
+      const mapas = projetoId ? await takeoffService.getMapas(projetoId) : [];
+      
+      const porDisciplina: DisciplinaAvancoItem[] = await Promise.all(
+        disciplinas.map(async (d) => {
+          const mapaDaDisciplina = mapas.filter(m => m.disciplinaId === d.id);
+          let totalItens = 0;
+          let totalExecutado = 0;
+          
+          for (const mapa of mapaDaDisciplina) {
+            const itens = await takeoffService.getItens({ mapaId: mapa.id });
+            for (const item of itens) {
+              totalItens += item.qtdTakeoff || 0;
+              totalExecutado += item.qtdExecutada || 0;
+            }
+          }
+          
+          const avanco = totalItens > 0 ? Math.round((totalExecutado / totalItens) * 100) : 0;
+          
+          return {
+            disciplina: d.nome,
+            avanco,
+            meta: 100,
+            color: DISCIPLINA_COLORS[d.nome] || '#6B7280',
+          };
+        })
+      );
+      
+      const disciplinasComDados = porDisciplina.filter(d => d.avanco > 0 || mapas.some(m => {
+        const disc = disciplinas.find(x => x.id === m.disciplinaId);
+        return disc?.nome === d.disciplina;
       }));
 
-      return { avancoGeral, porDisciplina };
+      return { avancoGeral, porDisciplina: disciplinasComDados.length > 0 ? disciplinasComDados : porDisciplina };
     } catch (e) {
       console.warn('Erro ao buscar métricas Take-off:', e);
       return { avancoGeral: 0, porDisciplina: [] };
@@ -359,7 +384,7 @@ export const dashboardExecutivoService = {
         .from('medicoes_periodos')
         .select('*')
         .eq('empresa_id', empresaId)
-        .order('numero_periodo', { ascending: false })
+        .order('numero', { ascending: false })
         .limit(1);
 
       if (projetoId) {
@@ -379,12 +404,16 @@ export const dashboardExecutivoService = {
       if (!data || data.length === 0) return null;
 
       const periodo = data[0];
+      const valorMedido = Number(periodo.valor_medido) || 0;
+      const valorPrevisto = Number(periodo.valor_previsto) || 0;
+      const avancoAcumulado = valorPrevisto > 0 ? (valorMedido / valorPrevisto) * 100 : 0;
+      
       return {
-        periodoNumero: periodo.numero_periodo,
+        periodoNumero: periodo.numero,
         dataInicio: periodo.data_inicio,
         dataFim: periodo.data_fim,
-        avancoAcumulado: periodo.percentual_acumulado || 0,
-        statusAprovacao: periodo.status_aprovacao || 'pendente',
+        avancoAcumulado: Math.round(avancoAcumulado * 10) / 10,
+        statusAprovacao: periodo.status || 'pendente',
       };
     } catch (e) {
       console.warn('Erro ao buscar medição atual:', e);

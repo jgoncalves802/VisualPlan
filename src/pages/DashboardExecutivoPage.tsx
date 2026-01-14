@@ -664,13 +664,23 @@ const DashboardExecutivoPage: React.FC = () => {
               </div>
               <ProgressBar value={kpis?.takeoffAvancoGeral || 0} showValue={false} color={tema.primary} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {kpis?.takeoffPorDisciplina && kpis.takeoffPorDisciplina.length > 0 ? (
-                kpis.takeoffPorDisciplina.slice(0, 4).map((d) => (
-                  <div key={d.disciplina} className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-sm flex-1" style={{ color: tema.text }}>{d.disciplina}</span>
-                    <span className="text-sm font-medium" style={{ color: tema.primary }}>{d.avanco}%</span>
+                kpis.takeoffPorDisciplina.slice(0, 6).map((d) => (
+                  <div key={d.disciplina} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span style={{ color: tema.text }}>{d.disciplina}</span>
+                      <span style={{ color: tema.textSecondary }}>{d.avanco}%</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full" style={{ backgroundColor: `${d.color}30` }}>
+                      <div 
+                        className="h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${d.avanco}%`,
+                          backgroundColor: d.color 
+                        }}
+                      />
+                    </div>
                   </div>
                 ))
               ) : (
