@@ -573,14 +573,23 @@ const DashboardExecutivoPage: React.FC = () => {
             <div className="space-y-3">
               {kpis?.restricoesPorCategoria && kpis.restricoesPorCategoria.length > 0 ? (
                 kpis.restricoesPorCategoria.map((r) => (
-                  <ProgressBar
-                    key={r.categoria}
-                    label={r.label}
-                    value={(r.count / (kpis.restricoesAtivas || 1)) * 100}
-                    showValue={false}
-                    color={r.color}
-                    size="sm"
-                  />
+                  <div key={r.categoria} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span style={{ color: tema.text }}>{r.label}</span>
+                      <span style={{ color: tema.textSecondary }}>
+                        {r.concluidas}/{r.total} ({r.percentual}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full" style={{ backgroundColor: `${r.color}30` }}>
+                      <div 
+                        className="h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${r.percentual}%`,
+                          backgroundColor: r.color 
+                        }}
+                      />
+                    </div>
+                  </div>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-6">

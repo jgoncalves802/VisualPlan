@@ -42,6 +42,9 @@ export interface RestricaoCategoria {
   categoria: string;
   label: string;
   count: number;
+  concluidas: number;
+  total: number;
+  percentual: number;
   color: string;
 }
 
@@ -124,12 +127,12 @@ export interface ProjetoRanking {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'METODO': '#6B7280',
-  'MAO_DE_OBRA': '#4B5563',
-  'MATERIAL': '#374151',
-  'MAQUINA': '#9CA3AF',
-  'MEDIDA': '#D1D5DB',
-  'MEIO_AMBIENTE': '#1F2937',
+  'METODO': '#8B5CF6',
+  'MAO_DE_OBRA': '#3B82F6',
+  'MATERIAL': '#10B981',
+  'MAQUINA': '#F59E0B',
+  'MEDIDA': '#EC4899',
+  'MEIO_AMBIENTE': '#06B6D4',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -390,18 +393,30 @@ export const dashboardExecutivoService = {
   },
 
   agruparRestricoesPorCategoria(restricoes: any[]): RestricaoCategoria[] {
-    const countByCategory = restricoes.reduce((acc, r) => {
+    const statsByCategory = restricoes.reduce((acc, r) => {
       const cat = r.categoria || 'OUTRO';
-      acc[cat] = (acc[cat] || 0) + 1;
+      if (!acc[cat]) {
+        acc[cat] = { total: 0, concluidas: 0 };
+      }
+      acc[cat].total += 1;
+      if (r.status === StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO) {
+        acc[cat].concluidas += 1;
+      }
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { total: number; concluidas: number }>);
 
-    return Object.entries(countByCategory).map(([categoria, count]) => ({
-      categoria,
-      label: CATEGORY_LABELS[categoria] || categoria,
-      count: count as number,
-      color: CATEGORY_COLORS[categoria] || '#6B7280',
-    }));
+    return Object.entries(statsByCategory).map(([categoria, stats]) => {
+      const typedStats = stats as { total: number; concluidas: number };
+      return {
+        categoria,
+        label: CATEGORY_LABELS[categoria] || categoria,
+        count: typedStats.total,
+        concluidas: typedStats.concluidas,
+        total: typedStats.total,
+        percentual: typedStats.total > 0 ? Math.round((typedStats.concluidas / typedStats.total) * 100) : 0,
+        color: CATEGORY_COLORS[categoria] || '#6B7280',
+      };
+    });
   },
 
   async getCurvaS(empresaId: string, projetoId?: string, wbsId?: string): Promise<CurvaSItem[]> {
