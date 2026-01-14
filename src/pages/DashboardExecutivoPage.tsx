@@ -53,7 +53,7 @@ import {
   ProjetoRanking,
 } from '../services/dashboardExecutivoService';
 import { epsService, EpsNode } from '../services/epsService';
-import { formatDateOnly } from '../utils/dateHelpers';
+import { toLocaleDateStringBR } from '../utils/dateHelpers';
 
 interface ProjetoSelecionado {
   id: string | undefined;
@@ -517,7 +517,7 @@ const DashboardExecutivoPage: React.FC = () => {
               marcos.slice(0, 6).map((m) => (
                 <div key={m.id} className="rounded-lg p-3" style={{ backgroundColor: tema.background, border: `1px solid ${tema.border}` }}>
                   <p className="text-xs font-medium truncate mb-1" style={{ color: tema.text }}>{m.nome}</p>
-                  <p className="text-xs mb-2" style={{ color: tema.textSecondary }}>{formatDateOnly(new Date(m.data))}</p>
+                  <p className="text-xs mb-2" style={{ color: tema.textSecondary }}>{toLocaleDateStringBR(new Date(m.data))}</p>
                   {getMarcoStatusBadge(m.status)}
                 </div>
               ))
@@ -634,7 +634,7 @@ const DashboardExecutivoPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span style={{ color: tema.textSecondary }}>Vigência</span>
                   <span style={{ color: tema.text }}>
-                    {formatDateOnly(new Date(kpis.medicaoAtual.dataInicio))} - {formatDateOnly(new Date(kpis.medicaoAtual.dataFim))}
+                    {toLocaleDateStringBR(new Date(kpis.medicaoAtual.dataInicio))} - {toLocaleDateStringBR(new Date(kpis.medicaoAtual.dataFim))}
                   </span>
                 </div>
                 <ProgressBar
@@ -707,7 +707,7 @@ const DashboardExecutivoPage: React.FC = () => {
                     <p className="text-sm font-medium truncate" style={{ color: tema.text }}>{a.titulo}</p>
                     <div className="flex items-center justify-between mt-2 text-xs">
                       <span style={{ color: tema.textSecondary }}>{a.responsavel}</span>
-                      <span style={{ color: tema.primary }}>{formatDateOnly(new Date(a.prazo))}</span>
+                      <span style={{ color: tema.primary }}>{toLocaleDateStringBR(new Date(a.prazo))}</span>
                     </div>
                   </div>
                 ))
@@ -736,7 +736,7 @@ const DashboardExecutivoPage: React.FC = () => {
                   <div key={a.id} className="rounded-lg p-3" style={{ backgroundColor: tema.background, border: `1px solid ${tema.border}` }}>
                     <p className="text-sm font-medium truncate" style={{ color: tema.text }}>{a.titulo}</p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs" style={{ color: tema.textSecondary }}>{formatDateOnly(new Date(a.data))}</span>
+                      <span className="text-xs" style={{ color: tema.textSecondary }}>{toLocaleDateStringBR(new Date(a.data))}</span>
                       <div className="flex items-center space-x-1">
                         <span className="text-sm font-semibold" style={{ color: tema.success }}>{a.conformidade.toFixed(0)}%</span>
                       </div>
