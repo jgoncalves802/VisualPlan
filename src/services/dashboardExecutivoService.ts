@@ -247,7 +247,7 @@ export const dashboardExecutivoService = {
     try {
       let query = supabase
         .from('atividades_cronograma')
-        .select('id, data_termino_prevista, data_termino_real, percentual_completo, bcws, bcwp, acwp, is_critical, custo_previsto, custo_real')
+        .select('id, data_inicio, data_fim, progresso, e_critica, custo_planejado, custo_real')
         .eq('empresa_id', empresaId);
 
       if (projetoId) {
@@ -261,31 +261,46 @@ export const dashboardExecutivoService = {
       const { data, error } = await query;
 
       if (error || !data) {
-        return { spi: 1, cpi: 1, avancoFisico: 0, avancoFinanceiro: 0, total: 0, concluidas: 0, atrasadas: 0, criticas: 0 };
+        return { spi: 0, cpi: 0, avancoFisico: 0, avancoFinanceiro: 0, total: 0, concluidas: 0, atrasadas: 0, criticas: 0 };
+      }
+
+      if (data.length === 0) {
+        return { spi: 0, cpi: 0, avancoFisico: 0, avancoFinanceiro: 0, total: 0, concluidas: 0, atrasadas: 0, criticas: 0 };
       }
 
       const hoje = new Date();
       const total = data.length;
-      const concluidas = data.filter(a => (a.percentual_completo || 0) >= 100).length;
+      const concluidas = data.filter(a => (a.progresso || 0) >= 100).length;
       const atrasadas = data.filter(a => {
-        const dataTermino = new Date(a.data_termino_prevista);
-        return dataTermino < hoje && (a.percentual_completo || 0) < 100;
+        const dataFim = a.data_fim ? new Date(a.data_fim) : null;
+        return dataFim && dataFim < hoje && (a.progresso || 0) < 100;
       }).length;
-      const criticas = data.filter(a => a.is_critical).length;
+      const criticas = data.filter(a => a.e_critica).length;
 
-      const totals = data.reduce((acc, a) => ({
-        bcws: acc.bcws + (a.bcws || 0),
-        bcwp: acc.bcwp + (a.bcwp || 0),
-        acwp: acc.acwp + (a.acwp || 0),
-        custoPrevisto: acc.custoPrevisto + (a.custo_previsto || 0),
-        custoReal: acc.custoReal + (a.custo_real || 0),
-        percentualTotal: acc.percentualTotal + (a.percentual_completo || 0),
-      }), { bcws: 0, bcwp: 0, acwp: 0, custoPrevisto: 0, custoReal: 0, percentualTotal: 0 });
+      const totals = data.reduce((acc, a) => {
+        const progresso = Number(a.progresso) || 0;
+        const custoPlanejado = Number(a.custo_planejado) || 0;
+        const custoReal = Number(a.custo_real) || 0;
+        const dataFim = a.data_fim ? new Date(a.data_fim) : null;
+        const deveriaConcluido = dataFim && dataFim <= hoje;
+        
+        return {
+          ev: acc.ev + (progresso / 100) * custoPlanejado,
+          pv: acc.pv + (deveriaConcluido ? custoPlanejado : 0),
+          ac: acc.ac + custoReal,
+          custoPlanejadoTotal: acc.custoPlanejadoTotal + custoPlanejado,
+          custoRealTotal: acc.custoRealTotal + custoReal,
+          progressoTotal: acc.progressoTotal + progresso,
+        };
+      }, { ev: 0, pv: 0, ac: 0, custoPlanejadoTotal: 0, custoRealTotal: 0, progressoTotal: 0 });
 
-      const spi = totals.bcws > 0 ? totals.bcwp / totals.bcws : 1;
-      const cpi = totals.acwp > 0 ? totals.bcwp / totals.acwp : 1;
-      const avancoFisico = total > 0 ? totals.percentualTotal / total : 0;
-      const avancoFinanceiro = totals.custoPrevisto > 0 ? (totals.custoReal / totals.custoPrevisto) * 100 : 0;
+      const avancoFisico = total > 0 ? totals.progressoTotal / total : 0;
+      const avancoFinanceiro = totals.custoPlanejadoTotal > 0 
+        ? (totals.custoRealTotal / totals.custoPlanejadoTotal) * 100 
+        : 0;
+      
+      const spi = totals.pv > 0 ? totals.ev / totals.pv : 0;
+      const cpi = totals.ac > 0 ? totals.ev / totals.ac : 0;
 
       return {
         spi: Math.round(spi * 100) / 100,
@@ -299,7 +314,7 @@ export const dashboardExecutivoService = {
       };
     } catch (e) {
       console.warn('Erro ao buscar métricas do cronograma:', e);
-      return { spi: 1, cpi: 1, avancoFisico: 0, avancoFinanceiro: 0, total: 0, concluidas: 0, atrasadas: 0, criticas: 0 };
+      return { spi: 0, cpi: 0, avancoFisico: 0, avancoFinanceiro: 0, total: 0, concluidas: 0, atrasadas: 0, criticas: 0 };
     }
   },
 

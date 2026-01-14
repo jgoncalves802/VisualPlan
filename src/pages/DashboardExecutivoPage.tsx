@@ -190,13 +190,15 @@ const DashboardExecutivoPage: React.FC = () => {
     document.body.style.overflow = presentationMode ? 'auto' : 'hidden';
   };
 
-  const getSPIColor = (spi: number) => {
+  const getSPIColor = (spi: number): 'neutral' | 'success' | 'warning' | 'danger' => {
+    if (spi === 0) return 'neutral';
     if (spi >= 1) return 'success';
     if (spi >= 0.9) return 'warning';
     return 'danger';
   };
 
-  const getCPIColor = (cpi: number) => {
+  const getCPIColor = (cpi: number): 'neutral' | 'success' | 'warning' | 'danger' => {
+    if (cpi === 0) return 'neutral';
     if (cpi >= 1) return 'success';
     if (cpi >= 0.9) return 'warning';
     return 'danger';
@@ -370,17 +372,21 @@ const DashboardExecutivoPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <MiniKPICard
           title="SPI"
-          value={kpis?.spi?.toFixed(2) || '1.00'}
+          value={kpis?.spi?.toFixed(2) || '0.00'}
           icon={TrendingUp}
-          color={getSPIColor(kpis?.spi || 1)}
+          color={getSPIColor(kpis?.spi || 0)}
           subtitle="Cronograma"
+          tooltip="Schedule Performance Index - Indica se o projeto está adiantado (>1) ou atrasado (<1). Calculado com base no valor das atividades concluídas vs planejadas até hoje."
+          formula="SPI = EV / PV (EV = Σ progresso × custo planejado)"
         />
         <MiniKPICard
           title="CPI"
-          value={kpis?.cpi?.toFixed(2) || '1.00'}
+          value={kpis?.cpi?.toFixed(2) || '0.00'}
           icon={TrendingDown}
-          color={getCPIColor(kpis?.cpi || 1)}
+          color={getCPIColor(kpis?.cpi || 0)}
           subtitle="Custo"
+          tooltip="Cost Performance Index - Indica eficiência de custo. >1 significa economia, <1 significa estouro de orçamento."
+          formula="CPI = EV / AC (AC = Σ custo real)"
         />
         <MiniKPICard
           title="Avanço Físico"
@@ -388,6 +394,8 @@ const DashboardExecutivoPage: React.FC = () => {
           icon={Target}
           color="neutral"
           subtitle={`${kpis?.atividadesConcluidas || 0}/${kpis?.atividadesTotal || 0} ativ.`}
+          tooltip="Percentual médio de conclusão de todas as atividades do cronograma."
+          formula="Avanço = Σ(Progresso) / Total de Atividades"
         />
         <MiniKPICard
           title="PPC"
@@ -395,6 +403,8 @@ const DashboardExecutivoPage: React.FC = () => {
           icon={CheckCircle2}
           color={kpis?.ppc && kpis.ppc >= 80 ? 'success' : kpis?.ppc && kpis.ppc >= 60 ? 'warning' : 'danger'}
           subtitle="Last Planner"
+          tooltip="Percentual de Planos Concluídos - Métrica do Last Planner System que mede a confiabilidade do planejamento semanal."
+          formula="PPC = Restrições Concluídas / Total de Restrições × 100"
         />
         <MiniKPICard
           title="Restrições"
@@ -402,6 +412,7 @@ const DashboardExecutivoPage: React.FC = () => {
           icon={AlertTriangle}
           color={kpis?.restricoesImpeditivas && kpis.restricoesImpeditivas > 0 ? 'danger' : 'warning'}
           subtitle={`${kpis?.restricoesImpeditivas || 0} impeditivas`}
+          tooltip="Total de restrições ativas (não concluídas) identificadas no projeto. Impeditivas são as vencidas ou atrasadas."
         />
         <MiniKPICard
           title="Ações Abertas"
@@ -409,6 +420,7 @@ const DashboardExecutivoPage: React.FC = () => {
           icon={ClipboardList}
           color={kpis?.acoesVencidas && kpis.acoesVencidas > 0 ? 'danger' : 'neutral'}
           subtitle={`${kpis?.acoesVencidas || 0} vencidas`}
+          tooltip="Ações do plano 5W2H que ainda não foram concluídas ou canceladas. Vencidas são as que ultrapassaram o prazo."
         />
       </div>
 
