@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   TrendingUp, 
   Clock, 
@@ -6,7 +7,10 @@ import {
   CheckCircle2,
   Maximize2,
   X,
-  Loader2
+  Loader2,
+  Calendar,
+  FileWarning,
+  Activity
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import KPICard from '../components/ui/KPICard';
@@ -180,8 +184,19 @@ const DashboardPage: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
-              <p>Sem dados de atividades para exibir a Curva S</p>
+            <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
+              <Calendar className="w-12 h-12 mb-3 text-gray-300" />
+              <p className="font-medium mb-1">Sem dados para a Curva S</p>
+              <p className="text-sm text-center max-w-xs">
+                Cadastre atividades no cronograma com datas de início para visualizar o avanço físico.
+              </p>
+              <Link 
+                to="/cronograma" 
+                className="mt-3 text-sm font-medium hover:underline"
+                style={{ color: tema.primary }}
+              >
+                Ir para Cronograma
+              </Link>
             </div>
           )}
         </div>
@@ -217,8 +232,19 @@ const DashboardPage: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[200px] text-gray-500">
-              <p>Sem restrições cadastradas</p>
+            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+              <FileWarning className="w-10 h-10 mb-3 text-gray-300" />
+              <p className="font-medium mb-1">Sem restrições cadastradas</p>
+              <p className="text-sm text-center max-w-xs">
+                Registre restrições na Análise Ishikawa para acompanhar impedimentos.
+              </p>
+              <Link 
+                to="/ishikawa" 
+                className="mt-3 text-sm font-medium hover:underline"
+                style={{ color: tema.primary }}
+              >
+                Ir para Análise Ishikawa
+              </Link>
             </div>
           )}
         </div>
@@ -281,8 +307,19 @@ const DashboardPage: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-[150px] text-gray-500">
-            <p>Sem atividades críticas cadastradas</p>
+          <div className="flex flex-col items-center justify-center h-[150px] text-gray-500">
+            <Activity className="w-10 h-10 mb-3 text-gray-300" />
+            <p className="font-medium mb-1">Sem atividades críticas</p>
+            <p className="text-sm text-center max-w-md">
+              Marque atividades como críticas no cronograma para acompanhá-las aqui.
+            </p>
+            <Link 
+              to="/cronograma" 
+              className="mt-3 text-sm font-medium hover:underline"
+              style={{ color: tema.primary }}
+            >
+              Ir para Cronograma
+            </Link>
           </div>
         )}
       </div>
