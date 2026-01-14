@@ -4,7 +4,7 @@ import {
   User, Wrench, Package, DollarSign, Clock, Plus, Minus,
   GripVertical, Calendar, AlertTriangle, Check, Boxes, Info
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { resourceService, Resource, ResourceCategory, ResourceAllocation } from '@/services/resourceService';
 import type { Task } from '@/lib/vision-gantt/types';
 import { getCalendarInheritanceLabel, getCalendarInheritanceBadgeColor, type ResolvedCalendar } from '@/lib/vision-gantt/utils/calendar-inheritance';

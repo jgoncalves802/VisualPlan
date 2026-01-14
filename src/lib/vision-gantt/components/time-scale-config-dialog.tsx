@@ -7,13 +7,13 @@
 
 import React, { useState } from 'react';
 import type { ViewPresetConfig, TimeScaleLayer, TimeUnit } from '../types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog';
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Input } from '../../../components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Separator } from '../../../components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/Dialog';
+import { Button } from '../../../components/ui/Button';
+import { Label } from '../../../components/ui/Label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/Select';
+import { Input } from '../../../components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
+import { Separator } from '../../../components/ui/Separator';
 
 interface TimeScaleConfigDialogProps {
   open: boolean;

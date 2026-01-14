@@ -12,11 +12,11 @@ import type { ResourceStore } from '../stores/resource-store';
 import type { DateRange } from '../types/advanced-features';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { Users, AlertTriangle, Activity, TrendingUp, Zap } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { Card } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/Button';
+import { Card } from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/Badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
+import { Alert, AlertDescription } from '../../../components/ui/Alert';
 
 interface ResourcePanelProps {
   resourceStore: ResourceStore;

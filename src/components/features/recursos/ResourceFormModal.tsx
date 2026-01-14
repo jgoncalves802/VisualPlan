@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Users, Package, DollarSign, Briefcase } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { resourceService, Resource, ResourceType } from '@/services/resourceService';
 
 interface ResourceFormModalProps {

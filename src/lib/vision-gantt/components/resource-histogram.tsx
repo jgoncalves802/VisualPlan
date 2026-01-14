@@ -11,8 +11,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
 import { format, eachDayOfInterval, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
-import { Card } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
+import { Card } from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/Badge';
 import { TrendingUp, AlertTriangle, BarChart3 } from 'lucide-react';
 
 interface ResourceHistogramProps {

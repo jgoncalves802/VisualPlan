@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Plus, Trash2, Users, DollarSign, Clock, Calendar, ChevronDown, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { resourceService, Resource, ResourceCurve, ResourceRate, ResourceAllocationP6 } from '@/services/resourceService';
 
 interface ResourceAssignmentModalProps {

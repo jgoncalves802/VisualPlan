@@ -8,10 +8,10 @@ import { ResourceCurveEditor } from '../components/features/recursos/ResourceCur
 import { ResourceAssignmentModal } from '../components/features/cronograma/ResourceAssignmentModal';
 import { ResourceFormModal } from '../components/features/recursos/ResourceFormModal';
 import { Resource, ResourceCurve, resourceService } from '../services/resourceService';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { 
   Users, 
   TrendingUp, 

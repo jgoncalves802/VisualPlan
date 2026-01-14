@@ -9,8 +9,8 @@
 import React, { useMemo } from 'react';
 import type { Resource } from '../types';
 import type { ResourceAllocation } from '../types/advanced-features';
-import { Card } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
+import { Card } from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/Badge';
 import { DollarSign, TrendingUp, AlertCircle, User } from 'lucide-react';
 import { differenceInHours, differenceInDays } from 'date-fns';
 import { formatCurrency, formatNumber } from '../utils/format-utils';
