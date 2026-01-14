@@ -9,6 +9,7 @@ import {
   ProgramacaoSemanal,
   ProgramacaoAtividade,
   MetricasPPC,
+  TakeoffItemVinculado,
   DIAS_SEMANA,
   DIAS_SEMANA_LABEL,
   DiaSemana,
@@ -16,6 +17,7 @@ import {
   CAUSAS_6M_LABEL,
   CAUSAS_6M_CORES,
 } from '../types/checkinCheckout.types';
+import { takeoffService } from '../services/takeoffService';
 import {
   Calendar,
   ChevronLeft,
@@ -39,6 +41,7 @@ export const CheckInCheckOutPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [programacao, setProgramacao] = useState<ProgramacaoSemanal | null>(null);
   const [atividades, setAtividades] = useState<ProgramacaoAtividade[]>([]);
+  const [itensPorAtividade, setItensPorAtividade] = useState<Record<string, TakeoffItemVinculado[]>>({});
   const [metricas, setMetricas] = useState<MetricasPPC | null>(null);
   const [modoTV, setModoTV] = useState(false);
   const [causaModal, setCausaModal] = useState<{
@@ -99,10 +102,37 @@ export const CheckInCheckOutPage: React.FC = () => {
         setAtividades(ativs);
         const metrics = await checkinCheckoutService.calcularMetricasPPC(prog.id);
         setMetricas(metrics);
+
+        const itensMap: Record<string, TakeoffItemVinculado[]> = {};
+        for (const ativ of ativs) {
+          if (ativ.atividade_cronograma_id) {
+            const vinculos = await takeoffService.getVinculosByAtividade(ativ.atividade_cronograma_id);
+            const itens: TakeoffItemVinculado[] = vinculos.map(v => {
+              const item = (v as any).takeoff_itens;
+              const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
+              const duracao = 5;
+              const qtdDiaria = duracao > 0 ? qtdTotal / duracao : qtdTotal;
+              return {
+                id: v.id,
+                itemId: v.itemId,
+                descricao: item?.descricao || 'Item sem descrição',
+                unidade: item?.unidade || 'un',
+                qtdTotal,
+                qtdDiaria: Math.round(qtdDiaria * 100) / 100,
+                peso: v.peso,
+              };
+            });
+            if (itens.length > 0) {
+              itensMap[ativ.id] = itens;
+            }
+          }
+        }
+        setItensPorAtividade(itensMap);
       } else {
         setProgramacao(null);
         setAtividades([]);
         setMetricas(null);
+        setItensPorAtividade({});
       }
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
@@ -439,6 +469,19 @@ export const CheckInCheckOutPage: React.FC = () => {
                               <div className="font-medium text-neutral-900">{atividade.nome}</div>
                               {atividade.codigo && (
                                 <div className="text-xs text-neutral-500">{atividade.codigo}</div>
+                              )}
+                              {itensPorAtividade[atividade.id] && itensPorAtividade[atividade.id].length > 0 && (
+                                <div className="mt-1 space-y-0.5">
+                                  {itensPorAtividade[atividade.id].map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded inline-block mr-1"
+                                      title={`Total: ${item.qtdTotal.toFixed(2)} ${item.unidade} | Meta diária: ${item.qtdDiaria.toFixed(2)} ${item.unidade}`}
+                                    >
+                                      {item.descricao.slice(0, 20)}{item.descricao.length > 20 ? '...' : ''}: {item.qtdDiaria} {item.unidade}/dia
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </td>
                             <td rowSpan={2} className="p-2 text-center border-r border-neutral-200">

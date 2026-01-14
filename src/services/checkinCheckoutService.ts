@@ -7,13 +7,15 @@ import {
   CreateProgramacaoAtividadeInput,
   UpdateCheckInInput,
   AtividadeParaProgramar,
+  TakeoffItemVinculado,
   MetricasPPC,
   DiaSemana,
   Causa6M,
   DIAS_SEMANA,
 } from '../types/checkinCheckout.types';
-import { getWeek, getYear, startOfWeek, endOfWeek, format, addDays, parseISO } from 'date-fns';
+import { getWeek, getYear, startOfWeek, endOfWeek, format, addDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { takeoffService } from './takeoffService';
 
 export const checkinCheckoutService = {
   async getProgramacoesSemana(empresaId: string, projetoId?: string): Promise<ProgramacaoSemanal[]> {
@@ -426,7 +428,7 @@ export const checkinCheckoutService = {
     try {
       const { data: atividades, error } = await supabase
         .from('atividades_cronograma')
-        .select('id, codigo, nome, responsavel_nome, data_inicio, data_fim')
+        .select('id, codigo, nome, responsavel_nome, data_inicio, data_fim, duracao')
         .eq('empresa_id', empresaId)
         .eq('projeto_id', projetoId)
         .in('status', ['nao_iniciada', 'em_andamento', 'pendente'])
@@ -447,17 +449,47 @@ export const checkinCheckoutService = {
         }
       });
 
-      return (atividades || []).map(a => ({
-        id: a.id,
-        codigo: a.codigo,
-        nome: a.nome,
-        responsavel_nome: a.responsavel_nome,
-        data_inicio: a.data_inicio,
-        data_fim: a.data_fim,
-        tem_restricao: restricoesMap.has(a.id),
-        restricao_id: restricoesMap.get(a.id)?.id,
-        restricao_descricao: restricoesMap.get(a.id)?.descricao,
-      }));
+      const result: AtividadeParaProgramar[] = [];
+
+      for (const a of (atividades || [])) {
+        let duracaoDias = a.duracao || 1;
+        if (!duracaoDias && a.data_inicio && a.data_fim) {
+          duracaoDias = Math.max(1, differenceInCalendarDays(parseISO(a.data_fim), parseISO(a.data_inicio)) + 1);
+        }
+
+        const vinculos = await takeoffService.getVinculosByAtividade(a.id);
+        const itensTakeoff: TakeoffItemVinculado[] = vinculos.map(v => {
+          const item = (v as any).takeoff_itens;
+          const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
+          const qtdDiaria = duracaoDias > 0 ? qtdTotal / duracaoDias : qtdTotal;
+
+          return {
+            id: v.id,
+            itemId: v.itemId,
+            descricao: item?.descricao || 'Item sem descrição',
+            unidade: item?.unidade || 'un',
+            qtdTotal,
+            qtdDiaria: Math.round(qtdDiaria * 100) / 100,
+            peso: v.peso,
+          };
+        });
+
+        result.push({
+          id: a.id,
+          codigo: a.codigo,
+          nome: a.nome,
+          responsavel_nome: a.responsavel_nome,
+          data_inicio: a.data_inicio,
+          data_fim: a.data_fim,
+          duracao_dias: duracaoDias,
+          tem_restricao: restricoesMap.has(a.id),
+          restricao_id: restricoesMap.get(a.id)?.id,
+          restricao_descricao: restricoesMap.get(a.id)?.descricao,
+          itens_takeoff: itensTakeoff.length > 0 ? itensTakeoff : undefined,
+        });
+      }
+
+      return result;
     } catch (e) {
       console.error('Erro ao buscar atividades disponíveis:', e);
       return [];

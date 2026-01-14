@@ -174,6 +174,16 @@ export interface UpdateCheckInInput {
   observacao?: string;
 }
 
+export interface TakeoffItemVinculado {
+  id: string;
+  itemId: string;
+  descricao: string;
+  unidade: string;
+  qtdTotal: number;
+  qtdDiaria: number;
+  peso: number;
+}
+
 export interface AtividadeParaProgramar {
   id: string;
   codigo?: string;
@@ -185,6 +195,8 @@ export interface AtividadeParaProgramar {
   restricao_descricao?: string;
   data_inicio?: string;
   data_fim?: string;
+  duracao_dias?: number;
+  itens_takeoff?: TakeoffItemVinculado[];
 }
 
 export interface MetricasPPC {

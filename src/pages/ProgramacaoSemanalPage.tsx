@@ -573,44 +573,67 @@ export const ProgramacaoSemanalPage: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   {atividadesDisponiveisFiltradas.map((atividade) => (
-                    <label
+                    <div
                       key={atividade.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      className={`rounded-lg border transition-colors ${
                         atividadesSelecionadas.has(atividade.id)
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-neutral-200 hover:bg-neutral-50'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={atividadesSelecionadas.has(atividade.id)}
-                        onChange={(e) => {
-                          const novasSelecionadas = new Set(atividadesSelecionadas);
-                          if (e.target.checked) {
-                            novasSelecionadas.add(atividade.id);
-                          } else {
-                            novasSelecionadas.delete(atividade.id);
-                          }
-                          setAtividadesSelecionadas(novasSelecionadas);
-                        }}
-                        className="w-4 h-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-neutral-900">{atividade.nome}</div>
-                        <div className="text-sm text-neutral-500 flex items-center gap-4">
-                          {atividade.codigo && <span>{atividade.codigo}</span>}
-                          {atividade.responsavel_nome && (
-                            <span>Resp: {atividade.responsavel_nome}</span>
-                          )}
+                      <label className="flex items-center gap-3 p-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={atividadesSelecionadas.has(atividade.id)}
+                          onChange={(e) => {
+                            const novasSelecionadas = new Set(atividadesSelecionadas);
+                            if (e.target.checked) {
+                              novasSelecionadas.add(atividade.id);
+                            } else {
+                              novasSelecionadas.delete(atividade.id);
+                            }
+                            setAtividadesSelecionadas(novasSelecionadas);
+                          }}
+                          className="w-4 h-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-neutral-900">{atividade.nome}</div>
+                          <div className="text-sm text-neutral-500 flex items-center gap-4">
+                            {atividade.codigo && <span>{atividade.codigo}</span>}
+                            {atividade.responsavel_nome && (
+                              <span>Resp: {atividade.responsavel_nome}</span>
+                            )}
+                            {atividade.duracao_dias && (
+                              <span>Duração: {atividade.duracao_dias} dias</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      {atividade.tem_restricao && (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs">
-                          <AlertTriangle className="w-3 h-3" />
-                          Com Restrição
+                        {atividade.tem_restricao && (
+                          <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs">
+                            <AlertTriangle className="w-3 h-3" />
+                            Com Restrição
+                          </div>
+                        )}
+                      </label>
+                      {atividade.itens_takeoff && atividade.itens_takeoff.length > 0 && (
+                        <div className="px-10 pb-3">
+                          <div className="text-xs font-medium text-neutral-500 mb-1">
+                            Quantitativos vinculados (meta diária calculada):
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {atividade.itens_takeoff.map((item) => (
+                              <div
+                                key={item.id}
+                                className="px-2 py-1 bg-neutral-100 rounded text-xs text-neutral-700"
+                                title={`Total: ${item.qtdTotal.toFixed(2)} ${item.unidade}`}
+                              >
+                                {item.descricao.slice(0, 30)}{item.descricao.length > 30 ? '...' : ''}: {item.qtdDiaria.toFixed(2)} {item.unidade}/dia
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
-                    </label>
+                    </div>
                   ))}
                 </div>
               )}
