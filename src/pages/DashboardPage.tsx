@@ -16,39 +16,21 @@ import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { dashboardService, DashboardKPIs, CurvaSData, RestricaoDistribution } from '../services/dashboardService';
 
-const DEFAULT_KPIS: DashboardKPIs = {
-  percentualPAC: 78.5,
-  tempoMedioResolucao: 32,
-  spi: 0.95,
-  cpi: 1.02,
-  restricoesImpeditivas: 5,
-  restricoesTotal: 25,
-  atividadesAtrasadas: 12,
-  atividadesTotal: 100,
-  acoesAbertas: 8,
-  acoesTotal: 15,
-  mudancasPendentes: 3,
-  auditoriasEmAndamento: 2,
-  conformidadeMedia: 85.5,
+const EMPTY_KPIS: DashboardKPIs = {
+  percentualPAC: 0,
+  tempoMedioResolucao: 0,
+  spi: 0,
+  cpi: 0,
+  restricoesImpeditivas: 0,
+  restricoesTotal: 0,
+  atividadesAtrasadas: 0,
+  atividadesTotal: 0,
+  acoesAbertas: 0,
+  acoesTotal: 0,
+  mudancasPendentes: 0,
+  auditoriasEmAndamento: 0,
+  conformidadeMedia: 0,
 };
-
-const DEFAULT_CURVA_S: CurvaSData[] = [
-  { mes: 'Jan', planejado: 10, realizado: 12 },
-  { mes: 'Fev', planejado: 25, realizado: 23 },
-  { mes: 'Mar', planejado: 42, realizado: 40 },
-  { mes: 'Abr', planejado: 58, realizado: 55 },
-  { mes: 'Mai', planejado: 73, realizado: 68 },
-  { mes: 'Jun', planejado: 85, realizado: 78 },
-  { mes: 'Jul', planejado: 100, realizado: 85 },
-];
-
-const DEFAULT_RESTRICOES: RestricaoDistribution[] = [
-  { categoria: 'Material', count: 15, color: '#10B981' },
-  { categoria: 'Mão de Obra', count: 8, color: '#3B82F6' },
-  { categoria: 'Máquina', count: 5, color: '#F59E0B' },
-  { categoria: 'Método', count: 12, color: '#8B5CF6' },
-  { categoria: 'Meio Ambiente', count: 3, color: '#06B6D4' },
-];
 
 const DashboardPage: React.FC = () => {
   const { usuario } = useAuthStore();
@@ -56,9 +38,9 @@ const DashboardPage: React.FC = () => {
   const { projetoSelecionado } = useProjetoStore();
   const [presentationMode, setPresentationMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [kpiData, setKpiData] = useState<DashboardKPIs>(DEFAULT_KPIS);
-  const [curvaS, setCurvaS] = useState<CurvaSData[]>(DEFAULT_CURVA_S);
-  const [restricoesPorTipo, setRestricoesPorTipo] = useState<RestricaoDistribution[]>(DEFAULT_RESTRICOES);
+  const [kpiData, setKpiData] = useState<DashboardKPIs>(EMPTY_KPIS);
+  const [curvaS, setCurvaS] = useState<CurvaSData[]>([]);
+  const [restricoesPorTipo, setRestricoesPorTipo] = useState<RestricaoDistribution[]>([]);
 
   const loadData = useCallback(async () => {
     if (!usuario?.empresaId) {
@@ -70,17 +52,13 @@ const DashboardPage: React.FC = () => {
     try {
       const [kpis, curva, restricoes] = await Promise.all([
         dashboardService.getKPIs(usuario.empresaId, projetoSelecionado?.id),
-        dashboardService.getCurvaS(usuario.empresaId),
+        dashboardService.getCurvaS(usuario.empresaId, projetoSelecionado?.id),
         dashboardService.getRestricoesPorCategoria(usuario.empresaId, projetoSelecionado?.id),
       ]);
 
-      const hasRealKPIData = kpis.atividadesTotal > 0 || kpis.acoesTotal > 0 || kpis.restricoesTotal > 0;
-      setKpiData(hasRealKPIData ? kpis : DEFAULT_KPIS);
-      
-      setCurvaS(curva.length > 0 ? curva : DEFAULT_CURVA_S);
-      
-      const hasRealRestricoes = restricoes.some(r => r.count > 0);
-      setRestricoesPorTipo(hasRealRestricoes ? restricoes : DEFAULT_RESTRICOES);
+      setKpiData(kpis);
+      setCurvaS(curva);
+      setRestricoesPorTipo(restricoes);
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -174,29 +152,35 @@ const DashboardPage: React.FC = () => {
           <h3 className="text-lg font-semibold theme-text mb-4">
             Curva S - Avanço Físico
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={curvaS}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="planejado" 
-                stroke={tema.primary} 
-                strokeWidth={2}
-                name="Planejado"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="realizado" 
-                stroke={tema.success} 
-                strokeWidth={2}
-                name="Realizado"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {curvaS.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={curvaS}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="planejado" 
+                  stroke={tema.primary} 
+                  strokeWidth={2}
+                  name="Planejado"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="realizado" 
+                  stroke={tema.success} 
+                  strokeWidth={2}
+                  name="Realizado"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-gray-500">
+              <p>Sem dados de atividades para exibir a Curva S</p>
+            </div>
+          )}
         </div>
 
         {/* Restrições por Tipo */}
@@ -204,30 +188,36 @@ const DashboardPage: React.FC = () => {
           <h3 className="text-lg font-semibold theme-text mb-4">
             Restrições por Tipo
           </h3>
-          <div className="space-y-3">
-            {restricoesPorTipo.map((item) => {
-              const total = restricoesPorTipo.reduce((acc, r) => acc + r.count, 0);
-              const percentage = total > 0 ? (item.count / total) * 100 : 0;
-              
-              return (
-                <div key={item.categoria}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="theme-text-secondary">{item.categoria}</span>
-                    <span className="font-medium theme-text">{item.count}</span>
+          {restricoesPorTipo.length > 0 ? (
+            <div className="space-y-3">
+              {restricoesPorTipo.map((item) => {
+                const total = restricoesPorTipo.reduce((acc, r) => acc + r.count, 0);
+                const percentage = total > 0 ? (item.count / total) * 100 : 0;
+                
+                return (
+                  <div key={item.categoria}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="theme-text-secondary">{item.categoria}</span>
+                      <span className="font-medium theme-text">{item.count}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${percentage}%`,
+                          backgroundColor: item.color
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: item.color
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[200px] text-gray-500">
+              <p>Sem restrições cadastradas</p>
+            </div>
+          )}
         </div>
       </div>
 

@@ -178,25 +178,58 @@ export const dashboardService = {
     }
   },
 
-  async getCurvaS(empresaId: string): Promise<CurvaSData[]> {
+  async getCurvaS(empresaId: string, projetoId?: string): Promise<CurvaSData[]> {
     try {
-      const { data, error } = await supabase
-        .from('curva_s')
-        .select('*')
-        .eq('empresa_id', empresaId)
-        .order('data', { ascending: true });
+      let query = supabase
+        .from('atividades_cronograma')
+        .select('data_inicio, data_fim, progresso, custo_planejado')
+        .eq('empresa_id', empresaId);
 
-      if (error || !data || data.length === 0) {
-        return generateMockCurvaS();
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
       }
 
-      return data.map(row => ({
-        mes: row.mes,
-        planejado: row.planejado,
-        realizado: row.realizado,
-      }));
+      const { data, error } = await query;
+
+      if (error || !data || data.length === 0) {
+        return [];
+      }
+
+      const monthlyData: Record<string, { planejado: number; realizado: number }> = {};
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+      data.forEach(activity => {
+        if (activity.data_inicio) {
+          const date = new Date(activity.data_inicio);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { planejado: 0, realizado: 0 };
+          }
+          
+          const custoAtividade = activity.custo_planejado || 0;
+          monthlyData[monthKey].planejado += custoAtividade;
+          monthlyData[monthKey].realizado += custoAtividade * ((activity.progresso || 0) / 100);
+        }
+      });
+
+      const sortedKeys = Object.keys(monthlyData).sort();
+      let accPlanejado = 0;
+      let accRealizado = 0;
+
+      return sortedKeys.map(key => {
+        const month = key.split('-')[1];
+        accPlanejado += monthlyData[key].planejado;
+        accRealizado += monthlyData[key].realizado;
+        return {
+          mes: monthNames[parseInt(month) - 1],
+          planejado: Math.round(accPlanejado),
+          realizado: Math.round(accRealizado),
+        };
+      });
     } catch (e) {
-      return generateMockCurvaS();
+      console.warn('Erro ao calcular Curva S:', e);
+      return [];
     }
   },
 
@@ -205,11 +238,12 @@ export const dashboardService = {
       const restricoes = await restricoesIshikawaService.getAll(empresaId, projetoId);
       
       if (restricoes.length === 0) {
-        return generateMockRestricoesPorCategoria();
+        return [];
       }
 
       const countByCategory = restricoes.reduce((acc, r) => {
-        acc[r.categoria] = (acc[r.categoria] || 0) + 1;
+        const cat = r.categoria?.toUpperCase() || 'OUTROS';
+        acc[cat] = (acc[cat] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
@@ -219,29 +253,8 @@ export const dashboardService = {
         color: CATEGORY_COLORS[categoria] || '#6B7280',
       }));
     } catch (e) {
-      return generateMockRestricoesPorCategoria();
+      console.warn('Erro ao buscar restrições por categoria:', e);
+      return [];
     }
   },
 };
-
-function generateMockCurvaS(): CurvaSData[] {
-  return [
-    { mes: 'Jan', planejado: 10, realizado: 12 },
-    { mes: 'Fev', planejado: 25, realizado: 23 },
-    { mes: 'Mar', planejado: 42, realizado: 40 },
-    { mes: 'Abr', planejado: 58, realizado: 55 },
-    { mes: 'Mai', planejado: 73, realizado: 68 },
-    { mes: 'Jun', planejado: 85, realizado: 78 },
-    { mes: 'Jul', planejado: 100, realizado: 85 },
-  ];
-}
-
-function generateMockRestricoesPorCategoria(): RestricaoDistribution[] {
-  return [
-    { categoria: 'Material', count: 15, color: '#10B981' },
-    { categoria: 'Mão de Obra', count: 8, color: '#3B82F6' },
-    { categoria: 'Máquina', count: 5, color: '#F59E0B' },
-    { categoria: 'Método', count: 12, color: '#8B5CF6' },
-    { categoria: 'Meio Ambiente', count: 3, color: '#06B6D4' },
-  ];
-}
