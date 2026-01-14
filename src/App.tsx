@@ -8,6 +8,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import DashboardExecutivoPage from './pages/DashboardExecutivoPage';
 import KanbanPage from './pages/KanbanPage';
 import AdminTemasPage from './pages/AdminTemasPage';
 import AdminUsuariosPage from './pages/AdminUsuariosPage';
@@ -69,7 +70,8 @@ function App() {
 
           <Route element={<ProtectedAppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardExecutivoPage />} />
+            <Route path="/dashboard-basico" element={<DashboardPage />} />
             <Route path="/wbs" element={<WBSPage />} />
             <Route path="/cronograma" element={<CronogramaPage />} />
             <Route path="/cronograma/:projetoId" element={<CronogramaPage />} />
