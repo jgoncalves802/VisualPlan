@@ -523,4 +523,173 @@ export const checkinCheckoutService = {
       dom: format(addDays(inicio, 6), 'yyyy-MM-dd'),
     };
   },
+
+  /**
+   * Busca atividades do cronograma que caem na semana especificada.
+   * Uma atividade cai na semana se seu período (data_inicio a data_fim) 
+   * intercepta o período da semana.
+   */
+  async getAtividadesDaSemana(
+    empresaId: string, 
+    projetoId: string, 
+    dataInicioSemana: string, 
+    dataFimSemana: string
+  ): Promise<AtividadeParaProgramar[]> {
+    try {
+      // Buscar atividades do cronograma que interceptam a semana
+      // (atividade.data_inicio <= semana.fim) AND (atividade.data_fim >= semana.inicio)
+      const { data: atividades, error } = await supabase
+        .from('atividades_cronograma')
+        .select('id, codigo, nome, responsavel_nome, data_inicio, data_fim, duracao_dias, progresso, status')
+        .eq('empresa_id', empresaId)
+        .eq('projeto_id', projetoId)
+        .neq('tipo', 'marco')
+        .neq('tipo', 'resumo')
+        .lte('data_inicio', dataFimSemana)
+        .gte('data_fim', dataInicioSemana)
+        .order('data_inicio', { ascending: true });
+
+      if (error) throw error;
+
+      // Buscar restrições pendentes
+      const { data: restricoes } = await supabase
+        .from('restricoes_ishikawa')
+        .select('id, descricao, atividade_id')
+        .eq('empresa_id', empresaId)
+        .neq('status', 'CONCLUIDA_NO_PRAZO');
+
+      const restricoesMap = new Map<string, { id: string; descricao: string }>();
+      (restricoes || []).forEach(r => {
+        if (r.atividade_id) {
+          restricoesMap.set(r.atividade_id, { id: r.id, descricao: r.descricao });
+        }
+      });
+
+      const result: AtividadeParaProgramar[] = [];
+
+      for (const a of (atividades || [])) {
+        // Pular atividades já 100% concluídas
+        if (a.progresso >= 100 || a.status === 'concluida') continue;
+
+        let duracaoDias = a.duracao_dias || 1;
+        if (!duracaoDias && a.data_inicio && a.data_fim) {
+          duracaoDias = Math.max(1, differenceInCalendarDays(parseISO(a.data_fim), parseISO(a.data_inicio)) + 1);
+        }
+
+        // Buscar itens de take-off vinculados
+        const vinculos = await takeoffService.getVinculosByAtividade(a.id);
+        const itensTakeoff: TakeoffItemVinculado[] = vinculos.map(v => {
+          const item = (v as any).takeoff_itens;
+          const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
+          const qtdDiaria = duracaoDias > 0 ? qtdTotal / duracaoDias : qtdTotal;
+
+          return {
+            id: v.id,
+            itemId: v.itemId,
+            descricao: item?.descricao || 'Item sem descrição',
+            unidade: item?.unidade || 'un',
+            qtdTotal,
+            qtdDiaria: Math.round(qtdDiaria * 100) / 100,
+            peso: v.peso,
+          };
+        });
+
+        result.push({
+          id: a.id,
+          codigo: a.codigo,
+          nome: a.nome,
+          responsavel_nome: a.responsavel_nome,
+          data_inicio: a.data_inicio,
+          data_fim: a.data_fim,
+          duracao_dias: duracaoDias,
+          tem_restricao: restricoesMap.has(a.id),
+          restricao_id: restricoesMap.get(a.id)?.id,
+          restricao_descricao: restricoesMap.get(a.id)?.descricao,
+          itens_takeoff: itensTakeoff.length > 0 ? itensTakeoff : undefined,
+        });
+      }
+
+      return result;
+    } catch (e) {
+      console.error('Erro ao buscar atividades da semana:', e);
+      return [];
+    }
+  },
+
+  /**
+   * Obtém ou cria automaticamente a programação para uma semana.
+   * Se a programação não existe, cria e popula com atividades do cronograma.
+   */
+  async getOrCreateProgramacao(
+    empresaId: string,
+    projetoId: string,
+    semana: number,
+    ano: number,
+    dataInicioSemana: string,
+    dataFimSemana: string
+  ): Promise<{ programacao: ProgramacaoSemanal | null; atividades: ProgramacaoAtividade[]; isNew: boolean }> {
+    try {
+      // Verificar se já existe programação para esta semana
+      const { data: existente, error: fetchError } = await supabase
+        .from('programacao_semanal')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('projeto_id', projetoId)
+        .eq('semana', semana)
+        .eq('ano', ano)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (existente) {
+        // Programação já existe, carregar atividades
+        const ativs = await this.getAtividadesProgramacao(existente.id);
+        return { programacao: existente as ProgramacaoSemanal, atividades: ativs, isNew: false };
+      }
+
+      // Criar nova programação
+      const novaProg = await this.createProgramacao(empresaId, {
+        projeto_id: projetoId,
+        semana,
+        ano,
+        data_inicio: dataInicioSemana,
+        data_fim: dataFimSemana,
+      });
+
+      if (!novaProg) {
+        return { programacao: null, atividades: [], isNew: false };
+      }
+
+      // Buscar atividades do cronograma para esta semana
+      const atividadesDaSemana = await this.getAtividadesDaSemana(
+        empresaId, 
+        projetoId, 
+        dataInicioSemana, 
+        dataFimSemana
+      );
+
+      // Adicionar atividades à programação
+      const inputs: CreateProgramacaoAtividadeInput[] = atividadesDaSemana.map((a, idx) => ({
+        programacao_id: novaProg.id,
+        atividade_cronograma_id: a.id,
+        codigo: a.codigo,
+        nome: a.nome,
+        responsavel_nome: a.responsavel_nome,
+        tem_restricao: a.tem_restricao,
+        restricao_id: a.restricao_id,
+        restricao_descricao: a.restricao_descricao,
+        ordem: idx,
+      }));
+
+      let novasAtividades: ProgramacaoAtividade[] = [];
+      if (inputs.length > 0) {
+        novasAtividades = await this.addAtividadesBatch(empresaId, inputs);
+      }
+
+      return { programacao: novaProg, atividades: novasAtividades, isNew: true };
+    } catch (e) {
+      console.error('Erro ao obter/criar programação:', e);
+      return { programacao: null, atividades: [], isNew: false };
+    }
+  },
 };

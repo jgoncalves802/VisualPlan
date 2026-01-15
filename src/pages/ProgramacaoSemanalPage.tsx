@@ -62,29 +62,35 @@ export const ProgramacaoSemanalPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const programacoes = await checkinCheckoutService.getProgramacoesSemana(
+      const dataInicioStr = format(semanaAtual.inicio, 'yyyy-MM-dd');
+      const dataFimStr = format(semanaAtual.fim, 'yyyy-MM-dd');
+
+      // Usar getOrCreateProgramacao para carregar ou criar automaticamente
+      const { programacao: prog, atividades: ativs, isNew } = await checkinCheckoutService.getOrCreateProgramacao(
         usuario.empresaId,
-        projetoSelecionado.id
+        projetoSelecionado.id,
+        semanaAtual.semana,
+        semanaAtual.ano,
+        dataInicioStr,
+        dataFimStr
       );
 
-      const prog = programacoes.find(
-        (p) => p.semana === semanaAtual.semana && p.ano === semanaAtual.ano
-      );
+      setProgramacao(prog);
+      setAtividades(ativs);
 
-      if (prog) {
-        setProgramacao(prog);
-        const ativs = await checkinCheckoutService.getAtividadesProgramacao(prog.id);
-        setAtividades(ativs);
-      } else {
-        setProgramacao(null);
-        setAtividades([]);
+      if (isNew && ativs.length > 0) {
+        console.log(`Programação criada automaticamente com ${ativs.length} atividades do cronograma`);
       }
 
+      // Carregar atividades disponíveis para adicionar (outras semanas)
       const disponiveis = await checkinCheckoutService.getAtividadesDisponiveis(
         usuario.empresaId,
         projetoSelecionado.id
       );
-      setAtividadesDisponiveis(disponiveis);
+      
+      // Filtrar atividades que já estão na programação
+      const idsNaProgramacao = new Set(ativs.map(a => a.atividade_cronograma_id));
+      setAtividadesDisponiveis(disponiveis.filter(a => !idsNaProgramacao.has(a.id)));
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
     } finally {
@@ -112,48 +118,6 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       inicio: startOfWeek(novaData, { weekStartsOn: 1 }),
       fim: endOfWeek(novaData, { weekStartsOn: 1 }),
     });
-  };
-
-  const handleCriarProgramacao = async () => {
-    if (!usuario?.empresaId) {
-      alert('Erro: Usuário não está logado ou empresa não identificada.');
-      return;
-    }
-    if (!projetoSelecionado?.id) {
-      alert('Erro: Selecione um projeto antes de criar a programação.');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      console.log('Criando programação para:', {
-        empresaId: usuario.empresaId,
-        projetoId: projetoSelecionado.id,
-        semana: semanaAtual.semana,
-        ano: semanaAtual.ano,
-      });
-
-      const novaProgramacao = await checkinCheckoutService.createProgramacao(usuario.empresaId, {
-        projeto_id: projetoSelecionado.id,
-        semana: semanaAtual.semana,
-        ano: semanaAtual.ano,
-        data_inicio: format(semanaAtual.inicio, 'yyyy-MM-dd'),
-        data_fim: format(semanaAtual.fim, 'yyyy-MM-dd'),
-      });
-
-      if (novaProgramacao) {
-        console.log('Programação criada com sucesso:', novaProgramacao);
-        setProgramacao(novaProgramacao);
-        setShowSeletor(true);
-      } else {
-        alert('Erro ao criar programação. Verifique o console para detalhes.');
-      }
-    } catch (e: any) {
-      console.error('Erro ao criar programação:', e);
-      alert(`Erro ao criar programação: ${e?.message || 'Erro desconhecido'}`);
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleAdicionarAtividades = async () => {
@@ -349,18 +313,37 @@ export const ProgramacaoSemanalPage: React.FC = () => {
           <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-neutral-200">
             <ClipboardList className="w-16 h-16 text-neutral-300 mb-4" />
             <h3 className="text-lg font-medium text-neutral-700 mb-2">
-              Nenhuma programação para esta semana
+              Carregando programação...
             </h3>
             <p className="text-neutral-500 mb-6">
-              Crie uma nova programação semanal para começar a planejar
+              Aguarde enquanto a programação é criada automaticamente com as atividades do cronograma
             </p>
             <button
-              onClick={handleCriarProgramacao}
-              disabled={saving}
+              onClick={loadData}
+              disabled={loading}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Carregando...' : 'Recarregar'}
+            </button>
+          </div>
+        ) : atividades.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-neutral-200">
+            <Calendar className="w-16 h-16 text-neutral-300 mb-4" />
+            <h3 className="text-lg font-medium text-neutral-700 mb-2">
+              Nenhuma atividade nesta semana
+            </h3>
+            <p className="text-neutral-500 mb-6 text-center max-w-md">
+              O cronograma não possui atividades programadas para esta semana.
+              <br />
+              Você pode adicionar atividades de outras semanas para adiantar o trabalho.
+            </p>
+            <button
+              onClick={() => setShowSeletor(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <Plus className="w-5 h-5" />
-              {saving ? 'Criando...' : 'Criar Programação Semanal'}
+              Adicionar Atividades
             </button>
           </div>
         ) : (
