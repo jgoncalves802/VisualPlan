@@ -16,6 +16,10 @@ import {
   Causa6M,
   CAUSAS_6M_LABEL,
   CAUSAS_6M_CORES,
+  InterferenciaObra,
+  TipoEmpresa,
+  TIPO_EMPRESA_LABEL,
+  CreateInterferenciaInput,
 } from '../types/checkinCheckout.types';
 import { takeoffService } from '../services/takeoffService';
 import { supabase } from '../services/supabase';
@@ -24,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  AlertOctagon,
   CheckCircle2,
   ClipboardList,
   RefreshCw,
@@ -31,6 +36,9 @@ import {
   Maximize2,
   Tv,
   BarChart3,
+  Plus,
+  History,
+  ArrowRight,
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -53,6 +61,17 @@ export const CheckInCheckOutPage: React.FC = () => {
   } | null>(null);
   const [causaSelecionada, setCausaSelecionada] = useState<Causa6M | null>(null);
   const [causaDescricao, setCausaDescricao] = useState('');
+
+  const [showInterferenciaModal, setShowInterferenciaModal] = useState(false);
+  const [interferencias, setInterferencias] = useState<InterferenciaObra[]>([]);
+  const [showHistoricoInterferencias, setShowHistoricoInterferencias] = useState(false);
+  const [novaInterferencia, setNovaInterferencia] = useState({
+    atividade_id: '',
+    tipo_empresa: 'CONTRATADA' as TipoEmpresa,
+    empresa: '',
+    descricao: '',
+  });
+  const [savingInterferencia, setSavingInterferencia] = useState(false);
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -161,16 +180,72 @@ export const CheckInCheckOutPage: React.FC = () => {
         } else {
           setItensPorAtividade({});
         }
+      const listaInterferencias = await checkinCheckoutService.getInterferencias(
+          usuario.empresaId,
+          projetoSelecionado.id,
+          result.programacao.id
+        );
+        setInterferencias(listaInterferencias);
       } else {
         setProgramacao(null);
         setAtividades([]);
         setMetricas(null);
         setItensPorAtividade({});
+        setInterferencias([]);
       }
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRegistrarInterferencia = async () => {
+    if (!programacao || !usuario?.empresaId || !usuario?.id || !projetoSelecionado?.id) return;
+    if (!novaInterferencia.descricao.trim()) {
+      alert('Por favor, descreva a interferência.');
+      return;
+    }
+
+    setSavingInterferencia(true);
+    try {
+      const input: CreateInterferenciaInput = {
+        projeto_id: projetoSelecionado.id,
+        programacao_id: programacao.id,
+        atividade_id: novaInterferencia.atividade_id || undefined,
+        setor: (usuario as any).setor || 'Não especificado',
+        empresa_nome: novaInterferencia.empresa,
+        tipo_empresa: novaInterferencia.tipo_empresa,
+        descricao: novaInterferencia.descricao,
+        data_ocorrencia: format(new Date(), 'yyyy-MM-dd'),
+      };
+
+      const resultado = await checkinCheckoutService.registrarInterferencia(
+        usuario.empresaId,
+        usuario.id,
+        usuario.nome || usuario.email || 'Usuário',
+        input
+      );
+
+      if (resultado) {
+        setShowInterferenciaModal(false);
+        setNovaInterferencia({
+          atividade_id: '',
+          tipo_empresa: 'CONTRATADA',
+          empresa: '',
+          descricao: '',
+        });
+        const listaInterferencias = await checkinCheckoutService.getInterferencias(
+          usuario.empresaId,
+          projetoSelecionado.id,
+          programacao.id
+        );
+        setInterferencias(listaInterferencias);
+      }
+    } catch (e) {
+      console.error('Erro ao registrar interferência:', e);
+    } finally {
+      setSavingInterferencia(false);
     }
   };
 
@@ -396,6 +471,26 @@ export const CheckInCheckOutPage: React.FC = () => {
             )}
             {!modoTV && (
               <>
+                {programacao && programacao.status === 'EM_EXECUCAO' && (
+                  <button
+                    onClick={() => setShowInterferenciaModal(true)}
+                    className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    title="Registrar Interferência"
+                  >
+                    <AlertOctagon className="w-4 h-4" />
+                    <span className="text-sm">Interferência</span>
+                  </button>
+                )}
+                {interferencias.length > 0 && (
+                  <button
+                    onClick={() => setShowHistoricoInterferencias(true)}
+                    className="flex items-center gap-2 px-3 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                    title="Histórico de Interferências"
+                  >
+                    <History className="w-4 h-4" />
+                    <span className="text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded-full">{interferencias.length}</span>
+                  </button>
+                )}
                 <button
                   onClick={handleExportPDF}
                   className="flex items-center gap-2 px-3 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
@@ -716,6 +811,184 @@ export const CheckInCheckOutPage: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showInterferenciaModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">Registrar Interferência</h3>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Registre ocorrências que afetaram o andamento das atividades
+                </p>
+              </div>
+              <button
+                onClick={() => setShowInterferenciaModal(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Atividade Afetada (opcional)
+                </label>
+                <select
+                  value={novaInterferencia.atividade_id}
+                  onChange={(e) => setNovaInterferencia({...novaInterferencia, atividade_id: e.target.value})}
+                  className="w-full p-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Geral - Afeta toda a programação</option>
+                  {atividades.map(ativ => (
+                    <option key={ativ.id} value={ativ.id}>{ativ.nome}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Tipo de Empresa
+                </label>
+                <div className="flex gap-2">
+                  {(Object.keys(TIPO_EMPRESA_LABEL) as TipoEmpresa[]).map(tipo => (
+                    <button
+                      key={tipo}
+                      onClick={() => setNovaInterferencia({...novaInterferencia, tipo_empresa: tipo})}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        novaInterferencia.tipo_empresa === tipo
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      }`}
+                    >
+                      {TIPO_EMPRESA_LABEL[tipo]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Nome da Empresa (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={novaInterferencia.empresa}
+                  onChange={(e) => setNovaInterferencia({...novaInterferencia, empresa: e.target.value})}
+                  className="w-full p-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nome da empresa envolvida"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Descrição da Interferência *
+                </label>
+                <textarea
+                  value={novaInterferencia.descricao}
+                  onChange={(e) => setNovaInterferencia({...novaInterferencia, descricao: e.target.value})}
+                  className="w-full p-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={4}
+                  placeholder="Descreva a interferência que ocorreu, seu impacto e possíveis ações..."
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowInterferenciaModal(false);
+                  setNovaInterferencia({
+                    atividade_id: '',
+                    tipo_empresa: 'CONTRATADA',
+                    empresa: '',
+                    descricao: '',
+                  });
+                }}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleRegistrarInterferencia}
+                disabled={savingInterferencia || !novaInterferencia.descricao.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+                {savingInterferencia ? 'Registrando...' : 'Registrar Interferência'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoricoInterferencias && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Histórico de Interferências</h3>
+              <button
+                onClick={() => setShowHistoricoInterferencias(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {interferencias.length === 0 ? (
+                <div className="text-center py-8 text-neutral-500">
+                  Nenhuma interferência registrada
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {interferencias.map((interf) => (
+                    <div key={interf.id} className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              interf.tipo_empresa === 'CONTRATADA' ? 'bg-blue-100 text-blue-700' :
+                              interf.tipo_empresa === 'CONTRATANTE' ? 'bg-green-100 text-green-700' :
+                              'bg-purple-100 text-purple-700'
+                            }`}>
+                              {TIPO_EMPRESA_LABEL[interf.tipo_empresa]}
+                            </span>
+                            {interf.empresa_nome && (
+                              <span className="text-sm text-neutral-500">{interf.empresa_nome}</span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              interf.status === 'ABERTA' ? 'bg-red-100 text-red-700' :
+                              interf.status === 'RESOLVIDA' ? 'bg-green-100 text-green-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {interf.status}
+                            </span>
+                          </div>
+                          <p className="text-neutral-900">{interf.descricao}</p>
+                          <div className="text-sm text-neutral-500 mt-2 flex items-center gap-4">
+                            <span>Por: {interf.usuario_nome}</span>
+                            <span>{format(new Date(interf.data_ocorrencia), "dd/MM/yyyy", { locale: ptBR })}</span>
+                          </div>
+                          {interf.convertida_restricao && (
+                            <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                              <ArrowRight className="w-4 h-4" />
+                              Convertida em restrição
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end">
+              <button
+                onClick={() => setShowHistoricoInterferencias(false)}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>
