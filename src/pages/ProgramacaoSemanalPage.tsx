@@ -115,10 +115,24 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   };
 
   const handleCriarProgramacao = async () => {
-    if (!usuario?.empresaId || !projetoSelecionado?.id) return;
+    if (!usuario?.empresaId) {
+      alert('Erro: Usuário não está logado ou empresa não identificada.');
+      return;
+    }
+    if (!projetoSelecionado?.id) {
+      alert('Erro: Selecione um projeto antes de criar a programação.');
+      return;
+    }
 
     setSaving(true);
     try {
+      console.log('Criando programação para:', {
+        empresaId: usuario.empresaId,
+        projetoId: projetoSelecionado.id,
+        semana: semanaAtual.semana,
+        ano: semanaAtual.ano,
+      });
+
       const novaProgramacao = await checkinCheckoutService.createProgramacao(usuario.empresaId, {
         projeto_id: projetoSelecionado.id,
         semana: semanaAtual.semana,
@@ -128,11 +142,15 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       });
 
       if (novaProgramacao) {
+        console.log('Programação criada com sucesso:', novaProgramacao);
         setProgramacao(novaProgramacao);
         setShowSeletor(true);
+      } else {
+        alert('Erro ao criar programação. Verifique o console para detalhes.');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Erro ao criar programação:', e);
+      alert(`Erro ao criar programação: ${e?.message || 'Erro desconhecido'}`);
     } finally {
       setSaving(false);
     }
