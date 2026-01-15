@@ -9,9 +9,13 @@ import {
   ProgramacaoSemanal,
   ProgramacaoAtividade,
   AtividadeParaProgramar,
+  AceiteProgramacao,
   DIAS_SEMANA,
   DIAS_SEMANA_LABEL,
   CreateProgramacaoAtividadeInput,
+  STATUS_PROGRAMACAO_LABEL,
+  STATUS_PROGRAMACAO_CORES,
+  TIPO_ACEITE_LABEL,
 } from '../types/checkinCheckout.types';
 import {
   Calendar,
@@ -26,6 +30,12 @@ import {
   Trash2,
   RefreshCw,
   Play,
+  Send,
+  FileCheck,
+  XCircle,
+  History,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 
 export const ProgramacaoSemanalPage: React.FC = () => {
@@ -39,6 +49,13 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const [atividadesDisponiveis, setAtividadesDisponiveis] = useState<AtividadeParaProgramar[]>([]);
   const [atividadesSelecionadas, setAtividadesSelecionadas] = useState<Set<string>>(new Set());
   const [showSeletor, setShowSeletor] = useState(false);
+  const [aceites, setAceites] = useState<AceiteProgramacao[]>([]);
+  const [showHistoricoAceites, setShowHistoricoAceites] = useState(false);
+  const [observacoesEnvio, setObservacoesEnvio] = useState('');
+  const [showModalEnvio, setShowModalEnvio] = useState(false);
+  const [showModalAceite, setShowModalAceite] = useState(false);
+  const [observacoesAceite, setObservacoesAceite] = useState('');
+  const [acaoAceite, setAcaoAceite] = useState<'aceitar' | 'rejeitar'>('aceitar');
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -80,6 +97,14 @@ export const ProgramacaoSemanalPage: React.FC = () => {
 
       if (isNew && ativs.length > 0) {
         console.log(`Programação criada automaticamente com ${ativs.length} atividades do cronograma`);
+      }
+
+      // Carregar histórico de aceites
+      if (prog) {
+        const aceitesData = await checkinCheckoutService.getAceitesByProgramacao(prog.id);
+        setAceites(aceitesData);
+      } else {
+        setAceites([]);
       }
 
       // Carregar atividades disponíveis para adicionar (outras semanas)
@@ -200,6 +225,93 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     }
   };
 
+  const handleEnviarParaProducao = async () => {
+    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+
+    setSaving(true);
+    try {
+      const sucesso = await checkinCheckoutService.enviarParaProducao(
+        usuario.empresaId,
+        usuario.id,
+        usuario.nome || usuario.email || 'Usuário',
+        programacao.id,
+        observacoesEnvio
+      );
+
+      if (sucesso) {
+        setProgramacao({ ...programacao, status: 'AGUARDANDO_ACEITE' });
+        setShowModalEnvio(false);
+        setObservacoesEnvio('');
+        await loadData();
+      }
+    } catch (e) {
+      console.error('Erro ao enviar para produção:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAceitarProgramacao = async () => {
+    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+
+    setSaving(true);
+    try {
+      const sucesso = await checkinCheckoutService.aceitarProgramacao(
+        usuario.empresaId,
+        usuario.id,
+        usuario.nome || usuario.email || 'Usuário',
+        programacao.id,
+        observacoesAceite
+      );
+
+      if (sucesso) {
+        setProgramacao({ ...programacao, status: 'ACEITA' });
+        setShowModalAceite(false);
+        setObservacoesAceite('');
+        await loadData();
+      }
+    } catch (e) {
+      console.error('Erro ao aceitar programação:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRejeitarProgramacao = async () => {
+    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+    if (!observacoesAceite.trim()) {
+      alert('Por favor, informe o motivo da rejeição.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const sucesso = await checkinCheckoutService.rejeitarProgramacao(
+        usuario.empresaId,
+        usuario.id,
+        usuario.nome || usuario.email || 'Usuário',
+        programacao.id,
+        observacoesAceite
+      );
+
+      if (sucesso) {
+        setProgramacao({ ...programacao, status: 'PLANEJADA' });
+        setShowModalAceite(false);
+        setObservacoesAceite('');
+        await loadData();
+      }
+    } catch (e) {
+      console.error('Erro ao rejeitar programação:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const podeEditar = useMemo(() => {
+    if (!programacao) return false;
+    return checkinCheckoutService.podeEditar(programacao);
+  }, [programacao]);
+
   const estatisticas = useMemo(() => {
     return {
       total: atividades.length,
@@ -285,7 +397,40 @@ export const ProgramacaoSemanalPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {programacao && (
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                style={{ 
+                  backgroundColor: `${STATUS_PROGRAMACAO_CORES[programacao.status]}20`,
+                  color: STATUS_PROGRAMACAO_CORES[programacao.status] 
+                }}
+              >
+                {podeEditar ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                {STATUS_PROGRAMACAO_LABEL[programacao.status]}
+              </div>
+            )}
+            
             {programacao && programacao.status === 'PLANEJADA' && atividades.length > 0 && (
+              <button
+                onClick={() => setShowModalEnvio(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Enviar para Produção
+              </button>
+            )}
+            
+            {programacao && programacao.status === 'AGUARDANDO_ACEITE' && (
+              <button
+                onClick={() => { setAcaoAceite('aceitar'); setShowModalAceite(true); }}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <FileCheck className="w-4 h-4" />
+                Dar Aceite
+              </button>
+            )}
+            
+            {programacao && programacao.status === 'ACEITA' && (
               <button
                 onClick={handleIniciarExecucao}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -294,6 +439,17 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 Iniciar Execução
               </button>
             )}
+            
+            {programacao && aceites.length > 0 && (
+              <button
+                onClick={() => setShowHistoricoAceites(true)}
+                className="flex items-center gap-2 px-3 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                title="Histórico de Aceites"
+              >
+                <History className="w-4 h-4" />
+              </button>
+            )}
+            
             <button
               onClick={loadData}
               className="flex items-center gap-2 px-3 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
@@ -659,6 +815,197 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                   {saving ? 'Salvando...' : 'Adicionar Selecionadas'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModalEnvio && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Enviar para Produção</h3>
+              <button
+                onClick={() => setShowModalEnvio(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="text-neutral-600 mb-4">
+                A programação será enviada para o setor de produção dar aceite. 
+                Enquanto aguarda o aceite, você ainda poderá editar a programação.
+                Após o aceite da produção, a programação será bloqueada para edição.
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Observações (opcional)
+                </label>
+                <textarea
+                  value={observacoesEnvio}
+                  onChange={(e) => setObservacoesEnvio(e.target.value)}
+                  placeholder="Adicione observações para a produção..."
+                  rows={3}
+                  className="w-full p-3 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowModalEnvio(false)}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEnviarParaProducao}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                {saving ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModalAceite && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Aceite da Produção</h3>
+              <button
+                onClick={() => setShowModalAceite(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="text-neutral-600 mb-4">
+                Você está dando o aceite da produção para esta programação semanal.
+                Após o aceite, a programação será bloqueada para edição e poderá ser iniciada.
+              </p>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setAcaoAceite('aceitar')}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    acaoAceite === 'aceitar'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  }`}
+                >
+                  Aceitar
+                </button>
+                <button
+                  onClick={() => setAcaoAceite('rejeitar')}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    acaoAceite === 'rejeitar'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  }`}
+                >
+                  Rejeitar
+                </button>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  {acaoAceite === 'rejeitar' ? 'Motivo da rejeição *' : 'Observações (opcional)'}
+                </label>
+                <textarea
+                  value={observacoesAceite}
+                  onChange={(e) => setObservacoesAceite(e.target.value)}
+                  placeholder={acaoAceite === 'rejeitar' ? 'Informe o motivo da rejeição...' : 'Adicione observações...'}
+                  rows={3}
+                  className="w-full p-3 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required={acaoAceite === 'rejeitar'}
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowModalAceite(false)}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              {acaoAceite === 'aceitar' ? (
+                <button
+                  onClick={handleAceitarProgramacao}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  <FileCheck className="w-4 h-4" />
+                  {saving ? 'Processando...' : 'Confirmar Aceite'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleRejeitarProgramacao}
+                  disabled={saving || !observacoesAceite.trim()}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4" />
+                  {saving ? 'Processando...' : 'Confirmar Rejeição'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoricoAceites && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Histórico de Aceites</h3>
+              <button
+                onClick={() => setShowHistoricoAceites(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {aceites.length === 0 ? (
+                <div className="text-center py-8 text-neutral-500">
+                  Nenhum aceite registrado
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {aceites.map((aceite) => (
+                    <div key={aceite.id} className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-medium text-neutral-900">
+                            {TIPO_ACEITE_LABEL[aceite.tipo_aceite]}
+                          </div>
+                          <div className="text-sm text-neutral-500 mt-1">
+                            Por: {aceite.usuario_nome} ({aceite.setor})
+                          </div>
+                          {aceite.observacoes && (
+                            <div className="text-sm text-neutral-600 mt-2 bg-white p-2 rounded border border-neutral-200">
+                              {aceite.observacoes}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-neutral-400">
+                          {format(new Date(aceite.data_aceite), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end">
+              <button
+                onClick={() => setShowHistoricoAceites(false)}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Fechar
+              </button>
             </div>
           </div>
         </div>
