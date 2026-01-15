@@ -26,6 +26,7 @@ import {
   CONDICAO_PRONTIDAO_DESCRICAO,
   CONDICAO_PARA_ISHIKAWA,
   Causa6M,
+  StatusAceiteAtividade,
 } from '../types/checkinCheckout.types';
 import {
   Calendar,
@@ -67,6 +68,8 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const [observacoesAceite, setObservacoesAceite] = useState('');
   const [acaoAceite, setAcaoAceite] = useState<'aceitar' | 'rejeitar'>('aceitar');
   const [condicaoSelecionada, setCondicaoSelecionada] = useState<CondicaoProntidao | ''>('');
+  const [atividadeParaAceite, setAtividadeParaAceite] = useState<ProgramacaoAtividade | null>(null);
+  const [showModalAceiteAtividade, setShowModalAceiteAtividade] = useState(false);
   
   const restricaoModal = useRestricaoModal();
 
@@ -264,32 +267,6 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     }
   };
 
-  const handleAceitarProgramacao = async () => {
-    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
-
-    setSaving(true);
-    try {
-      const sucesso = await checkinCheckoutService.aceitarProgramacao(
-        usuario.empresaId,
-        usuario.id,
-        usuario.nome || usuario.email || 'Usuário',
-        programacao.id,
-        observacoesAceite
-      );
-
-      if (sucesso) {
-        setProgramacao({ ...programacao, status: 'ACEITA' });
-        setShowModalAceite(false);
-        setObservacoesAceite('');
-        await loadData();
-      }
-    } catch (e) {
-      console.error('Erro ao aceitar programação:', e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const mapCausa6MToTipoDetalhado = (causa: Causa6M): TipoRestricaoDetalhado => {
     const mapping: Record<Causa6M, TipoRestricaoDetalhado> = {
       'MATERIAL': TipoRestricaoDetalhado.MATERIAL,
@@ -303,8 +280,63 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     return mapping[causa] || TipoRestricaoDetalhado.METODO;
   };
 
-  const handleRejeitarProgramacao = () => {
-    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+  const handleAbrirAceiteAtividade = (atividade: ProgramacaoAtividade) => {
+    setAtividadeParaAceite(atividade);
+    setAcaoAceite('aceitar');
+    setCondicaoSelecionada('');
+    setObservacoesAceite('');
+    setShowModalAceiteAtividade(true);
+  };
+
+  const handleAceitarAtividade = async () => {
+    if (!atividadeParaAceite || !usuario?.id || !usuario?.empresaId) return;
+
+    setSaving(true);
+    try {
+      setAtividades(prev => prev.map(a => 
+        a.id === atividadeParaAceite.id 
+          ? { 
+              ...a, 
+              status_aceite: 'ACEITA' as StatusAceiteAtividade,
+              aceite_usuario_id: usuario.id,
+              aceite_usuario_nome: usuario.nome || usuario.email || 'Usuário',
+              aceite_data: new Date().toISOString(),
+              aceite_observacoes: observacoesAceite || undefined,
+            } 
+          : a
+      ));
+      
+      setShowModalAceiteAtividade(false);
+      setAtividadeParaAceite(null);
+      setObservacoesAceite('');
+      
+      const todasAceitas = atividades.every(a => 
+        a.id === atividadeParaAceite.id || a.status_aceite === 'ACEITA'
+      );
+      
+      if (todasAceitas && programacao) {
+        await checkinCheckoutService.registrarAceite(
+          usuario.empresaId,
+          usuario.id,
+          usuario.nome || usuario.email || 'Usuário',
+          {
+            programacao_id: programacao.id,
+            tipo_aceite: 'ACEITE_PRODUCAO',
+            observacoes: 'Todas as atividades foram aceitas individualmente',
+          }
+        );
+        setProgramacao({ ...programacao, status: 'ACEITA' });
+      }
+    } catch (e) {
+      console.error('Erro ao aceitar atividade:', e);
+      alert('Erro ao aceitar atividade. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRejeitarAtividade = () => {
+    if (!atividadeParaAceite || !usuario?.id || !usuario?.empresaId || !programacao) return;
     if (!condicaoSelecionada) {
       alert('Por favor, selecione qual Condição de Prontidão não foi atendida.');
       return;
@@ -319,21 +351,22 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     const tipoDetalhado = mapCausa6MToTipoDetalhado(categoriaIshikawa);
 
     const initialData: RestricaoModalInitialData = {
-      descricao: `[Rejeição Programação S${semanaAtual.semana}/${semanaAtual.ano}] ${observacoesAceite}`,
+      descricao: `[Rejeição Atividade] ${atividadeParaAceite.nome} - ${observacoesAceite}`,
       tipo_detalhado: tipoDetalhado,
       projeto_id: projetoSelecionado?.id,
-      observacoes: `Condição de Prontidão não atendida: ${CONDICAO_PRONTIDAO_LABEL[condicao]}\n${CONDICAO_PRONTIDAO_DESCRICAO[condicao]}`,
+      wbs_id: atividadeParaAceite.wbs_id,
+      atividade_id: atividadeParaAceite.atividade_cronograma_id,
+      observacoes: `Condição de Prontidão não atendida: ${CONDICAO_PRONTIDAO_LABEL[condicao]}\n${CONDICAO_PRONTIDAO_DESCRICAO[condicao]}\n\nAtividade: ${atividadeParaAceite.codigo || ''} - ${atividadeParaAceite.nome}`,
       origem: 'REJEICAO_PROGRAMACAO',
       programacao_id: programacao.id,
     };
 
+    const atividadeId = atividadeParaAceite.id;
     const motivoRejeicao = observacoesAceite;
-    const programacaoId = programacao.id;
     const empresaId = usuario.empresaId;
-    const usuarioId = usuario.id;
-    const usuarioNome = usuario.nome || usuario.email || 'Usuário';
+    const programacaoId = programacao.id;
     
-    setShowModalAceite(false);
+    setShowModalAceiteAtividade(false);
     
     restricaoModal.open({
       initialData,
@@ -347,24 +380,28 @@ export const ProgramacaoSemanalPage: React.FC = () => {
           } as any, empresaId);
 
           if (novaRestricao) {
-            await checkinCheckoutService.registrarAceite(
-              empresaId,
-              usuarioId,
-              usuarioNome,
-              {
-                programacao_id: programacaoId,
-                tipo_aceite: 'REJEICAO_PRODUCAO',
-                observacoes: motivoRejeicao,
-              }
-            );
-
-            setProgramacao((prev) => prev ? { ...prev, status: 'PLANEJADA' } : null);
-            setObservacoesAceite('');
-            setCondicaoSelecionada('');
-            await loadData();
+            setAtividades(prev => prev.map(a => 
+              a.id === atividadeId 
+                ? { 
+                    ...a, 
+                    status_aceite: 'REJEITADA' as StatusAceiteAtividade,
+                    aceite_usuario_id: usuario.id,
+                    aceite_usuario_nome: usuario.nome || usuario.email || 'Usuário',
+                    aceite_data: new Date().toISOString(),
+                    aceite_observacoes: motivoRejeicao,
+                    condicao_nao_atendida: condicaoSelecionada as CondicaoProntidao,
+                    tem_restricao: true,
+                    restricao_id: novaRestricao.id,
+                  } 
+                : a
+            ));
           }
+          
+          setAtividadeParaAceite(null);
+          setObservacoesAceite('');
+          setCondicaoSelecionada('');
         } catch (e) {
-          console.error('Erro ao criar restrição e rejeitar programação:', e);
+          console.error('Erro ao criar restrição e rejeitar atividade:', e);
           alert('Erro ao processar a rejeição. Tente novamente.');
         } finally {
           setSaving(false);
@@ -372,6 +409,55 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       },
     });
   };
+
+  const handleAceitarTodas = async () => {
+    if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+    
+    const atividadesPendentes = atividades.filter(a => a.status_aceite !== 'ACEITA' && a.status_aceite !== 'REJEITADA');
+    if (atividadesPendentes.length === 0) return;
+
+    setSaving(true);
+    try {
+      setAtividades(prev => prev.map(a => 
+        a.status_aceite !== 'REJEITADA'
+          ? { 
+              ...a, 
+              status_aceite: 'ACEITA' as StatusAceiteAtividade,
+              aceite_usuario_id: usuario.id,
+              aceite_usuario_nome: usuario.nome || usuario.email || 'Usuário',
+              aceite_data: new Date().toISOString(),
+            } 
+          : a
+      ));
+      
+      await checkinCheckoutService.registrarAceite(
+        usuario.empresaId,
+        usuario.id,
+        usuario.nome || usuario.email || 'Usuário',
+        {
+          programacao_id: programacao.id,
+          tipo_aceite: 'ACEITE_PRODUCAO',
+          observacoes: 'Aceite total - todas as atividades aceitas',
+        }
+      );
+      
+      setProgramacao({ ...programacao, status: 'ACEITA' });
+      setShowModalAceite(false);
+    } catch (e) {
+      console.error('Erro ao aceitar todas as atividades:', e);
+      alert('Erro ao aceitar atividades. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const estatisticasAceite = useMemo(() => {
+    return {
+      pendentes: atividades.filter(a => !a.status_aceite || a.status_aceite === 'PENDENTE').length,
+      aceitas: atividades.filter(a => a.status_aceite === 'ACEITA').length,
+      rejeitadas: atividades.filter(a => a.status_aceite === 'REJEITADA').length,
+    };
+  }, [atividades]);
 
   const podeEditar = useMemo(() => {
     if (!programacao) return false;
@@ -675,6 +761,11 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                         <th className="text-center p-3 font-medium text-neutral-600 w-20">
                           Total
                         </th>
+                        {programacao?.status === 'AGUARDANDO_ACEITE' && (
+                          <th className="text-center p-3 font-medium text-neutral-600 w-28">
+                            Aceite
+                          </th>
+                        )}
                         <th className="w-10"></th>
                       </tr>
                     </thead>
@@ -738,6 +829,30 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                             <td className="p-3 text-center font-medium text-neutral-900">
                               {totalPrev.toFixed(1)}
                             </td>
+                            {programacao?.status === 'AGUARDANDO_ACEITE' && (
+                              <td className="p-2 text-center">
+                                {atividade.status_aceite === 'ACEITA' ? (
+                                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Aceita
+                                  </div>
+                                ) : atividade.status_aceite === 'REJEITADA' ? (
+                                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                    <XCircle className="w-3 h-3" />
+                                    Rejeitada
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAbrirAceiteAtividade(atividade)}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-full text-xs font-medium transition-colors"
+                                    title="Dar aceite ou rejeitar esta atividade"
+                                  >
+                                    <Clock className="w-3 h-3" />
+                                    Pendente
+                                  </button>
+                                )}
+                              </td>
+                            )}
                             <td className="p-2">
                               {podeEditar && (
                                 <button
@@ -936,9 +1051,138 @@ export const ProgramacaoSemanalPage: React.FC = () => {
             </div>
             <div className="p-4">
               <p className="text-neutral-600 mb-4">
-                Você está dando o aceite da produção para esta programação semanal.
-                Após o aceite, a programação será bloqueada para edição e poderá ser iniciada.
+                Você pode aceitar todas as atividades de uma vez ou voltar para aceitar/rejeitar cada atividade individualmente na tabela.
               </p>
+              
+              <div className="mb-4 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                <div className="text-sm font-medium text-neutral-700 mb-2">Resumo das Atividades:</div>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="p-2 bg-amber-100 rounded">
+                    <div className="font-bold text-amber-700">{estatisticasAceite.pendentes}</div>
+                    <div className="text-xs text-amber-600">Pendentes</div>
+                  </div>
+                  <div className="p-2 bg-green-100 rounded">
+                    <div className="font-bold text-green-700">{estatisticasAceite.aceitas}</div>
+                    <div className="text-xs text-green-600">Aceitas</div>
+                  </div>
+                  <div className="p-2 bg-red-100 rounded">
+                    <div className="font-bold text-red-700">{estatisticasAceite.rejeitadas}</div>
+                    <div className="text-xs text-red-600">Rejeitadas</div>
+                  </div>
+                </div>
+              </div>
+              
+              {estatisticasAceite.pendentes > 0 && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Dica:</strong> Clique em "Pendente" em cada atividade na tabela para aceitar ou rejeitar individualmente.
+                    Ou use "Aceitar Todas" para aceitar todas as atividades pendentes de uma vez.
+                  </p>
+                </div>
+              )}
+              
+              </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowModalAceite(false); setObservacoesAceite(''); }}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Voltar para Tabela
+              </button>
+              <button
+                onClick={handleAceitarTodas}
+                disabled={saving || estatisticasAceite.pendentes === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                <FileCheck className="w-4 h-4" />
+                {saving ? 'Processando...' : `Aceitar Todas (${estatisticasAceite.pendentes})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoricoAceites && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Histórico de Aceites</h3>
+              <button
+                onClick={() => setShowHistoricoAceites(false)}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {aceites.length === 0 ? (
+                <div className="text-center py-8 text-neutral-500">
+                  Nenhum aceite registrado
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {aceites.map((aceite) => (
+                    <div key={aceite.id} className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-medium text-neutral-900">
+                            {TIPO_ACEITE_LABEL[aceite.tipo_aceite]}
+                          </div>
+                          <div className="text-sm text-neutral-500 mt-1">
+                            Por: {aceite.usuario_nome} ({aceite.setor})
+                          </div>
+                          {aceite.observacoes && (
+                            <div className="text-sm text-neutral-600 mt-2 bg-white p-2 rounded border border-neutral-200">
+                              {aceite.observacoes}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-neutral-400">
+                          {format(new Date(aceite.data_aceite), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-neutral-200 flex justify-end">
+              <button
+                onClick={() => setShowHistoricoAceites(false)}
+                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModalAceiteAtividade && atividadeParaAceite && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Aceite da Atividade</h3>
+              <button
+                onClick={() => { setShowModalAceiteAtividade(false); setAtividadeParaAceite(null); }}
+                className="text-neutral-400 hover:text-neutral-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="mb-4 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                <div className="font-medium text-neutral-900">{atividadeParaAceite.nome}</div>
+                {atividadeParaAceite.codigo && (
+                  <div className="text-sm text-neutral-500 mt-1">{atividadeParaAceite.codigo}</div>
+                )}
+                {atividadeParaAceite.responsavel_nome && (
+                  <div className="text-sm text-neutral-500">
+                    Responsável: {atividadeParaAceite.responsavel_nome}
+                  </div>
+                )}
+              </div>
+              
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => { setAcaoAceite('aceitar'); setCondicaoSelecionada(''); }}
@@ -1006,21 +1250,21 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <p className="text-sm text-amber-800">
                     <strong>Atenção:</strong> Ao rejeitar, uma restrição será criada automaticamente 
-                    no módulo Kaizen para acompanhamento e resolução do problema identificado.
+                    no módulo Kaizen com os campos Projeto, WBS e Atividade já preenchidos.
                   </p>
                 </div>
               )}
             </div>
             <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
               <button
-                onClick={() => { setShowModalAceite(false); setCondicaoSelecionada(''); setObservacoesAceite(''); }}
+                onClick={() => { setShowModalAceiteAtividade(false); setAtividadeParaAceite(null); setCondicaoSelecionada(''); setObservacoesAceite(''); }}
                 className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               {acaoAceite === 'aceitar' ? (
                 <button
-                  onClick={handleAceitarProgramacao}
+                  onClick={handleAceitarAtividade}
                   disabled={saving}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
@@ -1029,7 +1273,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 </button>
               ) : (
                 <button
-                  onClick={handleRejeitarProgramacao}
+                  onClick={handleRejeitarAtividade}
                   disabled={saving || !observacoesAceite.trim() || !condicaoSelecionada}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
@@ -1037,62 +1281,6 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                   {saving ? 'Processando...' : 'Confirmar Rejeição'}
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showHistoricoAceites && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Histórico de Aceites</h3>
-              <button
-                onClick={() => setShowHistoricoAceites(false)}
-                className="text-neutral-400 hover:text-neutral-600"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              {aceites.length === 0 ? (
-                <div className="text-center py-8 text-neutral-500">
-                  Nenhum aceite registrado
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {aceites.map((aceite) => (
-                    <div key={aceite.id} className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium text-neutral-900">
-                            {TIPO_ACEITE_LABEL[aceite.tipo_aceite]}
-                          </div>
-                          <div className="text-sm text-neutral-500 mt-1">
-                            Por: {aceite.usuario_nome} ({aceite.setor})
-                          </div>
-                          {aceite.observacoes && (
-                            <div className="text-sm text-neutral-600 mt-2 bg-white p-2 rounded border border-neutral-200">
-                              {aceite.observacoes}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-sm text-neutral-400">
-                          {format(new Date(aceite.data_aceite), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="p-4 border-t border-neutral-200 flex justify-end">
-              <button
-                onClick={() => setShowHistoricoAceites(false)}
-                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-              >
-                Fechar
-              </button>
             </div>
           </div>
         </div>
