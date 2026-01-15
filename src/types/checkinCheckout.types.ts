@@ -4,6 +4,7 @@ export type StatusProgramacao = 'PLANEJADA' | 'AGUARDANDO_ACEITE' | 'ACEITA' | '
 export type StatusAtividade = 'PENDENTE' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'NAO_CONCLUIDA' | 'CANCELADA';
 export type Causa6M = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA';
 export type TipoAceite = 'ENVIO_PRODUCAO' | 'ACEITE_PRODUCAO' | 'REJEICAO_PRODUCAO' | 'RETORNO_PLANEJAMENTO';
+export type StatusAceiteAtividade = 'PENDENTE' | 'ACEITA' | 'REJEITADA';
 export type TipoEmpresa = 'CONTRATADA' | 'CONTRATANTE' | 'FISCALIZACAO';
 export type CategoriaInterferencia = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA' | 'PROJETO' | 'CLIMA' | 'OUTRO';
 export type StatusInterferencia = 'ABERTA' | 'EM_ANALISE' | 'RESOLVIDA' | 'CONVERTIDA_RESTRICAO';
@@ -119,6 +120,18 @@ export const TIPO_ACEITE_LABEL: Record<TipoAceite, string> = {
   RETORNO_PLANEJAMENTO: 'Retorno para Planejamento',
 };
 
+export const STATUS_ACEITE_ATIVIDADE_LABEL: Record<StatusAceiteAtividade, string> = {
+  PENDENTE: 'Pendente',
+  ACEITA: 'Aceita',
+  REJEITADA: 'Rejeitada',
+};
+
+export const STATUS_ACEITE_ATIVIDADE_CORES: Record<StatusAceiteAtividade, string> = {
+  PENDENTE: '#f59e0b',
+  ACEITA: '#10b981',
+  REJEITADA: '#ef4444',
+};
+
 export const TIPO_EMPRESA_LABEL: Record<TipoEmpresa, string> = {
   CONTRATADA: 'Contratada',
   CONTRATANTE: 'Contratante',
@@ -199,6 +212,16 @@ export interface ProgramacaoAtividade {
   status: StatusAtividade;
   observacao?: string;
   ordem: number;
+  status_aceite?: StatusAceiteAtividade;
+  aceite_usuario_id?: string;
+  aceite_usuario_nome?: string;
+  aceite_observacoes?: string;
+  aceite_data?: string;
+  condicao_nao_atendida?: CondicaoProntidao;
+  wbs_id?: string;
+  wbs_nome?: string;
+  projeto_id?: string;
+  projeto_nome?: string;
   created_at?: string;
   updated_at?: string;
 }
