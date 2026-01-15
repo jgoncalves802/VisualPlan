@@ -6,8 +6,9 @@ import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { checkinCheckoutService } from '../services/checkinCheckoutService';
 import { restricoesLpsService } from '../services/restricoesLpsService';
-import { RestricaoModal, RestricaoModalInitialData } from '../components/features/restricoes/RestricaoModal';
-import { RestricaoLPS, TipoRestricaoDetalhado } from '../types/lps';
+import { useRestricaoModal } from '../contexts/ModalContext';
+import { RestricaoModalInitialData } from '../components/features/restricoes/RestricaoModal';
+import { TipoRestricaoDetalhado } from '../types/lps';
 import {
   ProgramacaoSemanal,
   ProgramacaoAtividade,
@@ -67,12 +68,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const [acaoAceite, setAcaoAceite] = useState<'aceitar' | 'rejeitar'>('aceitar');
   const [condicaoSelecionada, setCondicaoSelecionada] = useState<CondicaoProntidao | ''>('');
   
-  const [showRestricaoModal, setShowRestricaoModal] = useState(false);
-  const [restricaoInitialData, setRestricaoInitialData] = useState<RestricaoModalInitialData | undefined>(undefined);
-  const [pendingRejeicao, setPendingRejeicao] = useState<{
-    motivo: string;
-    condicao: CondicaoProntidao;
-  } | null>(null);
+  const restricaoModal = useRestricaoModal();
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -331,58 +327,50 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       programacao_id: programacao.id,
     };
 
-    setPendingRejeicao({
-      motivo: observacoesAceite,
-      condicao: condicao,
-    });
-    setRestricaoInitialData(initialData);
+    const motivoRejeicao = observacoesAceite;
+    const programacaoId = programacao.id;
+    const empresaId = usuario.empresaId;
+    const usuarioId = usuario.id;
+    const usuarioNome = usuario.nome || usuario.email || 'Usuário';
+    
     setShowModalAceite(false);
-    setShowRestricaoModal(true);
-  };
+    
+    restricaoModal.open({
+      initialData,
+      onSave: async (restricaoData) => {
+        setSaving(true);
+        try {
+          const novaRestricao = await restricoesLpsService.create({
+            ...restricaoData,
+            origem: 'REJEICAO_PROGRAMACAO',
+            programacao_id: programacaoId,
+          } as any, empresaId);
 
-  const handleSaveRestricaoRejeicao = async (restricaoData: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS>) => {
-    if (!programacao || !usuario?.id || !usuario?.empresaId || !pendingRejeicao) return;
+          if (novaRestricao) {
+            await checkinCheckoutService.registrarAceite(
+              empresaId,
+              usuarioId,
+              usuarioNome,
+              {
+                programacao_id: programacaoId,
+                tipo_aceite: 'REJEICAO_PRODUCAO',
+                observacoes: motivoRejeicao,
+              }
+            );
 
-    setSaving(true);
-    try {
-      const novaRestricao = await restricoesLpsService.create({
-        ...restricaoData,
-        origem: 'REJEICAO_PROGRAMACAO',
-        programacao_id: programacao.id,
-      } as any, usuario.empresaId);
-
-      if (novaRestricao) {
-        await checkinCheckoutService.registrarAceite(
-          usuario.empresaId,
-          usuario.id,
-          usuario.nome || usuario.email || 'Usuário',
-          {
-            programacao_id: programacao.id,
-            tipo_aceite: 'REJEICAO_PRODUCAO',
-            observacoes: pendingRejeicao.motivo,
+            setProgramacao((prev) => prev ? { ...prev, status: 'PLANEJADA' } : null);
+            setObservacoesAceite('');
+            setCondicaoSelecionada('');
+            await loadData();
           }
-        );
-
-        setProgramacao({ ...programacao, status: 'PLANEJADA' });
-        setShowRestricaoModal(false);
-        setRestricaoInitialData(undefined);
-        setPendingRejeicao(null);
-        setObservacoesAceite('');
-        setCondicaoSelecionada('');
-        await loadData();
-      }
-    } catch (e) {
-      console.error('Erro ao criar restrição e rejeitar programação:', e);
-      alert('Erro ao processar a rejeição. Tente novamente.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCloseRestricaoModal = () => {
-    setShowRestricaoModal(false);
-    setRestricaoInitialData(undefined);
-    setPendingRejeicao(null);
+        } catch (e) {
+          console.error('Erro ao criar restrição e rejeitar programação:', e);
+          alert('Erro ao processar a rejeição. Tente novamente.');
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   const podeEditar = useMemo(() => {
@@ -1110,14 +1098,6 @@ export const ProgramacaoSemanalPage: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de Criação de Restrição (para rejeição) */}
-      <RestricaoModal
-        restricao={null}
-        isOpen={showRestricaoModal}
-        onClose={handleCloseRestricaoModal}
-        onSave={handleSaveRestricaoRejeicao}
-        initialData={restricaoInitialData}
-      />
     </div>
   );
 };

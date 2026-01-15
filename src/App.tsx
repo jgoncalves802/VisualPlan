@@ -4,6 +4,8 @@ import { useAuthStore } from './stores/authStore';
 import { useTemaStore } from './stores/temaStore';
 import { PerfilAcesso } from './types';
 import { ToastProvider } from './components/ui';
+import { ModalProvider } from './contexts/ModalContext';
+import { GlobalModals } from './components/GlobalModals';
 import { AppLayout } from './components/layout/AppLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
 import LoginPage from './pages/LoginPage';
@@ -66,8 +68,10 @@ function App() {
 
   return (
     <ToastProvider>
-      <BrowserRouter>
-        <Routes>
+      <ModalProvider>
+        <BrowserRouter>
+          <GlobalModals />
+          <Routes>
           <Route path="/login" element={<LoginPage />} />
 
           <Route element={<ProtectedAppLayout />}>
@@ -118,8 +122,9 @@ function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </ModalProvider>
     </ToastProvider>
   );
 }
