@@ -287,6 +287,7 @@ export const CheckInCheckOutPage: React.FC = () => {
         atividadeNome: interf.atividade_nome,
         dataCriacao: new Date(),
         dataPrevista: addDays(new Date(), 7),
+        responsavel: usuario?.nome || interf.usuario_nome || 'Não definido',
         impactoCaminhoCritico: false,
         duracaoAtividadeImpactada: 0,
         diasAtraso: 0,
