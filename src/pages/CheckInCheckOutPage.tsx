@@ -20,7 +20,10 @@ import {
   TipoEmpresa,
   TIPO_EMPRESA_LABEL,
   CreateInterferenciaInput,
+  CategoriaInterferencia,
 } from '../types/checkinCheckout.types';
+import { restricoesIshikawaService } from '../services/restricoesIshikawaService';
+import { CategoriaIshikawa, StatusRestricaoIshikawa, RestricaoIshikawa } from '../types/gestao';
 import { takeoffService } from '../services/takeoffService';
 import { supabase } from '../services/supabase';
 import {
@@ -72,6 +75,7 @@ export const CheckInCheckOutPage: React.FC = () => {
     descricao: '',
   });
   const [savingInterferencia, setSavingInterferencia] = useState(false);
+  const [convertendoInterferencia, setConvertendoInterferencia] = useState<string | null>(null);
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -246,6 +250,70 @@ export const CheckInCheckOutPage: React.FC = () => {
       console.error('Erro ao registrar interferência:', e);
     } finally {
       setSavingInterferencia(false);
+    }
+  };
+
+  const mapCategoriaToCategoriaIshikawa = (categoria?: CategoriaInterferencia): CategoriaIshikawa => {
+    const mapping: Record<CategoriaInterferencia, CategoriaIshikawa> = {
+      'MAO_DE_OBRA': CategoriaIshikawa.MAO_DE_OBRA,
+      'MATERIAL': CategoriaIshikawa.MATERIAL,
+      'MAQUINA': CategoriaIshikawa.MAQUINA,
+      'METODO': CategoriaIshikawa.METODO,
+      'MEIO_AMBIENTE': CategoriaIshikawa.MEIO_AMBIENTE,
+      'MEDIDA': CategoriaIshikawa.MEDIDA,
+      'SEGURANCA': CategoriaIshikawa.METODO,
+      'PROJETO': CategoriaIshikawa.METODO,
+      'CLIMA': CategoriaIshikawa.MEIO_AMBIENTE,
+      'OUTRO': CategoriaIshikawa.METODO,
+    };
+    return categoria ? mapping[categoria] : CategoriaIshikawa.METODO;
+  };
+
+  const handleConverterEmRestricao = async (interf: InterferenciaObra) => {
+    if (!usuario?.empresaId || !projetoSelecionado?.id) return;
+
+    setConvertendoInterferencia(interf.id);
+    try {
+      const novoCodigoNum = Math.floor(Math.random() * 10000);
+      const novoCodigo = `INT-${novoCodigoNum.toString().padStart(4, '0')}`;
+      
+      const novaRestricao: Omit<RestricaoIshikawa, 'id'> = {
+        codigo: novoCodigo,
+        descricao: `[Interferência] ${interf.descricao}`,
+        categoria: mapCategoriaToCategoriaIshikawa(interf.categoria),
+        status: StatusRestricaoIshikawa.EM_EXECUCAO,
+        atividadeId: interf.atividade_id,
+        atividadeNome: interf.atividade_nome,
+        dataCriacao: new Date(),
+        dataPrevista: addDays(new Date(), 7),
+        impactoCaminhoCritico: false,
+        duracaoAtividadeImpactada: 0,
+        diasAtraso: 0,
+        scoreImpacto: 0,
+        reincidente: false,
+      };
+
+      const restricaoCriada = await restricoesIshikawaService.create(
+        novaRestricao as RestricaoIshikawa,
+        usuario.empresaId
+      );
+
+      if (restricaoCriada) {
+        await checkinCheckoutService.converterEmRestricao(interf.id, restricaoCriada.id);
+        
+        if (programacao) {
+          const listaInterferencias = await checkinCheckoutService.getInterferencias(
+            usuario.empresaId,
+            projetoSelecionado.id,
+            programacao.id
+          );
+          setInterferencias(listaInterferencias);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao converter interferência em restrição:', e);
+    } finally {
+      setConvertendoInterferencia(null);
     }
   };
 
@@ -970,10 +1038,21 @@ export const CheckInCheckOutPage: React.FC = () => {
                             <span>Por: {interf.usuario_nome}</span>
                             <span>{format(new Date(interf.data_ocorrencia), "dd/MM/yyyy", { locale: ptBR })}</span>
                           </div>
-                          {interf.convertida_restricao && (
+                          {interf.convertida_restricao ? (
                             <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
                               <ArrowRight className="w-4 h-4" />
                               Convertida em restrição
+                            </div>
+                          ) : interf.status === 'ABERTA' && (
+                            <div className="mt-3">
+                              <button
+                                onClick={() => handleConverterEmRestricao(interf)}
+                                disabled={convertendoInterferencia === interf.id}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                              >
+                                <ArrowRight className="w-4 h-4" />
+                                {convertendoInterferencia === interf.id ? 'Convertendo...' : 'Converter em Restrição'}
+                              </button>
                             </div>
                           )}
                         </div>
