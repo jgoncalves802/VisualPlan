@@ -139,6 +139,16 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     }
   };
 
+  const loadAceites = async () => {
+    if (!programacao) return;
+    try {
+      const aceitesData = await checkinCheckoutService.getAceitesByProgramacao(programacao.id);
+      setAceites(aceitesData);
+    } catch (e) {
+      console.error('Erro ao carregar aceites:', e);
+    }
+  };
+
   const handleSemanaAnterior = () => {
     const novaData = subWeeks(semanaAtual.date, 1);
     setSemanaAtual({
@@ -289,9 +299,11 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   };
 
   const handleAceitarAtividade = async () => {
-    if (!atividadeParaAceite || !usuario?.id || !usuario?.empresaId) return;
+    if (!atividadeParaAceite || !usuario?.id || !usuario?.empresaId || !programacao) return;
 
     const atividadeIdAceita = atividadeParaAceite.id;
+    const atividadeNome = atividadeParaAceite.nome;
+    const atividadeCodigo = atividadeParaAceite.codigo;
     const empresaId = usuario.empresaId;
     const usuarioId = usuario.id;
     const usuarioNome = usuario.nome || usuario.email || 'Usuário';
@@ -299,6 +311,17 @@ export const ProgramacaoSemanalPage: React.FC = () => {
 
     setSaving(true);
     try {
+      await checkinCheckoutService.registrarAceite(
+        empresaId,
+        usuarioId,
+        usuarioNome,
+        {
+          programacao_id: programacaoAtual.id,
+          tipo_aceite: 'ACEITE_ATIVIDADE',
+          observacoes: `Atividade: ${atividadeCodigo || ''} - ${atividadeNome}${observacoesAceite ? `\n${observacoesAceite}` : ''}`,
+        }
+      );
+      
       const atividadesAtualizadas = atividades.map(a => 
         a.id === atividadeIdAceita 
           ? { 
@@ -317,9 +340,11 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       setAtividadeParaAceite(null);
       setObservacoesAceite('');
       
+      await loadAceites();
+      
       const todasAceitas = atividadesAtualizadas.every(a => a.status_aceite === 'ACEITA');
       
-      if (todasAceitas && programacaoAtual) {
+      if (todasAceitas) {
         await checkinCheckoutService.registrarAceite(
           empresaId,
           usuarioId,
@@ -331,6 +356,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
           }
         );
         setProgramacao({ ...programacaoAtual, status: 'ACEITA' });
+        await loadAceites();
       }
     } catch (e) {
       console.error('Erro ao aceitar atividade:', e);
@@ -421,9 +447,9 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     const atividadesPendentes = atividades.filter(a => a.status_aceite !== 'ACEITA' && a.status_aceite !== 'REJEITADA');
     if (atividadesPendentes.length === 0) return;
     
-    const atividadesComRestricoes = atividades.filter(a => a.tem_restricao || a.status_aceite === 'REJEITADA');
-    if (atividadesComRestricoes.length > 0) {
-      alert(`Não é possível aceitar todas as atividades. Existem ${atividadesComRestricoes.length} atividade(s) com restrições pendentes que precisam ser resolvidas antes.`);
+    const atividadesRejeitadas = atividades.filter(a => a.status_aceite === 'REJEITADA');
+    if (atividadesRejeitadas.length > 0) {
+      alert(`Não é possível aceitar todas as atividades. Existem ${atividadesRejeitadas.length} atividade(s) rejeitada(s) que precisam ser tratadas antes.`);
       return;
     }
 
@@ -466,13 +492,11 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     const pendentes = atividades.filter(a => !a.status_aceite || a.status_aceite === 'PENDENTE').length;
     const aceitas = atividades.filter(a => a.status_aceite === 'ACEITA').length;
     const rejeitadas = atividades.filter(a => a.status_aceite === 'REJEITADA').length;
-    const comRestricoes = atividades.filter(a => a.tem_restricao || a.status_aceite === 'REJEITADA').length;
     return {
       pendentes,
       aceitas,
       rejeitadas,
-      comRestricoes,
-      podeAceitarTodas: pendentes > 0 && comRestricoes === 0,
+      podeAceitarTodas: pendentes > 0 && rejeitadas === 0,
     };
   }, [atividades]);
 
@@ -1089,7 +1113,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 </div>
               </div>
               
-              {estatisticasAceite.pendentes > 0 && estatisticasAceite.comRestricoes === 0 && (
+              {estatisticasAceite.pendentes > 0 && estatisticasAceite.rejeitadas === 0 && (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <p className="text-sm text-blue-800">
                     <strong>Dica:</strong> Clique em "Pendente" em cada atividade na tabela para aceitar ou rejeitar individualmente.
@@ -1098,11 +1122,11 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 </div>
               )}
               
-              {estatisticasAceite.comRestricoes > 0 && (
+              {estatisticasAceite.rejeitadas > 0 && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
                   <p className="text-sm text-amber-800">
-                    <strong>Atenção:</strong> Existem {estatisticasAceite.comRestricoes} atividade(s) com restrições pendentes.
-                    Resolva as restrições antes de aceitar todas as atividades.
+                    <strong>Atenção:</strong> Existem {estatisticasAceite.rejeitadas} atividade(s) rejeitada(s).
+                    Trate as atividades rejeitadas antes de aceitar todas as demais.
                   </p>
                 </div>
               )}
@@ -1119,7 +1143,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 onClick={handleAceitarTodas}
                 disabled={saving || !estatisticasAceite.podeAceitarTodas}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                title={!estatisticasAceite.podeAceitarTodas && estatisticasAceite.comRestricoes > 0 ? 'Resolva as restrições pendentes primeiro' : ''}
+                title={!estatisticasAceite.podeAceitarTodas && estatisticasAceite.rejeitadas > 0 ? 'Trate as atividades rejeitadas primeiro' : ''}
               >
                 <FileCheck className="w-4 h-4" />
                 {saving ? 'Processando...' : `Aceitar Todas (${estatisticasAceite.pendentes})`}

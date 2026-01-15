@@ -3,7 +3,7 @@ export type DiaSemana = 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom';
 export type StatusProgramacao = 'PLANEJADA' | 'AGUARDANDO_ACEITE' | 'ACEITA' | 'EM_EXECUCAO' | 'CONCLUIDA' | 'CANCELADA';
 export type StatusAtividade = 'PENDENTE' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'NAO_CONCLUIDA' | 'CANCELADA';
 export type Causa6M = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA';
-export type TipoAceite = 'ENVIO_PRODUCAO' | 'ACEITE_PRODUCAO' | 'REJEICAO_PRODUCAO' | 'RETORNO_PLANEJAMENTO';
+export type TipoAceite = 'ENVIO_PRODUCAO' | 'ACEITE_PRODUCAO' | 'REJEICAO_PRODUCAO' | 'RETORNO_PLANEJAMENTO' | 'ACEITE_ATIVIDADE' | 'REJEICAO_ATIVIDADE';
 export type StatusAceiteAtividade = 'PENDENTE' | 'ACEITA' | 'REJEITADA';
 export type TipoEmpresa = 'CONTRATADA' | 'CONTRATANTE' | 'FISCALIZACAO';
 export type CategoriaInterferencia = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA' | 'PROJETO' | 'CLIMA' | 'OUTRO';
@@ -118,6 +118,8 @@ export const TIPO_ACEITE_LABEL: Record<TipoAceite, string> = {
   ACEITE_PRODUCAO: 'Aceite da Produção',
   REJEICAO_PRODUCAO: 'Rejeição da Produção',
   RETORNO_PLANEJAMENTO: 'Retorno para Planejamento',
+  ACEITE_ATIVIDADE: 'Aceite de Atividade',
+  REJEICAO_ATIVIDADE: 'Rejeição de Atividade',
 };
 
 export const STATUS_ACEITE_ATIVIDADE_LABEL: Record<StatusAceiteAtividade, string> = {
