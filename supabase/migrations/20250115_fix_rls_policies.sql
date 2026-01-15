@@ -22,7 +22,7 @@ DROP POLICY IF EXISTS interferencias_obra_delete_policy ON interferencias_obra;
 CREATE POLICY aceites_programacao_select_policy ON aceites_programacao
   FOR SELECT USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -30,7 +30,7 @@ CREATE POLICY aceites_programacao_select_policy ON aceites_programacao
 CREATE POLICY aceites_programacao_insert_policy ON aceites_programacao
   FOR INSERT WITH CHECK (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -38,7 +38,7 @@ CREATE POLICY aceites_programacao_insert_policy ON aceites_programacao
 CREATE POLICY aceites_programacao_update_policy ON aceites_programacao
   FOR UPDATE USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -46,7 +46,7 @@ CREATE POLICY aceites_programacao_update_policy ON aceites_programacao
 CREATE POLICY aceites_programacao_delete_policy ON aceites_programacao
   FOR DELETE USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -58,7 +58,7 @@ CREATE POLICY aceites_programacao_delete_policy ON aceites_programacao
 CREATE POLICY interferencias_obra_select_policy ON interferencias_obra
   FOR SELECT USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -66,7 +66,7 @@ CREATE POLICY interferencias_obra_select_policy ON interferencias_obra
 CREATE POLICY interferencias_obra_insert_policy ON interferencias_obra
   FOR INSERT WITH CHECK (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -74,7 +74,7 @@ CREATE POLICY interferencias_obra_insert_policy ON interferencias_obra
 CREATE POLICY interferencias_obra_update_policy ON interferencias_obra
   FOR UPDATE USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
@@ -82,7 +82,7 @@ CREATE POLICY interferencias_obra_update_policy ON interferencias_obra
 CREATE POLICY interferencias_obra_delete_policy ON interferencias_obra
   FOR DELETE USING (
     empresa_id IN (
-      SELECT empresa_id FROM usuarios_empresas 
+      SELECT empresa_id FROM usuario_empresa 
       WHERE usuario_id = auth.uid()
     )
   );
