@@ -36,6 +36,9 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Indicadores Module**: Comprehensive indicator tables for EVM, LPS, Quality, and S-Curve analysis, including user preferences persistence, periodic EVM snapshots, weekly LPS indicators, quality indicators, project baselines, and S-Curve data with multi-baseline support.
     *   **Global Project Filtering Architecture**: All modules use `useProjetoStore` for consistent project selection, with a `ProjetoSelector` component for switching projects. Services accept optional `projetoId` for filtering, and new records auto-fill `projeto_id`.
     *   **Check-in / Check-out Module**: Implements the Last Planner System (LPS) weekly work plan and daily tracking, including weekly program planning, activity tracking with daily targets and restrictions, daily check-in/check-out with root cause analysis (6M+S categories), PPC calculation, TV mode, and PDF export.
+    *   **Acceptance Workflow**: Full workflow for weekly programming acceptance between planning and production departments (PLANEJADA → AGUARDANDO_ACEITE → ACEITA → EM_EXECUCAO → CONCLUIDA), with permission-based editing control. Planning sector can edit in PLANEJADA/AGUARDANDO_ACEITE status; production gives acceptance; editing is blocked after acceptance.
+    *   **Interference Tracking**: During check-in/check-out, users can register work site interferences (by company type: CONTRATADA/CONTRATANTE/FISCALIZACAO) with full audit trail. Interferences can be converted to Ishikawa restrictions for follow-up in the Kaizen module.
+    *   **Database Tables**: `aceites_programacao` (acceptance history with user, sector, type, and observations), `interferencias_obra` (interference records with empresa_id scope and RLS policies).
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

@@ -274,12 +274,13 @@ export const CheckInCheckOutPage: React.FC = () => {
 
     setConvertendoInterferencia(interf.id);
     try {
-      const novoCodigoNum = Math.floor(Math.random() * 10000);
-      const novoCodigo = `INT-${novoCodigoNum.toString().padStart(4, '0')}`;
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const novoCodigo = `INT-${timestamp.slice(-4)}${randomPart}`;
       
       const novaRestricao: Omit<RestricaoIshikawa, 'id'> = {
         codigo: novoCodigo,
-        descricao: `[Interferência] ${interf.descricao}`,
+        descricao: `[Interferência ${interf.tipo_empresa}] ${interf.descricao}`,
         categoria: mapCategoriaToCategoriaIshikawa(interf.categoria),
         status: StatusRestricaoIshikawa.EM_EXECUCAO,
         atividadeId: interf.atividade_id,
@@ -289,7 +290,7 @@ export const CheckInCheckOutPage: React.FC = () => {
         impactoCaminhoCritico: false,
         duracaoAtividadeImpactada: 0,
         diasAtraso: 0,
-        scoreImpacto: 0,
+        scoreImpacto: 50,
         reincidente: false,
       };
 
@@ -299,9 +300,9 @@ export const CheckInCheckOutPage: React.FC = () => {
       );
 
       if (restricaoCriada) {
-        await checkinCheckoutService.converterEmRestricao(interf.id, restricaoCriada.id);
+        const convertido = await checkinCheckoutService.converterEmRestricao(interf.id, restricaoCriada.id);
         
-        if (programacao) {
+        if (convertido && programacao) {
           const listaInterferencias = await checkinCheckoutService.getInterferencias(
             usuario.empresaId,
             projetoSelecionado.id,
@@ -312,6 +313,7 @@ export const CheckInCheckOutPage: React.FC = () => {
       }
     } catch (e) {
       console.error('Erro ao converter interferência em restrição:', e);
+      alert('Erro ao converter interferência. Tente novamente.');
     } finally {
       setConvertendoInterferencia(null);
     }
