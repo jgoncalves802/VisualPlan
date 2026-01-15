@@ -291,41 +291,46 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const handleAceitarAtividade = async () => {
     if (!atividadeParaAceite || !usuario?.id || !usuario?.empresaId) return;
 
+    const atividadeIdAceita = atividadeParaAceite.id;
+    const empresaId = usuario.empresaId;
+    const usuarioId = usuario.id;
+    const usuarioNome = usuario.nome || usuario.email || 'Usuário';
+    const programacaoAtual = programacao;
+
     setSaving(true);
     try {
-      setAtividades(prev => prev.map(a => 
-        a.id === atividadeParaAceite.id 
+      const atividadesAtualizadas = atividades.map(a => 
+        a.id === atividadeIdAceita 
           ? { 
               ...a, 
               status_aceite: 'ACEITA' as StatusAceiteAtividade,
-              aceite_usuario_id: usuario.id,
-              aceite_usuario_nome: usuario.nome || usuario.email || 'Usuário',
+              aceite_usuario_id: usuarioId,
+              aceite_usuario_nome: usuarioNome,
               aceite_data: new Date().toISOString(),
               aceite_observacoes: observacoesAceite || undefined,
             } 
           : a
-      ));
+      );
       
+      setAtividades(atividadesAtualizadas);
       setShowModalAceiteAtividade(false);
       setAtividadeParaAceite(null);
       setObservacoesAceite('');
       
-      const todasAceitas = atividades.every(a => 
-        a.id === atividadeParaAceite.id || a.status_aceite === 'ACEITA'
-      );
+      const todasAceitas = atividadesAtualizadas.every(a => a.status_aceite === 'ACEITA');
       
-      if (todasAceitas && programacao) {
+      if (todasAceitas && programacaoAtual) {
         await checkinCheckoutService.registrarAceite(
-          usuario.empresaId,
-          usuario.id,
-          usuario.nome || usuario.email || 'Usuário',
+          empresaId,
+          usuarioId,
+          usuarioNome,
           {
-            programacao_id: programacao.id,
+            programacao_id: programacaoAtual.id,
             tipo_aceite: 'ACEITE_PRODUCAO',
             observacoes: 'Todas as atividades foram aceitas individualmente',
           }
         );
-        setProgramacao({ ...programacao, status: 'ACEITA' });
+        setProgramacao({ ...programacaoAtual, status: 'ACEITA' });
       }
     } catch (e) {
       console.error('Erro ao aceitar atividade:', e);
@@ -415,6 +420,12 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     
     const atividadesPendentes = atividades.filter(a => a.status_aceite !== 'ACEITA' && a.status_aceite !== 'REJEITADA');
     if (atividadesPendentes.length === 0) return;
+    
+    const atividadesComRestricoes = atividades.filter(a => a.tem_restricao || a.status_aceite === 'REJEITADA');
+    if (atividadesComRestricoes.length > 0) {
+      alert(`Não é possível aceitar todas as atividades. Existem ${atividadesComRestricoes.length} atividade(s) com restrições pendentes que precisam ser resolvidas antes.`);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -452,10 +463,16 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   };
 
   const estatisticasAceite = useMemo(() => {
+    const pendentes = atividades.filter(a => !a.status_aceite || a.status_aceite === 'PENDENTE').length;
+    const aceitas = atividades.filter(a => a.status_aceite === 'ACEITA').length;
+    const rejeitadas = atividades.filter(a => a.status_aceite === 'REJEITADA').length;
+    const comRestricoes = atividades.filter(a => a.tem_restricao || a.status_aceite === 'REJEITADA').length;
     return {
-      pendentes: atividades.filter(a => !a.status_aceite || a.status_aceite === 'PENDENTE').length,
-      aceitas: atividades.filter(a => a.status_aceite === 'ACEITA').length,
-      rejeitadas: atividades.filter(a => a.status_aceite === 'REJEITADA').length,
+      pendentes,
+      aceitas,
+      rejeitadas,
+      comRestricoes,
+      podeAceitarTodas: pendentes > 0 && comRestricoes === 0,
     };
   }, [atividades]);
 
@@ -1072,11 +1089,20 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 </div>
               </div>
               
-              {estatisticasAceite.pendentes > 0 && (
+              {estatisticasAceite.pendentes > 0 && estatisticasAceite.comRestricoes === 0 && (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <p className="text-sm text-blue-800">
                     <strong>Dica:</strong> Clique em "Pendente" em cada atividade na tabela para aceitar ou rejeitar individualmente.
                     Ou use "Aceitar Todas" para aceitar todas as atividades pendentes de uma vez.
+                  </p>
+                </div>
+              )}
+              
+              {estatisticasAceite.comRestricoes > 0 && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                  <p className="text-sm text-amber-800">
+                    <strong>Atenção:</strong> Existem {estatisticasAceite.comRestricoes} atividade(s) com restrições pendentes.
+                    Resolva as restrições antes de aceitar todas as atividades.
                   </p>
                 </div>
               )}
@@ -1091,8 +1117,9 @@ export const ProgramacaoSemanalPage: React.FC = () => {
               </button>
               <button
                 onClick={handleAceitarTodas}
-                disabled={saving || estatisticasAceite.pendentes === 0}
+                disabled={saving || !estatisticasAceite.podeAceitarTodas}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                title={!estatisticasAceite.podeAceitarTodas && estatisticasAceite.comRestricoes > 0 ? 'Resolva as restrições pendentes primeiro' : ''}
               >
                 <FileCheck className="w-4 h-4" />
                 {saving ? 'Processando...' : `Aceitar Todas (${estatisticasAceite.pendentes})`}
