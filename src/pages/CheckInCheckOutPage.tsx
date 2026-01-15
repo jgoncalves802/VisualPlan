@@ -282,7 +282,7 @@ export const CheckInCheckOutPage: React.FC = () => {
         codigo: novoCodigo,
         descricao: `[Interferência ${interf.tipo_empresa}] ${interf.descricao}`,
         categoria: mapCategoriaToCategoriaIshikawa(interf.categoria),
-        status: StatusRestricaoIshikawa.EM_EXECUCAO,
+        status: StatusRestricaoIshikawa.NO_PRAZO,
         atividadeId: interf.atividade_id,
         atividadeNome: interf.atividade_nome,
         dataCriacao: new Date(),
