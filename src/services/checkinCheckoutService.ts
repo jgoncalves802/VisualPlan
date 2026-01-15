@@ -12,6 +12,11 @@ import {
   DiaSemana,
   Causa6M,
   DIAS_SEMANA,
+  AceiteProgramacao,
+  CreateAceiteInput,
+  InterferenciaObra,
+  CreateInterferenciaInput,
+  StatusProgramacao,
 } from '../types/checkinCheckout.types';
 import { getWeek, getYear, startOfWeek, endOfWeek, format, addDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -690,6 +695,309 @@ export const checkinCheckoutService = {
     } catch (e) {
       console.error('Erro ao obter/criar programação:', e);
       return { programacao: null, atividades: [], isNew: false };
+    }
+  },
+
+  // ============================================================================
+  // Aceites da Programação
+  // ============================================================================
+
+  async getAceitesByProgramacao(programacaoId: string): Promise<AceiteProgramacao[]> {
+    try {
+      const { data, error } = await supabase
+        .from('aceites_programacao')
+        .select('*')
+        .eq('programacao_id', programacaoId)
+        .order('data_aceite', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as AceiteProgramacao[];
+    } catch (e) {
+      console.error('Erro ao buscar aceites:', e);
+      return [];
+    }
+  },
+
+  async registrarAceite(
+    empresaId: string, 
+    usuarioId: string, 
+    usuarioNome: string,
+    input: CreateAceiteInput
+  ): Promise<AceiteProgramacao | null> {
+    try {
+      // Buscar setor do usuário
+      const { data: perfil } = await supabase
+        .from('usuarios')
+        .select('setor')
+        .eq('id', usuarioId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('aceites_programacao')
+        .insert({
+          empresa_id: empresaId,
+          programacao_id: input.programacao_id,
+          usuario_id: usuarioId,
+          usuario_nome: usuarioNome,
+          setor: perfil?.setor || 'Não informado',
+          tipo_aceite: input.tipo_aceite,
+          observacoes: input.observacoes,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Atualizar status da programação conforme o tipo de aceite
+      let novoStatus: StatusProgramacao = 'PLANEJADA';
+      switch (input.tipo_aceite) {
+        case 'ENVIO_PRODUCAO':
+          novoStatus = 'AGUARDANDO_ACEITE';
+          break;
+        case 'ACEITE_PRODUCAO':
+          novoStatus = 'ACEITA';
+          break;
+        case 'REJEICAO_PRODUCAO':
+        case 'RETORNO_PLANEJAMENTO':
+          novoStatus = 'PLANEJADA';
+          break;
+      }
+
+      await supabase
+        .from('programacao_semanal')
+        .update({ status: novoStatus })
+        .eq('id', input.programacao_id);
+
+      return data as AceiteProgramacao;
+    } catch (e) {
+      console.error('Erro ao registrar aceite:', e);
+      return null;
+    }
+  },
+
+  async enviarParaProducao(
+    empresaId: string,
+    usuarioId: string,
+    usuarioNome: string,
+    programacaoId: string,
+    observacoes?: string
+  ): Promise<boolean> {
+    const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
+      programacao_id: programacaoId,
+      tipo_aceite: 'ENVIO_PRODUCAO',
+      observacoes,
+    });
+    return aceite !== null;
+  },
+
+  async aceitarProgramacao(
+    empresaId: string,
+    usuarioId: string,
+    usuarioNome: string,
+    programacaoId: string,
+    observacoes?: string
+  ): Promise<boolean> {
+    const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
+      programacao_id: programacaoId,
+      tipo_aceite: 'ACEITE_PRODUCAO',
+      observacoes,
+    });
+    return aceite !== null;
+  },
+
+  async rejeitarProgramacao(
+    empresaId: string,
+    usuarioId: string,
+    usuarioNome: string,
+    programacaoId: string,
+    observacoes: string
+  ): Promise<boolean> {
+    const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
+      programacao_id: programacaoId,
+      tipo_aceite: 'REJEICAO_PRODUCAO',
+      observacoes,
+    });
+    return aceite !== null;
+  },
+
+  async retornarParaPlanejamento(
+    empresaId: string,
+    usuarioId: string,
+    usuarioNome: string,
+    programacaoId: string,
+    observacoes: string
+  ): Promise<boolean> {
+    const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
+      programacao_id: programacaoId,
+      tipo_aceite: 'RETORNO_PLANEJAMENTO',
+      observacoes,
+    });
+    return aceite !== null;
+  },
+
+  async iniciarExecucao(programacaoId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('programacao_semanal')
+        .update({ status: 'EM_EXECUCAO' })
+        .eq('id', programacaoId);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Erro ao iniciar execução:', e);
+      return false;
+    }
+  },
+
+  podeEditar(programacao: ProgramacaoSemanal): boolean {
+    return programacao.status === 'PLANEJADA';
+  },
+
+  // ============================================================================
+  // Interferências da Obra
+  // ============================================================================
+
+  async getInterferencias(
+    empresaId: string, 
+    projetoId?: string, 
+    programacaoId?: string
+  ): Promise<InterferenciaObra[]> {
+    try {
+      let query = supabase
+        .from('interferencias_obra')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('data_ocorrencia', { ascending: false });
+
+      if (projetoId) {
+        query = query.eq('projeto_id', projetoId);
+      }
+      if (programacaoId) {
+        query = query.eq('programacao_id', programacaoId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return (data || []) as InterferenciaObra[];
+    } catch (e) {
+      console.error('Erro ao buscar interferências:', e);
+      return [];
+    }
+  },
+
+  async getInterferenciaById(id: string): Promise<InterferenciaObra | null> {
+    try {
+      const { data, error } = await supabase
+        .from('interferencias_obra')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data as InterferenciaObra;
+    } catch (e) {
+      console.error('Erro ao buscar interferência:', e);
+      return null;
+    }
+  },
+
+  async registrarInterferencia(
+    empresaId: string,
+    usuarioId: string,
+    usuarioNome: string,
+    input: CreateInterferenciaInput
+  ): Promise<InterferenciaObra | null> {
+    try {
+      const { data, error } = await supabase
+        .from('interferencias_obra')
+        .insert({
+          empresa_id: empresaId,
+          projeto_id: input.projeto_id,
+          programacao_id: input.programacao_id,
+          atividade_id: input.atividade_id,
+          atividade_codigo: input.atividade_codigo,
+          atividade_nome: input.atividade_nome,
+          usuario_id: usuarioId,
+          usuario_nome: usuarioNome,
+          setor: input.setor,
+          empresa_nome: input.empresa_nome,
+          tipo_empresa: input.tipo_empresa,
+          categoria: input.categoria,
+          descricao: input.descricao,
+          impacto: input.impacto,
+          acao_tomada: input.acao_tomada,
+          data_ocorrencia: input.data_ocorrencia,
+          status: 'ABERTA',
+          convertida_restricao: false,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as InterferenciaObra;
+    } catch (e) {
+      console.error('Erro ao registrar interferência:', e);
+      return null;
+    }
+  },
+
+  async atualizarInterferencia(
+    id: string, 
+    updates: Partial<InterferenciaObra>
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('interferencias_obra')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Erro ao atualizar interferência:', e);
+      return false;
+    }
+  },
+
+  async converterEmRestricao(
+    interferenciaId: string,
+    restricaoId: string
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('interferencias_obra')
+        .update({
+          convertida_restricao: true,
+          restricao_id: restricaoId,
+          status: 'CONVERTIDA_RESTRICAO',
+        })
+        .eq('id', interferenciaId);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Erro ao converter interferência em restrição:', e);
+      return false;
+    }
+  },
+
+  async resolverInterferencia(id: string, acaoTomada: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('interferencias_obra')
+        .update({
+          status: 'RESOLVIDA',
+          acao_tomada: acaoTomada,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Erro ao resolver interferência:', e);
+      return false;
     }
   },
 };

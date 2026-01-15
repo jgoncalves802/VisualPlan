@@ -1,8 +1,12 @@
 export type DiaSemana = 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom';
 
-export type StatusProgramacao = 'PLANEJADA' | 'EM_EXECUCAO' | 'CONCLUIDA' | 'CANCELADA';
+export type StatusProgramacao = 'PLANEJADA' | 'AGUARDANDO_ACEITE' | 'ACEITA' | 'EM_EXECUCAO' | 'CONCLUIDA' | 'CANCELADA';
 export type StatusAtividade = 'PENDENTE' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'NAO_CONCLUIDA' | 'CANCELADA';
 export type Causa6M = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA';
+export type TipoAceite = 'ENVIO_PRODUCAO' | 'ACEITE_PRODUCAO' | 'REJEICAO_PRODUCAO' | 'RETORNO_PLANEJAMENTO';
+export type TipoEmpresa = 'CONTRATADA' | 'CONTRATANTE' | 'FISCALIZACAO';
+export type CategoriaInterferencia = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA' | 'PROJETO' | 'CLIMA' | 'OUTRO';
+export type StatusInterferencia = 'ABERTA' | 'EM_ANALISE' | 'RESOLVIDA' | 'CONVERTIDA_RESTRICAO';
 
 export const DIAS_SEMANA: DiaSemana[] = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
 
@@ -34,6 +38,57 @@ export const CAUSAS_6M_CORES: Record<Causa6M, string> = {
   MEIO_AMBIENTE: '#06b6d4',
   MEDIDA: '#8b5cf6',
   SEGURANCA: '#ec4899',
+};
+
+export const STATUS_PROGRAMACAO_LABEL: Record<StatusProgramacao, string> = {
+  PLANEJADA: 'Planejada',
+  AGUARDANDO_ACEITE: 'Aguardando Aceite',
+  ACEITA: 'Aceita',
+  EM_EXECUCAO: 'Em Execução',
+  CONCLUIDA: 'Concluída',
+  CANCELADA: 'Cancelada',
+};
+
+export const STATUS_PROGRAMACAO_CORES: Record<StatusProgramacao, string> = {
+  PLANEJADA: '#6b7280',
+  AGUARDANDO_ACEITE: '#f59e0b',
+  ACEITA: '#10b981',
+  EM_EXECUCAO: '#3b82f6',
+  CONCLUIDA: '#22c55e',
+  CANCELADA: '#ef4444',
+};
+
+export const TIPO_ACEITE_LABEL: Record<TipoAceite, string> = {
+  ENVIO_PRODUCAO: 'Envio para Produção',
+  ACEITE_PRODUCAO: 'Aceite da Produção',
+  REJEICAO_PRODUCAO: 'Rejeição da Produção',
+  RETORNO_PLANEJAMENTO: 'Retorno para Planejamento',
+};
+
+export const TIPO_EMPRESA_LABEL: Record<TipoEmpresa, string> = {
+  CONTRATADA: 'Contratada',
+  CONTRATANTE: 'Contratante',
+  FISCALIZACAO: 'Fiscalização',
+};
+
+export const CATEGORIA_INTERFERENCIA_LABEL: Record<CategoriaInterferencia, string> = {
+  MATERIAL: 'Material',
+  MAO_DE_OBRA: 'Mão de Obra',
+  MAQUINA: 'Máquina',
+  METODO: 'Método',
+  MEIO_AMBIENTE: 'Meio Ambiente',
+  MEDIDA: 'Medida',
+  SEGURANCA: 'Segurança',
+  PROJETO: 'Projeto',
+  CLIMA: 'Clima',
+  OUTRO: 'Outro',
+};
+
+export const STATUS_INTERFERENCIA_LABEL: Record<StatusInterferencia, string> = {
+  ABERTA: 'Aberta',
+  EM_ANALISE: 'Em Análise',
+  RESOLVIDA: 'Resolvida',
+  CONVERTIDA_RESTRICAO: 'Convertida em Restrição',
 };
 
 export interface ProgramacaoSemanal {
@@ -207,4 +262,66 @@ export interface MetricasPPC {
   atividades_nao_concluidas: number;
   atividades_com_restricao: number;
   causas_6m: Record<Causa6M, number>;
+}
+
+export interface AceiteProgramacao {
+  id: string;
+  empresa_id: string;
+  programacao_id: string;
+  usuario_id: string;
+  usuario_nome: string;
+  setor: string;
+  tipo_aceite: TipoAceite;
+  observacoes?: string;
+  data_aceite: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateAceiteInput {
+  programacao_id: string;
+  tipo_aceite: TipoAceite;
+  observacoes?: string;
+}
+
+export interface InterferenciaObra {
+  id: string;
+  empresa_id: string;
+  projeto_id: string;
+  programacao_id?: string;
+  atividade_id?: string;
+  atividade_codigo?: string;
+  atividade_nome?: string;
+  usuario_id: string;
+  usuario_nome: string;
+  setor: string;
+  empresa_nome: string;
+  tipo_empresa: TipoEmpresa;
+  categoria?: CategoriaInterferencia;
+  descricao: string;
+  impacto?: string;
+  acao_tomada?: string;
+  data_ocorrencia: string;
+  data_registro: string;
+  convertida_restricao: boolean;
+  restricao_id?: string;
+  status: StatusInterferencia;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateInterferenciaInput {
+  projeto_id: string;
+  programacao_id?: string;
+  atividade_id?: string;
+  atividade_codigo?: string;
+  atividade_nome?: string;
+  setor: string;
+  empresa_nome: string;
+  tipo_empresa: TipoEmpresa;
+  categoria?: CategoriaInterferencia;
+  descricao: string;
+  impacto?: string;
+  acao_tomada?: string;
+  data_ocorrencia: string;
 }
