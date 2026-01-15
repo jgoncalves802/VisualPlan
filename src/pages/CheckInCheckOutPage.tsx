@@ -88,62 +88,79 @@ export const CheckInCheckOutPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const programacoes = await checkinCheckoutService.getProgramacoesSemana(
+      // Usa getOrCreateProgramacao para criar automaticamente a programação e popular com atividades do cronograma
+      const result = await checkinCheckoutService.getOrCreateProgramacao(
         usuario.empresaId,
-        projetoSelecionado.id
+        projetoSelecionado.id,
+        semanaAtual.semana,
+        semanaAtual.ano,
+        format(semanaAtual.inicio, 'yyyy-MM-dd'),
+        format(semanaAtual.fim, 'yyyy-MM-dd')
       );
 
-      const prog = programacoes.find(
-        (p) => p.semana === semanaAtual.semana && p.ano === semanaAtual.ano
-      );
-
-      if (prog) {
-        setProgramacao(prog);
-        const ativs = await checkinCheckoutService.getAtividadesProgramacao(prog.id);
-        setAtividades(ativs);
-        const metrics = await checkinCheckoutService.calcularMetricasPPC(prog.id);
+      if (result.programacao) {
+        setProgramacao(result.programacao);
+        
+        // Usa atividades retornadas por getOrCreateProgramacao
+        setAtividades(result.atividades);
+        
+        const metrics = await checkinCheckoutService.calcularMetricasPPC(result.programacao.id);
         setMetricas(metrics);
 
-        const itensMap: Record<string, TakeoffItemVinculado[]> = {};
-        for (const ativ of ativs) {
-          if (ativ.atividade_cronograma_id) {
-            const vinculos = await takeoffService.getVinculosByAtividade(ativ.atividade_cronograma_id);
-            
-            // Fetch cronograma activity to get duration
-            const { data: cronogramaAtiv } = await supabase
-              .from('atividades_cronograma')
-              .select('duracao_dias, data_inicio, data_fim')
-              .eq('id', ativ.atividade_cronograma_id)
-              .single();
-            
-            let duracao = cronogramaAtiv?.duracao_dias || 1;
-            if (!duracao && cronogramaAtiv?.data_inicio && cronogramaAtiv?.data_fim) {
+        // Busca itens de take-off em batch para todas as atividades
+        const cronogramaIds = result.atividades
+          .filter(a => a.atividade_cronograma_id)
+          .map(a => a.atividade_cronograma_id!);
+        
+        if (cronogramaIds.length > 0) {
+          // Buscar durações em uma só query
+          const { data: cronogramaAtivs } = await supabase
+            .from('atividades_cronograma')
+            .select('id, duracao_dias, data_inicio, data_fim')
+            .in('id', cronogramaIds);
+          
+          const duracaoMap = new Map<string, number>();
+          (cronogramaAtivs || []).forEach(c => {
+            let duracao = c.duracao_dias || 1;
+            if (!duracao && c.data_inicio && c.data_fim) {
               duracao = Math.max(1, differenceInCalendarDays(
-                parseISO(cronogramaAtiv.data_fim), 
-                parseISO(cronogramaAtiv.data_inicio)
+                parseISO(c.data_fim), 
+                parseISO(c.data_inicio)
               ) + 1);
             }
-            
-            const itens: TakeoffItemVinculado[] = vinculos.map(v => {
-              const item = (v as any).takeoff_itens;
-              const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
-              const qtdDiaria = duracao > 0 ? qtdTotal / duracao : qtdTotal;
-              return {
-                id: v.id,
-                itemId: v.itemId,
-                descricao: item?.descricao || 'Item sem descrição',
-                unidade: item?.unidade || 'un',
-                qtdTotal,
-                qtdDiaria: Math.round(qtdDiaria * 100) / 100,
-                peso: v.peso,
-              };
-            });
-            if (itens.length > 0) {
-              itensMap[ativ.id] = itens;
+            duracaoMap.set(c.id, duracao);
+          });
+
+          // Buscar todos os vínculos take-off
+          const itensMap: Record<string, TakeoffItemVinculado[]> = {};
+          for (const ativ of result.atividades) {
+            if (ativ.atividade_cronograma_id) {
+              const vinculos = await takeoffService.getVinculosByAtividade(ativ.atividade_cronograma_id);
+              const duracao = duracaoMap.get(ativ.atividade_cronograma_id) || 1;
+              
+              const itens: TakeoffItemVinculado[] = vinculos.map(v => {
+                const item = (v as any).takeoff_itens;
+                const qtdTotal = item?.qtd_prevista || item?.qtd_takeoff || 0;
+                const qtdDiaria = duracao > 0 ? qtdTotal / duracao : qtdTotal;
+                return {
+                  id: v.id,
+                  itemId: v.itemId,
+                  descricao: item?.descricao || 'Item sem descrição',
+                  unidade: item?.unidade || 'un',
+                  qtdTotal,
+                  qtdDiaria: Math.round(qtdDiaria * 100) / 100,
+                  peso: v.peso,
+                };
+              });
+              if (itens.length > 0) {
+                itensMap[ativ.id] = itens;
+              }
             }
           }
+          setItensPorAtividade(itensMap);
+        } else {
+          setItensPorAtividade({});
         }
-        setItensPorAtividade(itensMap);
       } else {
         setProgramacao(null);
         setAtividades([]);
