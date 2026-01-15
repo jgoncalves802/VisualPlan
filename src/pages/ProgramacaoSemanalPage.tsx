@@ -5,6 +5,9 @@ import { useAuthStore } from '../stores/authStore';
 import { useProjetoStore } from '../stores/projetoStore';
 import ProjetoSelector from '../components/ui/ProjetoSelector';
 import { checkinCheckoutService } from '../services/checkinCheckoutService';
+import { restricoesLpsService } from '../services/restricoesLpsService';
+import { RestricaoModal, RestricaoModalInitialData } from '../components/features/restricoes/RestricaoModal';
+import { RestricaoLPS, TipoRestricaoDetalhado } from '../types/lps';
 import {
   ProgramacaoSemanal,
   ProgramacaoAtividade,
@@ -20,6 +23,8 @@ import {
   CONDICOES_PRONTIDAO,
   CONDICAO_PRONTIDAO_LABEL,
   CONDICAO_PRONTIDAO_DESCRICAO,
+  CONDICAO_PARA_ISHIKAWA,
+  Causa6M,
 } from '../types/checkinCheckout.types';
 import {
   Calendar,
@@ -61,6 +66,13 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const [observacoesAceite, setObservacoesAceite] = useState('');
   const [acaoAceite, setAcaoAceite] = useState<'aceitar' | 'rejeitar'>('aceitar');
   const [condicaoSelecionada, setCondicaoSelecionada] = useState<CondicaoProntidao | ''>('');
+  
+  const [showRestricaoModal, setShowRestricaoModal] = useState(false);
+  const [restricaoInitialData, setRestricaoInitialData] = useState<RestricaoModalInitialData | undefined>(undefined);
+  const [pendingRejeicao, setPendingRejeicao] = useState<{
+    motivo: string;
+    condicao: CondicaoProntidao;
+  } | null>(null);
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -282,7 +294,20 @@ export const ProgramacaoSemanalPage: React.FC = () => {
     }
   };
 
-  const handleRejeitarProgramacao = async () => {
+  const mapCausa6MToTipoDetalhado = (causa: Causa6M): TipoRestricaoDetalhado => {
+    const mapping: Record<Causa6M, TipoRestricaoDetalhado> = {
+      'MATERIAL': TipoRestricaoDetalhado.MATERIAL,
+      'MAO_DE_OBRA': TipoRestricaoDetalhado.MAO_DE_OBRA,
+      'MAQUINA': TipoRestricaoDetalhado.MAQUINA,
+      'METODO': TipoRestricaoDetalhado.METODO,
+      'MEIO_AMBIENTE': TipoRestricaoDetalhado.MEIO_AMBIENTE,
+      'MEDIDA': TipoRestricaoDetalhado.MEDIDA,
+      'SEGURANCA': TipoRestricaoDetalhado.MEDIDA,
+    };
+    return mapping[causa] || TipoRestricaoDetalhado.METODO;
+  };
+
+  const handleRejeitarProgramacao = () => {
     if (!programacao || !usuario?.id || !usuario?.empresaId) return;
     if (!condicaoSelecionada) {
       alert('Por favor, selecione qual Condição de Prontidão não foi atendida.');
@@ -293,33 +318,71 @@ export const ProgramacaoSemanalPage: React.FC = () => {
       return;
     }
 
+    const condicao = condicaoSelecionada as CondicaoProntidao;
+    const categoriaIshikawa = CONDICAO_PARA_ISHIKAWA[condicao];
+    const tipoDetalhado = mapCausa6MToTipoDetalhado(categoriaIshikawa);
+
+    const initialData: RestricaoModalInitialData = {
+      descricao: `[Rejeição Programação S${semanaAtual.semana}/${semanaAtual.ano}] ${observacoesAceite}`,
+      tipo_detalhado: tipoDetalhado,
+      projeto_id: projetoSelecionado?.id,
+      observacoes: `Condição de Prontidão não atendida: ${CONDICAO_PRONTIDAO_LABEL[condicao]}\n${CONDICAO_PRONTIDAO_DESCRICAO[condicao]}`,
+      origem: 'REJEICAO_PROGRAMACAO',
+      programacao_id: programacao.id,
+    };
+
+    setPendingRejeicao({
+      motivo: observacoesAceite,
+      condicao: condicao,
+    });
+    setRestricaoInitialData(initialData);
+    setShowModalAceite(false);
+    setShowRestricaoModal(true);
+  };
+
+  const handleSaveRestricaoRejeicao = async (restricaoData: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS>) => {
+    if (!programacao || !usuario?.id || !usuario?.empresaId || !pendingRejeicao) return;
+
     setSaving(true);
     try {
-      const resultado = await checkinCheckoutService.rejeitarProgramacao(
-        usuario.empresaId,
-        usuario.id,
-        usuario.nome || usuario.email || 'Usuário',
-        programacao.id,
-        observacoesAceite,
-        condicaoSelecionada as CondicaoProntidao,
-        projetoSelecionado?.id
-      );
+      const novaRestricao = await restricoesLpsService.create({
+        ...restricaoData,
+        origem: 'REJEICAO_PROGRAMACAO',
+        programacao_id: programacao.id,
+      } as any, usuario.empresaId);
 
-      if (resultado.sucesso) {
+      if (novaRestricao) {
+        await checkinCheckoutService.registrarAceite(
+          usuario.empresaId,
+          usuario.id,
+          usuario.nome || usuario.email || 'Usuário',
+          {
+            programacao_id: programacao.id,
+            tipo_aceite: 'REJEICAO_PRODUCAO',
+            observacoes: pendingRejeicao.motivo,
+          }
+        );
+
         setProgramacao({ ...programacao, status: 'PLANEJADA' });
-        setShowModalAceite(false);
+        setShowRestricaoModal(false);
+        setRestricaoInitialData(undefined);
+        setPendingRejeicao(null);
         setObservacoesAceite('');
         setCondicaoSelecionada('');
-        if (resultado.restricaoId) {
-          alert('Rejeição registrada e restrição criada com sucesso. A restrição pode ser acompanhada no módulo Kaizen.');
-        }
         await loadData();
       }
     } catch (e) {
-      console.error('Erro ao rejeitar programação:', e);
+      console.error('Erro ao criar restrição e rejeitar programação:', e);
+      alert('Erro ao processar a rejeição. Tente novamente.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCloseRestricaoModal = () => {
+    setShowRestricaoModal(false);
+    setRestricaoInitialData(undefined);
+    setPendingRejeicao(null);
   };
 
   const podeEditar = useMemo(() => {
@@ -1046,6 +1109,15 @@ export const ProgramacaoSemanalPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Criação de Restrição (para rejeição) */}
+      <RestricaoModal
+        restricao={null}
+        isOpen={showRestricaoModal}
+        onClose={handleCloseRestricaoModal}
+        onSave={handleSaveRestricaoRejeicao}
+        initialData={restricaoInitialData}
+      />
     </div>
   );
 };

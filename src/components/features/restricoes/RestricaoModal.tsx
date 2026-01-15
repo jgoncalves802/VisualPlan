@@ -14,12 +14,24 @@ import { X, Save, AlertTriangle, Upload, FileText, Image } from 'lucide-react';
 import { restricoesLpsService } from '../../../services/restricoesLpsService';
 import { parseDateOnly } from '../../../utils/dateHelpers';
 
+export interface RestricaoModalInitialData {
+  descricao?: string;
+  tipo_detalhado?: TipoRestricaoDetalhado;
+  projeto_id?: string;
+  atividade_id?: string;
+  wbs_id?: string;
+  observacoes?: string;
+  origem?: string;
+  programacao_id?: string;
+}
+
 interface RestricaoModalProps {
   restricao: RestricaoLPS | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (restricao: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS>) => void;
   atividadeId?: string; // ID da atividade relacionada (quando criado a partir de uma atividade)
+  initialData?: RestricaoModalInitialData; // Dados iniciais para pré-preencher o formulário
   onAddEvidencia?: (restricaoId: string, arquivo: File) => void;
   onDeleteEvidencia?: (restricaoId: string, evidenciaId: string) => void;
   onAddAndamento?: (restricaoId: string, descricao: string) => void;
@@ -31,6 +43,7 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
   onClose,
   onSave,
   atividadeId,
+  initialData,
   onAddEvidencia,
   onDeleteEvidencia,
   onAddAndamento,
@@ -198,9 +211,9 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         setTipoDetalhadoAlterado(false);
       } else {
         setFormData({
-          descricao: '',
+          descricao: initialData?.descricao || '',
           tipo: TipoRestricao.RESTRICAO,
-          tipo_detalhado: TipoRestricaoDetalhado.METODO,
+          tipo_detalhado: initialData?.tipo_detalhado || TipoRestricaoDetalhado.METODO,
           tipo_responsabilidade: undefined,
           responsavel: '',
           apoio: '',
@@ -208,13 +221,13 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
           prazo_resolucao: undefined,
           status: 'PENDENTE',
           prioridade: 'MEDIA',
-          observacoes: '',
+          observacoes: initialData?.observacoes || '',
           categoria: '',
           impacto_previsto: '',
-          atividade_id: atividadeId || undefined,
+          atividade_id: initialData?.atividade_id || atividadeId || undefined,
           paralisar_obra: false,
-          projeto_id: undefined,
-          wbs_id: undefined,
+          projeto_id: initialData?.projeto_id || undefined,
+          wbs_id: initialData?.wbs_id || undefined,
         });
         setTipoDetalhadoAlterado(false);
       }
@@ -240,7 +253,7 @@ export const RestricaoModal: React.FC<RestricaoModalProps> = ({
         wbs_id: undefined,
       });
     }
-  }, [restricao, isOpen, atividadeId]);
+  }, [restricao, isOpen, atividadeId, initialData]);
 
   // Se paralisar_obra for true, aplicar prioridade máxima
   useEffect(() => {
