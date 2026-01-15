@@ -129,7 +129,7 @@ export const restricoesIshikawaService = {
 
   async create(restricao: Omit<RestricaoIshikawa, 'id'>, empresaId: string): Promise<RestricaoIshikawa> {
     const dbData = mapToDB(restricao, empresaId);
-    dbData.id = `rest-${Date.now()}`;
+    dbData.id = crypto.randomUUID();
 
     const { data, error } = await supabase
       .from('restricoes_ishikawa')
