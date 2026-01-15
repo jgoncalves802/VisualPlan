@@ -561,22 +561,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
               <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
                 <h3 className="font-semibold text-neutral-900">Atividades da Semana</h3>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      programacao.status === 'PLANEJADA'
-                        ? 'bg-blue-100 text-blue-700'
-                        : programacao.status === 'EM_EXECUCAO'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-neutral-100 text-neutral-700'
-                    }`}
-                  >
-                    {programacao.status === 'PLANEJADA'
-                      ? 'Em Planejamento'
-                      : programacao.status === 'EM_EXECUCAO'
-                      ? 'Em Execução'
-                      : programacao.status}
-                  </span>
-                  {programacao.status === 'PLANEJADA' && (
+                  {podeEditar && (
                     <button
                       onClick={() => setShowSeletor(true)}
                       className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
@@ -677,7 +662,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                                         parseFloat(e.target.value) || 0
                                       )
                                     }
-                                    disabled={programacao.status !== 'PLANEJADA'}
+                                    disabled={!podeEditar}
                                     className="w-full p-2 text-center border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-neutral-50"
                                     placeholder="0"
                                   />
@@ -688,7 +673,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                               {totalPrev.toFixed(1)}
                             </td>
                             <td className="p-2">
-                              {programacao.status === 'PLANEJADA' && (
+                              {podeEditar && (
                                 <button
                                   onClick={() => handleRemoverAtividade(atividade.id)}
                                   className="p-1.5 text-neutral-400 hover:text-red-500 transition-colors"
