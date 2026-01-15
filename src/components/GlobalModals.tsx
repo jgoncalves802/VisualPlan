@@ -8,9 +8,15 @@ export const GlobalModals: React.FC = () => {
 
   const handleSave = async (data: Omit<RestricaoLPS, 'id'> | Partial<RestricaoLPS>) => {
     if (restricaoModal.onSave) {
-      await restricaoModal.onSave(data);
+      try {
+        await restricaoModal.onSave(data);
+        closeRestricaoModal();
+      } catch (error) {
+        console.error('Erro ao salvar restrição:', error);
+      }
+    } else {
+      closeRestricaoModal();
     }
-    closeRestricaoModal();
   };
 
   const handleClose = () => {
