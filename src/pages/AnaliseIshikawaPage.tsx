@@ -70,19 +70,21 @@ const CATEGORY_COLORS: Record<CategoriaIshikawa, string> = {
 };
 
 const STATUS_COLORS: Record<StatusRestricaoIshikawa, string> = {
+  [StatusRestricaoIshikawa.IDENTIFICADA]: '#3B82F6',
+  [StatusRestricaoIshikawa.EM_TRATAMENTO]: '#EAB308',
   [StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO]: '#22C55E',
-  [StatusRestricaoIshikawa.EM_EXECUCAO]: '#3B82F6',
-  [StatusRestricaoIshikawa.NO_PRAZO]: '#EAB308',
   [StatusRestricaoIshikawa.ATRASADA]: '#F97316',
   [StatusRestricaoIshikawa.VENCIDA]: '#EF4444',
+  [StatusRestricaoIshikawa.CANCELADA]: '#6B7280',
 };
 
 const STATUS_LABELS: Record<StatusRestricaoIshikawa, string> = {
+  [StatusRestricaoIshikawa.IDENTIFICADA]: 'Identificada',
+  [StatusRestricaoIshikawa.EM_TRATAMENTO]: 'Em Tratamento',
   [StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO]: 'Concluída',
-  [StatusRestricaoIshikawa.EM_EXECUCAO]: 'Em Execução',
-  [StatusRestricaoIshikawa.NO_PRAZO]: 'No Prazo',
   [StatusRestricaoIshikawa.ATRASADA]: 'Atrasada',
   [StatusRestricaoIshikawa.VENCIDA]: 'Vencida',
+  [StatusRestricaoIshikawa.CANCELADA]: 'Cancelada',
 };
 
 
@@ -107,8 +109,8 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
 
   const statusDistribution = [
     { name: 'Concluídas', value: dadosCategoria.concluidas, color: STATUS_COLORS[StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO] },
-    { name: 'Em Execução', value: dadosCategoria.emExecucao, color: STATUS_COLORS[StatusRestricaoIshikawa.EM_EXECUCAO] },
-    { name: 'No Prazo', value: dadosCategoria.noPrazo, color: STATUS_COLORS[StatusRestricaoIshikawa.NO_PRAZO] },
+    { name: 'Identificadas', value: dadosCategoria.identificadas || 0, color: STATUS_COLORS[StatusRestricaoIshikawa.IDENTIFICADA] },
+    { name: 'Em Tratamento', value: dadosCategoria.emTratamento || 0, color: STATUS_COLORS[StatusRestricaoIshikawa.EM_TRATAMENTO] },
     { name: 'Atrasadas', value: dadosCategoria.atrasadas, color: STATUS_COLORS[StatusRestricaoIshikawa.ATRASADA] },
     { name: 'Vencidas', value: dadosCategoria.vencidas, color: STATUS_COLORS[StatusRestricaoIshikawa.VENCIDA] },
   ].filter(item => item.value > 0);
@@ -158,8 +160,8 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                   <div className="text-xs text-green-700">Concluídas</div>
                 </div>
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{dadosCategoria.emExecucao}</div>
-                  <div className="text-xs text-blue-700">Em Execução</div>
+                  <div className="text-2xl font-bold text-blue-600">{dadosCategoria.identificadas}</div>
+                  <div className="text-xs text-blue-700">Identificadas</div>
                 </div>
                 <div className="bg-orange-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-orange-600">{dadosCategoria.atrasadas}</div>
@@ -350,10 +352,10 @@ const IshikawaDiagram: React.FC<IshikawaDiagramProps> = ({
               Concluídas: {dados.concluidas}
             </text>
             <text x={-65} y={30} fontSize={11} fill="#3B82F6" fontWeight="500">
-              Em Execução: {dados.emExecucao}
+              Identificadas: {dados.identificadas}
             </text>
             <text x={-65} y={46} fontSize={11} fill="#EAB308" fontWeight="500">
-              No Prazo: {dados.noPrazo}
+              Em Tratamento: {dados.emTratamento}
             </text>
             <text x={25} y={14} fontSize={11} fill="#F97316" fontWeight="500">
               Atrasadas: {dados.atrasadas}
@@ -538,8 +540,8 @@ const AnaliseIshikawaPage: React.FC = () => {
         categoria: cat,
         total: catRestrictions.length,
         concluidas: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.CONCLUIDA_NO_PRAZO).length,
-        emExecucao: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.EM_EXECUCAO).length,
-        noPrazo: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.NO_PRAZO).length,
+        identificadas: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.IDENTIFICADA).length,
+        emTratamento: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.EM_TRATAMENTO).length,
         atrasadas: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.ATRASADA).length,
         vencidas: catRestrictions.filter(r => r.status === StatusRestricaoIshikawa.VENCIDA).length,
         percentualProblemas: catRestrictions.length > 0

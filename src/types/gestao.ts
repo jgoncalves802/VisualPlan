@@ -126,11 +126,12 @@ export enum CategoriaIshikawa {
 }
 
 export enum StatusRestricaoIshikawa {
+  IDENTIFICADA = 'IDENTIFICADA',
+  EM_TRATAMENTO = 'EM_TRATAMENTO',
   CONCLUIDA_NO_PRAZO = 'CONCLUIDA_NO_PRAZO',
-  EM_EXECUCAO = 'EM_EXECUCAO',
-  NO_PRAZO = 'NO_PRAZO',
   ATRASADA = 'ATRASADA',
   VENCIDA = 'VENCIDA',
+  CANCELADA = 'CANCELADA',
 }
 
 export interface RestricaoIshikawa {
@@ -171,8 +172,8 @@ export interface DadosIshikawa {
   categoria: CategoriaIshikawa;
   total: number;
   concluidas: number;
-  emExecucao: number;
-  noPrazo: number;
+  identificadas: number;
+  emTratamento: number;
   atrasadas: number;
   vencidas: number;
   percentualProblemas: number;
