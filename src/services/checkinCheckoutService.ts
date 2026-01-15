@@ -17,6 +17,9 @@ import {
   InterferenciaObra,
   CreateInterferenciaInput,
   StatusProgramacao,
+  CondicaoProntidao,
+  CONDICAO_PRONTIDAO_LABEL,
+  CONDICAO_PARA_ISHIKAWA,
 } from '../types/checkinCheckout.types';
 import { getWeek, getYear, startOfWeek, endOfWeek, format, addDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -810,14 +813,69 @@ export const checkinCheckoutService = {
     usuarioId: string,
     usuarioNome: string,
     programacaoId: string,
-    observacoes: string
-  ): Promise<boolean> {
-    const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
-      programacao_id: programacaoId,
-      tipo_aceite: 'REJEICAO_PRODUCAO',
-      observacoes,
-    });
-    return aceite !== null;
+    observacoes: string,
+    condicaoProntidao?: CondicaoProntidao,
+    projetoId?: string
+  ): Promise<{ sucesso: boolean; restricaoId?: string }> {
+    try {
+      const aceite = await this.registrarAceite(empresaId, usuarioId, usuarioNome, {
+        programacao_id: programacaoId,
+        tipo_aceite: 'REJEICAO_PRODUCAO',
+        observacoes,
+      });
+
+      if (!aceite) {
+        return { sucesso: false };
+      }
+
+      let restricaoId: string | undefined;
+
+      if (condicaoProntidao) {
+        const categoriaIshikawa = CONDICAO_PARA_ISHIKAWA[condicaoProntidao];
+        const condicaoLabel = CONDICAO_PRONTIDAO_LABEL[condicaoProntidao];
+        
+        const codigoRestricao = `REJ-${Date.now().toString(36).toUpperCase()}`;
+        const descricaoCompleta = `[Rejeição de Programação] Condição não atendida: ${condicaoLabel}. Motivo: ${observacoes}`;
+
+        const hoje = new Date();
+        const dataPrevista = new Date(hoje);
+        dataPrevista.setDate(dataPrevista.getDate() + 7);
+
+        const { data: restricao, error: restricaoError } = await supabase
+          .from('restricoes_ishikawa')
+          .insert({
+            empresa_id: empresaId,
+            projeto_id: projetoId,
+            codigo: codigoRestricao,
+            descricao: descricaoCompleta,
+            categoria: categoriaIshikawa,
+            status: 'EM_ANALISE',
+            responsavel: usuarioNome,
+            data_criacao: hoje.toISOString(),
+            data_prevista: dataPrevista.toISOString(),
+            impacto_caminho_critico: false,
+            duracao_atividade_impactada: 0,
+            dias_atraso: 0,
+            score_impacto: 0,
+            reincidente: false,
+            origem: 'REJEICAO_PROGRAMACAO',
+            programacao_id: programacaoId,
+          })
+          .select()
+          .single();
+
+        if (restricaoError) {
+          console.error('Erro ao criar restrição da rejeição:', restricaoError);
+        } else if (restricao) {
+          restricaoId = restricao.id;
+        }
+      }
+
+      return { sucesso: true, restricaoId };
+    } catch (e) {
+      console.error('Erro ao rejeitar programação:', e);
+      return { sucesso: false };
+    }
   },
 
   async retornarParaPlanejamento(

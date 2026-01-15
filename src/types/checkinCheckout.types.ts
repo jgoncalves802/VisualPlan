@@ -8,6 +8,60 @@ export type TipoEmpresa = 'CONTRATADA' | 'CONTRATANTE' | 'FISCALIZACAO';
 export type CategoriaInterferencia = 'MATERIAL' | 'MAO_DE_OBRA' | 'MAQUINA' | 'METODO' | 'MEIO_AMBIENTE' | 'MEDIDA' | 'SEGURANCA' | 'PROJETO' | 'CLIMA' | 'OUTRO';
 export type StatusInterferencia = 'ABERTA' | 'EM_ANALISE' | 'RESOLVIDA' | 'CONVERTIDA_RESTRICAO';
 
+export type CondicaoProntidao = 
+  | 'PROJETO' 
+  | 'MATERIAIS' 
+  | 'MAO_DE_OBRA' 
+  | 'EQUIPAMENTOS' 
+  | 'ESPACO' 
+  | 'TAREFAS_PREDECESSORAS' 
+  | 'CONDICOES_EXTERNAS'
+  | 'SEGURANCA';
+
+export const CONDICOES_PRONTIDAO: CondicaoProntidao[] = [
+  'PROJETO',
+  'MATERIAIS',
+  'MAO_DE_OBRA',
+  'EQUIPAMENTOS',
+  'ESPACO',
+  'TAREFAS_PREDECESSORAS',
+  'CONDICOES_EXTERNAS',
+  'SEGURANCA',
+];
+
+export const CONDICAO_PRONTIDAO_LABEL: Record<CondicaoProntidao, string> = {
+  PROJETO: 'Projeto / Informação',
+  MATERIAIS: 'Materiais',
+  MAO_DE_OBRA: 'Mão de Obra',
+  EQUIPAMENTOS: 'Equipamentos / Ferramentas',
+  ESPACO: 'Espaço / Área de Trabalho',
+  TAREFAS_PREDECESSORAS: 'Tarefas Predecessoras',
+  CONDICOES_EXTERNAS: 'Condições Externas',
+  SEGURANCA: 'Segurança',
+};
+
+export const CONDICAO_PRONTIDAO_DESCRICAO: Record<CondicaoProntidao, string> = {
+  PROJETO: 'Projeto aprovado, especificações e informações técnicas disponíveis',
+  MATERIAIS: 'Materiais disponíveis no local em quantidade e qualidade suficiente',
+  MAO_DE_OBRA: 'Equipe qualificada disponível para executar a tarefa',
+  EQUIPAMENTOS: 'Equipamentos e ferramentas disponíveis e em bom estado',
+  ESPACO: 'Área de trabalho liberada, limpa e pronta para a atividade',
+  TAREFAS_PREDECESSORAS: 'Atividades anteriores concluídas conforme planejado',
+  CONDICOES_EXTERNAS: 'Clima, licenças, autorizações e condições externas favoráveis',
+  SEGURANCA: 'Condições de segurança garantidas e EPIs disponíveis',
+};
+
+export const CONDICAO_PARA_ISHIKAWA: Record<CondicaoProntidao, Causa6M> = {
+  PROJETO: 'METODO',
+  MATERIAIS: 'MATERIAL',
+  MAO_DE_OBRA: 'MAO_DE_OBRA',
+  EQUIPAMENTOS: 'MAQUINA',
+  ESPACO: 'MEIO_AMBIENTE',
+  TAREFAS_PREDECESSORAS: 'METODO',
+  CONDICOES_EXTERNAS: 'MEIO_AMBIENTE',
+  SEGURANCA: 'SEGURANCA',
+};
+
 export const DIAS_SEMANA: DiaSemana[] = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
 
 export const DIAS_SEMANA_LABEL: Record<DiaSemana, string> = {

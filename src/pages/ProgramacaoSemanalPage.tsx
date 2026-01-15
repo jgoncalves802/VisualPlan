@@ -16,6 +16,10 @@ import {
   STATUS_PROGRAMACAO_LABEL,
   STATUS_PROGRAMACAO_CORES,
   TIPO_ACEITE_LABEL,
+  CondicaoProntidao,
+  CONDICOES_PRONTIDAO,
+  CONDICAO_PRONTIDAO_LABEL,
+  CONDICAO_PRONTIDAO_DESCRICAO,
 } from '../types/checkinCheckout.types';
 import {
   Calendar,
@@ -56,6 +60,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
   const [showModalAceite, setShowModalAceite] = useState(false);
   const [observacoesAceite, setObservacoesAceite] = useState('');
   const [acaoAceite, setAcaoAceite] = useState<'aceitar' | 'rejeitar'>('aceitar');
+  const [condicaoSelecionada, setCondicaoSelecionada] = useState<CondicaoProntidao | ''>('');
 
   const [semanaAtual, setSemanaAtual] = useState(() => {
     const hoje = new Date();
@@ -279,6 +284,10 @@ export const ProgramacaoSemanalPage: React.FC = () => {
 
   const handleRejeitarProgramacao = async () => {
     if (!programacao || !usuario?.id || !usuario?.empresaId) return;
+    if (!condicaoSelecionada) {
+      alert('Por favor, selecione qual Condição de Prontidão não foi atendida.');
+      return;
+    }
     if (!observacoesAceite.trim()) {
       alert('Por favor, informe o motivo da rejeição.');
       return;
@@ -286,18 +295,24 @@ export const ProgramacaoSemanalPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const sucesso = await checkinCheckoutService.rejeitarProgramacao(
+      const resultado = await checkinCheckoutService.rejeitarProgramacao(
         usuario.empresaId,
         usuario.id,
         usuario.nome || usuario.email || 'Usuário',
         programacao.id,
-        observacoesAceite
+        observacoesAceite,
+        condicaoSelecionada as CondicaoProntidao,
+        projetoSelecionado?.id
       );
 
-      if (sucesso) {
+      if (resultado.sucesso) {
         setProgramacao({ ...programacao, status: 'PLANEJADA' });
         setShowModalAceite(false);
         setObservacoesAceite('');
+        setCondicaoSelecionada('');
+        if (resultado.restricaoId) {
+          alert('Rejeição registrada e restrição criada com sucesso. A restrição pode ser acompanhada no módulo Kaizen.');
+        }
         await loadData();
       }
     } catch (e) {
@@ -875,7 +890,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
               </p>
               <div className="flex gap-2 mb-4">
                 <button
-                  onClick={() => setAcaoAceite('aceitar')}
+                  onClick={() => { setAcaoAceite('aceitar'); setCondicaoSelecionada(''); }}
                   className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                     acaoAceite === 'aceitar'
                       ? 'bg-green-600 text-white'
@@ -895,6 +910,33 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                   Rejeitar
                 </button>
               </div>
+              
+              {acaoAceite === 'rejeitar' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    Condição de Prontidão não atendida *
+                  </label>
+                  <select
+                    value={condicaoSelecionada}
+                    onChange={(e) => setCondicaoSelecionada(e.target.value as CondicaoProntidao | '')}
+                    className="w-full p-3 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+                    required
+                  >
+                    <option value="">Selecione a condição não atendida...</option>
+                    {CONDICOES_PRONTIDAO.map((condicao) => (
+                      <option key={condicao} value={condicao}>
+                        {CONDICAO_PRONTIDAO_LABEL[condicao]}
+                      </option>
+                    ))}
+                  </select>
+                  {condicaoSelecionada && (
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {CONDICAO_PRONTIDAO_DESCRICAO[condicaoSelecionada as CondicaoProntidao]}
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <div className="mb-4">
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
                   {acaoAceite === 'rejeitar' ? 'Motivo da rejeição *' : 'Observações (opcional)'}
@@ -902,16 +944,25 @@ export const ProgramacaoSemanalPage: React.FC = () => {
                 <textarea
                   value={observacoesAceite}
                   onChange={(e) => setObservacoesAceite(e.target.value)}
-                  placeholder={acaoAceite === 'rejeitar' ? 'Informe o motivo da rejeição...' : 'Adicione observações...'}
+                  placeholder={acaoAceite === 'rejeitar' ? 'Descreva o motivo da rejeição...' : 'Adicione observações...'}
                   rows={3}
                   className="w-full p-3 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required={acaoAceite === 'rejeitar'}
                 />
               </div>
+              
+              {acaoAceite === 'rejeitar' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    <strong>Atenção:</strong> Ao rejeitar, uma restrição será criada automaticamente 
+                    no módulo Kaizen para acompanhamento e resolução do problema identificado.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="p-4 border-t border-neutral-200 flex justify-end gap-3">
               <button
-                onClick={() => setShowModalAceite(false)}
+                onClick={() => { setShowModalAceite(false); setCondicaoSelecionada(''); setObservacoesAceite(''); }}
                 className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 Cancelar
@@ -928,7 +979,7 @@ export const ProgramacaoSemanalPage: React.FC = () => {
               ) : (
                 <button
                   onClick={handleRejeitarProgramacao}
-                  disabled={saving || !observacoesAceite.trim()}
+                  disabled={saving || !observacoesAceite.trim() || !condicaoSelecionada}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   <XCircle className="w-4 h-4" />
