@@ -186,26 +186,35 @@ class P6ImportService {
   }
 
   private buildWbsHierarchy(
-    tasks: Array<{ codigo: string; wbs_caminho?: string; nome: string }>
+    tasks: Array<{ codigo: string; wbs_caminho?: string; wbs_nome?: string; nome: string }>
   ): Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }> {
     const wbsNodes = new Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }>();
     
-    // Collect all unique WBS paths and their levels
-    const allPaths = new Set<string>();
+    // Collect all unique WBS paths and their names
+    const pathToName = new Map<string, string>();
     
     tasks.forEach(task => {
       const parsed = this.parseWbsPath(task.wbs_caminho);
       if (!parsed) return;
       
+      // Store the full path with its wbs_nome
+      const fullPath = parsed.levels.join('.');
+      if (task.wbs_nome && !pathToName.has(fullPath)) {
+        pathToName.set(fullPath, task.wbs_nome);
+      }
+      
       // Add all intermediate levels
       for (let i = 1; i <= parsed.levels.length; i++) {
         const pathKey = parsed.levels.slice(0, i).join('.');
-        allPaths.add(pathKey);
+        if (!pathToName.has(pathKey)) {
+          // For intermediate levels without names, use level indicator
+          pathToName.set(pathKey, `Nível ${pathKey}`);
+        }
       }
     });
     
     // Sort paths by depth (shorter paths first) to ensure parents are created before children
-    const sortedPaths = Array.from(allPaths).sort((a, b) => {
+    const sortedPaths = Array.from(pathToName.keys()).sort((a, b) => {
       const aDepth = a.split('.').length;
       const bDepth = b.split('.').length;
       if (aDepth !== bDepth) return aDepth - bDepth;
@@ -221,10 +230,13 @@ class P6ImportService {
       // Generate a deterministic UUID-like ID based on path
       const id = `wbs-${this.generatePathHash(pathKey)}`;
       
+      // Use the wbs_nome if available, otherwise use the path
+      const wbsName = pathToName.get(pathKey) || `WBS ${pathKey}`;
+      
       wbsNodes.set(pathKey, {
         id,
         parentId,
-        name: `WBS ${pathKey}`,
+        name: wbsName,
         level: levels.length,
         edt: pathKey,
       });
@@ -309,6 +321,19 @@ class P6ImportService {
                       p6Task['wbs_short_name'];
       if (wbsPath) {
         result.wbs_caminho = String(wbsPath);
+      }
+    }
+
+    // Fallback: try to get wbs_nome directly from p6Task if not mapped
+    if (!result.wbs_nome) {
+      const wbsName = p6Task.wbs_name || 
+                      p6Task['WBS Name'] || 
+                      p6Task['wbs name'] ||
+                      p6Task['WBS_Name'] ||
+                      p6Task['projwbs__wbs_name'] ||
+                      p6Task['PROJWBS__wbs_name'];
+      if (wbsName) {
+        result.wbs_nome = String(wbsName);
       }
     }
 
@@ -520,9 +545,18 @@ class P6ImportService {
 
       // Build WBS hierarchy from wbs_caminho
       const wbsHierarchy = this.buildWbsHierarchy(
-        validTasks.map(t => ({ codigo: t.codigo, wbs_caminho: t.wbs_caminho, nome: t.nome }))
+        validTasks.map(t => ({ 
+          codigo: t.codigo, 
+          wbs_caminho: t.wbs_caminho, 
+          wbs_nome: t.wbs_nome,
+          nome: t.nome 
+        }))
       );
       console.log('[P6Import] WBS Hierarchy criada:', wbsHierarchy.size, 'nós');
+      if (wbsHierarchy.size > 0) {
+        const firstNode = Array.from(wbsHierarchy.values())[0];
+        console.log('[P6Import] Primeiro nó WBS:', firstNode);
+      }
 
       if (config.options.overwriteExisting) {
         await supabase
@@ -548,7 +582,7 @@ class P6ImportService {
           projeto_id: projetoId,
           empresa_id: empresaId,
           codigo: `WBS-${pathKey}`.substring(0, 50),
-          nome: `WBS ${pathKey}`.substring(0, 255),
+          nome: wbsNode.name.substring(0, 255),
           edt: pathKey.substring(0, 100),
           data_inicio: new Date().toISOString().split('T')[0],
           data_fim: new Date().toISOString().split('T')[0],
