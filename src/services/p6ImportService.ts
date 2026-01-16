@@ -388,8 +388,6 @@ class P6ImportService {
         prioridade: task.prioridade,
         status: 'PLANEJADA',
         tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
-        created_by: userId,
-        updated_by: userId,
       }));
 
       if (config.options.overwriteExisting) {
@@ -431,7 +429,6 @@ class P6ImportService {
             atividade_destino_id: taskIdMap.get(dep.atividade_sucessora_codigo),
             tipo: dep.tipo,
             lag_dias: dep.lag_dias,
-            created_by: userId,
           }));
 
         if (depsToInsert.length > 0) {
