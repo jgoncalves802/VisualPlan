@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, getWeek, getYear, addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuthStore } from '../stores/authStore';
@@ -22,8 +22,8 @@ import {
   CreateInterferenciaInput,
   CategoriaInterferencia,
 } from '../types/checkinCheckout.types';
-import { restricoesIshikawaService } from '../services/restricoesIshikawaService';
-import { CategoriaIshikawa, StatusRestricaoIshikawa, RestricaoIshikawa } from '../types/gestao';
+import { useRestricaoModal } from '../contexts/ModalContext';
+import { RestricaoLPS, TipoRestricaoDetalhado } from '../types/lps';
 import { takeoffService } from '../services/takeoffService';
 import { supabase } from '../services/supabase';
 import {
@@ -49,6 +49,9 @@ import jsPDF from 'jspdf';
 export const CheckInCheckOutPage: React.FC = () => {
   const { usuario } = useAuthStore();
   const { projetoSelecionado } = useProjetoStore();
+  const restricaoModal = useRestricaoModal();
+  
+  const interferenciaParaConverterRef = useRef<InterferenciaObra | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [programacao, setProgramacao] = useState<ProgramacaoSemanal | null>(null);
@@ -253,70 +256,69 @@ export const CheckInCheckOutPage: React.FC = () => {
     }
   };
 
-  const mapCategoriaToCategoriaIshikawa = (categoria?: CategoriaInterferencia): CategoriaIshikawa => {
-    const mapping: Record<CategoriaInterferencia, CategoriaIshikawa> = {
-      'MAO_DE_OBRA': CategoriaIshikawa.MAO_DE_OBRA,
-      'MATERIAL': CategoriaIshikawa.MATERIAL,
-      'MAQUINA': CategoriaIshikawa.MAQUINA,
-      'METODO': CategoriaIshikawa.METODO,
-      'MEIO_AMBIENTE': CategoriaIshikawa.MEIO_AMBIENTE,
-      'MEDIDA': CategoriaIshikawa.MEDIDA,
-      'SEGURANCA': CategoriaIshikawa.METODO,
-      'PROJETO': CategoriaIshikawa.METODO,
-      'CLIMA': CategoriaIshikawa.MEIO_AMBIENTE,
-      'OUTRO': CategoriaIshikawa.METODO,
+  const mapCategoriaToTipoDetalhado = (categoria?: CategoriaInterferencia): TipoRestricaoDetalhado | undefined => {
+    const mapping: Record<CategoriaInterferencia, TipoRestricaoDetalhado> = {
+      'MAO_DE_OBRA': TipoRestricaoDetalhado.MAO_DE_OBRA,
+      'MATERIAL': TipoRestricaoDetalhado.MATERIAL,
+      'MAQUINA': TipoRestricaoDetalhado.MAQUINA,
+      'METODO': TipoRestricaoDetalhado.METODO,
+      'MEIO_AMBIENTE': TipoRestricaoDetalhado.MEIO_AMBIENTE,
+      'MEDIDA': TipoRestricaoDetalhado.MEDIDA,
+      'SEGURANCA': TipoRestricaoDetalhado.METODO,
+      'PROJETO': TipoRestricaoDetalhado.METODO,
+      'CLIMA': TipoRestricaoDetalhado.MEIO_AMBIENTE,
+      'OUTRO': TipoRestricaoDetalhado.METODO,
     };
-    return categoria ? mapping[categoria] : CategoriaIshikawa.METODO;
+    return categoria ? mapping[categoria] : undefined;
   };
 
-  const handleConverterEmRestricao = async (interf: InterferenciaObra) => {
+  const handleConverterEmRestricao = (interf: InterferenciaObra) => {
     if (!usuario?.empresaId || !projetoSelecionado?.id) return;
 
+    interferenciaParaConverterRef.current = interf;
     setConvertendoInterferencia(interf.id);
-    try {
-      const timestamp = Date.now().toString(36).toUpperCase();
-      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const novoCodigo = `INT-${timestamp.slice(-4)}${randomPart}`;
-      
-      const novaRestricao: Omit<RestricaoIshikawa, 'id'> = {
-        codigo: novoCodigo,
+
+    restricaoModal.open({
+      restricao: null,
+      initialData: {
         descricao: `[Interferência ${interf.tipo_empresa}] ${interf.descricao}`,
-        categoria: mapCategoriaToCategoriaIshikawa(interf.categoria),
-        status: StatusRestricaoIshikawa.IDENTIFICADA,
-        atividadeNome: interf.atividade_nome,
-        dataCriacao: new Date(),
-        dataPrevista: addDays(new Date(), 7),
-        responsavel: usuario?.nome || interf.usuario_nome || 'Não definido',
-        impactoCaminhoCritico: false,
-        duracaoAtividadeImpactada: 0,
-        diasAtraso: 0,
-        scoreImpacto: 50,
-        reincidente: false,
-      };
+        tipo_detalhado: mapCategoriaToTipoDetalhado(interf.categoria),
+        projeto_id: projetoSelecionado.id,
+        observacoes: `Convertida a partir de interferência registrada em ${format(new Date(interf.data_registro), 'dd/MM/yyyy HH:mm', { locale: ptBR })} por ${interf.usuario_nome}`,
+        origem: 'INTERFERENCIA',
+        programacao_id: programacao?.id,
+      },
+      onSave: async (restricaoData) => {
+        try {
+          const interferenciaAtual = interferenciaParaConverterRef.current;
+          if (!interferenciaAtual) return;
 
-      const restricaoCriada = await restricoesIshikawaService.create(
-        novaRestricao as RestricaoIshikawa,
-        usuario.empresaId
-      );
-
-      if (restricaoCriada) {
-        const convertido = await checkinCheckoutService.converterEmRestricao(interf.id, restricaoCriada.id);
-        
-        if (convertido && programacao) {
-          const listaInterferencias = await checkinCheckoutService.getInterferencias(
-            usuario.empresaId,
-            projetoSelecionado.id,
-            programacao.id
-          );
-          setInterferencias(listaInterferencias);
+          const restricaoSalva = restricaoData as RestricaoLPS & { id?: string };
+          
+          if (restricaoSalva.id) {
+            await checkinCheckoutService.converterEmRestricao(interferenciaAtual.id, restricaoSalva.id);
+            
+            if (programacao) {
+              const listaInterferencias = await checkinCheckoutService.getInterferencias(
+                usuario.empresaId,
+                projetoSelecionado.id,
+                programacao.id
+              );
+              setInterferencias(listaInterferencias);
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao vincular interferência à restrição:', e);
+        } finally {
+          interferenciaParaConverterRef.current = null;
+          setConvertendoInterferencia(null);
         }
-      }
-    } catch (e) {
-      console.error('Erro ao converter interferência em restrição:', e);
-      alert('Erro ao converter interferência. Tente novamente.');
-    } finally {
-      setConvertendoInterferencia(null);
-    }
+      },
+      onClose: () => {
+        interferenciaParaConverterRef.current = null;
+        setConvertendoInterferencia(null);
+      },
+    });
   };
 
   const handleSemanaAnterior = () => {
