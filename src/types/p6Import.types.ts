@@ -563,10 +563,11 @@ export const DEFAULT_COLUMN_MAPPINGS: Record<string, string> = {
   'wbs_path': 'wbs_caminho',
   'status_code': 'status',
   'task_type': 'tipo_atividade',
-  'target_start_date': 'data_inicio',
-  'target_end_date': 'data_fim',
   'start_date': 'data_inicio',
   'end_date': 'data_fim',
+  'finish_date': 'data_fim',
+  'target_start_date': 'data_inicio_target',
+  'target_end_date': 'data_fim_target',
   'act_start_date': 'data_inicio_real',
   'act_end_date': 'data_fim_real',
   'early_start_date': 'data_inicio_cedo',
@@ -636,9 +637,11 @@ export const P6_COLUMN_PATTERNS: Array<{ pattern: RegExp; visionplanField: strin
   { pattern: /^wbs[_\s]?(path|full[_\s]?name)$/i, visionplanField: 'wbs_caminho' },
   { pattern: /^status[_\s]?code$/i, visionplanField: 'status' },
   { pattern: /^task[_\s]?type$/i, visionplanField: 'tipo_atividade' },
-  { pattern: /^(target[_\s]?)?start[_\s]?date$/i, visionplanField: 'data_inicio' },
-  { pattern: /^(target[_\s]?)?end[_\s]?date$/i, visionplanField: 'data_fim' },
-  { pattern: /^(target[_\s]?)?finish[_\s]?date$/i, visionplanField: 'data_fim' },
+  { pattern: /^start[_\s]?date$/i, visionplanField: 'data_inicio' },
+  { pattern: /^end[_\s]?date$/i, visionplanField: 'data_fim' },
+  { pattern: /^finish[_\s]?date$/i, visionplanField: 'data_fim' },
+  { pattern: /^target[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_target' },
+  { pattern: /^target[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_target' },
   { pattern: /^act(ual)?[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_real' },
   { pattern: /^act(ual)?[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_real' },
   { pattern: /^early[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_cedo' },
@@ -696,6 +699,32 @@ export const P6_COLUMN_PATTERNS: Array<{ pattern: RegExp; visionplanField: strin
   { pattern: /^succ(essor)?[_\s]?list$/i, visionplanField: 'sucessoras' },
 ];
 
+const P6_PRIORITY_COLUMNS: string[] = [
+  'task_code',
+  'task_name',
+  'start_date',
+  'end_date',
+  'finish_date',
+  'target_start_date',
+  'target_end_date',
+  'act_start_date',
+  'act_end_date',
+  'early_start_date',
+  'early_end_date',
+  'late_start_date',
+  'late_end_date',
+  'base_start_date',
+  'base_end_date',
+  'total_drtn_hr_cnt',
+  'remain_drtn_hr_cnt',
+  'complete_pct',
+  'total_float_hr_cnt',
+  'free_float_hr_cnt',
+  'critical_flag',
+  'wbs_id',
+  'wbs_name',
+];
+
 export function autoMapP6Column(p6ColumnName: string): string | null {
   const normalized = p6ColumnName.trim().toLowerCase();
   
@@ -716,7 +745,19 @@ export function generateAutoMappings(p6Columns: string[]): Record<string, string
   const mappings: Record<string, string> = {};
   const usedVisionPlanFields = new Set<string>();
   
-  for (const p6Col of p6Columns) {
+  const sortedColumns = [...p6Columns].sort((a, b) => {
+    const aNorm = a.trim().toLowerCase();
+    const bNorm = b.trim().toLowerCase();
+    const aIndex = P6_PRIORITY_COLUMNS.indexOf(aNorm);
+    const bIndex = P6_PRIORITY_COLUMNS.indexOf(bNorm);
+    
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return 0;
+  });
+  
+  for (const p6Col of sortedColumns) {
     const visionPlanField = autoMapP6Column(p6Col);
     if (visionPlanField && !usedVisionPlanFields.has(visionPlanField)) {
       mappings[p6Col] = visionPlanField;
