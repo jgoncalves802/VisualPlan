@@ -12,8 +12,27 @@ import {
   VisionPlanDependencyTarget,
   P6_PREDECESSOR_TYPES,
   DEFAULT_COLUMN_MAPPINGS,
+  VISIONPLAN_TASK_COLUMNS,
 } from '../types/p6Import.types';
 import { supabase } from './supabase';
+
+const VISIONPLAN_DATE_FIELDS = VISIONPLAN_TASK_COLUMNS
+  .filter(c => c.dataType === 'date')
+  .map(c => c.key);
+
+const VISIONPLAN_NUMBER_FIELDS = VISIONPLAN_TASK_COLUMNS
+  .filter(c => c.dataType === 'number')
+  .map(c => c.key);
+
+const VISIONPLAN_BOOLEAN_FIELDS = VISIONPLAN_TASK_COLUMNS
+  .filter(c => c.dataType === 'boolean')
+  .map(c => c.key);
+
+const HOURS_TO_DAYS_FIELDS = [
+  'duracao_dias', 'duracao_restante_dias', 'duracao_horas', 'duracao_restante_horas',
+  'duracao_baseline', 'duracao_real', 'folga_total', 'folga_livre', 'folga_restante',
+  'horas_trabalho', 'horas_trabalho_restante'
+];
 
 class P6ImportService {
   private workbook: XLSX.WorkBook | null = null;
@@ -145,13 +164,12 @@ class P6ImportService {
     columnMappings: Record<string, string>,
     hoursPerDay: number = 8
   ): VisionPlanTaskTarget {
-    const getMappedValue = (vpField: string): unknown => {
+    const getP6ValueForVPField = (vpField: string): unknown => {
       const p6Key = Object.keys(columnMappings).find(k => columnMappings[k] === vpField);
       if (p6Key) {
         return p6Task[p6Key];
       }
-      const defaultP6Key = Object.keys(DEFAULT_COLUMN_MAPPINGS).find(k => DEFAULT_COLUMN_MAPPINGS[k] === vpField);
-      return defaultP6Key ? p6Task[defaultP6Key] : undefined;
+      return undefined;
     };
 
     const isMilestone = p6Task.task_type === 'TT_Mile' || 
@@ -162,28 +180,38 @@ class P6ImportService {
                       p6Task.task_type === 'TT_Rsrc' ||
                       p6Task.task_type === 'TT_LOE';
 
-    return {
-      codigo: String(getMappedValue('task_code') || ''),
-      nome: String(getMappedValue('task_name') || ''),
-      wbs_id: getMappedValue('wbs_id') ? String(getMappedValue('wbs_id')) : undefined,
-      data_inicio: this.parseDate(getMappedValue('target_start_date') || getMappedValue('start_date') || getMappedValue('early_start_date')),
-      data_fim: this.parseDate(getMappedValue('target_end_date') || getMappedValue('end_date') || getMappedValue('early_end_date')),
-      data_inicio_real: this.parseDate(getMappedValue('act_start_date')),
-      data_fim_real: this.parseDate(getMappedValue('act_end_date')),
-      data_inicio_baseline: this.parseDate(getMappedValue('primary_base_start_date') || getMappedValue('base_start_date')),
-      data_fim_baseline: this.parseDate(getMappedValue('primary_base_end_date') || getMappedValue('base_end_date')),
-      duracao_dias: this.convertHoursToDays(this.parseNumber(getMappedValue('total_drtn_hr_cnt')), hoursPerDay),
-      duracao_restante_dias: this.convertHoursToDays(this.parseNumber(getMappedValue('remain_drtn_hr_cnt')), hoursPerDay),
-      percentual_conclusao: this.parseNumber(getMappedValue('complete_pct')),
-      custo_orcado: this.parseNumber(getMappedValue('target_cost') || getMappedValue('base_cost')),
-      custo_real: this.parseNumber(getMappedValue('act_cost')),
-      custo_restante: this.parseNumber(getMappedValue('remain_cost')),
-      is_marco: isMilestone,
-      is_resumo: isSummary,
-      is_critico: this.parseBoolean(getMappedValue('critical_flag')),
-      prioridade: getMappedValue('priority_type') ? String(getMappedValue('priority_type')) : undefined,
-      tipo_duracao: getMappedValue('duration_type') ? String(getMappedValue('duration_type')) : undefined,
+    const result: VisionPlanTaskTarget = {
+      codigo: String(getP6ValueForVPField('codigo') || p6Task.task_code || ''),
+      nome: String(getP6ValueForVPField('nome') || p6Task.task_name || ''),
     };
+
+    Object.entries(columnMappings).forEach(([p6Key, vpField]) => {
+      if (!vpField || vpField === '' || vpField === 'codigo' || vpField === 'nome') return;
+      
+      const p6Value = p6Task[p6Key];
+      if (p6Value === undefined || p6Value === null || p6Value === '') return;
+
+      if (VISIONPLAN_DATE_FIELDS.includes(vpField)) {
+        const parsed = this.parseDate(p6Value);
+        if (parsed) (result as Record<string, unknown>)[vpField] = parsed;
+      } else if (VISIONPLAN_BOOLEAN_FIELDS.includes(vpField)) {
+        (result as Record<string, unknown>)[vpField] = this.parseBoolean(p6Value);
+      } else if (VISIONPLAN_NUMBER_FIELDS.includes(vpField)) {
+        let parsed = this.parseNumber(p6Value);
+        if (parsed !== undefined && HOURS_TO_DAYS_FIELDS.includes(vpField)) {
+          parsed = this.convertHoursToDays(parsed, hoursPerDay);
+        }
+        if (parsed !== undefined) (result as Record<string, unknown>)[vpField] = parsed;
+      } else {
+        (result as Record<string, unknown>)[vpField] = String(p6Value);
+      }
+    });
+
+    if (result.is_marco === undefined) result.is_marco = isMilestone;
+    if (result.is_resumo === undefined) result.is_resumo = isSummary;
+    if (result.is_critico === undefined) result.is_critico = this.parseBoolean(p6Task.critical_flag);
+
+    return result;
   }
 
   transformPredecessor(p6Pred: P6PredecessorRow, hoursPerDay: number = 8): VisionPlanDependencyTarget {

@@ -182,25 +182,114 @@ export interface P6ImportConfig {
 export interface VisionPlanTaskTarget {
   codigo: string;
   nome: string;
+  descricao?: string;
+  notas?: string;
   wbs_id?: string;
+  wbs_codigo?: string;
+  wbs_nome?: string;
+  wbs_caminho?: string;
+  nivel?: number;
+  parent_id?: string;
   data_inicio?: Date;
   data_fim?: Date;
+  data_inicio_target?: Date;
+  data_fim_target?: Date;
   data_inicio_real?: Date;
   data_fim_real?: Date;
+  data_suspensao?: Date;
+  data_retomada?: Date;
   data_inicio_baseline?: Date;
   data_fim_baseline?: Date;
+  data_inicio_baseline_primario?: Date;
+  data_fim_baseline_primario?: Date;
+  data_inicio_baseline_secundario?: Date;
+  data_fim_baseline_secundario?: Date;
+  data_inicio_cedo?: Date;
+  data_fim_cedo?: Date;
+  data_inicio_tarde?: Date;
+  data_fim_tarde?: Date;
   duracao_dias?: number;
+  duracao_horas?: number;
   duracao_restante_dias?: number;
+  duracao_restante_horas?: number;
+  duracao_baseline?: number;
+  duracao_real?: number;
+  variacao_duracao?: number;
+  folga_total?: number;
+  folga_livre?: number;
+  folga_restante?: number;
   percentual_conclusao?: number;
+  percentual_duracao?: number;
+  percentual_trabalho?: number;
+  percentual_fisico?: number;
+  percentual_performance?: number;
   custo_orcado?: number;
   custo_real?: number;
   custo_restante?: number;
+  custo_total?: number;
+  custo_baseline?: number;
+  custo_target?: number;
+  variacao_custo?: number;
+  custo_mao_obra_real?: number;
+  custo_material_real?: number;
+  custo_equipamento_real?: number;
+  custo_despesas_real?: number;
+  custo_mao_obra_target?: number;
+  custo_material_target?: number;
+  custo_equipamento_target?: number;
+  custo_despesas_target?: number;
+  bcws?: number;
+  bcwp?: number;
+  acwp?: number;
+  bac?: number;
+  bac_trabalho?: number;
+  eac?: number;
+  etc?: number;
+  vac?: number;
+  cv?: number;
+  sv?: number;
+  cpi?: number;
+  spi?: number;
+  tcpi?: number;
+  cv_percent?: number;
+  sv_percent?: number;
+  recurso_id?: string;
+  recurso_nome?: string;
+  lista_recursos?: string;
+  horas_trabalho?: number;
+  horas_trabalho_restante?: number;
+  unidades?: number;
+  unidades_restantes?: number;
+  status?: string;
   is_marco?: boolean;
   is_resumo?: boolean;
   is_critico?: boolean;
+  tipo_atividade?: string;
   prioridade?: string;
   tipo_duracao?: string;
+  tipo_restricao?: string;
+  data_restricao?: Date;
+  predecessoras?: string;
+  sucessoras?: string;
+  predecessoras_detalhes?: string;
+  sucessoras_detalhes?: string;
   calendario_id?: string;
+  responsavel?: string;
+  departamento?: string;
+  local?: string;
+  fase?: string;
+  codigo_atividade_1?: string;
+  codigo_atividade_2?: string;
+  codigo_atividade_3?: string;
+  user_defined_1?: string;
+  user_defined_2?: string;
+  user_defined_3?: string;
+  user_defined_4?: string;
+  user_defined_5?: string;
+  peso?: number;
+  quantidade?: number;
+  unidade_medida?: string;
+  [key: string]: unknown;
 }
 
 export interface VisionPlanDependencyTarget {
@@ -244,27 +333,175 @@ export const P6_STATUS_MAPPING: Record<string, string> = {
   'TK_Complete': 'CONCLUIDA',
 };
 
-export const VISIONPLAN_TASK_COLUMNS = [
-  { key: 'codigo', label: 'Código', required: true, dataType: 'string' as const },
-  { key: 'nome', label: 'Nome', required: true, dataType: 'string' as const },
-  { key: 'wbs_id', label: 'WBS', required: false, dataType: 'string' as const },
-  { key: 'data_inicio', label: 'Data Início Planejada', required: false, dataType: 'date' as const },
-  { key: 'data_fim', label: 'Data Fim Planejada', required: false, dataType: 'date' as const },
-  { key: 'data_inicio_real', label: 'Data Início Real', required: false, dataType: 'date' as const },
-  { key: 'data_fim_real', label: 'Data Fim Real', required: false, dataType: 'date' as const },
-  { key: 'data_inicio_baseline', label: 'Data Início Baseline', required: false, dataType: 'date' as const },
-  { key: 'data_fim_baseline', label: 'Data Fim Baseline', required: false, dataType: 'date' as const },
-  { key: 'duracao_dias', label: 'Duração (dias)', required: false, dataType: 'number' as const },
-  { key: 'duracao_restante_dias', label: 'Duração Restante (dias)', required: false, dataType: 'number' as const },
-  { key: 'percentual_conclusao', label: '% Conclusão', required: false, dataType: 'number' as const },
-  { key: 'custo_orcado', label: 'Custo Orçado', required: false, dataType: 'number' as const },
-  { key: 'custo_real', label: 'Custo Real', required: false, dataType: 'number' as const },
-  { key: 'custo_restante', label: 'Custo Restante', required: false, dataType: 'number' as const },
-  { key: 'is_marco', label: 'Marco', required: false, dataType: 'boolean' as const },
-  { key: 'is_resumo', label: 'Resumo', required: false, dataType: 'boolean' as const },
-  { key: 'is_critico', label: 'Crítico', required: false, dataType: 'boolean' as const },
-  { key: 'prioridade', label: 'Prioridade', required: false, dataType: 'string' as const },
-  { key: 'tipo_duracao', label: 'Tipo Duração', required: false, dataType: 'string' as const },
+export interface VisionPlanColumnDefinition {
+  key: string;
+  label: string;
+  category: string;
+  required: boolean;
+  dataType: 'string' | 'number' | 'date' | 'boolean';
+  description?: string;
+}
+
+export const VISIONPLAN_COLUMN_CATEGORIES = {
+  IDENTIFICACAO: 'Identificação',
+  DATAS_PLANEJADAS: 'Datas Planejadas',
+  DATAS_REAIS: 'Datas Reais',
+  DATAS_BASELINE: 'Datas Baseline',
+  DATAS_CEDO_TARDE: 'Datas Cedo/Tarde (CPM)',
+  DURACAO: 'Duração',
+  FOLGA: 'Folga',
+  PROGRESSO: 'Progresso',
+  CUSTOS: 'Custos',
+  CUSTOS_DETALHADOS: 'Custos Detalhados',
+  EVM: 'Earned Value Management (EVM)',
+  RECURSOS: 'Recursos',
+  STATUS: 'Status e Tipo',
+  WBS: 'WBS/Estrutura',
+  DEPENDENCIAS: 'Dependências',
+  OUTROS: 'Outros',
+} as const;
+
+export const VISIONPLAN_TASK_COLUMNS: VisionPlanColumnDefinition[] = [
+  // IDENTIFICAÇÃO
+  { key: 'codigo', label: 'Código', category: 'IDENTIFICACAO', required: true, dataType: 'string', description: 'Código único da atividade' },
+  { key: 'nome', label: 'Nome', category: 'IDENTIFICACAO', required: true, dataType: 'string', description: 'Nome da atividade' },
+  { key: 'descricao', label: 'Descrição', category: 'IDENTIFICACAO', required: false, dataType: 'string', description: 'Descrição detalhada' },
+  { key: 'notas', label: 'Notas', category: 'IDENTIFICACAO', required: false, dataType: 'string', description: 'Notas e observações' },
+  
+  // WBS/ESTRUTURA
+  { key: 'wbs_id', label: 'WBS ID', category: 'WBS', required: false, dataType: 'string', description: 'ID da WBS pai' },
+  { key: 'wbs_codigo', label: 'WBS Código', category: 'WBS', required: false, dataType: 'string', description: 'Código da WBS' },
+  { key: 'wbs_nome', label: 'WBS Nome', category: 'WBS', required: false, dataType: 'string', description: 'Nome da WBS' },
+  { key: 'wbs_caminho', label: 'WBS Caminho', category: 'WBS', required: false, dataType: 'string', description: 'Caminho completo da WBS' },
+  { key: 'nivel', label: 'Nível', category: 'WBS', required: false, dataType: 'number', description: 'Nível hierárquico' },
+  { key: 'parent_id', label: 'Atividade Pai', category: 'WBS', required: false, dataType: 'string', description: 'ID da atividade pai' },
+  
+  // DATAS PLANEJADAS
+  { key: 'data_inicio', label: 'Data Início Planejada', category: 'DATAS_PLANEJADAS', required: false, dataType: 'date', description: 'Data de início planejada' },
+  { key: 'data_fim', label: 'Data Fim Planejada', category: 'DATAS_PLANEJADAS', required: false, dataType: 'date', description: 'Data de fim planejada' },
+  { key: 'data_inicio_target', label: 'Data Início Target', category: 'DATAS_PLANEJADAS', required: false, dataType: 'date', description: 'Data de início target/meta' },
+  { key: 'data_fim_target', label: 'Data Fim Target', category: 'DATAS_PLANEJADAS', required: false, dataType: 'date', description: 'Data de fim target/meta' },
+  
+  // DATAS REAIS
+  { key: 'data_inicio_real', label: 'Data Início Real', category: 'DATAS_REAIS', required: false, dataType: 'date', description: 'Data de início real' },
+  { key: 'data_fim_real', label: 'Data Fim Real', category: 'DATAS_REAIS', required: false, dataType: 'date', description: 'Data de fim real' },
+  { key: 'data_suspensao', label: 'Data Suspensão', category: 'DATAS_REAIS', required: false, dataType: 'date', description: 'Data de suspensão' },
+  { key: 'data_retomada', label: 'Data Retomada', category: 'DATAS_REAIS', required: false, dataType: 'date', description: 'Data de retomada' },
+  
+  // DATAS BASELINE
+  { key: 'data_inicio_baseline', label: 'Data Início Baseline', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Data de início do baseline' },
+  { key: 'data_fim_baseline', label: 'Data Fim Baseline', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Data de fim do baseline' },
+  { key: 'data_inicio_baseline_primario', label: 'Início Baseline Primário', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Início do baseline primário' },
+  { key: 'data_fim_baseline_primario', label: 'Fim Baseline Primário', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Fim do baseline primário' },
+  { key: 'data_inicio_baseline_secundario', label: 'Início Baseline Secundário', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Início do baseline secundário' },
+  { key: 'data_fim_baseline_secundario', label: 'Fim Baseline Secundário', category: 'DATAS_BASELINE', required: false, dataType: 'date', description: 'Fim do baseline secundário' },
+  
+  // DATAS CEDO/TARDE (CPM)
+  { key: 'data_inicio_cedo', label: 'Início Cedo (ES)', category: 'DATAS_CEDO_TARDE', required: false, dataType: 'date', description: 'Early Start - Início mais cedo possível' },
+  { key: 'data_fim_cedo', label: 'Fim Cedo (EF)', category: 'DATAS_CEDO_TARDE', required: false, dataType: 'date', description: 'Early Finish - Fim mais cedo possível' },
+  { key: 'data_inicio_tarde', label: 'Início Tarde (LS)', category: 'DATAS_CEDO_TARDE', required: false, dataType: 'date', description: 'Late Start - Início mais tarde possível' },
+  { key: 'data_fim_tarde', label: 'Fim Tarde (LF)', category: 'DATAS_CEDO_TARDE', required: false, dataType: 'date', description: 'Late Finish - Fim mais tarde possível' },
+  
+  // DURAÇÃO
+  { key: 'duracao_dias', label: 'Duração (dias)', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração total em dias' },
+  { key: 'duracao_horas', label: 'Duração (horas)', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração total em horas' },
+  { key: 'duracao_restante_dias', label: 'Duração Restante (dias)', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração restante em dias' },
+  { key: 'duracao_restante_horas', label: 'Duração Restante (horas)', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração restante em horas' },
+  { key: 'duracao_baseline', label: 'Duração Baseline', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração do baseline em dias' },
+  { key: 'duracao_real', label: 'Duração Real', category: 'DURACAO', required: false, dataType: 'number', description: 'Duração real em dias' },
+  { key: 'variacao_duracao', label: 'Variação de Duração', category: 'DURACAO', required: false, dataType: 'number', description: 'Diferença entre planejado e real' },
+  
+  // FOLGA
+  { key: 'folga_total', label: 'Folga Total', category: 'FOLGA', required: false, dataType: 'number', description: 'Total Float em dias' },
+  { key: 'folga_livre', label: 'Folga Livre', category: 'FOLGA', required: false, dataType: 'number', description: 'Free Float em dias' },
+  { key: 'folga_restante', label: 'Folga Restante', category: 'FOLGA', required: false, dataType: 'number', description: 'Folga restante em dias' },
+  
+  // PROGRESSO
+  { key: 'percentual_conclusao', label: '% Conclusão', category: 'PROGRESSO', required: false, dataType: 'number', description: 'Percentual de conclusão física' },
+  { key: 'percentual_duracao', label: '% Duração Concluída', category: 'PROGRESSO', required: false, dataType: 'number', description: 'Percentual de duração concluída' },
+  { key: 'percentual_trabalho', label: '% Trabalho Concluído', category: 'PROGRESSO', required: false, dataType: 'number', description: 'Percentual de trabalho concluído' },
+  { key: 'percentual_fisico', label: '% Físico', category: 'PROGRESSO', required: false, dataType: 'number', description: 'Progresso físico' },
+  { key: 'percentual_performance', label: '% Performance', category: 'PROGRESSO', required: false, dataType: 'number', description: 'Percentual de performance' },
+  
+  // CUSTOS
+  { key: 'custo_orcado', label: 'Custo Orçado', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo orçado total' },
+  { key: 'custo_real', label: 'Custo Real', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo real incorrido' },
+  { key: 'custo_restante', label: 'Custo Restante', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo restante estimado' },
+  { key: 'custo_total', label: 'Custo Total', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo total (real + restante)' },
+  { key: 'custo_baseline', label: 'Custo Baseline', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo do baseline' },
+  { key: 'custo_target', label: 'Custo Target', category: 'CUSTOS', required: false, dataType: 'number', description: 'Custo meta/target' },
+  { key: 'variacao_custo', label: 'Variação de Custo', category: 'CUSTOS', required: false, dataType: 'number', description: 'Diferença entre orçado e real' },
+  
+  // CUSTOS DETALHADOS
+  { key: 'custo_mao_obra_real', label: 'Custo Mão de Obra Real', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo real de mão de obra' },
+  { key: 'custo_material_real', label: 'Custo Material Real', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo real de materiais' },
+  { key: 'custo_equipamento_real', label: 'Custo Equipamento Real', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo real de equipamentos' },
+  { key: 'custo_despesas_real', label: 'Custo Despesas Real', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo real de despesas' },
+  { key: 'custo_mao_obra_target', label: 'Custo Mão de Obra Target', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo target de mão de obra' },
+  { key: 'custo_material_target', label: 'Custo Material Target', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo target de materiais' },
+  { key: 'custo_equipamento_target', label: 'Custo Equipamento Target', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo target de equipamentos' },
+  { key: 'custo_despesas_target', label: 'Custo Despesas Target', category: 'CUSTOS_DETALHADOS', required: false, dataType: 'number', description: 'Custo target de despesas' },
+  
+  // EVM (Earned Value Management)
+  { key: 'bcws', label: 'BCWS (Valor Planejado)', category: 'EVM', required: false, dataType: 'number', description: 'Budgeted Cost of Work Scheduled' },
+  { key: 'bcwp', label: 'BCWP (Valor Agregado)', category: 'EVM', required: false, dataType: 'number', description: 'Budgeted Cost of Work Performed' },
+  { key: 'acwp', label: 'ACWP (Custo Real)', category: 'EVM', required: false, dataType: 'number', description: 'Actual Cost of Work Performed' },
+  { key: 'bac', label: 'BAC (Orçamento na Conclusão)', category: 'EVM', required: false, dataType: 'number', description: 'Budget at Completion' },
+  { key: 'bac_trabalho', label: 'BAC Trabalho', category: 'EVM', required: false, dataType: 'number', description: 'BAC baseado em trabalho' },
+  { key: 'eac', label: 'EAC (Estimativa na Conclusão)', category: 'EVM', required: false, dataType: 'number', description: 'Estimate at Completion' },
+  { key: 'etc', label: 'ETC (Estimativa para Conclusão)', category: 'EVM', required: false, dataType: 'number', description: 'Estimate to Complete' },
+  { key: 'vac', label: 'VAC (Variação na Conclusão)', category: 'EVM', required: false, dataType: 'number', description: 'Variance at Completion' },
+  { key: 'cv', label: 'CV (Variação de Custo)', category: 'EVM', required: false, dataType: 'number', description: 'Cost Variance = BCWP - ACWP' },
+  { key: 'sv', label: 'SV (Variação de Prazo)', category: 'EVM', required: false, dataType: 'number', description: 'Schedule Variance = BCWP - BCWS' },
+  { key: 'cpi', label: 'CPI (Índice de Custo)', category: 'EVM', required: false, dataType: 'number', description: 'Cost Performance Index = BCWP / ACWP' },
+  { key: 'spi', label: 'SPI (Índice de Prazo)', category: 'EVM', required: false, dataType: 'number', description: 'Schedule Performance Index = BCWP / BCWS' },
+  { key: 'tcpi', label: 'TCPI (Índice Necessário)', category: 'EVM', required: false, dataType: 'number', description: 'To Complete Performance Index' },
+  { key: 'cv_percent', label: 'CV%', category: 'EVM', required: false, dataType: 'number', description: 'Variação de custo percentual' },
+  { key: 'sv_percent', label: 'SV%', category: 'EVM', required: false, dataType: 'number', description: 'Variação de prazo percentual' },
+  
+  // RECURSOS
+  { key: 'recurso_id', label: 'ID Recurso', category: 'RECURSOS', required: false, dataType: 'string', description: 'ID do recurso principal' },
+  { key: 'recurso_nome', label: 'Nome Recurso', category: 'RECURSOS', required: false, dataType: 'string', description: 'Nome do recurso principal' },
+  { key: 'lista_recursos', label: 'Lista de Recursos', category: 'RECURSOS', required: false, dataType: 'string', description: 'Lista de todos os recursos' },
+  { key: 'horas_trabalho', label: 'Horas de Trabalho', category: 'RECURSOS', required: false, dataType: 'number', description: 'Total de horas de trabalho' },
+  { key: 'horas_trabalho_restante', label: 'Horas Trabalho Restante', category: 'RECURSOS', required: false, dataType: 'number', description: 'Horas de trabalho restantes' },
+  { key: 'unidades', label: 'Unidades', category: 'RECURSOS', required: false, dataType: 'number', description: 'Quantidade de unidades' },
+  { key: 'unidades_restantes', label: 'Unidades Restantes', category: 'RECURSOS', required: false, dataType: 'number', description: 'Unidades restantes' },
+  
+  // STATUS E TIPO
+  { key: 'status', label: 'Status', category: 'STATUS', required: false, dataType: 'string', description: 'Status da atividade' },
+  { key: 'is_marco', label: 'Marco', category: 'STATUS', required: false, dataType: 'boolean', description: 'É um marco (milestone)' },
+  { key: 'is_resumo', label: 'Resumo', category: 'STATUS', required: false, dataType: 'boolean', description: 'É uma atividade resumo' },
+  { key: 'is_critico', label: 'Crítico', category: 'STATUS', required: false, dataType: 'boolean', description: 'Está no caminho crítico' },
+  { key: 'tipo_atividade', label: 'Tipo Atividade', category: 'STATUS', required: false, dataType: 'string', description: 'Tipo da atividade' },
+  { key: 'prioridade', label: 'Prioridade', category: 'STATUS', required: false, dataType: 'string', description: 'Nível de prioridade' },
+  { key: 'tipo_duracao', label: 'Tipo Duração', category: 'STATUS', required: false, dataType: 'string', description: 'Tipo de duração (Fixed Units, etc)' },
+  { key: 'tipo_restricao', label: 'Tipo Restrição', category: 'STATUS', required: false, dataType: 'string', description: 'Tipo de restrição de data' },
+  { key: 'data_restricao', label: 'Data Restrição', category: 'STATUS', required: false, dataType: 'date', description: 'Data da restrição' },
+  
+  // DEPENDÊNCIAS
+  { key: 'predecessoras', label: 'Predecessoras', category: 'DEPENDENCIAS', required: false, dataType: 'string', description: 'Lista de predecessoras' },
+  { key: 'sucessoras', label: 'Sucessoras', category: 'DEPENDENCIAS', required: false, dataType: 'string', description: 'Lista de sucessoras' },
+  { key: 'predecessoras_detalhes', label: 'Detalhes Predecessoras', category: 'DEPENDENCIAS', required: false, dataType: 'string', description: 'Detalhes das predecessoras' },
+  { key: 'sucessoras_detalhes', label: 'Detalhes Sucessoras', category: 'DEPENDENCIAS', required: false, dataType: 'string', description: 'Detalhes das sucessoras' },
+  
+  // OUTROS
+  { key: 'calendario_id', label: 'Calendário', category: 'OUTROS', required: false, dataType: 'string', description: 'ID do calendário' },
+  { key: 'responsavel', label: 'Responsável', category: 'OUTROS', required: false, dataType: 'string', description: 'Responsável pela atividade' },
+  { key: 'departamento', label: 'Departamento', category: 'OUTROS', required: false, dataType: 'string', description: 'Departamento responsável' },
+  { key: 'local', label: 'Local', category: 'OUTROS', required: false, dataType: 'string', description: 'Local de execução' },
+  { key: 'fase', label: 'Fase', category: 'OUTROS', required: false, dataType: 'string', description: 'Fase do projeto' },
+  { key: 'codigo_atividade_1', label: 'Código Atividade 1', category: 'OUTROS', required: false, dataType: 'string', description: 'Código de atividade customizado 1' },
+  { key: 'codigo_atividade_2', label: 'Código Atividade 2', category: 'OUTROS', required: false, dataType: 'string', description: 'Código de atividade customizado 2' },
+  { key: 'codigo_atividade_3', label: 'Código Atividade 3', category: 'OUTROS', required: false, dataType: 'string', description: 'Código de atividade customizado 3' },
+  { key: 'user_defined_1', label: 'Campo Customizado 1', category: 'OUTROS', required: false, dataType: 'string', description: 'Campo definido pelo usuário 1' },
+  { key: 'user_defined_2', label: 'Campo Customizado 2', category: 'OUTROS', required: false, dataType: 'string', description: 'Campo definido pelo usuário 2' },
+  { key: 'user_defined_3', label: 'Campo Customizado 3', category: 'OUTROS', required: false, dataType: 'string', description: 'Campo definido pelo usuário 3' },
+  { key: 'user_defined_4', label: 'Campo Customizado 4', category: 'OUTROS', required: false, dataType: 'string', description: 'Campo definido pelo usuário 4' },
+  { key: 'user_defined_5', label: 'Campo Customizado 5', category: 'OUTROS', required: false, dataType: 'string', description: 'Campo definido pelo usuário 5' },
+  { key: 'peso', label: 'Peso', category: 'OUTROS', required: false, dataType: 'number', description: 'Peso/importância da atividade' },
+  { key: 'quantidade', label: 'Quantidade', category: 'OUTROS', required: false, dataType: 'number', description: 'Quantidade física' },
+  { key: 'unidade_medida', label: 'Unidade de Medida', category: 'OUTROS', required: false, dataType: 'string', description: 'Unidade de medida' },
 ];
 
 export const P6_TASK_COLUMNS = [

@@ -20,8 +20,11 @@ import {
   P6ImportResult,
   P6_TASK_COLUMNS,
   VISIONPLAN_TASK_COLUMNS,
+  VISIONPLAN_COLUMN_CATEGORIES,
+  VisionPlanColumnDefinition,
   DEFAULT_COLUMN_MAPPINGS,
 } from '../../../types/p6Import.types';
+import { Search } from 'lucide-react';
 
 interface P6ImportModalProps {
   isOpen: boolean;
@@ -37,6 +40,126 @@ type ImportStep = 'upload' | 'sheets' | 'mapping' | 'preview' | 'importing' | 'r
 interface ColumnMappingState {
   [p6Column: string]: string;
 }
+
+interface SearchableColumnSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  dataType: 'string' | 'number' | 'date' | 'boolean';
+}
+
+const SearchableColumnSelect: React.FC<SearchableColumnSelectProps> = ({ value, onChange, dataType }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const compatibleColumns = VISIONPLAN_TASK_COLUMNS.filter(vpc => 
+    vpc.dataType === dataType
+  );
+
+  const filteredColumns = searchTerm
+    ? compatibleColumns.filter(vpc =>
+        vpc.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vpc.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (vpc.description && vpc.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        VISIONPLAN_COLUMN_CATEGORIES[vpc.category as keyof typeof VISIONPLAN_COLUMN_CATEGORIES]?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : compatibleColumns;
+
+  const groupedColumns = filteredColumns.reduce((acc, col) => {
+    const category = col.category;
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(col);
+    return acc;
+  }, {} as Record<string, VisionPlanColumnDefinition[]>);
+
+  const selectedColumn = VISIONPLAN_TASK_COLUMNS.find(c => c.key === value);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 py-2 text-left border rounded-lg text-sm bg-white hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between"
+      >
+        <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+          {selectedColumn ? (
+            <>
+              {selectedColumn.label} {selectedColumn.required && <span className="text-red-500">*</span>}
+            </>
+          ) : '-- Ignorar --'}
+        </span>
+        <ChevronRight size={16} className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-80 bg-white border rounded-lg shadow-lg max-h-80 overflow-hidden">
+          <div className="p-2 border-b sticky top-0 bg-white">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Pesquisar campo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+            </div>
+          </div>
+          
+          <div className="overflow-y-auto max-h-64">
+            <button
+              type="button"
+              onClick={() => { onChange(''); setIsOpen(false); setSearchTerm(''); }}
+              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 ${!value ? 'bg-blue-50 text-blue-700' : ''}`}
+            >
+              -- Ignorar --
+            </button>
+
+            {Object.entries(groupedColumns).map(([category, columns]) => (
+              <div key={category}>
+                <div className="px-3 py-1.5 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wide sticky top-0">
+                  {VISIONPLAN_COLUMN_CATEGORIES[category as keyof typeof VISIONPLAN_COLUMN_CATEGORIES] || category}
+                </div>
+                {columns.map(col => (
+                  <button
+                    key={col.key}
+                    type="button"
+                    onClick={() => { onChange(col.key); setIsOpen(false); setSearchTerm(''); }}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex flex-col ${value === col.key ? 'bg-blue-50 text-blue-700' : ''}`}
+                  >
+                    <span className="font-medium">
+                      {col.label} {col.required && <span className="text-red-500">*</span>}
+                    </span>
+                    {col.description && (
+                      <span className="text-xs text-gray-500">{col.description}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ))}
+
+            {Object.keys(groupedColumns).length === 0 && (
+              <div className="px-3 py-4 text-center text-sm text-gray-500">
+                Nenhum campo encontrado
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   isOpen,
@@ -63,6 +186,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
     dateFormat: 'yyyy-mm-dd',
     hoursPerDay: 8,
   });
+  const [mappingSearch, setMappingSearch] = useState('');
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -382,6 +506,13 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   const renderMappingStep = () => {
     const p6Columns = p6ImportService.getSheetColumns('TASK');
     const importantP6Columns = P6_TASK_COLUMNS.filter(c => p6Columns.includes(c.key));
+    
+    const filteredP6Columns = mappingSearch
+      ? importantP6Columns.filter(col =>
+          col.key.toLowerCase().includes(mappingSearch.toLowerCase()) ||
+          col.label.toLowerCase().includes(mappingSearch.toLowerCase())
+        )
+      : importantP6Columns;
 
     return (
       <div className="space-y-4">
@@ -390,45 +521,48 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
           As colunas já foram pré-configuradas com base no padrão do P6.
         </p>
 
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar colunas P6..."
+            value={mappingSearch}
+            onChange={(e) => setMappingSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="text-xs text-gray-500 flex items-center gap-4">
+          <span>Total de colunas P6: <strong>{importantP6Columns.length}</strong></span>
+          <span>Colunas VisionPlan: <strong>{VISIONPLAN_TASK_COLUMNS.length}</strong></span>
+          <span>Mapeadas: <strong>{Object.values(columnMappings).filter(v => v).length}</strong></span>
+        </div>
+
         <div className="max-h-96 overflow-y-auto border rounded-lg">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-3 font-medium">Coluna P6</th>
-                <th className="text-center p-3 font-medium">→</th>
+                <th className="text-left p-3 font-medium w-1/3">Coluna P6</th>
+                <th className="text-center p-3 font-medium w-8">→</th>
                 <th className="text-left p-3 font-medium">Campo VisionPlan</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {importantP6Columns.map(p6Col => (
+              {filteredP6Columns.map(p6Col => (
                 <tr key={p6Col.key} className="hover:bg-gray-50">
                   <td className="p-3">
                     <div>
-                      <span className="font-mono text-xs bg-gray-100 px-1 rounded">{p6Col.key}</span>
+                      <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{p6Col.key}</span>
                       <p className="text-gray-600 text-xs mt-1">{p6Col.label}</p>
                     </div>
                   </td>
                   <td className="p-3 text-center text-gray-400">→</td>
                   <td className="p-3">
-                    <select
+                    <SearchableColumnSelect
                       value={columnMappings[p6Col.key] || ''}
-                      onChange={(e) => handleMappingChange(p6Col.key, e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-sm"
-                    >
-                      <option value="">-- Ignorar --</option>
-                      {VISIONPLAN_TASK_COLUMNS
-                        .filter(vpc => vpc.dataType === p6Col.dataType || 
-                          (p6Col.dataType === 'number' && vpc.dataType === 'number') ||
-                          (p6Col.dataType === 'date' && vpc.dataType === 'date') ||
-                          (p6Col.dataType === 'string' && vpc.dataType === 'string') ||
-                          (p6Col.dataType === 'boolean' && vpc.dataType === 'boolean')
-                        )
-                        .map(vpc => (
-                          <option key={vpc.key} value={vpc.key}>
-                            {vpc.label} {vpc.required && '*'}
-                          </option>
-                        ))}
-                    </select>
+                      onChange={(value) => handleMappingChange(p6Col.key, value)}
+                      dataType={p6Col.dataType}
+                    />
                   </td>
                 </tr>
               ))}
