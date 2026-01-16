@@ -342,6 +342,8 @@ class P6ImportService {
     empresaId: string,
     userId: string
   ): Promise<P6ImportResult> {
+    console.log('[P6Import] Iniciando importação:', { projetoId, empresaId, userId });
+    
     const result: P6ImportResult = {
       success: false,
       tasksImported: 0,
@@ -351,8 +353,20 @@ class P6ImportService {
       warnings: [],
     };
 
+    if (!projetoId || projetoId === '') {
+      result.errors.push({
+        row: 0,
+        column: 'projeto_id',
+        value: projetoId,
+        message: 'Projeto não selecionado. Selecione um projeto antes de importar.',
+        severity: 'error',
+      });
+      return result;
+    }
+
     try {
       const p6Tasks = this.getSheetData<P6TaskRow>('TASK');
+      console.log('[P6Import] Tasks P6 encontradas:', p6Tasks.length);
       const p6Predecessors = this.getSheetData<P6PredecessorRow>('TASKPRED');
 
       const taskMappings = config.taskColumnMappings || DEFAULT_COLUMN_MAPPINGS;
@@ -377,11 +391,15 @@ class P6ImportService {
         return result;
       }
 
+      console.log('[P6Import] Tasks transformadas:', transformedTasks.length);
+      console.log('[P6Import] Primeira task:', transformedTasks[0]);
+      
       const tasksToInsert = transformedTasks
         .filter((task) => {
           // Skip tasks without valid start date (required field)
           const hasValidStartDate = task.data_inicio instanceof Date && !isNaN(task.data_inicio.getTime());
           if (!hasValidStartDate) {
+            console.log('[P6Import] Task sem data de início:', task.codigo, task.data_inicio);
             result.warnings.push({
               row: 0,
               column: 'data_inicio',
@@ -428,6 +446,22 @@ class P6ImportService {
           };
         });
 
+      console.log('[P6Import] Tasks para inserir:', tasksToInsert.length);
+      if (tasksToInsert.length > 0) {
+        console.log('[P6Import] Exemplo de task a inserir:', tasksToInsert[0]);
+      }
+
+      if (tasksToInsert.length === 0) {
+        result.errors.push({
+          row: 0,
+          column: 'tasks',
+          value: null,
+          message: 'Nenhuma atividade válida para importar. Verifique se as datas de início estão mapeadas corretamente.',
+          severity: 'error',
+        });
+        return result;
+      }
+
       if (config.options.overwriteExisting) {
         await supabase
           .from('atividades_cronograma')
@@ -440,6 +474,8 @@ class P6ImportService {
         .from('atividades_cronograma')
         .insert(tasksToInsert)
         .select('id, codigo');
+
+      console.log('[P6Import] Resultado da inserção:', { insertedTasks: insertedTasks?.length, error: taskError });
 
       if (taskError) {
         result.errors.push({
