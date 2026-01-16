@@ -424,7 +424,7 @@ class P6ImportService {
             folga_total: folgaTotal,
             prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
             status: 'PLANEJADA',
-            tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
+            tipo: task.is_marco ? 'Marco' : (task.is_resumo ? 'WBS' : 'Tarefa'),
           };
         });
 
