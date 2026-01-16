@@ -377,36 +377,56 @@ class P6ImportService {
         return result;
       }
 
-      const tasksToInsert = transformedTasks.map((task) => {
-        const duracaoDias = task.duracao_dias 
-          ? Math.max(1, Math.round(Number(task.duracao_dias))) 
-          : 1;
-        const folgaTotal = task.folga_total !== undefined && task.folga_total !== null
-          ? Math.round(Number(task.folga_total))
-          : null;
-        const progresso = task.percentual_conclusao !== undefined
-          ? Math.min(100, Math.max(0, Number(task.percentual_conclusao) || 0))
-          : 0;
+      const tasksToInsert = transformedTasks
+        .filter((task) => {
+          // Skip tasks without valid start date (required field)
+          const hasValidStartDate = task.data_inicio instanceof Date && !isNaN(task.data_inicio.getTime());
+          if (!hasValidStartDate) {
+            result.warnings.push({
+              row: 0,
+              column: 'data_inicio',
+              value: task.codigo,
+              message: `Atividade ${task.codigo} ignorada: data de início inválida`,
+              severity: 'warning',
+            });
+          }
+          return hasValidStartDate;
+        })
+        .map((task) => {
+          const duracaoDias = task.duracao_dias 
+            ? Math.max(1, Math.round(Number(task.duracao_dias))) 
+            : 1;
+          const folgaTotal = task.folga_total !== undefined && task.folga_total !== null
+            ? Math.round(Number(task.folga_total))
+            : null;
+          const progresso = task.percentual_conclusao !== undefined
+            ? Math.min(100, Math.max(0, Number(task.percentual_conclusao) || 0))
+            : 0;
 
-        return {
-          projeto_id: projetoId,
-          empresa_id: empresaId,
-          codigo: String(task.codigo || '').substring(0, 50),
-          nome: String(task.nome || '').substring(0, 255),
-          wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
-          data_inicio: task.data_inicio?.toISOString().split('T')[0],
-          data_fim: task.data_fim?.toISOString().split('T')[0],
-          duracao_dias: duracaoDias,
-          progresso: progresso,
-          custo_planejado: task.custo_orcado ? Number(task.custo_orcado) : null,
-          custo_real: task.custo_real ? Number(task.custo_real) : null,
-          e_critica: task.is_critico || false,
-          folga_total: folgaTotal,
-          prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
-          status: 'PLANEJADA',
-          tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
-        };
-      });
+          const dataInicio = task.data_inicio!.toISOString().split('T')[0];
+          const dataFim = task.data_fim instanceof Date && !isNaN(task.data_fim.getTime())
+            ? task.data_fim.toISOString().split('T')[0]
+            : dataInicio;
+
+          return {
+            projeto_id: projetoId,
+            empresa_id: empresaId,
+            codigo: String(task.codigo || '').substring(0, 50),
+            nome: String(task.nome || '').substring(0, 255),
+            wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
+            data_inicio: dataInicio,
+            data_fim: dataFim,
+            duracao_dias: duracaoDias,
+            progresso: progresso,
+            custo_planejado: task.custo_orcado ? Number(task.custo_orcado) : null,
+            custo_real: task.custo_real ? Number(task.custo_real) : null,
+            e_critica: task.is_critico || false,
+            folga_total: folgaTotal,
+            prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
+            status: 'PLANEJADA',
+            tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
+          };
+        });
 
       if (config.options.overwriteExisting) {
         await supabase
