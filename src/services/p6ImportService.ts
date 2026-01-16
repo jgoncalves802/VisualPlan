@@ -377,24 +377,36 @@ class P6ImportService {
         return result;
       }
 
-      const tasksToInsert = transformedTasks.map((task) => ({
-        projeto_id: projetoId,
-        empresa_id: empresaId,
-        codigo: String(task.codigo || '').substring(0, 50),
-        nome: String(task.nome || '').substring(0, 255),
-        wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
-        data_inicio: task.data_inicio?.toISOString().split('T')[0],
-        data_fim: task.data_fim?.toISOString().split('T')[0],
-        duracao_dias: task.duracao_dias || 1,
-        progresso: task.percentual_conclusao || 0,
-        custo_planejado: task.custo_orcado,
-        custo_real: task.custo_real,
-        e_critica: task.is_critico || false,
-        folga_total: task.folga_total,
-        prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
-        status: 'PLANEJADA',
-        tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
-      }));
+      const tasksToInsert = transformedTasks.map((task) => {
+        const duracaoDias = task.duracao_dias 
+          ? Math.max(1, Math.round(Number(task.duracao_dias))) 
+          : 1;
+        const folgaTotal = task.folga_total !== undefined && task.folga_total !== null
+          ? Math.round(Number(task.folga_total))
+          : null;
+        const progresso = task.percentual_conclusao !== undefined
+          ? Math.min(100, Math.max(0, Number(task.percentual_conclusao) || 0))
+          : 0;
+
+        return {
+          projeto_id: projetoId,
+          empresa_id: empresaId,
+          codigo: String(task.codigo || '').substring(0, 50),
+          nome: String(task.nome || '').substring(0, 255),
+          wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
+          data_inicio: task.data_inicio?.toISOString().split('T')[0],
+          data_fim: task.data_fim?.toISOString().split('T')[0],
+          duracao_dias: duracaoDias,
+          progresso: progresso,
+          custo_planejado: task.custo_orcado ? Number(task.custo_orcado) : null,
+          custo_real: task.custo_real ? Number(task.custo_real) : null,
+          e_critica: task.is_critico || false,
+          folga_total: folgaTotal,
+          prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
+          status: 'PLANEJADA',
+          tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
+        };
+      });
 
       if (config.options.overwriteExisting) {
         await supabase
@@ -433,8 +445,8 @@ class P6ImportService {
           .map(dep => ({
             atividade_origem_id: taskIdMap.get(dep.atividade_predecessora_codigo),
             atividade_destino_id: taskIdMap.get(dep.atividade_sucessora_codigo),
-            tipo: dep.tipo,
-            lag_dias: dep.lag_dias,
+            tipo: String(dep.tipo || 'FS').substring(0, 20),
+            lag_dias: Math.round(Number(dep.lag_dias) || 0),
           }));
 
         if (depsToInsert.length > 0) {
