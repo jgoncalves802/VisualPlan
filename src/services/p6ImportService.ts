@@ -374,8 +374,8 @@ class P6ImportService {
       const tasksToInsert = transformedTasks.map((task) => ({
         projeto_id: projetoId,
         empresa_id: empresaId,
-        codigo: task.codigo,
-        nome: task.nome,
+        codigo: String(task.codigo || '').substring(0, 50),
+        nome: String(task.nome || '').substring(0, 255),
         wbs_id: task.wbs_id,
         data_inicio: task.data_inicio?.toISOString().split('T')[0],
         data_fim: task.data_fim?.toISOString().split('T')[0],
@@ -385,7 +385,7 @@ class P6ImportService {
         custo_real: task.custo_real,
         e_critica: task.is_critico || false,
         folga_total: task.folga_total,
-        prioridade: task.prioridade,
+        prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
         status: 'PLANEJADA',
         tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
       }));
