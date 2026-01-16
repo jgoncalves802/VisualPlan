@@ -371,7 +371,7 @@ class P6ImportService {
         return result;
       }
 
-      const tasksToInsert = transformedTasks.map((task, index) => ({
+      const tasksToInsert = transformedTasks.map((task) => ({
         projeto_id: projetoId,
         empresa_id: empresaId,
         codigo: task.codigo,
@@ -388,6 +388,8 @@ class P6ImportService {
         prioridade: task.prioridade,
         status: 'PLANEJADA',
         tipo: task.is_marco ? 'MARCO' : (task.is_resumo ? 'RESUMO' : 'ATIVIDADE'),
+        created_by: userId,
+        updated_by: userId,
       }));
 
       if (config.options.overwriteExisting) {
@@ -425,11 +427,9 @@ class P6ImportService {
             taskIdMap.has(dep.atividade_sucessora_codigo)
           )
           .map(dep => ({
-            projeto_id: projetoId,
-            empresa_id: empresaId,
-            atividade_predecessora_id: taskIdMap.get(dep.atividade_predecessora_codigo),
-            atividade_sucessora_id: taskIdMap.get(dep.atividade_sucessora_codigo),
-            tipo_dependencia: dep.tipo,
+            atividade_origem_id: taskIdMap.get(dep.atividade_predecessora_codigo),
+            atividade_destino_id: taskIdMap.get(dep.atividade_sucessora_codigo),
+            tipo: dep.tipo,
             lag_dias: dep.lag_dias,
             created_by: userId,
           }));
