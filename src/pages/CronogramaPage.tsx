@@ -20,6 +20,7 @@ import { CronogramaStats } from '../components/features/cronograma/CronogramaSta
 import { AtividadeActionsModal } from '../components/features/cronograma/AtividadeActionsModal';
 import { ManageDependenciesModal } from '../components/features/cronograma/ManageDependenciesModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
+import { P6ImportModal } from '../components/features/cronograma/P6ImportModal';
 import { EpsSelector } from '../components/features/cronograma/EpsSelector';
 import { MasterGanttView } from '../components/features/cronograma/MasterGanttView';
 import { useLPSStore } from '../stores/lpsStore';
@@ -58,6 +59,8 @@ export const CronogramaPage: React.FC = () => {
     excluirDependencia,
     calcularCaminhoCritico,
   } = useCronograma(projetoId || '');
+  
+  const { carregarAtividades } = useCronogramaStore();
 
   const { calendarios, calendario_padrao } = useCronogramaStore();
   const { addRestricao, addEvidencia, deleteEvidencia, addAndamento } = useLPSStore();
@@ -93,6 +96,7 @@ export const CronogramaPage: React.FC = () => {
   const [showResourcePanel, setShowResourcePanel] = useState(false);
   const [selectedTaskForResources, setSelectedTaskForResources] = useState<Task | null>(null);
   const [masterView, setMasterView] = useState<'list' | 'timeline'>('list');
+  const [p6ImportModalOpen, setP6ImportModalOpen] = useState(false);
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -478,6 +482,7 @@ export const CronogramaPage: React.FC = () => {
             projetoNome="Projeto VisionPlan"
             presentationMode={presentationMode}
             onTogglePresentationMode={togglePresentationMode}
+            onImportP6={() => setP6ImportModalOpen(true)}
           />
         </div>
 
@@ -663,6 +668,7 @@ export const CronogramaPage: React.FC = () => {
           projetoNome={selectedProjetoNome || "Projeto VisionPlan"}
           presentationMode={presentationMode}
           onTogglePresentationMode={togglePresentationMode}
+          onImportP6={() => setP6ImportModalOpen(true)}
         />
       </div>
 
@@ -735,6 +741,21 @@ export const CronogramaPage: React.FC = () => {
             data: new Date(),
             responsavel: usuario?.id,
           });
+        }}
+      />
+
+      <P6ImportModal
+        isOpen={p6ImportModalOpen}
+        onClose={() => setP6ImportModalOpen(false)}
+        projetoId={projetoId || ''}
+        empresaId={usuario?.empresaId || ''}
+        userId={usuario?.id || ''}
+        onImportComplete={(result) => {
+          setP6ImportModalOpen(false);
+          toast.success(`Importação concluída: ${result.tasksImported} atividades e ${result.dependenciesImported} dependências importadas.`);
+          if (projetoId) {
+            carregarAtividades(projetoId);
+          }
         }}
       />
     </div>
