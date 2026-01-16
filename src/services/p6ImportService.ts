@@ -167,6 +167,84 @@ class P6ImportService {
     return uuidRegex.test(value);
   }
 
+  private parseWbsPath(wbsPath: string | undefined): { levels: string[], fullPath: string } | null {
+    if (!wbsPath || typeof wbsPath !== 'string') return null;
+    
+    // Remove prefix if present (e.g., "M450_2.4.1" -> "2.4.1")
+    let path = wbsPath;
+    if (path.includes('_')) {
+      const parts = path.split('_');
+      path = parts.slice(1).join('_'); // Take everything after first underscore
+    }
+    
+    // Split by dots to get hierarchy levels
+    const levels = path.split('.').filter(l => l.trim() !== '');
+    if (levels.length === 0) return null;
+    
+    return { levels, fullPath: wbsPath };
+  }
+
+  private buildWbsHierarchy(
+    tasks: Array<{ codigo: string; wbs_caminho?: string; nome: string }>,
+    projectName: string = 'Projeto'
+  ): Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }> {
+    const wbsNodes = new Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }>();
+    
+    // Collect all unique WBS paths and their levels
+    const allPaths = new Set<string>();
+    
+    tasks.forEach(task => {
+      const parsed = this.parseWbsPath(task.wbs_caminho);
+      if (!parsed) return;
+      
+      // Add all intermediate levels
+      for (let i = 1; i <= parsed.levels.length; i++) {
+        const pathKey = parsed.levels.slice(0, i).join('.');
+        allPaths.add(pathKey);
+      }
+    });
+    
+    // Sort paths by depth (shorter paths first) to ensure parents are created before children
+    const sortedPaths = Array.from(allPaths).sort((a, b) => {
+      const aDepth = a.split('.').length;
+      const bDepth = b.split('.').length;
+      if (aDepth !== bDepth) return aDepth - bDepth;
+      return a.localeCompare(b);
+    });
+    
+    // Create WBS nodes with UUIDs
+    sortedPaths.forEach(pathKey => {
+      const levels = pathKey.split('.');
+      const parentPath = levels.slice(0, -1).join('.');
+      const parentId = parentPath ? wbsNodes.get(parentPath)?.id || null : null;
+      
+      // Generate a deterministic UUID-like ID based on path
+      const id = `wbs-${this.generatePathHash(pathKey)}`;
+      
+      wbsNodes.set(pathKey, {
+        id,
+        parentId,
+        name: `WBS ${pathKey}`,
+        level: levels.length,
+        edt: pathKey,
+      });
+    });
+    
+    return wbsNodes;
+  }
+
+  private generatePathHash(path: string): string {
+    // Create a simple hash from the path for consistent IDs
+    let hash = 0;
+    for (let i = 0; i < path.length; i++) {
+      const char = path.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    const hexHash = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hexHash}-0000-4000-8000-${hexHash.padEnd(12, '0').substring(0, 12)}`;
+  }
+
   transformTask(
     p6Task: P6TaskRow, 
     columnMappings: Record<string, string>,
@@ -394,64 +472,23 @@ class P6ImportService {
       console.log('[P6Import] Tasks transformadas:', transformedTasks.length);
       console.log('[P6Import] Primeira task:', transformedTasks[0]);
       
-      const tasksToInsert = transformedTasks
-        .filter((task) => {
-          // Skip tasks without valid start date (required field)
-          const hasValidStartDate = task.data_inicio instanceof Date && !isNaN(task.data_inicio.getTime());
-          if (!hasValidStartDate) {
-            console.log('[P6Import] Task sem data de início:', task.codigo, task.data_inicio);
-            result.warnings.push({
-              row: 0,
-              column: 'data_inicio',
-              value: task.codigo,
-              message: `Atividade ${task.codigo} ignorada: data de início inválida`,
-              severity: 'warning',
-            });
-          }
-          return hasValidStartDate;
-        })
-        .map((task) => {
-          const duracaoDias = task.duracao_dias 
-            ? Math.max(1, Math.round(Number(task.duracao_dias))) 
-            : 1;
-          const folgaTotal = task.folga_total !== undefined && task.folga_total !== null
-            ? Math.round(Number(task.folga_total))
-            : null;
-          const progresso = task.percentual_conclusao !== undefined
-            ? Math.min(100, Math.max(0, Number(task.percentual_conclusao) || 0))
-            : 0;
+      // Filter tasks with valid start dates
+      const validTasks = transformedTasks.filter((task) => {
+        const hasValidStartDate = task.data_inicio instanceof Date && !isNaN(task.data_inicio.getTime());
+        if (!hasValidStartDate) {
+          console.log('[P6Import] Task sem data de início:', task.codigo, task.data_inicio);
+          result.warnings.push({
+            row: 0,
+            column: 'data_inicio',
+            value: task.codigo,
+            message: `Atividade ${task.codigo} ignorada: data de início inválida`,
+            severity: 'warning',
+          });
+        }
+        return hasValidStartDate;
+      });
 
-          const dataInicio = task.data_inicio!.toISOString().split('T')[0];
-          const dataFim = task.data_fim instanceof Date && !isNaN(task.data_fim.getTime())
-            ? task.data_fim.toISOString().split('T')[0]
-            : dataInicio;
-
-          return {
-            projeto_id: projetoId,
-            empresa_id: empresaId,
-            codigo: String(task.codigo || '').substring(0, 50),
-            nome: String(task.nome || '').substring(0, 255),
-            wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
-            data_inicio: dataInicio,
-            data_fim: dataFim,
-            duracao_dias: duracaoDias,
-            progresso: progresso,
-            custo_planejado: task.custo_orcado ? Number(task.custo_orcado) : null,
-            custo_real: task.custo_real ? Number(task.custo_real) : null,
-            e_critica: task.is_critico || false,
-            folga_total: folgaTotal,
-            prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
-            status: 'PLANEJADA',
-            tipo: task.is_marco ? 'Marco' : (task.is_resumo ? 'WBS' : 'Tarefa'),
-          };
-        });
-
-      console.log('[P6Import] Tasks para inserir:', tasksToInsert.length);
-      if (tasksToInsert.length > 0) {
-        console.log('[P6Import] Exemplo de task a inserir:', tasksToInsert[0]);
-      }
-
-      if (tasksToInsert.length === 0) {
+      if (validTasks.length === 0) {
         result.errors.push({
           row: 0,
           column: 'tasks',
@@ -462,12 +499,115 @@ class P6ImportService {
         return result;
       }
 
+      // Build WBS hierarchy from wbs_caminho
+      const wbsHierarchy = this.buildWbsHierarchy(
+        validTasks.map(t => ({ codigo: t.codigo, wbs_caminho: t.wbs_caminho, nome: t.nome }))
+      );
+      console.log('[P6Import] WBS Hierarchy criada:', wbsHierarchy.size, 'nós');
+
       if (config.options.overwriteExisting) {
         await supabase
           .from('atividades_cronograma')
           .delete()
           .eq('projeto_id', projetoId)
           .eq('origem', 'IMPORTACAO_P6');
+      }
+
+      // Create a map to store inserted WBS node IDs
+      const wbsIdMap = new Map<string, string>();
+      
+      // Insert WBS nodes first (sorted by level to ensure parents exist before children)
+      const sortedWbsNodes = Array.from(wbsHierarchy.entries())
+        .sort((a, b) => a[1].level - b[1].level);
+      
+      for (const [pathKey, wbsNode] of sortedWbsNodes) {
+        const parentIdFromMap = wbsNode.parentId ? wbsIdMap.get(
+          Array.from(wbsHierarchy.entries()).find(([_, v]) => v.id === wbsNode.parentId)?.[0] || ''
+        ) : null;
+        
+        const wbsToInsert = {
+          projeto_id: projetoId,
+          empresa_id: empresaId,
+          codigo: `WBS-${pathKey}`.substring(0, 50),
+          nome: `WBS ${pathKey}`.substring(0, 255),
+          edt: pathKey.substring(0, 100),
+          data_inicio: new Date().toISOString().split('T')[0],
+          data_fim: new Date().toISOString().split('T')[0],
+          duracao_dias: 1,
+          progresso: 0,
+          status: 'PLANEJADA',
+          tipo: 'WBS',
+          parent_id: parentIdFromMap,
+        };
+        
+        const { data: insertedWbs, error: wbsError } = await supabase
+          .from('atividades_cronograma')
+          .insert(wbsToInsert)
+          .select('id, codigo, edt')
+          .single();
+        
+        if (insertedWbs) {
+          wbsIdMap.set(pathKey, insertedWbs.id);
+          console.log('[P6Import] WBS inserido:', pathKey, insertedWbs.id);
+        } else if (wbsError) {
+          console.log('[P6Import] Erro ao inserir WBS:', pathKey, wbsError.message);
+        }
+      }
+
+      console.log('[P6Import] WBS nodes inseridos:', wbsIdMap.size);
+
+      // Now insert tasks with parent_id pointing to their WBS parent
+      const tasksToInsert = validTasks.map((task) => {
+        const duracaoDias = task.duracao_dias 
+          ? Math.max(1, Math.round(Number(task.duracao_dias))) 
+          : 1;
+        const folgaTotal = task.folga_total !== undefined && task.folga_total !== null
+          ? Math.round(Number(task.folga_total))
+          : null;
+        const progresso = task.percentual_conclusao !== undefined
+          ? Math.min(100, Math.max(0, Number(task.percentual_conclusao) || 0))
+          : 0;
+
+        const dataInicio = task.data_inicio!.toISOString().split('T')[0];
+        const dataFim = task.data_fim instanceof Date && !isNaN(task.data_fim.getTime())
+          ? task.data_fim.toISOString().split('T')[0]
+          : dataInicio;
+
+        // Determine parent_id from WBS path
+        let parentId: string | null = null;
+        if (task.wbs_caminho) {
+          const parsed = this.parseWbsPath(task.wbs_caminho);
+          if (parsed && parsed.levels.length > 0) {
+            const fullPath = parsed.levels.join('.');
+            parentId = wbsIdMap.get(fullPath) || null;
+            console.log('[P6Import] Task', task.codigo, 'WBS path:', fullPath, 'parent_id:', parentId);
+          }
+        }
+
+        return {
+          projeto_id: projetoId,
+          empresa_id: empresaId,
+          codigo: String(task.codigo || '').substring(0, 50),
+          nome: String(task.nome || '').substring(0, 255),
+          edt: task.wbs_caminho ? String(task.wbs_caminho).substring(0, 100) : null,
+          parent_id: parentId,
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          duracao_dias: duracaoDias,
+          progresso: progresso,
+          custo_planejado: task.custo_orcado ? Number(task.custo_orcado) : null,
+          custo_real: task.custo_real ? Number(task.custo_real) : null,
+          e_critica: task.is_critico || false,
+          folga_total: folgaTotal,
+          prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
+          status: 'PLANEJADA',
+          tipo: task.is_marco ? 'Marco' : (task.is_resumo ? 'WBS' : 'Tarefa'),
+        };
+      });
+
+      console.log('[P6Import] Tasks para inserir:', tasksToInsert.length);
+      if (tasksToInsert.length > 0) {
+        console.log('[P6Import] Exemplo de task a inserir:', tasksToInsert[0]);
       }
 
       const { data: insertedTasks, error: taskError } = await supabase
