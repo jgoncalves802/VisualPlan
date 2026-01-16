@@ -559,19 +559,170 @@ export const DEFAULT_COLUMN_MAPPINGS: Record<string, string> = {
   'task_code': 'codigo',
   'task_name': 'nome',
   'wbs_id': 'wbs_id',
+  'wbs_name': 'wbs_nome',
+  'wbs_path': 'wbs_caminho',
+  'status_code': 'status',
+  'task_type': 'tipo_atividade',
   'target_start_date': 'data_inicio',
   'target_end_date': 'data_fim',
+  'start_date': 'data_inicio',
+  'end_date': 'data_fim',
   'act_start_date': 'data_inicio_real',
   'act_end_date': 'data_fim_real',
-  'primary_base_start_date': 'data_inicio_baseline',
-  'primary_base_end_date': 'data_fim_baseline',
+  'early_start_date': 'data_inicio_cedo',
+  'early_end_date': 'data_fim_cedo',
+  'late_start_date': 'data_inicio_tarde',
+  'late_end_date': 'data_fim_tarde',
+  'base_start_date': 'data_inicio_baseline',
+  'base_end_date': 'data_fim_baseline',
+  'primary_base_start_date': 'data_inicio_baseline_primario',
+  'primary_base_end_date': 'data_fim_baseline_primario',
+  'secondary_base_start_date': 'data_inicio_baseline_secundario',
+  'secondary_base_end_date': 'data_fim_baseline_secundario',
   'total_drtn_hr_cnt': 'duracao_dias',
   'remain_drtn_hr_cnt': 'duracao_restante_dias',
+  'base_drtn_hr_cnt': 'duracao_baseline',
+  'act_drtn_hr_cnt': 'duracao_real',
+  'total_float_hr_cnt': 'folga_total',
+  'free_float_hr_cnt': 'folga_livre',
+  'remain_float_hr_cnt': 'folga_restante',
   'complete_pct': 'percentual_conclusao',
+  'drtn_complete_pct': 'percentual_duracao',
+  'work_complete_pct': 'percentual_trabalho',
+  'perfm_complete_pct': 'percentual_performance',
+  'phys_complete_pct': 'percentual_fisico',
   'target_cost': 'custo_orcado',
   'act_cost': 'custo_real',
   'remain_cost': 'custo_restante',
+  'total_cost': 'custo_total',
+  'base_cost': 'custo_baseline',
+  'act_work_cost': 'custo_mao_obra_real',
+  'act_mat_cost': 'custo_material_real',
+  'act_equip_cost': 'custo_equipamento_real',
+  'act_expense_cost': 'custo_despesas_real',
+  'target_work_cost': 'custo_mao_obra_target',
+  'target_mat_cost': 'custo_material_target',
+  'target_equip_cost': 'custo_equipamento_target',
+  'target_expense_cost': 'custo_despesas_target',
+  'bcws': 'bcws',
+  'bcwp': 'bcwp',
+  'acwp': 'acwp',
+  'bac': 'bac',
+  'bac_work': 'bac_trabalho',
+  'eac': 'eac',
+  'etc': 'etc',
+  'vac': 'vac',
+  'cv': 'cv',
+  'sv': 'sv',
+  'cpi': 'cpi',
+  'spi': 'spi',
+  'tcpi': 'tcpi',
   'critical_flag': 'is_critico',
   'priority_type': 'prioridade',
   'duration_type': 'tipo_duracao',
+  'clndr_id': 'calendario_id',
+  'rsrc_id': 'recurso_id',
+  'pred_list': 'predecessoras',
+  'succ_list': 'sucessoras',
 };
+
+export const P6_COLUMN_PATTERNS: Array<{ pattern: RegExp; visionplanField: string }> = [
+  { pattern: /^task[_\s]?code$/i, visionplanField: 'codigo' },
+  { pattern: /^(activity[_\s]?)?id$/i, visionplanField: 'codigo' },
+  { pattern: /^task[_\s]?name$/i, visionplanField: 'nome' },
+  { pattern: /^(activity[_\s]?)?name$/i, visionplanField: 'nome' },
+  { pattern: /^wbs[_\s]?id$/i, visionplanField: 'wbs_id' },
+  { pattern: /^wbs[_\s]?name$/i, visionplanField: 'wbs_nome' },
+  { pattern: /^wbs[_\s]?(path|full[_\s]?name)$/i, visionplanField: 'wbs_caminho' },
+  { pattern: /^status[_\s]?code$/i, visionplanField: 'status' },
+  { pattern: /^task[_\s]?type$/i, visionplanField: 'tipo_atividade' },
+  { pattern: /^(target[_\s]?)?start[_\s]?date$/i, visionplanField: 'data_inicio' },
+  { pattern: /^(target[_\s]?)?end[_\s]?date$/i, visionplanField: 'data_fim' },
+  { pattern: /^(target[_\s]?)?finish[_\s]?date$/i, visionplanField: 'data_fim' },
+  { pattern: /^act(ual)?[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_real' },
+  { pattern: /^act(ual)?[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_real' },
+  { pattern: /^early[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_cedo' },
+  { pattern: /^early[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_cedo' },
+  { pattern: /^late[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_tarde' },
+  { pattern: /^late[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_tarde' },
+  { pattern: /^(base(line)?|bl)[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_baseline' },
+  { pattern: /^(base(line)?|bl)[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_baseline' },
+  { pattern: /^(primary|bl1)[_\s]?base[_\s]?start[_\s]?date$/i, visionplanField: 'data_inicio_baseline_primario' },
+  { pattern: /^(primary|bl1)[_\s]?base[_\s]?(end|finish)[_\s]?date$/i, visionplanField: 'data_fim_baseline_primario' },
+  { pattern: /^total[_\s]?dr(tn|ation)[_\s]?(hr[_\s]?cnt|hours?)$/i, visionplanField: 'duracao_dias' },
+  { pattern: /^(original[_\s]?)?duration$/i, visionplanField: 'duracao_dias' },
+  { pattern: /^remain(ing)?[_\s]?dr(tn|ation)[_\s]?(hr[_\s]?cnt|hours?)$/i, visionplanField: 'duracao_restante_dias' },
+  { pattern: /^remain(ing)?[_\s]?duration$/i, visionplanField: 'duracao_restante_dias' },
+  { pattern: /^base[_\s]?dr(tn|ation)[_\s]?(hr[_\s]?cnt|hours?)$/i, visionplanField: 'duracao_baseline' },
+  { pattern: /^(bl|baseline)[_\s]?duration$/i, visionplanField: 'duracao_baseline' },
+  { pattern: /^act(ual)?[_\s]?dr(tn|ation)[_\s]?(hr[_\s]?cnt|hours?)$/i, visionplanField: 'duracao_real' },
+  { pattern: /^actual[_\s]?duration$/i, visionplanField: 'duracao_real' },
+  { pattern: /^total[_\s]?float[_\s]?(hr[_\s]?cnt|hours?)?$/i, visionplanField: 'folga_total' },
+  { pattern: /^free[_\s]?float[_\s]?(hr[_\s]?cnt|hours?)?$/i, visionplanField: 'folga_livre' },
+  { pattern: /^remain(ing)?[_\s]?float[_\s]?(hr[_\s]?cnt|hours?)?$/i, visionplanField: 'folga_restante' },
+  { pattern: /^complete[_\s]?p(ct|ercent)$/i, visionplanField: 'percentual_conclusao' },
+  { pattern: /^(activity[_\s]?)?%[_\s]?complete$/i, visionplanField: 'percentual_conclusao' },
+  { pattern: /^dr(tn|ation)[_\s]?complete[_\s]?p(ct|ercent)$/i, visionplanField: 'percentual_duracao' },
+  { pattern: /^(duration|physical)[_\s]?%[_\s]?complete$/i, visionplanField: 'percentual_duracao' },
+  { pattern: /^work[_\s]?complete[_\s]?p(ct|ercent)$/i, visionplanField: 'percentual_trabalho' },
+  { pattern: /^perf(m|ormance)?[_\s]?complete[_\s]?p(ct|ercent)$/i, visionplanField: 'percentual_performance' },
+  { pattern: /^target[_\s]?cost$/i, visionplanField: 'custo_orcado' },
+  { pattern: /^budget(ed)?[_\s]?cost$/i, visionplanField: 'custo_orcado' },
+  { pattern: /^act(ual)?[_\s]?cost$/i, visionplanField: 'custo_real' },
+  { pattern: /^remain(ing)?[_\s]?cost$/i, visionplanField: 'custo_restante' },
+  { pattern: /^total[_\s]?cost$/i, visionplanField: 'custo_total' },
+  { pattern: /^(eac|at[_\s]?completion)[_\s]?cost$/i, visionplanField: 'custo_total' },
+  { pattern: /^base(line)?[_\s]?cost$/i, visionplanField: 'custo_baseline' },
+  { pattern: /^bcws$/i, visionplanField: 'bcws' },
+  { pattern: /^bcwp$/i, visionplanField: 'bcwp' },
+  { pattern: /^acwp$/i, visionplanField: 'acwp' },
+  { pattern: /^bac$/i, visionplanField: 'bac' },
+  { pattern: /^eac$/i, visionplanField: 'eac' },
+  { pattern: /^etc$/i, visionplanField: 'etc' },
+  { pattern: /^vac$/i, visionplanField: 'vac' },
+  { pattern: /^cv$/i, visionplanField: 'cv' },
+  { pattern: /^sv$/i, visionplanField: 'sv' },
+  { pattern: /^cpi$/i, visionplanField: 'cpi' },
+  { pattern: /^spi$/i, visionplanField: 'spi' },
+  { pattern: /^tcpi$/i, visionplanField: 'tcpi' },
+  { pattern: /^critical[_\s]?(flag|path)?$/i, visionplanField: 'is_critico' },
+  { pattern: /^is[_\s]?critical$/i, visionplanField: 'is_critico' },
+  { pattern: /^priority[_\s]?(type)?$/i, visionplanField: 'prioridade' },
+  { pattern: /^duration[_\s]?type$/i, visionplanField: 'tipo_duracao' },
+  { pattern: /^cal(endar|ndr)[_\s]?id$/i, visionplanField: 'calendario_id' },
+  { pattern: /^rsrc[_\s]?id$/i, visionplanField: 'recurso_id' },
+  { pattern: /^resource[_\s]?id$/i, visionplanField: 'recurso_id' },
+  { pattern: /^pred(ecessor)?[_\s]?list$/i, visionplanField: 'predecessoras' },
+  { pattern: /^succ(essor)?[_\s]?list$/i, visionplanField: 'sucessoras' },
+];
+
+export function autoMapP6Column(p6ColumnName: string): string | null {
+  const normalized = p6ColumnName.trim().toLowerCase();
+  
+  if (DEFAULT_COLUMN_MAPPINGS[normalized]) {
+    return DEFAULT_COLUMN_MAPPINGS[normalized];
+  }
+  
+  for (const { pattern, visionplanField } of P6_COLUMN_PATTERNS) {
+    if (pattern.test(p6ColumnName)) {
+      return visionplanField;
+    }
+  }
+  
+  return null;
+}
+
+export function generateAutoMappings(p6Columns: string[]): Record<string, string> {
+  const mappings: Record<string, string> = {};
+  const usedVisionPlanFields = new Set<string>();
+  
+  for (const p6Col of p6Columns) {
+    const visionPlanField = autoMapP6Column(p6Col);
+    if (visionPlanField && !usedVisionPlanFields.has(visionPlanField)) {
+      mappings[p6Col] = visionPlanField;
+      usedVisionPlanFields.add(visionPlanField);
+    }
+  }
+  
+  return mappings;
+}

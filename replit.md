@@ -41,6 +41,14 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
     *   **Interference Tracking**: During check-in/check-out, users can register work site interferences (by company type: CONTRATADA/CONTRATANTE/FISCALIZACAO) with full audit trail. Interferences can be converted to Ishikawa restrictions for follow-up in the Kaizen module.
     *   **Database Tables**: `aceites_programacao` (acceptance history with user, sector, type, and observations), `interferencias_obra` (interference records with empresa_id scope and RLS policies), `restricoes_ishikawa` (restrictions with origem field for tracking source like REJEICAO_PROGRAMACAO).
     *   **Global Modal System**: Centralized modal management via `ModalContext` and `ModalProvider` in `src/contexts/ModalContext.tsx`. The `RestricaoModal` is rendered once globally via `GlobalModals` component in App.tsx and can be opened from anywhere using the `useRestricaoModal()` hook with `initialData`, `onSave`, and `onClose` callbacks. This ensures consistent modal behavior across all modules and avoids duplicating modal code.
+    *   **Primavera P6 Import System**: Comprehensive import functionality for P6 Excel exports with:
+        *   **Multi-step Import Wizard**: Upload → Sheet Selection → Column Mapping → Preview → Import → Results.
+        *   **110+ Mappable Fields**: Organized in 16 categories (Identification, Dates Planned/Actual/Baseline/CPM, Duration, Float, Progress, Costs, Detailed Costs, EVM, Resources, Status, WBS, Dependencies, Other).
+        *   **Intelligent Auto-Mapping**: Uses exact match lookup (`DEFAULT_COLUMN_MAPPINGS`) and pattern-based matching (`P6_COLUMN_PATTERNS` with regex) to automatically suggest column mappings. The `autoMapP6Column()` function first checks for exact P6 column name matches, then applies 60+ regex patterns covering common P6 column naming conventions.
+        *   **SearchableColumnSelect Component**: Dropdown with real-time search, category grouping, field descriptions, and click-outside-to-close behavior.
+        *   **Dynamic Data Transformation**: `transformTask` processes fields by type (date/number/boolean/string) using derived type lists from `VISIONPLAN_TASK_COLUMNS`, automatically converts P6 hours to VisionPlan days.
+        *   **Prevents Duplicate Mappings**: `generateAutoMappings()` ensures each VisionPlan field is mapped only once.
+        *   **User Review Step**: Auto-mapped fields are pre-selected but user can review and adjust before importing.
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

@@ -13,6 +13,8 @@ import {
   P6_PREDECESSOR_TYPES,
   DEFAULT_COLUMN_MAPPINGS,
   VISIONPLAN_TASK_COLUMNS,
+  autoMapP6Column,
+  generateAutoMappings,
 } from '../types/p6Import.types';
 import { supabase } from './supabase';
 
@@ -479,7 +481,12 @@ class P6ImportService {
   }
 
   suggestMapping(p6Column: string): string | null {
-    return DEFAULT_COLUMN_MAPPINGS[p6Column] || null;
+    return autoMapP6Column(p6Column);
+  }
+
+  generateAutoMappingsForSheet(sheetName: string = 'TASK'): Record<string, string> {
+    const columns = this.getSheetColumns(sheetName);
+    return generateAutoMappings(columns);
   }
 
   clear(): void {

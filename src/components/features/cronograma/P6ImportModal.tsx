@@ -22,7 +22,6 @@ import {
   VISIONPLAN_TASK_COLUMNS,
   VISIONPLAN_COLUMN_CATEGORIES,
   VisionPlanColumnDefinition,
-  DEFAULT_COLUMN_MAPPINGS,
 } from '../../../types/p6Import.types';
 import { Search } from 'lucide-react';
 
@@ -173,7 +172,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [sheets, setSheets] = useState<P6SheetInfo[]>([]);
   const [selectedSheets, setSelectedSheets] = useState<string[]>(['TASK', 'TASKPRED']);
-  const [columnMappings, setColumnMappings] = useState<ColumnMappingState>({ ...DEFAULT_COLUMN_MAPPINGS });
+  const [columnMappings, setColumnMappings] = useState<ColumnMappingState>({});
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
   const [importResult, setImportResult] = useState<P6ImportResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -257,17 +256,8 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   };
 
   const handleGoToMapping = () => {
-    const p6Columns = p6ImportService.getSheetColumns('TASK');
-    const initialMappings: ColumnMappingState = {};
-    
-    p6Columns.forEach(col => {
-      const suggested = p6ImportService.suggestMapping(col);
-      if (suggested) {
-        initialMappings[col] = suggested;
-      }
-    });
-    
-    setColumnMappings(initialMappings);
+    const autoMappings = p6ImportService.generateAutoMappingsForSheet('TASK');
+    setColumnMappings(autoMappings);
     setStep('mapping');
   };
 
@@ -320,7 +310,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
     setFile(null);
     setSheets([]);
     setSelectedSheets(['TASK', 'TASKPRED']);
-    setColumnMappings({ ...DEFAULT_COLUMN_MAPPINGS });
+    setColumnMappings({});
     setPreviewData([]);
     setImportResult(null);
     setError(null);
