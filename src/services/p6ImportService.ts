@@ -161,6 +161,12 @@ class P6ImportService {
     return Math.round((hours / hoursPerDay) * 100) / 100;
   }
 
+  private isValidUUID(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(value);
+  }
+
   transformTask(
     p6Task: P6TaskRow, 
     columnMappings: Record<string, string>,
@@ -376,7 +382,7 @@ class P6ImportService {
         empresa_id: empresaId,
         codigo: String(task.codigo || '').substring(0, 50),
         nome: String(task.nome || '').substring(0, 255),
-        wbs_id: task.wbs_id,
+        wbs_id: this.isValidUUID(task.wbs_id) ? task.wbs_id : null,
         data_inicio: task.data_inicio?.toISOString().split('T')[0],
         data_fim: task.data_fim?.toISOString().split('T')[0],
         duracao_dias: task.duracao_dias || 1,
