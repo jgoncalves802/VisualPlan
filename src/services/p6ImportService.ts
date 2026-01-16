@@ -297,6 +297,21 @@ class P6ImportService {
     if (result.is_resumo === undefined) result.is_resumo = isSummary;
     if (result.is_critico === undefined) result.is_critico = this.parseBoolean(p6Task.critical_flag);
 
+    // Fallback: try to get wbs_caminho directly from p6Task if not mapped
+    if (!result.wbs_caminho) {
+      // Try common column names for WBS path
+      const wbsPath = p6Task.wbs_path || 
+                      p6Task['WBS Path'] || 
+                      p6Task['wbs path'] ||
+                      p6Task['WBS_Path'] ||
+                      p6Task['projwbs__wbs_short_name'] ||
+                      p6Task['PROJWBS__wbs_short_name'] ||
+                      p6Task['wbs_short_name'];
+      if (wbsPath) {
+        result.wbs_caminho = String(wbsPath);
+      }
+    }
+
     return result;
   }
 
@@ -471,6 +486,10 @@ class P6ImportService {
 
       console.log('[P6Import] Tasks transformadas:', transformedTasks.length);
       console.log('[P6Import] Primeira task:', transformedTasks[0]);
+      console.log('[P6Import] WBS caminhos encontrados:', transformedTasks.filter(t => t.wbs_caminho).length);
+      if (transformedTasks.length > 0 && transformedTasks[0]) {
+        console.log('[P6Import] Primeira task wbs_caminho:', transformedTasks[0].wbs_caminho);
+      }
       
       // Filter tasks with valid start dates
       const validTasks = transformedTasks.filter((task) => {
