@@ -271,16 +271,18 @@ class P6XmlImportService {
           continue;
         }
 
+        const uniqueCode = `${wbs.code}_${Date.now().toString(36).slice(-4)}`;
         const { data: newNode, error: insertError } = await supabase
           .from('eps_nodes')
           .insert({
             nome: wbs.name,
-            codigo: wbs.code,
+            codigo: uniqueCode,
             parent_id: parentNodeId,
             empresa_id: empresaId,
             ordem: wbs.sequenceNumber,
             nivel: this.getWbsDepth(wbs.objectId) + 1,
             ativo: true,
+            peso_estimado: null,
           })
           .select('id')
           .single();
@@ -322,8 +324,8 @@ class P6XmlImportService {
         }
 
         const durationDays = activity.plannedDuration 
-          ? activity.plannedDuration / hoursPerDay 
-          : undefined;
+          ? Math.round(activity.plannedDuration / hoursPerDay) 
+          : 1;
 
         const { error: insertError } = await supabase
           .from('atividades_cronograma')
