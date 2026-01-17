@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { epsService, EpsNode } from '../../../services/epsService';
 import { useAuthStore } from '../../../stores/authStore';
+import { supabase } from '../../../services/supabase';
 import { 
   Loader2,
   Search,
@@ -8,7 +9,9 @@ import {
   FileSpreadsheet,
   Calendar,
   Plus,
-  Upload
+  Upload,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface EpsSelectorProps {
@@ -17,12 +20,94 @@ interface EpsSelectorProps {
   onImportP6?: () => void;
 }
 
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  projectName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting: boolean;
+  error?: string | null;
+}
+
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  isOpen,
+  projectName,
+  onConfirm,
+  onCancel,
+  isDeleting,
+  error
+}) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Confirmar Exclusão
+          </h3>
+        </div>
+        
+        <p className="text-gray-600 dark:text-gray-400 mb-2">
+          Tem certeza que deseja excluir o cronograma:
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          "{projectName}"
+        </p>
+        <p className="text-sm text-red-600 dark:text-red-400 mb-6">
+          Esta ação excluirá todas as atividades e dependências associadas. Esta ação não pode ser desfeita.
+        </p>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          </div>
+        )}
+        
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Excluindo...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                Excluir
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCreateNew, onImportP6 }) => {
   const { usuario } = useAuthStore();
   const [projects, setProjects] = useState<EpsNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<EpsNode | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -49,6 +134,109 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
 
   const handleDoubleClick = (project: EpsNode) => {
     onSelectProject(project.id, project.nome);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, project: EpsNode) => {
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+    
+    setIsDeleting(true);
+    setDeleteError(null);
+    
+    try {
+      const { data: activities } = await supabase
+        .from('atividades_cronograma')
+        .select('id')
+        .eq('projeto_id', projectToDelete.id);
+
+      if (activities && activities.length > 0) {
+        const activityIds = activities.map(a => a.id);
+        
+        const { error: depError1 } = await supabase
+          .from('dependencias_atividades')
+          .delete()
+          .in('atividade_origem_id', activityIds);
+
+        if (depError1) {
+          console.warn('Error deleting dependencies (origem):', depError1);
+        }
+
+        const { error: depError2 } = await supabase
+          .from('dependencias_atividades')
+          .delete()
+          .in('atividade_destino_id', activityIds);
+
+        if (depError2) {
+          console.warn('Error deleting dependencies (destino):', depError2);
+        }
+      }
+
+      const { error: activitiesError } = await supabase
+        .from('atividades_cronograma')
+        .delete()
+        .eq('projeto_id', projectToDelete.id);
+
+      if (activitiesError) {
+        throw new Error(`Erro ao excluir atividades: ${activitiesError.message}`);
+      }
+
+      const collectDescendantIds = async (parentId: string): Promise<string[]> => {
+        const { data: children, error: queryError } = await supabase
+          .from('eps_nodes')
+          .select('id')
+          .eq('parent_id', parentId);
+        
+        if (queryError) {
+          console.warn('Error querying WBS children:', queryError);
+          return [];
+        }
+        
+        if (!children || children.length === 0) return [];
+        
+        const childIds = children.map(c => c.id);
+        const grandchildIds: string[] = [];
+        
+        for (const childId of childIds) {
+          const descendants = await collectDescendantIds(childId);
+          grandchildIds.push(...descendants);
+        }
+        
+        return [...childIds, ...grandchildIds];
+      };
+
+      const wbsIdsToDelete = await collectDescendantIds(projectToDelete.id);
+      
+      if (wbsIdsToDelete.length > 0) {
+        const { error: wbsError } = await supabase
+          .from('eps_nodes')
+          .delete()
+          .in('id', wbsIdsToDelete);
+
+        if (wbsError) {
+          throw new Error(`Erro ao excluir estrutura WBS: ${wbsError.message}`);
+        }
+      }
+
+      setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
+      setDeleteModalOpen(false);
+      setProjectToDelete(null);
+    } catch (err) {
+      console.error('Error deleting project schedule:', err);
+      setDeleteError(err instanceof Error ? err.message : 'Erro ao excluir cronograma');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setProjectToDelete(null);
+    setDeleteError(null);
   };
 
   const filteredProjects = projects.filter(project => 
@@ -190,15 +378,33 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
                   </span>
                 </td>
                 <td className="py-4 px-4 text-center">
-                  <span className="text-sm text-amber-700 font-medium">
-                    Duplo clique para abrir
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm text-amber-700 font-medium">
+                      Duplo clique para abrir
+                    </span>
+                    <button
+                      onClick={(e) => handleDeleteClick(e, project)}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      title="Excluir cronograma"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        projectName={projectToDelete?.nome || ''}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isDeleting={isDeleting}
+        error={deleteError}
+      />
       
       {filteredProjects.length === 0 && searchTerm !== '' && (
         <div className="p-8 text-center text-gray-500">

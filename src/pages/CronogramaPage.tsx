@@ -407,6 +407,27 @@ export const CronogramaPage: React.FC = () => {
                     await excluirAtividade(id);
                   }
                 }}
+                onDeleteMultiple={async (ids) => {
+                  let successCount = 0;
+                  const errors: string[] = [];
+                  
+                  for (const id of ids) {
+                    try {
+                      await excluirAtividade(id);
+                      successCount++;
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+                      errors.push(msg);
+                    }
+                  }
+                  
+                  if (successCount > 0) {
+                    toast.success(`${successCount} atividade(s) excluída(s) com sucesso!`);
+                  }
+                  if (errors.length > 0) {
+                    toast.error(`${errors.length} atividade(s) não foram excluídas.`);
+                  }
+                }}
               />
             )}
           </div>

@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { AtividadeMock, DependenciaAtividade } from '../../../types/cronograma';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
 import { formatarData } from '../../../utils/dateFormatter';
+import { Trash2, AlertTriangle, Loader2, X } from 'lucide-react';
 
 interface TaskListProps {
   atividades: AtividadeMock[];
@@ -13,15 +14,56 @@ interface TaskListProps {
   dependencias: DependenciaAtividade[];
   onEdit: (atividadeId: string) => void;
   onDelete: (atividadeId: string) => void;
+  onDeleteMultiple?: (atividadeIds: string[]) => Promise<void>;
 }
 
 type SortField = 'nome' | 'data_inicio' | 'data_fim' | 'progresso' | 'status';
 type SortOrder = 'asc' | 'desc';
 
-export const TaskList: React.FC<TaskListProps> = ({ atividades, todasAtividades, dependencias, onEdit, onDelete }) => {
+export const TaskList: React.FC<TaskListProps> = ({ atividades, todasAtividades, dependencias, onEdit, onDelete, onDeleteMultiple }) => {
   const { configuracoes } = useCronogramaStore();
   const [sortField, setSortField] = useState<SortField>('data_inicio');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(atividades.filter(a => a.tipo !== 'WBS').map(a => a.id));
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    const newSet = new Set(selectedIds);
+    if (checked) {
+      newSet.add(id);
+    } else {
+      newSet.delete(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!onDeleteMultiple || selectedIds.size === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDeleteMultiple(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error('Error deleting activities:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const selectableActivities = atividades.filter(a => a.tipo !== 'WBS');
+  const allSelected = selectableActivities.length > 0 && selectableActivities.every(a => selectedIds.has(a.id));
 
   const atividadesMap = useMemo(() => {
     const map = new Map<string, AtividadeMock>();
@@ -131,9 +173,90 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, todasAtividades,
 
   return (
     <div className="overflow-x-auto">
+      {selectedIds.size > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              {selectedIds.size} atividade(s) selecionada(s)
+            </span>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1"
+            >
+              <X className="w-4 h-4" />
+              Limpar seleção
+            </button>
+          </div>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+          >
+            <Trash2 className="w-4 h-4" />
+            Excluir Selecionadas
+          </button>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Confirmar Exclusão
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Tem certeza que deseja excluir <strong>{selectedIds.size}</strong> atividade(s)?
+            </p>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-6">
+              Esta ação excluirá as atividades selecionadas e suas dependências. Esta ação não pode ser desfeita.
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Excluir
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
+            <th scope="col" className="px-3 py-3 text-center w-10">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </th>
             <th
               scope="col"
               className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -209,7 +332,17 @@ export const TaskList: React.FC<TaskListProps> = ({ atividades, todasAtividades,
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {atividadesOrdenadas.map((atividade) => (
-            <tr key={atividade.id} className="hover:bg-gray-50 transition">
+            <tr key={atividade.id} className={`hover:bg-gray-50 transition ${selectedIds.has(atividade.id) ? 'bg-blue-50' : ''}`}>
+              <td className="px-3 py-4 text-center">
+                {atividade.tipo !== 'WBS' && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(atividade.id)}
+                    onChange={(e) => handleSelectOne(atividade.id, e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                )}
+              </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="flex items-center">
                   {atividade.e_critica && (
