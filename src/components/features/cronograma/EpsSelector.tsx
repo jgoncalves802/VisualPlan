@@ -144,12 +144,28 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
   };
 
   const handleConfirmDelete = async () => {
-    if (!projectToDelete) return;
+    if (!projectToDelete || !usuario?.empresaId) return;
     
     setIsDeleting(true);
     setDeleteError(null);
     
     try {
+      const { data: existingProject, error: checkError } = await supabase
+        .from('eps_nodes')
+        .select('id')
+        .eq('id', projectToDelete.id)
+        .single();
+      
+      if (checkError || !existingProject) {
+        console.log('[EpsSelector] Project no longer exists in database, refreshing list');
+        const freshProjects = await epsService.getEpsOnlyTree(usuario.empresaId);
+        const rootProjects = freshProjects.filter((p: EpsNode) => p.nivel === 0 && !p.parentId);
+        setProjects(rootProjects);
+        setDeleteModalOpen(false);
+        setProjectToDelete(null);
+        return;
+      }
+
       const collectDescendantIds = async (parentId: string): Promise<string[]> => {
         const { data: children, error: queryError } = await supabase
           .from('eps_nodes')
@@ -238,7 +254,11 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       }
 
       console.log('[EpsSelector] Project deleted successfully:', projectToDelete.nome);
-      setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
+      
+      const freshProjects = await epsService.getEpsOnlyTree(usuario.empresaId);
+      const rootProjects = freshProjects.filter((p: EpsNode) => p.nivel === 0 && !p.parentId);
+      setProjects(rootProjects);
+      
       setDeleteModalOpen(false);
       setProjectToDelete(null);
     } catch (err) {
