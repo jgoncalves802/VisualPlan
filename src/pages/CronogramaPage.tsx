@@ -616,6 +616,22 @@ export const CronogramaPage: React.FC = () => {
             <MasterGanttView onSelectProject={handleSelectProject} />
           )}
         </div>
+        
+        <P6ImportModal
+          isOpen={p6ImportModalOpen}
+          onClose={() => setP6ImportModalOpen(false)}
+          projetoId={undefined}
+          empresaId={usuario?.empresaId || ''}
+          userId={usuario?.id || ''}
+          onImportComplete={(result, newProjetoId) => {
+            setP6ImportModalOpen(false);
+            toast.success(`Importação concluída: ${result.tasksImported} atividades e ${result.dependenciesImported} dependências importadas.`);
+            if (newProjetoId) {
+              setSelectedProjetoId(newProjetoId);
+              carregarAtividades(newProjetoId);
+            }
+          }}
+        />
       </div>
     );
   }
