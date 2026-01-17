@@ -247,6 +247,11 @@ class P6XmlImportService {
     try {
       const wbsObjectIdToNodeId = new Map<string, string>();
       wbsObjectIdToNodeId.set(project.wbsObjectId || '', scheduleNodeId);
+      
+      console.log('[P6XmlImport] Project WBS ObjectId:', project.wbsObjectId);
+      console.log('[P6XmlImport] Schedule Node ID:', scheduleNodeId);
+      console.log('[P6XmlImport] Total WBS nodes to import:', this.parsedData.wbsNodes.length);
+      console.log('[P6XmlImport] Total Activities to import:', this.parsedData.activities.length);
 
       const sortedWbs = [...this.parsedData.wbsNodes].sort((a, b) => {
         const aDepth = this.getWbsDepth(a.objectId);
@@ -288,6 +293,7 @@ class P6XmlImportService {
           .single();
 
         if (insertError) {
+          console.error('[P6XmlImport] WBS insert error:', wbs.name, insertError.message);
           errors.push({
             row: 0,
             column: 'WBS',
@@ -298,8 +304,11 @@ class P6XmlImportService {
         } else if (newNode) {
           wbsObjectIdToNodeId.set(wbs.objectId, newNode.id);
           wbsImported++;
+          console.log('[P6XmlImport] WBS inserted:', wbs.name, '->', newNode.id);
         }
       }
+      
+      console.log('[P6XmlImport] WBS ObjectId Map size:', wbsObjectIdToNodeId.size);
 
       const sortedActivities = [...this.parsedData.activities].sort((a, b) => {
         if (a.wbsObjectId !== b.wbsObjectId) {
@@ -344,6 +353,7 @@ class P6XmlImportService {
           });
 
         if (insertError) {
+          console.error('[P6XmlImport] Activity insert error:', activity.name, insertError.message);
           errors.push({
             row: i,
             column: 'Activity',
@@ -353,6 +363,9 @@ class P6XmlImportService {
           });
         } else {
           activitiesImported++;
+          if (activitiesImported <= 5) {
+            console.log('[P6XmlImport] Activity inserted:', activity.name);
+          }
         }
       }
 
