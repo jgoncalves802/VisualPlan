@@ -72,11 +72,15 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
       
       if (!targetProjetoId) {
         const { data: newProject, error: projectError } = await supabase
-          .from('projetos')
+          .from('eps_nodes')
           .insert({
             nome: scheduleName,
+            codigo: parsedData.projects[0]?.id || 'PROJ',
             empresa_id: empresaId,
-            status: 'PLANEJAMENTO',
+            parent_id: null,
+            nivel: 0,
+            ordem: 0,
+            ativo: true,
           })
           .select('id')
           .single();
@@ -89,13 +93,13 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
       const { data: scheduleNode, error: nodeError } = await supabase
         .from('eps_nodes')
         .insert({
-          nome: scheduleName,
-          codigo: parsedData.projects[0]?.id || 'SCHEDULE',
-          tipo: 'CRONOGRAMA',
-          parent_id: null,
+          nome: `${scheduleName} - Cronograma`,
+          codigo: `${parsedData.projects[0]?.id || 'SCHEDULE'}_CRON`,
+          parent_id: targetProjetoId,
           empresa_id: empresaId,
-          projeto_id: targetProjetoId,
+          nivel: 1,
           ordem: 0,
+          ativo: true,
         })
         .select('id')
         .single();
