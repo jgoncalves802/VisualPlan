@@ -150,42 +150,6 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
     setDeleteError(null);
     
     try {
-      const { data: activities } = await supabase
-        .from('atividades_cronograma')
-        .select('id')
-        .eq('projeto_id', projectToDelete.id);
-
-      if (activities && activities.length > 0) {
-        const activityIds = activities.map(a => a.id);
-        
-        const { error: depError1 } = await supabase
-          .from('dependencias_atividades')
-          .delete()
-          .in('atividade_origem_id', activityIds);
-
-        if (depError1) {
-          console.warn('Error deleting dependencies (origem):', depError1);
-        }
-
-        const { error: depError2 } = await supabase
-          .from('dependencias_atividades')
-          .delete()
-          .in('atividade_destino_id', activityIds);
-
-        if (depError2) {
-          console.warn('Error deleting dependencies (destino):', depError2);
-        }
-      }
-
-      const { error: activitiesError } = await supabase
-        .from('atividades_cronograma')
-        .delete()
-        .eq('projeto_id', projectToDelete.id);
-
-      if (activitiesError) {
-        throw new Error(`Erro ao excluir atividades: ${activitiesError.message}`);
-      }
-
       const collectDescendantIds = async (parentId: string): Promise<string[]> => {
         const { data: children, error: queryError } = await supabase
           .from('eps_nodes')
@@ -211,6 +175,47 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       };
 
       const wbsIdsToDelete = await collectDescendantIds(projectToDelete.id);
+      const allWbsIds = [projectToDelete.id, ...wbsIdsToDelete];
+      
+      console.log('[EpsSelector] Deleting project with all WBS IDs:', allWbsIds);
+
+      const { data: activities } = await supabase
+        .from('atividades_cronograma')
+        .select('id')
+        .or(`projeto_id.eq.${projectToDelete.id},wbs_id.in.(${allWbsIds.join(',')})`);
+
+      console.log('[EpsSelector] Activities to delete:', activities?.length || 0);
+
+      if (activities && activities.length > 0) {
+        const activityIds = activities.map(a => a.id);
+        
+        const { error: depError1 } = await supabase
+          .from('dependencias_atividades')
+          .delete()
+          .in('atividade_origem_id', activityIds);
+
+        if (depError1) {
+          console.warn('Error deleting dependencies (origem):', depError1);
+        }
+
+        const { error: depError2 } = await supabase
+          .from('dependencias_atividades')
+          .delete()
+          .in('atividade_destino_id', activityIds);
+
+        if (depError2) {
+          console.warn('Error deleting dependencies (destino):', depError2);
+        }
+
+        const { error: activitiesError } = await supabase
+          .from('atividades_cronograma')
+          .delete()
+          .in('id', activityIds);
+
+        if (activitiesError) {
+          throw new Error(`Erro ao excluir atividades: ${activitiesError.message}`);
+        }
+      }
       
       if (wbsIdsToDelete.length > 0) {
         const { error: wbsError } = await supabase
@@ -223,6 +228,16 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
         }
       }
 
+      const { error: rootError } = await supabase
+        .from('eps_nodes')
+        .delete()
+        .eq('id', projectToDelete.id);
+
+      if (rootError) {
+        throw new Error(`Erro ao excluir projeto: ${rootError.message}`);
+      }
+
+      console.log('[EpsSelector] Project deleted successfully:', projectToDelete.nome);
       setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
       setDeleteModalOpen(false);
       setProjectToDelete(null);
