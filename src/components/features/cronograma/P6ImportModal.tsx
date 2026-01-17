@@ -15,6 +15,7 @@ import {
   Download,
 } from 'lucide-react';
 import { p6ImportService } from '../../../services/p6ImportService';
+import { epsService, EpsNode } from '../../../services/epsService';
 import {
   P6SheetInfo,
   P6ImportResult,
@@ -28,13 +29,13 @@ import { Search } from 'lucide-react';
 interface P6ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projetoId: string;
+  projetoId?: string;
   empresaId: string;
   userId: string;
-  onImportComplete: (result: P6ImportResult) => void;
+  onImportComplete: (result: P6ImportResult, newProjetoId?: string) => void;
 }
 
-type ImportStep = 'upload' | 'sheets' | 'mapping' | 'preview' | 'importing' | 'result';
+type ImportStep = 'upload' | 'project' | 'sheets' | 'mapping' | 'preview' | 'importing' | 'result';
 
 interface ColumnMappingState {
   [p6Column: string]: string;
@@ -163,7 +164,7 @@ const SearchableColumnSelect: React.FC<SearchableColumnSelectProps> = ({ value, 
 export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   isOpen,
   onClose,
-  projetoId,
+  projetoId: initialProjetoId,
   empresaId,
   userId,
   onImportComplete,
@@ -186,6 +187,25 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
     hoursPerDay: 8,
   });
   const [mappingSearch, setMappingSearch] = useState('');
+  
+  const [selectedProjetoId, setSelectedProjetoId] = useState<string>(initialProjetoId || '');
+  const [newProjectName, setNewProjectName] = useState<string>('');
+  const [existingProjects, setExistingProjects] = useState<EpsNode[]>([]);
+  const [projectMode, setProjectMode] = useState<'existing' | 'new'>('existing');
+  const [detectedProjectName, setDetectedProjectName] = useState<string>('');
+
+  React.useEffect(() => {
+    if (isOpen && empresaId) {
+      epsService.getEpsOnlyTree(empresaId).then(setExistingProjects);
+    }
+  }, [isOpen, empresaId]);
+
+  React.useEffect(() => {
+    if (initialProjetoId) {
+      setSelectedProjetoId(initialProjetoId);
+      setProjectMode('existing');
+    }
+  }, [initialProjetoId]);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -204,7 +224,25 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       setFile(selectedFile);
       setSheets(sheetInfos);
       setSelectedSheets(sheetInfos.filter(s => s.selected).map(s => s.name));
-      setStep('sheets');
+      
+      const preview = p6ImportService.getSheetPreview('TASK', 1);
+      if (preview.length > 0) {
+        const firstRow = preview[0];
+        const projName = firstRow['project__proj_name'] || 
+                         firstRow['Project Name'] || 
+                         firstRow['project_name'] || 
+                         '';
+        if (projName) {
+          setDetectedProjectName(String(projName));
+          setNewProjectName(String(projName));
+        }
+      }
+      
+      if (!initialProjetoId && !selectedProjetoId) {
+        setStep('project');
+      } else {
+        setStep('sheets');
+      }
     } catch (err) {
       setError('Erro ao ler arquivo Excel. Verifique se o arquivo não está corrompido.');
       console.error(err);
@@ -231,14 +269,32 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       setFile(droppedFile);
       setSheets(sheetInfos);
       setSelectedSheets(sheetInfos.filter(s => s.selected).map(s => s.name));
-      setStep('sheets');
+      
+      const preview = p6ImportService.getSheetPreview('TASK', 1);
+      if (preview.length > 0) {
+        const firstRow = preview[0];
+        const projName = firstRow['project__proj_name'] || 
+                         firstRow['Project Name'] || 
+                         firstRow['project_name'] || 
+                         '';
+        if (projName) {
+          setDetectedProjectName(String(projName));
+          setNewProjectName(String(projName));
+        }
+      }
+      
+      if (!initialProjetoId && !selectedProjetoId) {
+        setStep('project');
+      } else {
+        setStep('sheets');
+      }
     } catch (err) {
       setError('Erro ao ler arquivo Excel. Verifique se o arquivo não está corrompido.');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [initialProjetoId, selectedProjetoId]);
 
   const handleSheetToggle = (sheetName: string) => {
     setSelectedSheets(prev =>
@@ -284,7 +340,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
           taskColumnMappings: columnMappings,
           options,
         },
-        projetoId,
+        selectedProjetoId || initialProjetoId || '',
         empresaId,
         userId
       );
@@ -293,7 +349,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       setStep('result');
       
       if (result.success) {
-        onImportComplete(result);
+        onImportComplete(result, selectedProjetoId || initialProjetoId);
       }
     } catch (err) {
       setError('Erro durante a importação. Tente novamente.');
@@ -320,6 +376,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
   const renderStepIndicator = () => {
     const steps = [
       { key: 'upload', label: 'Upload' },
+      { key: 'project', label: 'Projeto' },
       { key: 'sheets', label: 'Planilhas' },
       { key: 'mapping', label: 'Mapeamento' },
       { key: 'preview', label: 'Preview' },
@@ -349,6 +406,131 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       </div>
     );
   };
+
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) {
+      setError('Por favor, informe o nome do cronograma');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const newProject = await epsService.create({
+        empresaId,
+        codigo: newProjectName.trim().substring(0, 20).toUpperCase().replace(/\s+/g, '_'),
+        nome: newProjectName.trim(),
+        descricao: `Cronograma importado do P6 - ${new Date().toLocaleDateString()}`,
+      });
+      
+      setSelectedProjetoId(newProject.id);
+      setStep('sheets');
+    } catch (err) {
+      setError('Erro ao criar o projeto. Tente novamente.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderProjectStep = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Selecione ou Crie um Cronograma</h3>
+        <p className="text-sm text-gray-600">
+          {detectedProjectName 
+            ? `Nome detectado no arquivo: "${detectedProjectName}"`
+            : 'Escolha um projeto existente ou crie um novo para importar os dados'
+          }
+        </p>
+      </div>
+      
+      <div className="flex gap-2 justify-center">
+        <button
+          onClick={() => setProjectMode('existing')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            projectMode === 'existing' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Projeto Existente
+        </button>
+        <button
+          onClick={() => setProjectMode('new')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            projectMode === 'new' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Criar Novo
+        </button>
+      </div>
+      
+      {projectMode === 'existing' ? (
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">Selecione o Projeto:</label>
+          <select
+            value={selectedProjetoId}
+            onChange={(e) => setSelectedProjetoId(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">-- Selecione um projeto --</option>
+            {existingProjects.map(proj => (
+              <option key={proj.id} value={proj.id}>{proj.nome} ({proj.codigo})</option>
+            ))}
+          </select>
+          
+          <button
+            onClick={() => selectedProjetoId && setStep('sheets')}
+            disabled={!selectedProjetoId}
+            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Continuar
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">Nome do Cronograma:</label>
+          <input
+            type="text"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            placeholder="Ex: Plataforma Offshore A"
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+          
+          <button
+            onClick={handleCreateProject}
+            disabled={loading || !newProjectName.trim()}
+            className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+            Criar e Continuar
+          </button>
+        </div>
+      )}
+      
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+      
+      <div className="flex justify-between pt-4 border-t">
+        <button
+          onClick={() => setStep('upload')}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+        >
+          <ChevronLeft size={16} />
+          Voltar
+        </button>
+      </div>
+    </div>
+  );
 
   const renderUploadStep = () => (
     <div className="space-y-4">
@@ -772,6 +954,7 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
           {renderStepIndicator()}
 
           {step === 'upload' && renderUploadStep()}
+          {step === 'project' && renderProjectStep()}
           {step === 'sheets' && renderSheetsStep()}
           {step === 'mapping' && renderMappingStep()}
           {step === 'preview' && renderPreviewStep()}

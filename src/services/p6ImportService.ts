@@ -161,18 +161,14 @@ class P6ImportService {
     return Math.round((hours / hoursPerDay) * 100) / 100;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private isValidUUID(value: unknown): boolean {
-    if (typeof value !== 'string') return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(value);
-  }
 
-  private parseWbsPath(wbsPath: string | undefined): { levels: string[], fullPath: string } | null {
+  private parseWbsPath(wbsPath: string | undefined): { levels: string[], fullPath: string, originalCode: string } | null {
     if (!wbsPath || typeof wbsPath !== 'string') return null;
     
-    // Remove prefix if present (e.g., "M450_2.4.1" -> "2.4.1")
-    let path = wbsPath;
+    const originalCode = wbsPath.trim();
+    
+    // For hierarchical parsing, remove prefix if present (e.g., "M450_2.4.1" -> "2.4.1")
+    let path = originalCode;
     if (path.includes('_')) {
       const parts = path.split('_');
       path = parts.slice(1).join('_'); // Take everything after first underscore
@@ -182,80 +178,78 @@ class P6ImportService {
     const levels = path.split('.').filter(l => l.trim() !== '');
     if (levels.length === 0) return null;
     
-    return { levels, fullPath: wbsPath };
+    // Return original code preserved for database insertion
+    return { levels, fullPath: path, originalCode };
   }
 
   private buildWbsHierarchy(
     tasks: Array<{ codigo: string; wbs_caminho?: string; wbs_nome?: string; nome: string }>
-  ): Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }> {
-    const wbsNodes = new Map<string, { id: string; parentId: string | null; name: string; level: number; edt: string }>();
+  ): Map<string, { name: string; level: number; originalCode: string; parentPath: string | null }> {
+    const wbsNodes = new Map<string, { name: string; level: number; originalCode: string; parentPath: string | null }>();
     
-    // Collect all unique WBS paths and their names
-    const pathToName = new Map<string, string>();
+    // Collect all unique WBS paths with their original codes and names
+    const pathInfo = new Map<string, { name: string; originalCode: string }>();
     
     tasks.forEach(task => {
       const parsed = this.parseWbsPath(task.wbs_caminho);
       if (!parsed) return;
       
-      // Store the full path with its wbs_nome
+      // Store the full path with its wbs_nome and original code
       const fullPath = parsed.levels.join('.');
-      if (task.wbs_nome && !pathToName.has(fullPath)) {
-        pathToName.set(fullPath, task.wbs_nome);
+      if (!pathInfo.has(fullPath)) {
+        pathInfo.set(fullPath, {
+          name: task.wbs_nome || `WBS ${parsed.originalCode}`,
+          originalCode: parsed.originalCode
+        });
       }
       
-      // Add all intermediate levels
-      for (let i = 1; i <= parsed.levels.length; i++) {
+      // Add all intermediate levels (build parent codes from original)
+      // Extract prefix if present (e.g., "M450_" from "M450_2.4.1")
+      let prefix = '';
+      if (parsed.originalCode.includes('_')) {
+        const underscoreIdx = parsed.originalCode.indexOf('_');
+        prefix = parsed.originalCode.substring(0, underscoreIdx + 1);
+      }
+      
+      for (let i = 1; i < parsed.levels.length; i++) {
         const pathKey = parsed.levels.slice(0, i).join('.');
-        if (!pathToName.has(pathKey)) {
-          // For intermediate levels without names, use level indicator
-          pathToName.set(pathKey, `Nível ${pathKey}`);
+        if (!pathInfo.has(pathKey)) {
+          // Reconstruct original code for intermediate level maintaining prefix
+          const intermediateNumeric = parsed.levels.slice(0, i).join('.');
+          const intermediateOriginal = prefix + intermediateNumeric;
+          pathInfo.set(pathKey, {
+            name: `Nível ${intermediateOriginal}`,
+            originalCode: intermediateOriginal
+          });
         }
       }
     });
     
     // Sort paths by depth (shorter paths first) to ensure parents are created before children
-    const sortedPaths = Array.from(pathToName.keys()).sort((a, b) => {
+    const sortedPaths = Array.from(pathInfo.keys()).sort((a, b) => {
       const aDepth = a.split('.').length;
       const bDepth = b.split('.').length;
       if (aDepth !== bDepth) return aDepth - bDepth;
       return a.localeCompare(b);
     });
     
-    // Create WBS nodes with UUIDs
+    // Create WBS nodes
     sortedPaths.forEach(pathKey => {
       const levels = pathKey.split('.');
-      const parentPath = levels.slice(0, -1).join('.');
-      const parentId = parentPath ? wbsNodes.get(parentPath)?.id || null : null;
-      
-      // Generate a deterministic UUID-like ID based on path
-      const id = `wbs-${this.generatePathHash(pathKey)}`;
-      
-      // Use the wbs_nome if available, otherwise use the path
-      const wbsName = pathToName.get(pathKey) || `WBS ${pathKey}`;
+      const parentPath = levels.length > 1 ? levels.slice(0, -1).join('.') : null;
+      const info = pathInfo.get(pathKey)!;
       
       wbsNodes.set(pathKey, {
-        id,
-        parentId,
-        name: wbsName,
+        name: info.name,
         level: levels.length,
-        edt: pathKey,
+        originalCode: info.originalCode,
+        parentPath,
       });
     });
     
     return wbsNodes;
   }
 
-  private generatePathHash(path: string): string {
-    // Create a simple hash from the path for consistent IDs
-    let hash = 0;
-    for (let i = 0; i < path.length; i++) {
-      const char = path.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    const hexHash = Math.abs(hash).toString(16).padStart(8, '0');
-    return `${hexHash}-0000-4000-8000-${hexHash.padEnd(12, '0').substring(0, 12)}`;
-  }
 
   transformTask(
     p6Task: P6TaskRow, 
@@ -562,54 +556,50 @@ class P6ImportService {
         await supabase
           .from('atividades_cronograma')
           .delete()
-          .eq('projeto_id', projetoId)
-          .eq('origem', 'IMPORTACAO_P6');
+          .eq('projeto_id', projetoId);
       }
 
-      // Create a map to store inserted WBS node IDs
+      // Create a map to store inserted WBS node IDs (maps path to eps_nodes.id)
       const wbsIdMap = new Map<string, string>();
       
-      // Insert WBS nodes first (sorted by level to ensure parents exist before children)
+      // Insert WBS nodes into eps_nodes table (sorted by level to ensure parents exist before children)
       const sortedWbsNodes = Array.from(wbsHierarchy.entries())
         .sort((a, b) => a[1].level - b[1].level);
       
+      console.log('[P6Import] Inserindo', sortedWbsNodes.length, 'nós WBS na tabela eps_nodes');
+      
       for (const [pathKey, wbsNode] of sortedWbsNodes) {
-        const parentIdFromMap = wbsNode.parentId ? wbsIdMap.get(
-          Array.from(wbsHierarchy.entries()).find(([_, v]) => v.id === wbsNode.parentId)?.[0] || ''
-        ) : null;
+        // Get parent ID from map - parent is already inserted because we sorted by level
+        const parentIdFromMap = wbsNode.parentPath ? wbsIdMap.get(wbsNode.parentPath) : projetoId;
         
         const wbsToInsert = {
-          projeto_id: projetoId,
           empresa_id: empresaId,
-          codigo: `WBS-${pathKey}`.substring(0, 50),
+          parent_id: parentIdFromMap || projetoId, // Use project as root parent
+          codigo: wbsNode.originalCode.substring(0, 50), // Preserve original P6 code
           nome: wbsNode.name.substring(0, 255),
-          edt: pathKey.substring(0, 100),
-          data_inicio: new Date().toISOString().split('T')[0],
-          data_fim: new Date().toISOString().split('T')[0],
-          duracao_dias: 1,
-          progresso: 0,
-          status: 'PLANEJADA',
-          tipo: 'WBS',
-          parent_id: parentIdFromMap,
+          nivel: wbsNode.level,
+          ordem: wbsIdMap.size + 1,
+          cor: '#3B82F6',
+          ativo: true,
         };
         
         const { data: insertedWbs, error: wbsError } = await supabase
-          .from('atividades_cronograma')
+          .from('eps_nodes')
           .insert(wbsToInsert)
-          .select('id, codigo, edt')
+          .select('id, codigo, nome')
           .single();
         
         if (insertedWbs) {
           wbsIdMap.set(pathKey, insertedWbs.id);
-          console.log('[P6Import] WBS inserido:', pathKey, insertedWbs.id);
+          console.log('[P6Import] WBS inserido em eps_nodes:', wbsNode.originalCode, '->', insertedWbs.id, insertedWbs.nome);
         } else if (wbsError) {
-          console.log('[P6Import] Erro ao inserir WBS:', pathKey, wbsError.message);
+          console.log('[P6Import] Erro ao inserir WBS em eps_nodes:', pathKey, wbsError.message);
         }
       }
 
-      console.log('[P6Import] WBS nodes inseridos:', wbsIdMap.size);
+      console.log('[P6Import] WBS nodes inseridos em eps_nodes:', wbsIdMap.size);
 
-      // Now insert tasks with parent_id pointing to their WBS parent
+      // Now insert tasks with wbs_id pointing to their WBS node in eps_nodes
       const tasksToInsert = validTasks.map((task) => {
         const duracaoDias = task.duracao_dias 
           ? Math.max(1, Math.round(Number(task.duracao_dias))) 
@@ -626,14 +616,14 @@ class P6ImportService {
           ? task.data_fim.toISOString().split('T')[0]
           : dataInicio;
 
-        // Determine parent_id from WBS path
-        let parentId: string | null = null;
+        // Determine wbs_id from WBS path - link to eps_nodes
+        let wbsId: string | null = null;
         if (task.wbs_caminho) {
           const parsed = this.parseWbsPath(task.wbs_caminho);
           if (parsed && parsed.levels.length > 0) {
             const fullPath = parsed.levels.join('.');
-            parentId = wbsIdMap.get(fullPath) || null;
-            console.log('[P6Import] Task', task.codigo, 'WBS path:', fullPath, 'parent_id:', parentId);
+            wbsId = wbsIdMap.get(fullPath) || null;
+            console.log('[P6Import] Task', task.codigo, 'WBS path:', fullPath, 'wbs_id:', wbsId);
           }
         }
 
@@ -643,7 +633,7 @@ class P6ImportService {
           codigo: String(task.codigo || '').substring(0, 50),
           nome: String(task.nome || '').substring(0, 255),
           edt: task.wbs_caminho ? String(task.wbs_caminho).substring(0, 100) : null,
-          parent_id: parentId,
+          wbs_id: wbsId, // Link to WBS in eps_nodes table
           data_inicio: dataInicio,
           data_fim: dataFim,
           duracao_dias: duracaoDias,

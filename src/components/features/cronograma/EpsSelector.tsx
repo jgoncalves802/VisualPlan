@@ -6,14 +6,18 @@ import {
   Search,
   Building2,
   FileSpreadsheet,
-  Calendar
+  Calendar,
+  Plus,
+  Upload
 } from 'lucide-react';
 
 interface EpsSelectorProps {
   onSelectProject: (projectId: string, projectName: string) => void;
+  onCreateNew?: () => void;
+  onImportP6?: () => void;
 }
 
-export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject }) => {
+export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCreateNew, onImportP6 }) => {
   const { usuario } = useAuthStore();
   const [projects, setProjects] = useState<EpsNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,15 +113,37 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject }) => 
             </div>
           </div>
           
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar projeto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 rounded-lg bg-white/90 border-0 text-sm focus:ring-2 focus:ring-white/50 w-64"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar projeto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 rounded-lg bg-white/90 border-0 text-sm focus:ring-2 focus:ring-white/50 w-64"
+              />
+            </div>
+            
+            {onCreateNew && (
+              <button
+                onClick={onCreateNew}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Novo Cronograma
+              </button>
+            )}
+            
+            {onImportP6 && (
+              <button
+                onClick={onImportP6}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
+              >
+                <Upload className="w-4 h-4" />
+                Importar P6
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -605,7 +605,13 @@ export const CronogramaPage: React.FC = () => {
         
         <div className="flex-1 p-6 overflow-auto">
           {masterView === 'list' ? (
-            <EpsSelector onSelectProject={handleSelectProject} />
+            <EpsSelector 
+              onSelectProject={handleSelectProject}
+              onCreateNew={() => {
+                toast.info('Crie um novo projeto na página de Administração (EPS)');
+              }}
+              onImportP6={() => setP6ImportModalOpen(true)}
+            />
           ) : (
             <MasterGanttView onSelectProject={handleSelectProject} />
           )}
@@ -747,14 +753,18 @@ export const CronogramaPage: React.FC = () => {
       <P6ImportModal
         isOpen={p6ImportModalOpen}
         onClose={() => setP6ImportModalOpen(false)}
-        projetoId={projetoId || ''}
+        projetoId={projetoId}
         empresaId={usuario?.empresaId || ''}
         userId={usuario?.id || ''}
-        onImportComplete={(result) => {
+        onImportComplete={(result, newProjetoId) => {
           setP6ImportModalOpen(false);
           toast.success(`Importação concluída: ${result.tasksImported} atividades e ${result.dependenciesImported} dependências importadas.`);
-          if (projetoId) {
-            carregarAtividades(projetoId);
+          const targetProjetoId = newProjetoId || projetoId;
+          if (targetProjetoId) {
+            carregarAtividades(targetProjetoId);
+            if (!projetoId && newProjetoId) {
+              setSelectedProjetoId(newProjetoId);
+            }
           }
         }}
       />
