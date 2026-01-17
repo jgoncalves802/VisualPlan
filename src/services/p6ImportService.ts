@@ -643,7 +643,7 @@ class P6ImportService {
       });
 
       // Now insert tasks with wbs_id pointing to their WBS node in eps_nodes
-      const tasksToInsert = sortedTasks.map((task, index) => {
+      const tasksToInsert = sortedTasks.map((task) => {
         const duracaoDias = task.duracao_dias 
           ? Math.max(1, Math.round(Number(task.duracao_dias))) 
           : 1;
@@ -688,7 +688,6 @@ class P6ImportService {
           prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
           status: 'PLANEJADA',
           tipo: task.is_marco ? 'Marco' : (task.is_resumo ? 'WBS' : 'Tarefa'),
-          ordem: index + 1, // Ordering based on WBS path and sequence number
         };
       });
 
