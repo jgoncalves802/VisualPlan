@@ -52,6 +52,8 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **Dynamic Data Transformation**: `transformTask` processes fields by type (date/number/boolean/string) using derived type lists from `VISIONPLAN_TASK_COLUMNS`, automatically converts P6 hours to VisionPlan days.
         *   **Prevents Duplicate Mappings**: `generateAutoMappings()` ensures each VisionPlan field is mapped only once.
         *   **User Review Step**: Auto-mapped fields are pre-selected but user can review and adjust before importing.
+        *   **Schedule Deletion**: Delete entire schedules from EpsSelector with confirmation modal, recursive WBS deletion, and activity cleanup.
+        *   **Multi-Activity Deletion**: Checkbox selection in TaskList for batch activity deletion with confirmation modal and partial failure reporting.
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
