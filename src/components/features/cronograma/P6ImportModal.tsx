@@ -228,13 +228,17 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       const preview = p6ImportService.getSheetPreview('TASK', 1);
       if (preview.length > 0) {
         const firstRow = preview[0];
-        const projName = firstRow['project__proj_name'] || 
-                         firstRow['Project Name'] || 
-                         firstRow['project_name'] || 
-                         '';
-        if (projName) {
-          setDetectedProjectName(String(projName));
-          setNewProjectName(String(projName));
+        let projName = '';
+        for (const key of Object.keys(firstRow)) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.includes('proj_name') || lowerKey.includes('project name') || lowerKey === 'project__proj_name') {
+            projName = String(firstRow[key] || '');
+            break;
+          }
+        }
+        if (projName && projName.trim() !== '') {
+          setDetectedProjectName(projName);
+          setNewProjectName(projName);
         }
       }
       
@@ -273,13 +277,17 @@ export const P6ImportModal: React.FC<P6ImportModalProps> = ({
       const preview = p6ImportService.getSheetPreview('TASK', 1);
       if (preview.length > 0) {
         const firstRow = preview[0];
-        const projName = firstRow['project__proj_name'] || 
-                         firstRow['Project Name'] || 
-                         firstRow['project_name'] || 
-                         '';
-        if (projName) {
-          setDetectedProjectName(String(projName));
-          setNewProjectName(String(projName));
+        let projName = '';
+        for (const key of Object.keys(firstRow)) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.includes('proj_name') || lowerKey.includes('project name') || lowerKey === 'project__proj_name') {
+            projName = String(firstRow[key] || '');
+            break;
+          }
+        }
+        if (projName && projName.trim() !== '') {
+          setDetectedProjectName(projName);
+          setNewProjectName(projName);
         }
       }
       

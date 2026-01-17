@@ -162,16 +162,18 @@ class P6ImportService {
   }
 
 
-  private parseWbsPath(wbsPath: string | undefined): { levels: string[], fullPath: string, originalCode: string } | null {
+  private parseWbsPath(wbsPath: string | undefined): { levels: string[], fullPath: string, originalCode: string, prefix: string } | null {
     if (!wbsPath || typeof wbsPath !== 'string') return null;
     
     const originalCode = wbsPath.trim();
     
-    // For hierarchical parsing, remove prefix if present (e.g., "M450_2.4.1" -> "2.4.1")
+    // Extract prefix if present (e.g., "M450_2.4.1" -> prefix="M450_", path="2.4.1")
     let path = originalCode;
+    let prefix = '';
     if (path.includes('_')) {
-      const parts = path.split('_');
-      path = parts.slice(1).join('_'); // Take everything after first underscore
+      const underscoreIdx = path.indexOf('_');
+      prefix = path.substring(0, underscoreIdx + 1);
+      path = path.substring(underscoreIdx + 1);
     }
     
     // Split by dots to get hierarchy levels
@@ -179,7 +181,20 @@ class P6ImportService {
     if (levels.length === 0) return null;
     
     // Return original code preserved for database insertion
-    return { levels, fullPath: path, originalCode };
+    return { levels, fullPath: path, originalCode, prefix };
+  }
+
+  private extractSequenceNumber(activityId: string): number {
+    if (!activityId) return 999999;
+    const matches = activityId.match(/(\d+)$/);
+    if (matches && matches[1]) {
+      return parseInt(matches[1], 10);
+    }
+    const allDigits = activityId.replace(/\D/g, '');
+    if (allDigits.length > 0) {
+      return parseInt(allDigits.slice(-4) || allDigits, 10);
+    }
+    return 999999;
   }
 
   private buildWbsHierarchy(
@@ -188,40 +203,51 @@ class P6ImportService {
     const wbsNodes = new Map<string, { name: string; level: number; originalCode: string; parentPath: string | null }>();
     
     // Collect all unique WBS paths with their original codes and names
-    const pathInfo = new Map<string, { name: string; originalCode: string }>();
+    const pathInfo = new Map<string, { name: string; originalCode: string; prefix: string }>();
+    
+    // Group tasks by WBS path to get the WBS name
+    const wbsNamesByPath = new Map<string, string>();
     
     tasks.forEach(task => {
       const parsed = this.parseWbsPath(task.wbs_caminho);
       if (!parsed) return;
       
-      // Store the full path with its wbs_nome and original code
       const fullPath = parsed.levels.join('.');
+      
+      // Store the first wbs_nome found for this path
+      if (!wbsNamesByPath.has(fullPath) && task.wbs_nome) {
+        wbsNamesByPath.set(fullPath, task.wbs_nome);
+      }
+      
+      // Register the full path
       if (!pathInfo.has(fullPath)) {
         pathInfo.set(fullPath, {
           name: task.wbs_nome || `WBS ${parsed.originalCode}`,
-          originalCode: parsed.originalCode
+          originalCode: parsed.originalCode,
+          prefix: parsed.prefix
         });
       }
       
-      // Add all intermediate levels (build parent codes from original)
-      // Extract prefix if present (e.g., "M450_" from "M450_2.4.1")
-      let prefix = '';
-      if (parsed.originalCode.includes('_')) {
-        const underscoreIdx = parsed.originalCode.indexOf('_');
-        prefix = parsed.originalCode.substring(0, underscoreIdx + 1);
-      }
-      
+      // Add all intermediate levels (build parent hierarchy)
       for (let i = 1; i < parsed.levels.length; i++) {
         const pathKey = parsed.levels.slice(0, i).join('.');
         if (!pathInfo.has(pathKey)) {
-          // Reconstruct original code for intermediate level maintaining prefix
           const intermediateNumeric = parsed.levels.slice(0, i).join('.');
-          const intermediateOriginal = prefix + intermediateNumeric;
+          const intermediateOriginal = parsed.prefix + intermediateNumeric;
           pathInfo.set(pathKey, {
             name: `Nível ${intermediateOriginal}`,
-            originalCode: intermediateOriginal
+            originalCode: intermediateOriginal,
+            prefix: parsed.prefix
           });
         }
+      }
+    });
+    
+    // Update names from wbsNamesByPath where available
+    wbsNamesByPath.forEach((name, path) => {
+      const info = pathInfo.get(path);
+      if (info) {
+        info.name = name;
       }
     });
     
@@ -230,8 +256,10 @@ class P6ImportService {
       const aDepth = a.split('.').length;
       const bDepth = b.split('.').length;
       if (aDepth !== bDepth) return aDepth - bDepth;
-      return a.localeCompare(b);
+      return a.localeCompare(b, undefined, { numeric: true });
     });
+    
+    console.log('[P6Import] WBS paths encontrados:', sortedPaths);
     
     // Create WBS nodes
     sortedPaths.forEach(pathKey => {
@@ -245,6 +273,8 @@ class P6ImportService {
         originalCode: info.originalCode,
         parentPath,
       });
+      
+      console.log('[P6Import] WBS node:', pathKey, '-> nome:', info.name, 'parent:', parentPath);
     });
     
     return wbsNodes;
@@ -598,9 +628,22 @@ class P6ImportService {
       }
 
       console.log('[P6Import] WBS nodes inseridos em eps_nodes:', wbsIdMap.size);
+      console.log('[P6Import] WBS ID Map:', Array.from(wbsIdMap.entries()));
+
+      // Sort tasks by WBS path and then by sequence number from activity code
+      const sortedTasks = [...validTasks].sort((a, b) => {
+        const pathA = a.wbs_caminho || '';
+        const pathB = b.wbs_caminho || '';
+        if (pathA !== pathB) {
+          return pathA.localeCompare(pathB, undefined, { numeric: true });
+        }
+        const seqA = this.extractSequenceNumber(a.codigo);
+        const seqB = this.extractSequenceNumber(b.codigo);
+        return seqA - seqB;
+      });
 
       // Now insert tasks with wbs_id pointing to their WBS node in eps_nodes
-      const tasksToInsert = validTasks.map((task) => {
+      const tasksToInsert = sortedTasks.map((task, index) => {
         const duracaoDias = task.duracao_dias 
           ? Math.max(1, Math.round(Number(task.duracao_dias))) 
           : 1;
@@ -645,6 +688,7 @@ class P6ImportService {
           prioridade: task.prioridade ? String(task.prioridade).substring(0, 20) : null,
           status: 'PLANEJADA',
           tipo: task.is_marco ? 'Marco' : (task.is_resumo ? 'WBS' : 'Tarefa'),
+          ordem: index + 1, // Ordering based on WBS path and sequence number
         };
       });
 
