@@ -18,6 +18,7 @@ interface EpsSelectorProps {
   onSelectProject: (projectId: string, projectName: string) => void;
   onCreateNew?: () => void;
   onImportP6?: () => void;
+  onImportXml?: () => void;
 }
 
 interface DeleteConfirmModalProps {
@@ -98,7 +99,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   );
 };
 
-export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCreateNew, onImportP6 }) => {
+export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCreateNew, onImportP6, onImportXml }) => {
   const { usuario } = useAuthStore();
   const [projects, setProjects] = useState<EpsNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -329,7 +330,17 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
               >
                 <Upload className="w-4 h-4" />
-                Importar P6
+                Importar Excel
+              </button>
+            )}
+            
+            {onImportXml && (
+              <button
+                onClick={onImportXml}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm shadow-sm"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Importar XML
               </button>
             )}
           </div>

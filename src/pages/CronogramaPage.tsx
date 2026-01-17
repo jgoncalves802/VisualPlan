@@ -21,6 +21,7 @@ import { AtividadeActionsModal } from '../components/features/cronograma/Ativida
 import { ManageDependenciesModal } from '../components/features/cronograma/ManageDependenciesModal';
 import { RestricaoModal } from '../components/features/restricoes/RestricaoModal';
 import { P6ImportModal } from '../components/features/cronograma/P6ImportModal';
+import { P6XmlImportModal } from '../components/features/cronograma/P6XmlImportModal';
 import { EpsSelector } from '../components/features/cronograma/EpsSelector';
 import { MasterGanttView } from '../components/features/cronograma/MasterGanttView';
 import { useLPSStore } from '../stores/lpsStore';
@@ -97,6 +98,7 @@ export const CronogramaPage: React.FC = () => {
   const [selectedTaskForResources, setSelectedTaskForResources] = useState<Task | null>(null);
   const [masterView, setMasterView] = useState<'list' | 'timeline'>('list');
   const [p6ImportModalOpen, setP6ImportModalOpen] = useState(false);
+  const [p6XmlImportModalOpen, setP6XmlImportModalOpen] = useState(false);
 
   useEffect(() => {
     if (projetoId && atividades.length > 0) {
@@ -632,6 +634,7 @@ export const CronogramaPage: React.FC = () => {
                 toast.info('Crie um novo projeto na página de Administração (EPS)');
               }}
               onImportP6={() => setP6ImportModalOpen(true)}
+              onImportXml={() => setP6XmlImportModalOpen(true)}
             />
           ) : (
             <MasterGanttView onSelectProject={handleSelectProject} />
@@ -647,6 +650,21 @@ export const CronogramaPage: React.FC = () => {
           onImportComplete={(result, newProjetoId) => {
             setP6ImportModalOpen(false);
             toast.success(`Importação concluída: ${result.tasksImported} atividades e ${result.dependenciesImported} dependências importadas.`);
+            if (newProjetoId) {
+              setSelectedProjetoId(newProjetoId);
+              carregarAtividades(newProjetoId);
+            }
+          }}
+        />
+        
+        <P6XmlImportModal
+          isOpen={p6XmlImportModalOpen}
+          onClose={() => setP6XmlImportModalOpen(false)}
+          projetoId={undefined}
+          empresaId={usuario?.empresaId || ''}
+          onImportComplete={(newProjetoId) => {
+            setP6XmlImportModalOpen(false);
+            toast.success('Importação XML concluída com sucesso!');
             if (newProjetoId) {
               setSelectedProjetoId(newProjetoId);
               carregarAtividades(newProjetoId);
@@ -796,6 +814,24 @@ export const CronogramaPage: React.FC = () => {
         onImportComplete={(result, newProjetoId) => {
           setP6ImportModalOpen(false);
           toast.success(`Importação concluída: ${result.tasksImported} atividades e ${result.dependenciesImported} dependências importadas.`);
+          const targetProjetoId = newProjetoId || projetoId;
+          if (targetProjetoId) {
+            carregarAtividades(targetProjetoId);
+            if (!projetoId && newProjetoId) {
+              setSelectedProjetoId(newProjetoId);
+            }
+          }
+        }}
+      />
+      
+      <P6XmlImportModal
+        isOpen={p6XmlImportModalOpen}
+        onClose={() => setP6XmlImportModalOpen(false)}
+        projetoId={projetoId}
+        empresaId={usuario?.empresaId || ''}
+        onImportComplete={(newProjetoId) => {
+          setP6XmlImportModalOpen(false);
+          toast.success('Importação XML concluída com sucesso!');
           const targetProjetoId = newProjetoId || projetoId;
           if (targetProjetoId) {
             carregarAtividades(targetProjetoId);

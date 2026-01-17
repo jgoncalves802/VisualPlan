@@ -767,3 +767,78 @@ export function generateAutoMappings(p6Columns: string[]): Record<string, string
   
   return mappings;
 }
+
+export interface P6XmlProject {
+  objectId: string;
+  id: string;
+  name: string;
+  guid?: string;
+  dataDate?: Date;
+  plannedStartDate?: Date;
+  status?: string;
+  wbsObjectId?: string;
+}
+
+export interface P6XmlWbs {
+  objectId: string;
+  parentObjectId?: string;
+  projectObjectId: string;
+  code: string;
+  name: string;
+  guid?: string;
+  sequenceNumber: number;
+  status?: string;
+}
+
+export interface P6XmlActivity {
+  objectId: string;
+  id: string;
+  name: string;
+  guid?: string;
+  wbsObjectId: string;
+  projectObjectId: string;
+  status?: string;
+  type?: string;
+  calendarObjectId?: string;
+  startDate?: Date;
+  finishDate?: Date;
+  plannedStartDate?: Date;
+  plannedFinishDate?: Date;
+  actualStartDate?: Date;
+  actualFinishDate?: Date;
+  plannedDuration?: number;
+  remainingDuration?: number;
+  actualDuration?: number;
+  percentComplete?: number;
+  durationPercentComplete?: number;
+  physicalPercentComplete?: number;
+}
+
+export interface P6XmlCalendar {
+  objectId: string;
+  name: string;
+  hoursPerDay: number;
+  hoursPerWeek: number;
+  isDefault: boolean;
+  standardWorkWeek?: {
+    dayOfWeek: string;
+    workTimes?: { start: string; finish: string }[];
+  }[];
+  holidays?: Date[];
+}
+
+export interface P6XmlData {
+  projects: P6XmlProject[];
+  wbsNodes: P6XmlWbs[];
+  activities: P6XmlActivity[];
+  calendars: P6XmlCalendar[];
+}
+
+export interface P6XmlImportResult {
+  success: boolean;
+  projectName: string;
+  wbsImported: number;
+  activitiesImported: number;
+  errors: P6ImportValidationError[];
+  warnings: P6ImportValidationError[];
+}

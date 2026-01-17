@@ -54,6 +54,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **User Review Step**: Auto-mapped fields are pre-selected but user can review and adjust before importing.
         *   **Schedule Deletion**: Delete entire schedules from EpsSelector with confirmation modal, recursive WBS deletion, and activity cleanup.
         *   **Multi-Activity Deletion**: Checkbox selection in TaskList for batch activity deletion with confirmation modal and partial failure reporting.
+    *   **P6 XML Import System**: Native XML import for Primavera P6 exports with:
+        *   **XML Parser**: DOMParser-based extraction of Project, WBS, Activity, and Calendar elements.
+        *   **WBS Hierarchy via ObjectId**: Builds WBS tree using ObjectId/ParentObjectId relationships, sorted by depth and sequence number.
+        *   **Activity Linking**: Activities linked to WBS nodes via WBSObjectId, with order preserved.
+        *   **Import Wizard**: 4-step modal (Upload → Preview → Import → Results) with project info display, WBS hierarchy preview, and hours-per-day configuration.
+        *   **Project Creation**: Auto-creates project and schedule eps_node when importing without existing project selection.
+        *   **Service Layer**: `p6XmlImportService.ts` with parseXmlFile, importToDatabase, getProjectInfo, and getWbsHierarchy methods.
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
