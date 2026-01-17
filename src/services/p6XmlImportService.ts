@@ -276,11 +276,11 @@ class P6XmlImportService {
           .insert({
             nome: wbs.name,
             codigo: wbs.code,
-            tipo: 'WBS',
             parent_id: parentNodeId,
             empresa_id: empresaId,
-            projeto_id: projetoId,
             ordem: wbs.sequenceNumber,
+            nivel: this.getWbsDepth(wbs.objectId) + 1,
+            ativo: true,
           })
           .select('id')
           .single();
@@ -335,17 +335,10 @@ class P6XmlImportService {
             wbs_id: wbsNodeId,
             data_inicio: activity.plannedStartDate || activity.startDate,
             data_fim: activity.plannedFinishDate || activity.finishDate,
-            data_inicio_real: activity.actualStartDate,
-            data_fim_real: activity.actualFinishDate,
             duracao_dias: durationDays,
-            percentual_conclusao: activity.percentComplete,
-            percentual_duracao: activity.durationPercentComplete,
-            percentual_fisico: activity.physicalPercentComplete,
+            progresso: activity.percentComplete || 0,
             status: this.mapStatus(activity.status),
-            tipo_atividade: activity.type,
-            ordem: i,
-            is_resumo: false,
-            is_marco: durationDays === 0,
+            tipo: durationDays === 0 ? 'Marco' : 'Tarefa',
           });
 
         if (insertError) {
