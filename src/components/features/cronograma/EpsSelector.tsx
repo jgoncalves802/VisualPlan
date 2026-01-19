@@ -150,11 +150,15 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
     setDeleteError(null);
     
     try {
+      console.log('[EpsSelector] Starting delete for project:', projectToDelete.id, projectToDelete.nome);
+      
       const { data: existingProject, error: checkError } = await supabase
         .from('eps_nodes')
         .select('id')
         .eq('id', projectToDelete.id)
         .single();
+      
+      console.log('[EpsSelector] Project existence check:', { exists: !!existingProject, checkError: checkError?.message });
       
       if (checkError || !existingProject) {
         console.log('[EpsSelector] Project no longer exists in database, refreshing list');
@@ -234,22 +238,27 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       }
       
       if (wbsIdsToDelete.length > 0) {
+        console.log('[EpsSelector] Deleting WBS nodes:', wbsIdsToDelete.length);
         const { error: wbsError } = await supabase
           .from('eps_nodes')
           .delete()
           .in('id', wbsIdsToDelete);
 
         if (wbsError) {
+          console.error('[EpsSelector] WBS delete error:', wbsError);
           throw new Error(`Erro ao excluir estrutura WBS: ${wbsError.message}`);
         }
+        console.log('[EpsSelector] WBS nodes deleted successfully');
       }
 
+      console.log('[EpsSelector] Deleting root project node:', projectToDelete.id);
       const { error: rootError } = await supabase
         .from('eps_nodes')
         .delete()
         .eq('id', projectToDelete.id);
 
       if (rootError) {
+        console.error('[EpsSelector] Root delete error:', rootError);
         throw new Error(`Erro ao excluir projeto: ${rootError.message}`);
       }
 
