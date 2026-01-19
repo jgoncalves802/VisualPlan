@@ -170,38 +170,36 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
         return;
       }
 
-      console.log('[EpsSelector] Starting to collect descendant IDs...');
+      console.log('[EpsSelector] Fetching all WBS nodes for deletion...');
       
-      const collectDescendantIds = async (parentId: string, depth = 0): Promise<string[]> => {
-        if (depth > 20) {
-          console.warn('[EpsSelector] Max depth reached, stopping recursion');
-          return [];
+      const { data: allNodes, error: nodesError } = await supabase
+        .from('eps_nodes')
+        .select('id, parent_id');
+      
+      if (nodesError) {
+        console.error('[EpsSelector] Error fetching nodes:', nodesError);
+        throw new Error(`Erro ao buscar nós WBS: ${nodesError.message}`);
+      }
+      
+      const nodeMap = new Map<string, string[]>();
+      for (const node of allNodes || []) {
+        if (node.parent_id) {
+          const children = nodeMap.get(node.parent_id) || [];
+          children.push(node.id);
+          nodeMap.set(node.parent_id, children);
         }
-        
-        const { data: children, error: queryError } = await supabase
-          .from('eps_nodes')
-          .select('id')
-          .eq('parent_id', parentId);
-        
-        if (queryError) {
-          console.warn('[EpsSelector] Error querying WBS children:', queryError);
-          return [];
+      }
+      
+      const collectDescendants = (parentId: string): string[] => {
+        const children = nodeMap.get(parentId) || [];
+        const descendants: string[] = [...children];
+        for (const childId of children) {
+          descendants.push(...collectDescendants(childId));
         }
-        
-        if (!children || children.length === 0) return [];
-        
-        const childIds = children.map(c => c.id);
-        const grandchildIds: string[] = [];
-        
-        for (const childId of childIds) {
-          const descendants = await collectDescendantIds(childId, depth + 1);
-          grandchildIds.push(...descendants);
-        }
-        
-        return [...childIds, ...grandchildIds];
+        return descendants;
       };
 
-      const wbsIdsToDelete = await collectDescendantIds(projectToDelete.id);
+      const wbsIdsToDelete = collectDescendants(projectToDelete.id);
       console.log('[EpsSelector] Found', wbsIdsToDelete.length, 'descendant WBS nodes');
       
       const allWbsIds = [projectToDelete.id, ...wbsIdsToDelete];
