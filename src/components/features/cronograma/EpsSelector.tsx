@@ -208,10 +208,12 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
 
       console.log('[EpsSelector] Querying activities to delete...');
       
+      const BATCH_SIZE = 50;
+      
       const { data: activities, error: actQueryError } = await supabase
         .from('atividades_cronograma')
         .select('id')
-        .or(`projeto_id.eq.${projectToDelete.id},wbs_id.in.(${allWbsIds.join(',')})`);
+        .eq('projeto_id', projectToDelete.id);
 
       if (actQueryError) {
         console.error('[EpsSelector] Error querying activities:', actQueryError);
@@ -221,44 +223,47 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       if (activities && activities.length > 0) {
         const activityIds = activities.map(a => a.id);
         
-        const { error: depError1 } = await supabase
-          .from('dependencias_atividades')
-          .delete()
-          .in('atividade_origem_id', activityIds);
+        for (let i = 0; i < activityIds.length; i += BATCH_SIZE) {
+          const batch = activityIds.slice(i, i + BATCH_SIZE);
+          
+          await supabase
+            .from('dependencias_atividades')
+            .delete()
+            .in('atividade_origem_id', batch);
 
-        if (depError1) {
-          console.warn('Error deleting dependencies (origem):', depError1);
+          await supabase
+            .from('dependencias_atividades')
+            .delete()
+            .in('atividade_destino_id', batch);
+
+          const { error: activitiesError } = await supabase
+            .from('atividades_cronograma')
+            .delete()
+            .in('id', batch);
+
+          if (activitiesError) {
+            throw new Error(`Erro ao excluir atividades: ${activitiesError.message}`);
+          }
         }
-
-        const { error: depError2 } = await supabase
-          .from('dependencias_atividades')
-          .delete()
-          .in('atividade_destino_id', activityIds);
-
-        if (depError2) {
-          console.warn('Error deleting dependencies (destino):', depError2);
-        }
-
-        const { error: activitiesError } = await supabase
-          .from('atividades_cronograma')
-          .delete()
-          .in('id', activityIds);
-
-        if (activitiesError) {
-          throw new Error(`Erro ao excluir atividades: ${activitiesError.message}`);
-        }
+        console.log('[EpsSelector] Activities deleted successfully');
       }
       
       if (wbsIdsToDelete.length > 0) {
         console.log('[EpsSelector] Deleting WBS nodes:', wbsIdsToDelete.length);
-        const { error: wbsError } = await supabase
-          .from('eps_nodes')
-          .delete()
-          .in('id', wbsIdsToDelete);
+        
+        const reversedIds = [...wbsIdsToDelete].reverse();
+        
+        for (let i = 0; i < reversedIds.length; i += BATCH_SIZE) {
+          const batch = reversedIds.slice(i, i + BATCH_SIZE);
+          const { error: wbsError } = await supabase
+            .from('eps_nodes')
+            .delete()
+            .in('id', batch);
 
-        if (wbsError) {
-          console.error('[EpsSelector] WBS delete error:', wbsError);
-          throw new Error(`Erro ao excluir estrutura WBS: ${wbsError.message}`);
+          if (wbsError) {
+            console.error('[EpsSelector] WBS delete error:', wbsError);
+            throw new Error(`Erro ao excluir estrutura WBS: ${wbsError.message}`);
+          }
         }
         console.log('[EpsSelector] WBS nodes deleted successfully');
       }
