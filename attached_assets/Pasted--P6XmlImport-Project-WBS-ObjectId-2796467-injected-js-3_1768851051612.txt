@@ -1,0 +1,819 @@
+[P6XmlImport] Project WBS ObjectId: 2796467
+injected.js:37 [P6XmlImport] Schedule Node ID: b1342f74-c7c7-4bcb-8d32-32f41c87d7b4
+injected.js:37 [P6XmlImport] Total WBS nodes to import: 807
+injected.js:37 [P6XmlImport] Total Activities to import: 65
+injected.js:37 [P6XmlImport] WBS inserted: MARCOS CONTRATUAIS -> a94758a1-6f55-46da-9de0-59d08dfcad46
+injected.js:37 [P6XmlImport] WBS inserted: MOBILIZAÇÃO -> 57b0d1e2-b8a6-4a6c-8e1e-82278c96d719
+injected.js:37 [P6XmlImport] WBS inserted: SUPRIMENTO -> 93408cb9-7478-4df5-9f11-97981fa89d93
+injected.js:37 [P6XmlImport] WBS inserted: CONSTRUÇÃO E MONTAGEM -> cab80e06-8cf4-4e82-8536-a4fcb47e0ce2
+injected.js:37 [P6XmlImport] WBS inserted: COMISSIONAMENTO -> e5794c8d-0c95-409e-a006-9f56d4251be7
+injected.js:37 [P6XmlImport] WBS inserted: PRÉDIO DOS BRITADORES -> 61ef7823-7bb5-4443-8d28-9f01710481bb
+injected.js:37 [P6XmlImport] WBS inserted: SALA ELÉTRICA SE-1340 -> fc2b067e-ac1c-49cc-8232-cbaf05584f0b
+injected.js:37 [P6XmlImport] WBS inserted: PRÉDIO DOS BRITADORES -> db6733da-7494-4864-bba8-23556aa3e690
+injected.js:37 [P6XmlImport] WBS inserted: GERENCIAL -> 6249494c-fa99-4e51-ab1a-c1f7c6cd3f25
+injected.js:37 [P6XmlImport] WBS inserted: TRANSPORTADORES EXTERNOS -> 1f967ba6-3c0f-4e48-8d34-d57fc75a097f
+injected.js:37 [P6XmlImport] WBS inserted: SALA ELÉTRICA SE-1340 -> 1154a526-d646-4cc6-bef2-b07fa8d10732
+injected.js:37 [P6XmlImport] WBS inserted: TRANSPORTADORES EXTERNOS -> 712ec9f0-1e32-495f-90ec-8a02e84998c4
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> 2b03db76-f3cf-4805-af53-9e555565a2d3
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> d77174ef-6e47-4d67-9453-4e8dfda535e3
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> df53c287-ca05-4368-9fc4-0bc7f2c7acd0
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> 7198e189-297a-4090-b178-33e31b5e1686
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA METÁLICA -> 8e743abd-4609-4159-a5f2-9a41bdddb00a
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA METÁLICA -> 5c5e6b37-30f9-4e25-a433-df608411bd41
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> 4de7e971-9b24-40c9-97c1-05e20acff8cc
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA METÁLICA -> 3a09c276-99d7-4afe-bb65-ed25bd8e988e
+injected.js:37 [P6XmlImport] WBS inserted: CIVIL -> eccbc47e-5490-49a4-be84-7ecc77cf0d71
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA -> 82c3fbc3-db4b-4307-a629-b7eb38caae12
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA METÁLICA -> dd1e89bd-0132-4e52-a7d6-d69532b28979
+injected.js:37 [P6XmlImport] WBS inserted: ESTRUTURA METÁLICA -> af31116b-1348-4596-88ee-d0d2a85e32e1
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> aab1bdef-19e9-4650-8bc6-e0a14a1b45cb
+injected.js:37 [P6XmlImport] WBS inserted: MECÂNICA -> 2ab13b6d-9477-479a-b751-38e4d1169d31
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> 4faf2d62-b851-4623-8665-d59ec4f18cbd
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> 3c281782-bfa4-4593-9ec5-6bc505d8eac9
+injected.js:37 [P6XmlImport] WBS inserted: MECÂNICA -> de7e5134-6705-458a-b417-2941067e33b9
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> 530e1c66-f48d-420d-880b-3c91f59d7219
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> e2a366b6-c977-491d-b7f9-8304e60d86a1
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> c0ca34ac-ce30-4a66-9a93-f18bf46be94e
+injected.js:37 [P6XmlImport] WBS inserted: MECÂNICA -> 8d413467-2117-419b-9073-1952eafc35a8
+injected.js:37 [P6XmlImport] WBS inserted: MECÂNICA -> 622cde32-6dfa-421a-a397-05b7bc6163f3
+injected.js:37 [P6XmlImport] WBS inserted: MECÂNICA -> e4cd49a8-0d0f-42a2-aef9-db2b4f40d4d0
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> 5658a98f-d787-47b0-804a-9dbacef041e7
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> a988cf54-5ad2-44d9-8dfc-2c81b5dec66e
+injected.js:37 [P6XmlImport] WBS inserted: ELÉTRICA -> af400f2a-aacd-4330-a85f-1382e7793462
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> 410b7fad-cc0b-43fc-8426-827a53b64895
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> 9d4c5078-3397-4b5b-906c-9e1fc355832c
+injected.js:37 [P6XmlImport] WBS inserted: INSTRUMENTAÇÃO -> 36476c96-1caa-4b84-a6b5-86d198a17cb7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> f7b5930b-b669-4c3a-9eba-875a26f69d89
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 9dd1f157-e688-45f4-ba6a-3beecce78698
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> bc7a0857-8ac4-4156-98ad-5cb69c2939d0
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 8363f0fc-39fe-4882-898a-8e8003fe72bc
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 89ae10d0-ca1c-45da-b7a6-33947f0f8beb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 3ae35bd4-ae23-405d-a787-2544d6ad0711
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 12e6920e-cee3-49c8-80ff-a91dea83fd73
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 118e7373-a23e-4b47-bbb7-15e1892af6d2
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 550a31b3-bbfc-44de-8d52-b13b35406025
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> be84fc16-2aa7-4f61-9df0-0c58118633de
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 0ea65fae-2020-4565-a7c6-c9a57632cae7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 5fdc10df-3a87-4306-bcda-ec3bd1194839
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> 92902d5f-224d-4804-abc8-b3b0b0ad3166
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> e07fedb8-79a6-4b5f-a314-3c02c3c0efe5
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 2afd381a-dd37-429e-9880-1b054a7750f9
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 6d131e1d-971b-4a9f-a418-a7c62f53c133
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> fbc021a1-bfd9-47f4-b807-6a27309dba12
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> c2358417-fabf-444b-bfd2-369824950513
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> b484a83e-ebd7-426e-9430-8fff4261ce98
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> f80311cc-4ec3-47ee-be7e-3db7853a0f45
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> a7a562c3-3bc1-4396-82a7-01953d82d392
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> ff711204-bd95-45ae-a2da-27425e26537d
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> d9686c9c-ac33-404e-a793-4230b382ba0e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 5f65a737-7062-45cf-87ae-af007f61fa2e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 9c8f09e0-4147-4b28-9eb6-c42f35c5ea42
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> b71baf52-8c40-4d9b-b3a6-4fef108f7abf
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> a4ea794e-8f5d-43d3-a822-b3f26e177eac
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 414.300 -> cef4aec0-b487-4ca6-ab1d-2a2aaf6449f4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> d69ea3c2-64fb-4efd-b85c-eaa0980f4b14
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> f690618b-73e3-47fb-bf29-194ce9c6a29e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 8ad802ac-b286-4d8d-aef9-73595db16a4d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 55717a9e-243e-42aa-908e-f3d95bd499ad
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 2aa9cd0a-aef7-494c-a4d5-39a465e4d105
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 3d5af5dc-a81c-4cb5-94dc-3ffafc585405
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> b64e9a87-02de-4694-8677-c6ad88fccee6
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 593b95fe-9bb9-458e-81f2-ea1e997e99c7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-106 - TRANSPORTADOR -> 43987254-acf7-469a-87e0-a776c7572f9e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> cbea1945-82e6-4705-b491-f515370ed007
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 404be9a6-5765-41fd-a785-1ce6c9f49b32
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> ba67032b-eff9-4f7d-9a58-d9e056bc8897
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> fe8f4ab6-d1d7-431b-be22-68d1eb310f20
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 5e75a5d4-89eb-4831-b804-f5ea282971ea
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 9c375a33-1044-4e7e-8648-b942480b39f6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> d45391d6-c1a0-42f4-81e4-7588764b7f84
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> b324802c-e5c2-4589-a90b-fb68f3308b62
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 95dd07b8-35bc-49e8-8b06-2e74e03437c9
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> 53fe7bd3-e0b4-423e-b8c4-9d45bee11c34
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> cfb95f6f-ae1b-444b-87a8-5bc7a9b188a6
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> b4b5492a-b18d-4175-8bfe-5123798156de
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> 65d1d6e8-8ad8-4f8c-ab8d-d6097dbeae80
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> e2071491-8f5f-4b27-99b1-171e9443ff51
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 87c55ece-d3ee-4bca-9c79-713e336ee89b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> dc4e552f-21f6-42e6-bef2-a7110551eac5
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> afc9ac7c-2ba3-47e2-b803-fa56eece2a4a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 9490b8eb-2bbd-42ba-92c3-da2e79de1740
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> 083f2659-2ea4-4886-ad9d-af860bddd4bf
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> a4f61996-616b-4c3b-9418-c20e72b50bfd
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> 2f4c043e-d8e9-4da6-aad7-29de5427e6a2
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> dafc2111-602f-4d78-a9d7-ddc121198fd3
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-107 - TRANSPORTADOR -> f5273889-d4b3-4aba-bb6e-178f8b27c6eb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 417.900 -> 8599a260-6410-46e5-b257-8deb9a3d62bc
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 6a680a10-e61e-43b6-a59a-7cdc1515699f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 8ebac94d-7576-489a-9274-4622fa372d8a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> a73ff456-55f0-448b-bb41-5f246bb567a2
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 8e3f4172-1489-4a9f-8f95-1bf4a5026075
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> e3fd7ed9-73db-4607-92f8-06d263e9f1ee
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> fd3718d8-6c0f-4933-9388-2d3de12a2eff
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 683fe8db-754e-4ff7-878c-18484baba1d3
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 56bd18d1-6a0b-4841-955c-35763f3a151a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 9833b862-5440-49ce-8723-1c96e7f51967
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 7500496d-502c-4dd8-9e1b-7d1901cd842b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 1535877f-a179-4e33-bae3-b2c6e7385e9f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 4cb15736-8c01-4746-9c39-80c66d0a9271
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> ee41959f-79cf-4ffd-b112-80d3b19df032
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 5b7ce52e-a595-4571-b2e3-de3ab6e11df1
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 2f2a1acd-aed1-4ea9-b11f-7aca99a7a02a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 419.872 -> f903e5ec-b107-4f8d-9388-038221c69bd7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> c4e2b8c0-2b04-4078-a26c-298c2fb39868
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 86024aa3-605d-4968-9e26-fe719460f6e4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> a8a830a3-b0f7-411d-9089-29293e13c132
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> ee095853-5c61-4d0c-8886-057f590f7231
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 8eea7ebc-4519-49a9-a8e6-cf94b21997c9
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 2df37be3-cefd-45de-9f37-0235cc4a8a58
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 1bcc8bd7-35fb-4bda-b426-a4b335ab2450
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-108 - TRANSPORTADOR -> 80e05e96-dda6-424f-abfa-1f2427e52d48
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> 9c9458f2-9367-4d9c-93d0-1ac2fdf49f5d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> f4bb9c14-4e59-4e06-9dcc-cd63979489ea
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> c58a39a0-2415-4758-99ec-ad805bc44fa8
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 7ffd4c73-5889-4830-9697-25f281bb5cd6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 64aa5e41-a8de-4512-aa72-40e106fa1159
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> e9eee050-eaa3-41d0-8101-06ee9cc64b62
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> ede761c2-0d52-4b8f-9061-f8ccb665e88a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> c09a934e-5cd3-482c-bc85-26df801d1470
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 429cc850-4e3a-40a4-9404-60e6947b4c4c
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> fe84c35a-b499-4298-96c5-ad00f55de066
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> e096ccc6-a654-4d1e-ab35-7474750bd5dc
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 3582742d-008d-401a-af9d-761eae6800ad
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 77e5507d-fc36-4193-b249-af2c28d74f76
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> a418b0d3-ebd5-4f21-a75d-5643e3b206fa
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 92ba8d99-19ed-4573-8279-17e3de9e9deb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 423.200 -> dced05ba-aecf-4c46-b7ed-eb38d1b188d7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> cfa71a65-4fb7-483c-bb95-46eebda25168
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> ae269f89-69d4-4153-88dd-28021c2a1a67
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 7f30156a-5bda-4825-b86e-397545796664
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 5208751b-776b-4606-b4ec-a0442ae0aed7
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 86580709-513c-455b-8b82-3afc7a31fb08
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 03fca9f3-ad15-4a96-a198-06c86d01e8e6
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> 81a76712-9cad-456a-88d5-4802f166b867
+injected.js:37 [P6XmlImport] WBS inserted: CT-1310KN-16 - CASA DE TRANSFERÊNCIA -> f9ba6eb2-6391-4511-9a32-7292b57d3027
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> 8144c80e-6462-47c3-a4fb-181e7b3a9538
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> c7f4a331-1941-4d24-afa0-2743732bfbeb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 4d55d1d7-bef9-47c8-89a4-5802dd0b54cf
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 183c0065-20a6-4d62-adc8-27c9e18f7f6e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> c6150bd9-8131-4fee-a1d1-946689390f51
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> a4471b8b-844a-44e8-9407-1dd4c29fbe79
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 9702c963-befd-4201-9587-b416bc225c8e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> e46e2774-b676-450c-8825-63bd06f630df
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 26c8715a-f8a9-4425-9903-f2783a27f93d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 69941fce-9cb1-4e65-a30a-48c7cf21f66a
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> 93e0b665-7db1-4dc3-87e9-39493358365d
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> 63673ca3-8c79-4e18-9ce8-e9bd2d1a2a6e
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> f39a2d2f-3c96-429d-a9c0-09c68baebf6f
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> 7eeb4665-f8b2-4d9f-969e-aeb3b9b13881
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> aaef31db-4e0d-481a-80de-76169d51f9fe
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> fad2b0c9-f30d-4f99-88e0-1138380c881d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 426.850 -> d47d52ea-421b-4e45-9882-c6e583e1fe80
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 4711fb29-c1d8-4281-9e78-3ddc36320e69
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 7c03e65b-be19-4944-aab8-fa6ed11ee481
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 3d6be728-dfa2-4a2a-a963-3344c3ed8125
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> 061d9036-4921-4663-ae2d-10664761e8b2
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> d13f6cac-b8f2-45a7-aad6-396836cacb97
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> b45d4573-94fe-44a9-bf41-0e4ca8dc5dff
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> 9d320a1c-3f32-40cf-9f6f-4dc5f6443f7c
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-10 - CASA DE TRANSFERÊNCIA -> df24ae79-e62b-455b-9fff-0986e0617856
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> c87ff21e-0d0a-460f-a89b-6d17eb77f931
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> dd389c04-86d9-4384-bd7a-abf30646b738
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 5a62a527-e09b-489c-9a94-85d21224f1fd
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 91f47f5c-c7d4-4fec-bd41-134a71654794
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 0953ea22-479d-402e-aadd-81410521ad66
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 2fe28d26-6840-4fe0-8c61-56590eabe48a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> e600d68e-fe9c-4102-8b60-113defa4ccf6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 0fbb4a67-f134-4b6a-a45f-8454d01b3f7d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> ed24b64f-092c-4ef2-8a4a-7076dc7f191e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 2b6ac50e-acbd-4185-8f53-e840b8bc8a75
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> ff8df20c-e311-4c57-89e4-daeef4ff9bfb
+anchor?ar=2&k=6Ldqhw…jQ0Mw..&hl=pt-BR…:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> 9e008256-408d-425b-a9f1-b264fffbab30
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> b0f7a04d-2444-4fee-949e-0e204ae9bc01
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> b3294fc6-e7a8-4b99-be80-4a57d16c7667
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> 2eb71592-3b8c-470d-a509-8fa4887d7e15
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> cca12aa4-ca61-4cf8-ae2f-2bb2febd4483
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 429.300 -> 2cccaa68-d24f-4288-942f-4c86ec7896ff
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 5021781b-1961-40bc-a9e1-47e62bb35fc4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 4ab5a475-0f70-42dd-ae4b-b39428552aae
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 74d0bea6-f28e-4d71-87a2-c05ef30992e3
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> bb17738f-ec97-4174-be86-b54953e9b92b
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> 2f77309d-7443-423d-92f1-1c4ca99ce7ce
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> a74d99cc-06e2-4e81-ab2c-f8ce4792761a
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> d09cb817-279a-4f89-8d20-87089edab885
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-11 - CASA DE TRANSFERÊNCIA -> 2e959b9b-b6bf-4f82-b6f0-d6df3419fb46
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 34012605-cead-4cc5-91f4-65f5c34caa7f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> a54544b7-6771-4b90-a937-b1230faf5089
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> de232df5-033f-46dc-93cc-3bf8f8b1e5d9
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> b23a7018-204b-44b8-9fb4-abc9349587e4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 1c444167-1dfc-4fc1-b637-1a006935428f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 445edf7d-ebbc-448f-b211-c65adf0e8b73
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 121186c8-2655-469d-b870-7d3da9718f45
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 4929c89d-769b-4c47-96f7-c1ad5c67800a
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 4fda5017-2adf-4ccc-8714-fdbcfd855485
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> ab703f77-6c67-4582-a067-a603852a58a9
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 160dc94f-d31b-49cf-b877-575e88140cda
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 9a25a40b-881e-46db-8a78-7158b5a04da6
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 75aa4478-9dc4-44c3-9795-b561a305807d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 7cba25ed-9d1a-41e7-8a3a-7be7a5df5004
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 12dc192a-4d71-4943-a020-7151db5c1ce9
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> f00adb4c-105c-47d6-9fee-f536df7cff6b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 2e046096-c858-4564-b838-e1cbf2108cf6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> ff0b0688-d953-425b-a74e-5a4899567db9
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> dbc316f9-b25d-4405-aacb-0338de316667
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 34d1095e-cb96-4238-a206-a67c83bc490c
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 4f9c8fbb-09dc-4bf2-b2b0-95d33c103c1b
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> d6d1c6aa-bd8d-4e55-8867-c4978f4244e0
+injected.js:37 [P6XmlImport] WBS inserted: CT-1331KN-12 - CASA DE TRANSFERÊNCIA -> 3e91bcdc-808c-4011-a603-d702716bbbc7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 4653cc90-ddce-4470-a410-25900e007321
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 2e048dda-8ddd-4147-829f-e8cc39582acb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 6488b66e-da9e-476b-b8b2-b79d18469f38
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> b818c375-5093-40ad-91cb-bc46d668f1a4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 9622c61b-613a-4553-b050-6fc7444e59f5
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 433.500 -> 725d9797-8dca-477c-8f28-2b14094a448f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 3d4f1706-b363-4988-80d0-bef3fd493b4a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> e39f6469-7c75-48db-985d-9e342967ffb2
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 2900ded4-3df1-45b4-b643-bf88257b8099
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> beb934c1-1e5a-4cf8-b4d6-d122baa5aabb
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> d9bb89ce-08f4-4f92-a39f-64de99a6c9df
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> 507a571c-4fe9-49fc-97c5-370330906a03
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> 1979dfe1-812f-4231-a6d3-9088f02d989b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> db32303b-b7c3-452c-8d12-b6ef79098d8d
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> 427596e0-50fe-4095-bca3-b85823466ff6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> fc3dfd2a-4f28-446f-87ca-b877ed9b62ac
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> 92e6f820-f99c-4d0b-9a5b-60fd341ce2ee
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> de5b438d-bcee-44f1-9e77-f51a34a69ba6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> a583eabb-c6e4-4d2a-8fef-2589dc8e9774
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 4f56306e-9d98-4863-81c5-97df30c8d367
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> c29499df-d297-4874-8963-9d7b68391d3d
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> 8152b8e9-9368-47f2-b92d-acc111d29fef
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> b59123e0-985c-4d0a-a768-6bfaa13590a1
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> 66ddb3f9-aa61-47e1-b2cf-429ccb10b8f5
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-140 - TRANSPORTADOR -> a313ec0b-95d1-4d2a-9d67-fb6b6a3ed8b1
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> a03aec7c-1756-4dec-8f08-8f95db58142e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 39727d34-2c92-4237-a4bc-843987558df6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 8eb4391a-483e-45eb-ad4c-aa7de569bfe6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> bd8cfdcb-2d6b-493a-a980-5b004c6d3aa2
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 4a3d3891-6e1c-417a-9bfa-08eb3ef58231
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 436.510 -> dab77598-43c8-492e-a0ed-f855bfcecbeb
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 1abc4c79-2f35-4fd5-94b6-df84c37e6874
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 0460a7fe-2385-4151-a015-980709ee55f6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> d500a62b-84ef-4fcf-8f59-569dcd9f2d64
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> e45c18ba-a4ab-4c6c-b782-c371bf3b48c1
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 12a60964-c220-479b-a71f-6036bb9eb730
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> ffb48bf5-fba3-4803-b04a-52c227bf5bc5
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 70618698-1f72-48a2-8ecc-3680f6238fb9
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> c5b260b7-f38b-4f46-8704-f56cc3c6c51c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> bc2a4383-f532-43dd-8ff2-4c7e895d5136
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> e17c1bfe-d54f-4031-bbf0-9dd5314f389e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 48df7a50-1865-4153-b60a-6ecb07aa87b4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 83936c4c-4090-41c2-b0ea-718b53e90735
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> b1a1edb4-71ed-4958-bc06-36c144a97616
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> a9d77daa-dfd2-433e-b2db-cddf4925ea68
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 13533664-66f1-4b92-8da4-270ddca4b486
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 2f783f02-fc07-4bb8-ab00-e977b8683fc4
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 78eaa78d-fafb-4e1a-b20a-3d38ff9d6631
+injected.js:37 [P6XmlImport] WBS inserted: TR-1310KN-141 - TRANSPORTADOR -> 7a728ed8-b8dd-48b5-84d4-2358b4782b4a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> d14aed14-6fc0-40f3-a20a-bb2b231d09b1
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 67d54fba-6cd7-482e-b9bd-0d4478fdab7f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 3f97e4b4-67cc-4e09-881e-fdeedda9fd5f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> d41110c9-4339-4d59-a971-dd16b45caa34
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 4e0625ff-25b2-4963-800b-0b25866c7928
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 438.910 -> 4dab7e8f-b4b2-4663-929b-e624555ab72d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 641d3da1-0438-4b93-9c16-9a63fe2488c8
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 44e844c4-37ab-491c-8282-5a98aeceeba2
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 953e0fd5-de2c-424c-a952-f3035bdbded3
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 1818faa7-848c-468d-9cba-297d95805156
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 17babf8b-70cb-42db-afdb-b63ccc889736
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 9b9af815-20d0-447f-abb1-7beba15356db
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> e31a89c4-50b9-4bdd-a986-08105eece729
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 58509122-65cb-4d8b-9640-7a39c94b6947
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 7f3d0aef-a26e-41e8-9e40-5195e61c9cfa
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 11b6d0a3-d335-4de9-88ff-4decbdc0e55a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> f43aefda-266d-49d2-9c68-f01f3694d458
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> d1451b55-5425-4ce4-a995-652cf3daee9e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 2849ead6-aabf-455b-9aba-9244ddf2d6a8
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 259fcd92-45e6-4aaa-815d-13465fc6e51f
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 0c7a6e12-3a8d-4e1b-a5ef-5cffed398f8f
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> e0bdd1ef-2f9c-42f4-b5dc-b098f243c274
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> cd379a95-8248-4c04-9cfd-aeb39ab79ed0
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 6bd0a64b-ecfd-448d-8f95-0f33ac47647d
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-07 - TRANSPORTADOR -> 7c59d1f1-50fd-4203-9e62-c9300ba25d01
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 49a169a4-e98e-4a10-8ad5-61948394a957
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 20998006-d0fb-4d3b-8a3a-e4878671f9b0
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 441.800 -> 6401edb9-fab1-4719-9859-963179ac8dfc
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 3dac121c-28e6-4ea7-8949-5102377ba0e5
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> ea445d92-11d9-4950-8e62-ad41ed6166c3
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> fc357d51-dbe5-4d43-aeca-7d2df85f37dd
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 27935835-dd0e-4091-9540-a20d5498230c
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> c8801bf1-1aa7-4619-9c69-5f0efda9da11
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> ca0a61ff-3d8a-4d1f-b9c9-a39a64985f41
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> 95ab759b-b87b-41bb-b93a-c7eed8b6920c
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> 29bbc234-dc2d-4a8a-9709-9cdeba316f0d
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> acaadd6d-6cb0-4c9a-bc9c-ad2603af93a8
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> e1df50c2-a707-41df-85c5-d511d4486a16
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> dc8d13f5-5eca-46f6-b60d-a62060848e5b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 55f8633b-d68e-4d30-be4b-1eb767179655
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> 2485f63e-b5f4-4452-ac00-cb71dd7b7ccb
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> cbf1bcc3-3b89-4b07-9dfe-45412516b429
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> 57d9ac1e-81b7-42ed-a9de-a8fda615dc31
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> cfaf0984-3805-4220-9070-4c0220e11d2a
+injected.js:37 [P6XmlImport] WBS inserted: TR-131K-12 - TRANSPORTADOR -> b97c08a7-e531-4893-aa2e-f954800c71aa
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 97a942c0-dec8-40fa-afad-57d8b0786bf0
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 80482d89-8b82-4703-b1c9-87a7c62fdeb7
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 2ca9e21e-681c-482e-bbf9-a34de10adc84
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> afe72bba-d498-4926-a3b7-f27cb28d6c30
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 2dc00e56-786a-4267-ae75-18f75290e65a
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 42b59458-1619-4999-a46b-a9424fc3f67b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> ffc20f2d-a81e-4c5d-8c36-3bedc01447a6
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 5b23f874-1c95-40e5-b2ce-088e43614847
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> c2220d73-3f69-49ce-930e-6f4a64e3fb06
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> aca167cf-4452-4463-b765-6d1869aabea4
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 3e91dc5b-eef5-4a74-aebb-565ea208db84
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> c6ffcf31-dff1-400b-bbc6-f4ebeb911f85
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> daa3a21f-849e-41bd-b70e-55759f074e44
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 5ca81df3-4484-41e7-ad6b-1c7cc1ba3e3b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 08f455fd-df06-431b-8b8f-9e37bb76786f
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 8487cb6e-2078-4686-957e-047256288543
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> cedb2747-d873-47b6-a16f-31e7a0780217
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 192c7a13-1b0c-4ede-bc94-90d356242466
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 4826666b-0599-41db-930d-62108f0d6234
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> c6765a31-5ce3-4ebe-8c28-93322610e172
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 900b26a8-acec-4d71-aad1-4a60341f9201
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-05 - TRANSPORTADOR -> 98ad86b8-95e7-4bdf-b3b9-6d4d7799a928
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 444.898 -> 5ec50c12-86ea-48ca-952d-a254676eb92e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> f2ae5aac-0ca7-4400-90c5-fa64cbf02205
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 542eacd1-33d9-4f96-b119-4f6af0f28a46
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 812618da-117e-4739-99a5-555aa078e15e
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 2d26aca5-1f95-46d9-9b8c-21a9b0216af8
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 3f510f56-bce7-40ae-889c-3ae111e23a89
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 421e7fbe-1b3d-4578-9dba-e767f7897fb8
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 55d8b165-58d8-400d-86b0-25e05fd9fd7f
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> d5b862d3-2828-4ab6-860c-4a643044b0c8
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 1469047d-69b7-491e-9493-694fc81f477b
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 9a8ae329-cff1-4da6-af04-db912b0cd2ba
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 5343ea7d-c2e4-48a0-a90c-36812c582c77
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 9ffb6142-515c-4045-9a73-451009ff6a0c
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 3d0830c9-f6d4-493d-a40c-51f11367eb09
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> a80ff044-ca77-45d3-aa4a-11d4d2e9f1d6
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 17695d61-49da-453d-824e-d4a4cefffa15
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 2594ec35-5bca-4f58-b205-e055bbf384d8
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 4b9f711c-7ec6-4968-a5b1-b75774b92244
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> 83fcb0e1-4095-462e-b69f-5a0ec56e65fb
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-03 - TRANSPORTADOR -> f87b82e8-dade-429f-8b9a-49964ce2c2f4
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 448.900 -> 475e5e89-acbc-489b-bd12-ccb5d4ecd6db
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 78515a16-296a-4528-8831-60ac270a0e07
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> b3f0811b-9729-483a-a7be-db78701cc248
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> ec20ed2a-cda4-452a-90cf-b91d5d29f074
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 8d3c06fd-27be-4755-8b16-787b0a028fd4
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 8ef1e2ca-a215-4c83-90ac-6d6a54c63ac7
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 1983fa7b-2d07-4093-92c5-462c4976cf44
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 61ad3a98-adb8-4023-967a-a3db68e919fc
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 240edb43-053c-49a7-90d2-132f54d909b6
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> f9a51855-9fb1-4046-82d5-eb442bd3a352
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 7b083c88-800a-426a-a568-91326f56633a
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 930fbb9d-0ae0-4baa-afc8-a47dd5ecf32a
+injected.js:37 [P6XmlImport] WBS inserted: EX-1330KN-102 - EXTRATOR DE SUCATA -> 4f5907fa-0066-4010-9b23-a580196f5900
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> 39b665c8-d62d-49d3-96d8-f51c77da1268
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 458.300 -> f4c8b174-762d-4271-b82d-6cc0576b7f8d
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> 903a8c6d-8bf3-4ee3-bb36-7ed6e30f4c07
+injected.js:37 [P6XmlImport] WBS inserted: ELEVAÇÃO 468.933 -> b3964c72-4184-4b3d-a0b9-b3d65c733404
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> bdaa5462-1681-4729-9b8f-b41b642787da
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 30f3d907-f38b-493a-bffa-a476f15c2297
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> a727b812-13c5-4044-bebc-8c27c86a3311
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 88c57abb-0fb6-431d-8de7-212e631b8942
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 15109d09-b323-4718-adf6-1a82c8dab2c0
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> e762ba05-01ca-4b35-b65c-2b0ae429f007
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 49b9c3ac-3845-4833-86cc-bc7b1c7d7914
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> ebbceb70-0abe-47db-bc5e-fc7bf0c0a860
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> b8ff742a-daf0-4ecd-9990-14e1543cb843
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 6fe32284-697c-4f45-b9c1-d0f9d3e15981
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 7b3e4e41-f403-460e-a220-e8d51cac4535
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> df7b3cf2-8bbe-4e7f-a981-d175a27b359f
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> e3e62735-db61-42a0-9d09-6b822cd45e0f
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 9c11fa67-d259-42d6-ad50-a7f955dd3f47
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> f6ffbb5a-3b9c-4e80-b355-dccde03a7c87
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> faf40398-58c2-4ba5-abed-3975702d41df
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - TR-1331KN-105 -> 5533f07b-a57f-4cbe-8551-c273de28cfd2
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - CHUTE PENEIRAS -> 0de7a102-5a06-4429-aee6-9435a6dbc5da
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 6ab559b6-f521-4cf7-bdd2-ae9fda2190f9
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 28375ad1-4f6a-4cb8-b095-d0d2ba4c44dd
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 6b44643d-cd66-4e1e-8dcb-983c91b50957
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 494a82eb-954e-49d8-ace8-e2cddac88e6b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 645b6a89-20b3-4c49-a967-8477a6ebf21b
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> b0adaeec-5a08-44d7-ae0d-a90784e140ad
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 99568bcf-9ecb-43ba-80e3-89441a87b1ee
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> ab096a7d-eb01-47c1-889a-b4b9c56fc454
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> d63aac8c-62fe-4523-886f-05c29ba09233
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 3efd2389-ca5d-4a2a-a2d8-300055d5373a
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> b0cae0e6-b808-40fb-8e28-47d8bc79d2cf
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> bbc2090b-df2b-4f08-a1ed-b59853c508f4
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 0f24f577-d6cd-4cca-9d6f-cc4c704102f7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> d6792821-50c5-43f0-b008-1698b19ffcfc
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> b83264a6-ae19-45a4-b91b-6d53ea16ea67
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> a032f5b0-0295-4e48-a3d6-f9e58bfd5b8f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 8651d578-2d6c-47b5-b1b9-226626b8b56a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 6ce63638-0ead-4ef3-bf03-3381900641e1
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 3a93464e-7223-4b01-a2a1-b5993eae5a1c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 93da150e-8bee-43d0-af73-4d69a1505a2b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> fc0ba514-340b-449a-a647-23c99877da24
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 82c028bb-5501-4dd6-a47a-8bc331ca903f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> d4c48851-67bb-48c8-b091-05e93de37aab
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 7a588636-0bc3-447c-a24a-c1b4a99331f5
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 72a5210d-38a7-4cd5-81bb-d8dc1c8d7ed1
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 0bd1ea25-6637-41d6-9f7c-61c86371b106
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 8e4133c6-b0d4-408a-9b39-e3a8ff5ffaef
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> c1e61d0e-e819-4cb0-913a-06ca9ece7924
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 5d6000ef-e7d3-45cb-9bc7-3732212e0748
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 66e20b68-7bfb-4abd-b92d-f176fdcd0ea2
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 01af9e57-0b32-42f2-90ae-11893de6f89f
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 0da058bf-16d0-4fcd-bf8a-68bebbc8aa0d
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 47598afa-b7d4-4e34-ad7a-5e4a5a0dfee8
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> e361429d-76dc-42bb-baa7-5897fa048c21
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> ef41ad31-60ef-4a0b-98d9-3c1bf8a3e253
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 1a224b06-0b72-41fb-ab18-11d7e71caef3
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 1fdb2481-73c8-41ec-8f92-7e9360ca106b
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 19334a85-e22e-44bb-bb36-3798a5548cd1
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 7d0f8ea2-4d09-41e5-b5a7-8635ee3f92bb
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> f3c5baf8-0129-464e-93ff-55fe07b5cf77
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 6896eb4b-7f99-4d4f-96d8-639a2854fa15
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 93c47132-c3f0-4621-80c2-bb08a4324044
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 2024f941-54a3-442a-9eba-c90745e40569
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 9a02387d-44c9-4c9a-a137-203812ef6dfa
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> f6761164-a14d-4df2-8016-81c00a4bace0
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> ab05adf3-31d8-4846-a3e1-f6decb0b3aae
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 653e1ae4-0a1e-46d0-87e0-170d48d17162
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 281084ee-5f60-468c-b805-73188036af52
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> 56d3fa14-8b22-41fd-96c9-16e1f21ba3f7
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> c287a558-baef-4cfa-8302-78433337d0d7
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 5c78ec85-3409-43f6-8fc7-70594bad9e5b
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> d6252928-d286-4aef-acef-3f0daee2e416
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 5b34e2ad-6314-4202-94dc-ebed1cabc03e
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 398e103d-7c0c-4f3b-882b-ffa258068e8e
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> aad47097-1321-467e-94b2-537f4eb0c846
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 859dc598-6b99-4a6f-9b23-248cfa506f20
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 82eb208c-8304-4283-8ab2-61b2f85dbfcd
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 15ac9721-c41f-40fa-ab5c-1bb865415326
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> e8f3ccce-0b75-4051-a8ec-1e455b8da082
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - ACIONAMENTO CHUTE PENEIRAS -> ee2d857e-ca8f-44ce-851e-f2bcb0dd8e53
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - TRANSPORTADORES 101 @ 104 -> 7cda11ab-8e04-45da-a1bd-7d610dd85d89
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - BRITADORES -> f9ec1500-5fb3-4435-9745-533afbb504d5
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - COBERTURA LATERAL -> 6eb163b2-da9c-42fe-8da8-17b5f8cabf48
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> 2f4dd67b-3b4c-42f8-8236-f45fc283ba55
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 8be7df79-7ec6-457e-bebc-04c0ce92a72c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> bd1ddcbb-a938-4edf-a70a-41ab39e0f823
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 9a0c6876-a9ce-4bb0-9c04-a2bcc0be15f4
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 926128b2-4551-460a-8325-ddc244a37feb
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 0156660e-3fa8-4841-82ce-f6c171c71978
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 0b21d44c-46f1-44ad-be18-bee1fbe70bb0
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 7c85ac4e-46e6-4762-8711-511c50b6379f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> f6f2e0fb-8964-40e7-b28c-73a7d51ea0a7
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 8d8941f2-230d-4975-abab-983ee4b806dd
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-101 - TRANSPORTADOR -> c9f4897d-d0ae-43b3-867e-a6e0ce524f45
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> eca32f31-ed5a-4aaa-9145-3f140282a9d3
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 2a1bf667-46cc-45c2-84ee-e943a18649b7
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 485d8a7e-1ba5-43f6-bfd4-305997fe6756
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 5822332c-8fed-4e86-b76e-1fa46f0b9877
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> affde458-7e0d-419d-bb60-6913dfab62d5
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 282e7969-a3fb-4999-a2f9-02a477b5a7c0
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> b98e68a6-0772-43d9-ae49-d0a6fd25a269
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> f2ecbd8a-fde4-46f4-8819-2241e73e5c11
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> cd2b254d-4316-46d8-af34-483c39a36a70
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> c53049bc-7066-4f6f-88d8-68c9a51f71bc
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 9fd5c003-50d6-4be7-8ec7-bcf2dd09372c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 701b4b75-a182-4d11-a7c1-c6918f8b823a
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - TR-1331KN-105 -> 2393c3a4-11b3-4be1-9ca5-bbe4cecbee65
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - CHUTE PENEIRAS -> 3191e397-6dce-461a-997f-4fafbb23851d
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> 8f5d958c-7c7a-46be-b1b8-c3c50f41fb68
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> f03ab2f8-3370-4606-ae19-319901d610f8
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 6271606f-e036-493c-b355-cfad3a492fe2
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 574491dc-1ce0-4b2b-ad83-2f4415d93703
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> cadf0748-c901-48aa-b96f-b5533ffbd715
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> e6919624-be28-4421-8e28-ca645ac95115
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> b32da076-25c1-4e57-ae61-5392e30d4825
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> ceee5aed-9c81-4e74-930b-c957fcb3fa34
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 32b8be2d-f74a-4180-9f42-0866c22bc4f3
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 36a1f068-a1a6-4ec2-8cae-a2aa9f8ce961
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> edb86fc3-4212-4bde-8739-f3a6a62eb070
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 23503268-ec6e-4637-8c6e-0449aeefb3bc
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> ab6813b3-bbcb-49ee-9e32-c23d8caa71c8
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 2d45cb31-c4fa-41d5-bb45-be74f2a2aff3
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 41f584af-e220-46c3-88d4-e842c55d124e
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> d7def195-b512-4841-992a-ecd6217e2423
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-105 - TRANSPORTADOR -> 02409b38-8290-424e-b649-0d74671bc955
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> ebc22585-94aa-457c-a28b-27b3c818008e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 754f0d27-4aab-467e-9828-ec80913a21a3
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 7e57c8d2-5786-4e3f-a975-c7c7847571ea
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 619aec7d-0e21-4013-bb22-7eed8fa1fba9
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 7e76c815-629d-453e-a8b3-847c3add8dcf
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 5c8858dc-a23d-47b4-8632-f328dcc9a73b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> a26f25d7-cd3c-486f-a968-aee170cbfa15
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 51d03197-9ffe-4c7c-bba7-9c3c7a1acde7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 4a66b2f5-f75b-4025-ad06-a607bf813d0a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 7ddd4630-ea58-42db-8090-47e9005a0266
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 642689c3-0cc0-45d6-8031-b8fff04cb8dc
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> c66ea188-d1b3-4871-a3e6-31e52bbe5029
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 4b680bc7-4102-40ea-9d5b-ae5eb5630b59
+injected.js:37 [P6XmlImport] WBS inserted: TR-133K-07 - TRANSPORTADOR -> 69cbe4d5-111d-49cd-9242-958783e89f10
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> 0992e024-0a3f-4ff2-a02a-638650b47e04
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> c686bcf2-083e-4b4c-b878-b0d28e42720b
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> a730ef54-c24b-4d6d-8b54-3a88a77f0afc
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> 1e7817e0-78e9-4cd8-a8f6-80a4b24a66ef
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> e28f9877-5071-401b-855d-91de6e3ab392
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> 1d200896-80e9-4f52-a0ec-0269d0877c69
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> c584d0f9-4c01-4ce9-b8b5-7c943fb5bd34
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> 3812a029-b3e9-4ace-976a-f3c6d57f550c
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> db8afccc-6d73-4935-b5d7-2ac2c28afd08
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> ad109a17-d1f6-4bbc-8b96-2414db3f3734
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> d842922d-db44-4c22-833b-e71eccdc3290
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> c9e999ce-5d1c-48c8-b021-801a9f044ad6
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 19f07b69-bc8b-452b-94c4-1f38ee2af1a5
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> a6de1e5f-05c5-469a-9ed2-b953b4962939
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> ab88377c-43cf-48ad-9efd-ccc2ab0b882a
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 4b2ff354-789d-4191-9c8a-27d22cbe17e6
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 477ba951-20fd-43dd-9461-a735f494258e
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 1925f67a-8889-4d98-b0a3-6e2e134eaef2
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 685c9708-6b53-400a-bd65-66edf9158a56
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 2cdb9ff8-7140-431f-9519-0bf3a3d99aec
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> 174ff3dd-61eb-4fa0-ad5b-23d3dc783d42
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 3bb886f2-e9a0-4ae6-93b1-fea6d0dfab77
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> b2ee4566-ec55-4bc8-a670-6a7b2b972d0f
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 17286803-1b1e-498d-bdbe-47181d09c300
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-101 - ALIMENTADOR -> 1a1a6a21-02e0-4ecc-bec1-ddf5a860a984
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-101 - BRITADOR -> a519b6d6-0154-4552-9bd0-478b725d3d95
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> 042b973a-e513-4695-9536-0bd61e7c0483
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> e6b4b234-a892-4576-baf0-ccdf18c32a23
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> 25987684-6333-439b-a477-c73eafc16ed7
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> acc7f88c-5d62-4687-998b-3297f4664016
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> de156db7-51b4-48c7-ac44-946f6dcbc190
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> bc5e4e65-881a-4231-a15b-11af2395517c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> 1e6ea57b-51c5-4041-8e37-7213f623400c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> d31b1957-8576-4fe0-a635-881eaf10cfd7
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-101 - PENEIRA -> 8fc1022a-b111-4f06-bfd1-610f229e0346
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 1a3ff305-084d-454f-a069-92f8564385fc
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> fd50ac35-3a99-485a-9d00-6d1577dd15de
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> dbbea30f-1292-4137-a60a-312007352f63
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 8c26ae66-7468-4bcc-87fd-5098abc2074e
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 08117008-b9d7-428b-b223-d2a521de8b9f
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 23ace2df-ab49-4759-a277-bcb45cb01950
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 14f6a1e4-4c42-435a-9894-aa3ca30a68f8
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> b3d3b276-3fb4-45f1-bccc-5a1510dd8165
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> cb232bcb-4161-4f69-886e-c2c34cae0441
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> ad384884-d2b4-4ae3-a26b-383c3869381e
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 2c9778a1-da7a-42ff-a1e2-4ac3914e09af
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 7d7dd15b-e4ca-4432-a9f1-fa3233050d35
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 9403b419-2ade-4d60-b180-a9f7b60cb20f
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 4511796b-203f-4905-ab4d-b6e66ef03861
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> d0cdc91c-0775-4e63-8e48-eb728ae8d529
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 23dbdcff-6557-4433-8275-6e31a99e86f8
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-102 - PONTE ROLANTE (15 t) -> 93881df4-ae3c-4f08-9d9f-2e19c832df47
+injected.js:37 [P6XmlImport] WBS inserted: PRÉ- MONTAGEM ESTRUTURA - TR-1331KN-110 -> cd7888ac-a687-40b0-8f3e-c27882f609fd
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - ACIONAMENTO CHUTE PENEIRAS -> ead0df9e-8dd7-4e63-b57c-d743bd88de6e
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - TRANSPORTADORES 101 @ 104 -> 938944e4-1be7-445b-94cb-281b1ee4a6f8
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - BRITADORES -> 141cbc7d-4c5e-467c-9816-d98359aff0c2
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - COBERTURA LATERAL -> c700caeb-d376-4943-90b2-87bf8ee4a8b0
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> cbec2775-a621-4353-8af5-995ea592ac3c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 2fd3b4ca-ba04-4d00-b562-a70512867f93
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> f45517d5-65d3-4763-9b47-b0c539e07db8
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> d2b8f3d7-5600-4637-9173-bb190eef066e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 334f99bf-3c1d-41e3-9a35-42e73ecdd37a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 0e22bea2-0437-453a-8528-58ffb79ae25a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 79c59337-09cc-4eaf-970f-33dd8b550872
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> f0426618-5109-4d5f-a1cb-ef3c5d7d3b04
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 38b86a2b-32a3-4cfc-bb93-76493952864f
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> b1c47b39-a522-45a3-a166-5c00b4093359
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-102 - TRANSPORTADOR -> 3a49ef0e-19d3-4915-ae40-cbe7df5192d2
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> c256af6c-d69c-48d5-9922-b229593422a4
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 266a0d43-2f8b-4012-8008-6889de3c05f4
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> e302a1a0-b36d-4f74-af20-ceb2b22768bf
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 8a32bb16-f2fc-4a9b-a7c6-e337eb2207c0
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> c02fa04c-edd8-4d38-bb4e-e9a9b966275b
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 0195895b-d6eb-4129-8351-116269378d75
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 9a6fd580-f1d3-455e-a62b-218a3d92a5d5
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> f0100b9c-3966-46c2-86bf-7ea6b42c0b31
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 0a06efa5-b3aa-42f6-9c8e-f61112bb2aea
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> a9cecdf8-c0ce-4782-8508-b8253b88592a
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 03ede721-5ae2-4029-affb-2e6a5536715c
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> e76dfc0c-94aa-4f3e-a9dc-44a3c87cefac
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> ae27d07e-7e7e-40ad-85f5-e4e6043d23f6
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 787468ea-0d58-48fb-80ae-fc3fb3afcb43
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> a5d93720-9132-4984-ac16-04fb8fa36313
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 3a64d075-ca09-401f-a47b-4a224223acda
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 24a55902-792f-4fdd-b46b-e2b1e63bd52d
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 0aab67fe-e172-4cd6-9c6c-6b90f5f6981b
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 6a564739-f968-42d5-b832-c7797f961b64
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-109 - TRANSPORTADOR -> 18a0c6f2-1705-4923-a0ea-0dc052ccda6e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 7e47986b-e7b0-4212-93fd-fb2cb60ac1ed
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 1b935ea8-968a-45ae-8601-fd0394f81d59
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 12de0bc8-2495-4a76-86a7-229a25501522
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 95e652e8-a8fe-429f-991d-859a793cfe71
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 771e52b7-4fa8-49c8-a604-4287a6d8ab25
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> fa7359f6-169b-419d-a786-bfb7224777ea
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> cabec865-c566-468f-8fd0-c74a6529e650
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> daca75cf-a3b9-4db8-83d4-10fa83b3133c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 705ada40-9853-4844-ac13-ae96858cedc7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 789c9243-2b83-4320-940d-f10f666f460a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> a937ceb9-48a4-47c3-917b-c3bf7aa7ca5b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> be1737f5-5710-4247-9279-3507aa2c650b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 4d404769-a6a4-4f23-a429-ca21da79bd12
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 02de4aa6-fc23-41f6-b8a2-afc15443be34
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 85febd13-dde0-4afd-869a-c6675227a46d
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> e77d1c3a-486e-4fc3-ba73-9dc25f4ac9b9
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 7bff506c-d93f-43bf-9fd2-8d52cd4d9cde
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 9d000369-ac99-40da-a9d4-be4a72b64d98
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> c133da17-a244-4f7c-9edc-948bbe616f4f
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 01285ffd-8b38-4528-afb8-4e356b741db0
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> c1ccb822-22ba-4e1c-9657-19d947f8b5d8
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 016e3932-aa26-46d0-b7e6-135bae893b03
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> bdb7641e-ee20-499d-bc7e-33c999a45faf
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> f6cf8f3e-9b29-4267-b550-13ac66003f8a
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 8719bde0-f678-4cc0-9ae7-131a783ef1d0
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> 5b748be0-f645-4ebf-b1fe-08a7e5aad439
+injected.js:37 [P6XmlImport] WBS inserted: TR-134K-04 - TRANSPORTADOR -> 3c17a90b-1ccb-4346-8331-884ba1e61dc3
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 1ec06419-ced3-4528-9cfb-5fee0dc0349f
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> bd7db66b-cbe6-44fc-a481-565b898f96d1
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 4b3bd746-612f-4f97-95f8-d735fd50190e
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 1e646967-923b-4c86-bf47-c39ce40830aa
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> fb01c033-f88e-4e1e-937d-9981958b8724
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> d7e0e009-f91c-4c7a-b778-0090816fe7b2
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 33ed24dd-7fb6-49cb-a3b2-50cc7996d9a2
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 7198818b-163f-4815-9b41-78f16a5934f5
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-102 - ALIMENTADOR -> f6069070-8d65-4dae-b56f-6ac1703eaace
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-102 - BRITADOR -> b79efa13-2df4-4fb6-9331-95a942fe1abe
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 1189a8dd-c884-474a-af62-3a8c2cd79aec
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 262a7f8f-66d0-4e31-88b7-36ec52146c86
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 8a7e1d9f-c3ca-4567-81c1-c43301f99127
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> cadeac7a-9521-4e3e-98c5-6e79fa804acf
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 13d0c879-1c34-4c0c-aa3f-438dfca11df3
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> c1251038-65f1-471a-b236-99d45f499076
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 5791d943-5580-4a18-b000-89752d1ada94
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> a878238a-637e-432f-86c9-261b9e35040b
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-102 - PENEIRA -> 11a66f42-5cc5-46e8-b1f7-a7156dc4e083
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 9ec20c53-4fcc-4e41-beb7-57f24d74171d
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 42426467-78c7-488f-9dbe-34ab36ed4075
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> c6e09e26-ac6f-443d-b4b5-5e8dc681c92e
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 23880bbb-27b4-4298-aaef-52edc48fcdf3
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> ba5e0b5f-7d21-485a-bb56-e83d5609fe79
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 1b68f45e-ca40-4bfd-8e2b-563818ee2018
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 87edd67e-f429-4e66-bc6f-cb19626224ee
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 72a7f57c-98b7-4083-b66b-ce81f71a7378
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 09d0dda1-13d5-47a2-a8b7-29ee01835ef4
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 9b6e5834-da18-4f52-af1d-80eac9da8a05
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 71e37523-c697-4247-9fb8-35550f3276ec
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 579cf65c-772a-40f2-8518-65b4fc495122
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 37a95275-6cb1-43fe-9b8d-f1f07575c22b
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> d48975ad-55a8-4990-bf1d-27def09de64f
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> ebeb49a6-9711-4c23-b70e-f524533d31b1
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-103 - PONTE ROLANTE (15 t) -> 8eddf6cf-f37c-4e05-a283-eb18b1541b4d
+injected.js:37 [P6XmlImport] WBS inserted: MONTAGEM ESTRUTURA METÁLICA - TR-1331KN-110 -> 3f4eff06-beba-458b-9be4-964a9269f774
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> f614155c-c16a-4f39-a166-9e4b72ed3ea8
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> de9ee661-5fac-4389-a31d-d2ad9ec3df1a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 264bd941-17b8-4fda-8b71-c7e5ce54cb44
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> f2b930c4-a066-487e-af39-553f6dc964e7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 0cc92db1-2a68-4249-8d5d-deca9e164612
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> f726c8ee-dbe7-4625-85bf-1f5314dd3d8f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> dd0e16f3-6058-48e4-b15e-c48e554306fe
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> a607950f-75b9-424a-add9-7b57ead57d20
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> bb0b2acf-58b3-4db8-868a-ff86cf5a6b58
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> 43e4f1ab-dd00-469a-8e59-ff71ea2eb02f
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-103 - TRANSPORTADOR -> 133f56a0-073a-4930-9374-239f6301f75a
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> f5aec6bc-7b8b-4b68-804b-dacf8d054074
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> c1433d3c-4a39-42e0-9fe3-2b9c5517a57e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> f33b7215-5113-495e-b58c-bca43d5a1629
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 38cc1e3c-0f8f-4892-af2c-2c20a115f501
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 82b81574-9ad7-4087-b640-4ad601389425
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 44e9a46a-2234-4adb-abb6-15ceb0ef7dac
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> a56b3f48-e048-42d1-8e95-cbee0f6546ec
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 82b5597c-fb08-46a0-aaf7-886beec310aa
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 6698917b-da42-4f7d-b34f-17db1cd67f8d
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> a4d1ba4a-d859-4dbe-8fb5-fd8ed8b7db9b
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 51897943-0379-446f-96b1-247030907716
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 9bab0d32-72a6-4308-b7f7-b54ae0c3c57c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 512c79ec-88f8-4674-bb43-d030ba0b2105
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-110 - TRANSPORTADOR -> 04b2d622-4a24-45fa-8603-33cca578baf0
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 44da52bc-5dcf-4fef-b328-29bcfe1fdd20
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 3c69d6f5-6738-40b2-945a-340c006c5e0c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 538965c9-b9bc-46fc-89c9-66c0ded47e29
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 7efea549-9d22-4795-b908-56738d9ac08a
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 9ee1d108-dd86-4c4a-9db8-f2107adbe9c8
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> aeb2ac9e-c60f-4fa6-bd7c-26363fc0f838
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 9a1a672f-3e25-43d1-9eab-66ccf9bdf018
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> b378b37a-18ea-43bb-9e7e-92a1527d52d3
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 821496f3-beed-46fb-adc4-b939b5f18146
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 9ab9f441-3209-4e49-b335-d13c954da66e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 9a22664b-e503-4c3b-b4cd-9fa441e5d566
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 984b014e-0e3d-4631-ba8b-07927010146d
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> b11fd8d4-44af-4722-b058-28016e4ffc52
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 4ff7eb66-d787-42a9-9db9-88130823e195
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 409e5704-6378-452d-9b39-adafd690dc04
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 7c956fa5-ee30-4726-bf18-a2bda854ac9d
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 5493bb84-964a-4cba-8891-0f4d79bc92aa
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> f54428b2-9ea1-46f2-9649-f572ea5383e6
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> d6aae606-93e1-4271-b2de-c4d7ba7ede56
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 572a9629-7b30-4958-9a4c-6aab5fdb9600
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 3738dac5-9e26-40fc-80be-9c8c11c2f2b2
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 1101a4c4-0136-4a80-8c94-1838a0db6658
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 7c7228fe-7c5a-4a51-9fb3-1624bcaa125e
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> f8953fb5-31b1-41fa-b45b-dbaa368e1a90
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> d315f81a-989e-485f-9e26-8ccaf11d9df6
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 6f4974e0-f580-4ab8-899d-fac46567b19b
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 4553603c-9cc4-4257-87d2-7c3e5ebf2681
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> e44ea712-a53e-4fc5-af67-8e3fc662ffef
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 4b3ccbd7-556f-4f72-8daf-3f06a0af3ba9
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 7f311711-c8b6-4cec-90f3-1513d3acb148
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 73ecfd1b-44f3-4fbf-8319-6a38d6a2f78b
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 87c84352-1aea-46ed-afdc-fe09de325f26
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 33fc0a20-1b74-46f8-9d46-a266277a209a
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> cb6de395-f308-4123-8aad-0d12ccf3bedc
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 73ad2c56-a38d-41e3-aba3-28c755e06042
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 6cdacf70-60c4-403e-87ed-beb024b8ccf2
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> 47dbf780-fc29-42b6-8262-8a6eddac2376
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> 470131fd-2ed5-4546-92d4-732d619f9527
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> b5a79641-ac01-495a-94b4-da5685d54381
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-103 - ALIMENTADOR -> 113d62d4-b8d9-44d0-9a11-70058ed46007
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-103 - BRITADOR -> 8d8184fb-ecc9-4be9-a819-9d9bed45f82c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> c7abee2a-529f-42e2-95b0-743bbe78aa01
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 2d982c9c-2938-464b-a706-b5b30d1ee80c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 30cba06f-613b-47da-bcf5-0d967d46102a
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 65ebb863-f67f-4f3d-9fed-07685a3d78d1
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 2bf341fd-bdeb-43fa-816e-c9a5290b04dd
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 31971558-1197-4583-b7ff-c15a71d1355c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 49ecf34f-b105-4a56-81ab-b11a5dc66e7c
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 83fe795e-dbfd-4ca8-afc0-a9a4efbe9e67
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-103 - PENEIRA -> eff440ff-d16c-4a2c-b428-8a5c942cadaa
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> a3352ce6-af52-45eb-aee0-965901ec876b
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 546b43f7-bfba-494b-9385-de9e3380cea5
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> de909b33-8631-455c-b6fc-a1e158b94527
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 99661adf-f988-4e78-9e04-172710ab52ba
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 2ee61a34-6468-497c-ab5d-9a32f32e78b5
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> b964792e-e71f-406d-a350-6a8925e7cf7a
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 50132b03-87e3-4e98-b456-6216a7f1da8f
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> a3fc37b5-7648-4529-97fa-8f9cb652f5f9
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> b1e76dd5-d221-49fb-bae3-dd561c42c976
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> 4e37b3b4-2f81-4af6-8ec6-cc5ec442f5eb
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> 2eea7a98-e37e-42c6-bb69-66c90b8e9b99
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> 25adeebf-7fae-4577-8c16-c9d0595c5c72
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> 395a63e2-4da9-4a57-9dda-d27f983efdb9
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> fa10136b-9bb2-4c29-b0d3-d36eff0c8cb5
+injected.js:37 [P6XmlImport] WBS inserted: PR-134KN-01 - TALHA ELÉTRICA (35 t) -> 3e2c0901-e09c-41f9-8333-09d3610a7b5c
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 7d55930a-b810-4cee-94a4-6063477709df
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 93fb2c79-6337-4eea-8618-5d6b8e55b455
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-104 - TRANSPORTADOR -> 6cb6a93c-8e57-4113-adb6-ecc6910e6880
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 0e07f08c-d652-43bd-ac57-31bd8b7f2367
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> ae93fad2-5830-45bc-aa4c-97e6b1704816
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> df4aba05-cb86-401d-b5e4-feae76992108
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> b747261f-fe5a-4658-97d0-6f537adf676e
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 2078426b-6981-4f41-a20f-50d2e413fef3
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-111 - TRANSPORTADOR -> 29a6df43-e946-4f07-949e-cee3caa52c41
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 5b6be308-512a-43b9-bddb-e8790f0c5544
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 77b769c1-1a54-42c2-ab14-bd778a8f406d
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 3a676516-1169-41c0-90a7-fb5143636be8
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 5789447a-5a8d-450b-82bc-2ff0133866af
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> b2e65540-3522-4664-bc63-2a5e22ae111e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 3f54e736-03c9-470d-b2f5-111ccdb3982e
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> ac446f08-0c40-49cc-bd46-9673a1ed43f7
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> eb5e8af6-05dc-4834-9be1-1fe4da457d1b
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> cf3b845e-3ca7-4d94-8109-50b1f2b5ac78
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 544ab60e-0236-47ac-9fee-8bfc67b19893
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 06451f17-6db7-4362-8fd1-7cc076e0c160
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 87801e09-d929-4774-aae0-9e4557f95bbc
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> 6f1b229f-fc4d-4fb5-8ae1-12795fc2b80c
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> f9259f61-aa3d-4b6b-852f-c8e98adfc63e
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> f99957ec-fcf5-44ab-a093-3d2969d5b744
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 27345451-cfde-4dd2-afcd-a66deb7a4505
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 31c9aef8-aee3-4e64-8219-a2e024fb0ede
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> d81e3aa5-50b4-4489-9dfd-925f2379aee1
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 0becab03-41ba-4e87-8403-686354fe0eca
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> edc85b23-d260-48bd-b6b2-456bf0694a04
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 8eb9c14f-d3ca-4b77-ac24-91e44ba3644f
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 423b1f49-f8b4-4aa7-a20f-b89416d338e2
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 909be536-d391-4d42-9b6a-433d3841e33c
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 0b8a7399-6aa8-4e39-b9c7-75bde65278ae
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> a3eaab08-00a5-4444-89a9-6b16488a85cd
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> 020325be-b581-4478-bacd-a81b91ba0a80
+injected.js:37 [P6XmlImport] WBS inserted: AL-1331KN-104 - ALIMENTADOR -> 143131f9-4ed1-4628-8c47-ad906696e221
+injected.js:37 [P6XmlImport] WBS inserted: BR-1331KN-104 - BRITADOR -> 54b75bad-355e-4674-b463-899315825166
+injected.js:37 [P6XmlImport] WBS inserted: PN-1331KN-104 - PENEIRA -> 8ca826a3-e347-4c19-b80a-1b770dc8f1d4
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 36e4b908-6bfc-4ee0-81b7-f36688c0d101
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 3a875eff-5182-4228-96aa-68875a108c89
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> dfb011a3-9535-492e-9452-b9f4cdd7b6e5
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> ba37dec8-fd44-43ad-811f-614d4d1b0c7b
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 5fac8b11-ab34-438e-be26-39783e6cf1ff
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 2b2a5f2a-6aab-49b4-8b35-3c085348f45c
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> e5ececc7-aeda-4458-979d-532146f37660
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> 6ead2e81-fd5c-4b0c-a855-1ef806335789
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> c0b22067-0b68-45a0-9985-bec0d739cda6
+injected.js:37 [P6XmlImport] WBS inserted: TR-1331KN-112 - TRANSPORTADOR -> a6979abb-d33d-417c-a0a2-7fc3b2220bd1
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-101 - VÁLVULA GUILHOTINA -> f3d5c839-6437-4d05-9856-cfb5906dce05
+injected.js:37 [P6XmlImport] WBS inserted: PR-1331KN-104 - PONTE ROLANTE (35 t) -> c30ca875-4f29-4a42-aea7-59b54e2d6d8d
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-102 - VÁLVULA GUILHOTINA -> d49248c3-45cb-4204-8e66-f3d44bfb759e
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-103 - VÁLVULA GUILHOTINA -> f3694c71-24d0-4570-a5bf-a0ca3cc53bab
+injected.js:37 [P6XmlImport] WBS inserted: EE-1331KN-104 - VÁLVULA GUILHOTINA -> aea3d7f3-8b7f-4f4a-b622-b0553d9c403f
+injected.js:37 [P6XmlImport] WBS ObjectId Map size: 808
+injected.js:37 [P6XmlImport] Activity inserted: Mobilização Efetivo Histograma
+injected.js:37 [P6XmlImport] Activity inserted: New Activity
+injected.js:37 [P6XmlImport] Activity inserted: Pré-Montar conjunto de colunas, vigas e travessas da plataforma
+injected.js:37 [P6XmlImport] Activity inserted: Pré-Montar Painel Lateral - Externa ao Prédio
+injected.js:37 [P6XmlImport] Activity inserted: Pré-Montar Cobertura - Externa ao Prédio
+2injected.js:37 [ensureActivityCodes] All activities have codes

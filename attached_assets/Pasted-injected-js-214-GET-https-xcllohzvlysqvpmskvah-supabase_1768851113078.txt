@@ -1,0 +1,33 @@
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/resource_allocations?select=*%2Cresources%28*%2Cresource_types%28*%29%29&empresa_id=eq.f6f37e93-be66-4334-9a3f-4e05c4d9bd01&ativo=eq.true&projeto_id=eq.43b4559d-745e-42a8-90c5-43a1dc37d3dc&order=data_inicio.asc 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:37 Error fetching allocations: {message: 'column resource_allocations.projeto_id does not exist', code: '42703'}
+(anonymous) @ injected.js:37
+getAllocations @ resourceService.ts:535
+await in getAllocations
+(anonymous) @ useResources.ts:45
+await in (anonymous)
+(anonymous) @ useResources.ts:59
+commitHookEffectListMount @ chunk-334SA7H6.js?v=6d1c649c:16915
+commitPassiveMountOnFiber @ chunk-334SA7H6.js?v=6d1c649c:18156
+commitPassiveMountEffects_complete @ chunk-334SA7H6.js?v=6d1c649c:18129
+commitPassiveMountEffects_begin @ chunk-334SA7H6.js?v=6d1c649c:18119
+commitPassiveMountEffects @ chunk-334SA7H6.js?v=6d1c649c:18109
+flushPassiveEffectsImpl @ chunk-334SA7H6.js?v=6d1c649c:19490
+flushPassiveEffects @ chunk-334SA7H6.js?v=6d1c649c:19447
+commitRootImpl @ chunk-334SA7H6.js?v=6d1c649c:19416
+commitRoot @ chunk-334SA7H6.js?v=6d1c649c:19277
+performSyncWorkOnRoot @ chunk-334SA7H6.js?v=6d1c649c:18895
+flushSyncCallbacks @ chunk-334SA7H6.js?v=6d1c649c:9119
+(anonymous) @ chunk-334SA7H6.js?v=6d1c649c:18627Understand this error
+injected.js:37 [ensureActivityCodes] All activities have codes
+injected.js:214  GET https://xcllohzvlysqvpmskvah.supabase.co/rest/v1/resource_allocations?select=*%2Cresources%28*%2Cresource_types%28*%29%29&empresa_id=eq.f6f37e93-be66-4334-9a3f-4e05c4d9bd01&ativo=eq.true&projeto_id=eq.43b4559d-745e-42a8-90c5-43a1dc37d3dc&order=data_inicio.asc 400 (Bad Request)
+apply @ injected.js:214
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6331
+(anonymous) @ @supabase_supabase-js.js?v=6d1c649c:6349
+await in (anonymous)
+then @ @supabase_supabase-js.js?v=6d1c649c:606Understand this error
+injected.js:37 Error fetching allocations: {message: 'column resource_allo

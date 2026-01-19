@@ -277,6 +277,8 @@ class P6XmlImportService {
         }
 
         const uniqueCode = `${wbs.code}_${Date.now().toString(36).slice(-4)}`;
+        // WBS nodes are children of schedule (nivel=1), so start at nivel=2
+        const wbsNivel = this.getWbsDepth(wbs.objectId) + 2;
         const { data: newNode, error: insertError } = await supabase
           .from('eps_nodes')
           .insert({
@@ -285,7 +287,7 @@ class P6XmlImportService {
             parent_id: parentNodeId,
             empresa_id: empresaId,
             ordem: wbs.sequenceNumber,
-            nivel: this.getWbsDepth(wbs.objectId) + 1,
+            nivel: wbsNivel,
             ativo: true,
             peso_estimado: null,
           })
