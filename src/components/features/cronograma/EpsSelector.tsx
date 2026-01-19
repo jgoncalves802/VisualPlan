@@ -170,14 +170,21 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
         return;
       }
 
-      const collectDescendantIds = async (parentId: string): Promise<string[]> => {
+      console.log('[EpsSelector] Starting to collect descendant IDs...');
+      
+      const collectDescendantIds = async (parentId: string, depth = 0): Promise<string[]> => {
+        if (depth > 20) {
+          console.warn('[EpsSelector] Max depth reached, stopping recursion');
+          return [];
+        }
+        
         const { data: children, error: queryError } = await supabase
           .from('eps_nodes')
           .select('id')
           .eq('parent_id', parentId);
         
         if (queryError) {
-          console.warn('Error querying WBS children:', queryError);
+          console.warn('[EpsSelector] Error querying WBS children:', queryError);
           return [];
         }
         
@@ -187,7 +194,7 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
         const grandchildIds: string[] = [];
         
         for (const childId of childIds) {
-          const descendants = await collectDescendantIds(childId);
+          const descendants = await collectDescendantIds(childId, depth + 1);
           grandchildIds.push(...descendants);
         }
         
@@ -195,15 +202,22 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       };
 
       const wbsIdsToDelete = await collectDescendantIds(projectToDelete.id);
+      console.log('[EpsSelector] Found', wbsIdsToDelete.length, 'descendant WBS nodes');
+      
       const allWbsIds = [projectToDelete.id, ...wbsIdsToDelete];
       
-      console.log('[EpsSelector] Deleting project with all WBS IDs:', allWbsIds);
+      console.log('[EpsSelector] Deleting project with all WBS IDs:', allWbsIds.length, 'total');
 
-      const { data: activities } = await supabase
+      console.log('[EpsSelector] Querying activities to delete...');
+      
+      const { data: activities, error: actQueryError } = await supabase
         .from('atividades_cronograma')
         .select('id')
         .or(`projeto_id.eq.${projectToDelete.id},wbs_id.in.(${allWbsIds.join(',')})`);
 
+      if (actQueryError) {
+        console.error('[EpsSelector] Error querying activities:', actQueryError);
+      }
       console.log('[EpsSelector] Activities to delete:', activities?.length || 0);
 
       if (activities && activities.length > 0) {
