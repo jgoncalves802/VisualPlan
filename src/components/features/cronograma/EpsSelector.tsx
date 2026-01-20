@@ -135,6 +135,7 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
   }, [usuario?.empresaId]);
 
   const handleDoubleClick = (project: EpsNode) => {
+    console.log('[EpsSelector] Project selected:', project.id, project.nome);
     onSelectProject(project.id, project.nome);
   };
 

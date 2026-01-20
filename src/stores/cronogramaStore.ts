@@ -496,6 +496,7 @@ export const useCronogramaStore = create<CronogramaState>()(
        * depois sincroniza com Supabase em background se cache expirado
        */
       carregarAtividades: async (projetoId: string) => {
+        console.log('[CronogramaStore] carregarAtividades called with projetoId:', projetoId);
         set({ isLoading: true, erro: null });
 
         // Helper function to process activities
@@ -551,6 +552,12 @@ export const useCronogramaStore = create<CronogramaState>()(
                 cronogramaService.getAtividades(projetoId),
                 epsService.getProjectWbsTree(projetoId),
               ]);
+              
+              console.log('[CronogramaStore] Loaded from Supabase:', { 
+                atividades: atividades.length, 
+                wbsNodes: wbsNodes.length,
+                projetoId 
+              });
               
               // Update cache
               setActivitiesToCache(projetoId, atividades);
