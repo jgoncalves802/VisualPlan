@@ -121,6 +121,7 @@ export const EpsSelector: React.FC<EpsSelectorProps> = ({ onSelectProject, onCre
       try {
         setIsLoading(true);
         const projectList = await epsService.getEpsOnlyTree(usuario.empresaId);
+        console.log('[EpsSelector] Loaded projects:', projectList.length, projectList.map(p => ({ id: p.id, nome: p.nome, nivel: p.nivel, createdBy: p.createdBy })));
         setProjects(projectList);
       } catch (err) {
         console.error('Error loading projects:', err);
