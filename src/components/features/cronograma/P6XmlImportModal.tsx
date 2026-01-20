@@ -70,6 +70,10 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
     try {
       let targetProjetoId = projetoId;
       
+      // Get current user ID for created_by field
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || null;
+      
       if (!targetProjetoId) {
         const { data: newProject, error: projectError } = await supabase
           .from('eps_nodes')
@@ -81,6 +85,7 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
             nivel: 0,
             ordem: 0,
             ativo: true,
+            created_by: userId,
           })
           .select('id')
           .single();
@@ -100,6 +105,7 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
           nivel: 1,
           ordem: 0,
           ativo: true,
+          created_by: userId,
         })
         .select('id')
         .single();
@@ -110,7 +116,8 @@ export const P6XmlImportModal: React.FC<P6XmlImportModalProps> = ({
         targetProjetoId!,
         empresaId,
         scheduleNode.id,
-        hoursPerDay
+        hoursPerDay,
+        userId
       );
       
       setImportResult(result);

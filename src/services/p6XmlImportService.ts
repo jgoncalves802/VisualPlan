@@ -225,7 +225,8 @@ class P6XmlImportService {
     projetoId: string,
     empresaId: string,
     scheduleNodeId: string,
-    hoursPerDay: number = 9
+    hoursPerDay: number = 9,
+    userId?: string | null
   ): Promise<P6XmlImportResult> {
     const errors: P6ImportValidationError[] = [];
     const warnings: P6ImportValidationError[] = [];
@@ -290,6 +291,7 @@ class P6XmlImportService {
             nivel: wbsNivel,
             ativo: true,
             peso_estimado: null,
+            created_by: userId || null,
           })
           .select('id')
           .single();

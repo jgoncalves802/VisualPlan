@@ -358,9 +358,20 @@ export const WBSPage: React.FC = () => {
     const visible = new Set<string>();
     
     const obsNodeIds = userAssignments.map(a => a.obsNodeId);
+    const userId = usuario?.id;
     
     const addVisibleNodes = (node: EpsNode) => {
-      if (node.responsibleManagerId && obsNodeIds.includes(node.responsibleManagerId)) {
+      // User can see nodes they created (import, manual creation)
+      if (node.createdBy === userId) {
+        visible.add(node.id);
+        const addAllChildren = (n: EpsNode) => {
+          visible.add(n.id);
+          n.children?.forEach(addAllChildren);
+        };
+        node.children?.forEach(addAllChildren);
+      }
+      // User can see nodes assigned via OBS
+      else if (node.responsibleManagerId && obsNodeIds.includes(node.responsibleManagerId)) {
         visible.add(node.id);
         const addAllChildren = (n: EpsNode) => {
           visible.add(n.id);
@@ -396,7 +407,7 @@ export const WBSPage: React.FC = () => {
     });
     
     return visible;
-  }, [isAdmin, userAssignments, epsTree]);
+  }, [isAdmin, userAssignments, epsTree, usuario?.id]);
 
   const canEditWbsForProject = useCallback((projectId: string): boolean => {
     if (isAdmin) return true;
