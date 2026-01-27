@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { projectDataStorage } from '../../../services/storageService';
 
 interface Recurso {
   id: string;
@@ -44,8 +45,8 @@ export const RecursosModal: React.FC<RecursosModalProps> = ({ open, onClose }) =
   });
 
   useEffect(() => {
-    // Carregar recursos do localStorage
-    const savedRecursos = localStorage.getItem('recursos');
+    // Carregar recursos do sessionStorage (isolado por aba)
+    const savedRecursos = projectDataStorage.getItem('recursos');
     if (savedRecursos) {
       setRecursos(JSON.parse(savedRecursos));
     } else {
@@ -58,10 +59,10 @@ export const RecursosModal: React.FC<RecursosModalProps> = ({ open, onClose }) =
         { id: 'rec-5', nome: 'Betoneira', tipo: 'Equipamento', unidade: 'h', custo_hora: 50, disponibilidade: 100, cor: '#8B5CF6' },
       ];
       setRecursos(recursosDefault);
-      localStorage.setItem('recursos', JSON.stringify(recursosDefault));
+      projectDataStorage.setItem('recursos', JSON.stringify(recursosDefault));
     }
 
-    const savedAlocacoes = localStorage.getItem('alocacoes-recursos');
+    const savedAlocacoes = projectDataStorage.getItem('alocacoes-recursos');
     if (savedAlocacoes) {
       setAlocacoes(JSON.parse(savedAlocacoes));
     }
@@ -79,7 +80,7 @@ export const RecursosModal: React.FC<RecursosModalProps> = ({ open, onClose }) =
         r.id === recursoEditando.id ? { ...r, ...formData } : r
       );
       setRecursos(novosRecursos);
-      localStorage.setItem('recursos', JSON.stringify(novosRecursos));
+      projectDataStorage.setItem('recursos', JSON.stringify(novosRecursos));
     } else {
       // Criar novo recurso
       const novoRecurso: Recurso = {
@@ -94,7 +95,7 @@ export const RecursosModal: React.FC<RecursosModalProps> = ({ open, onClose }) =
 
       const novosRecursos = [...recursos, novoRecurso];
       setRecursos(novosRecursos);
-      localStorage.setItem('recursos', JSON.stringify(novosRecursos));
+      projectDataStorage.setItem('recursos', JSON.stringify(novosRecursos));
     }
 
     limparForm();
@@ -113,12 +114,12 @@ export const RecursosModal: React.FC<RecursosModalProps> = ({ open, onClose }) =
 
     const novosRecursos = recursos.filter((r) => r.id !== recurso.id);
     setRecursos(novosRecursos);
-    localStorage.setItem('recursos', JSON.stringify(novosRecursos));
+    projectDataStorage.setItem('recursos', JSON.stringify(novosRecursos));
 
     // Remover alocações deste recurso
     const novasAlocacoes = alocacoes.filter((a) => a.recurso_id !== recurso.id);
     setAlocacoes(novasAlocacoes);
-    localStorage.setItem('alocacoes-recursos', JSON.stringify(novasAlocacoes));
+    projectDataStorage.setItem('alocacoes-recursos', JSON.stringify(novasAlocacoes));
   };
 
   const limparForm = () => {

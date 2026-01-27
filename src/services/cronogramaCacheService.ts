@@ -1,9 +1,13 @@
 /**
  * Serviço de Cache para o Cronograma
- * Minimiza requisições ao Supabase usando localStorage com TTL
+ * Minimiza requisições ao Supabase usando sessionStorage com TTL
+ * 
+ * IMPORTANTE: Usa sessionStorage (isolado por aba) para evitar conflitos
+ * quando o usuário trabalha com múltiplos projetos em abas diferentes.
  */
 
 import { AtividadeMock, DependenciaAtividade } from '../types/cronograma';
+import { projectDataStorage } from './storageService';
 
 // ============================================================================
 // CONFIGURAÇÕES
@@ -71,7 +75,7 @@ export const getColumnConfigFromCache = (
   projetoId: string
 ): ColumnConfig | null => {
   const key = getCacheKey('columns', userId, projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return null;
   
@@ -98,7 +102,7 @@ export const setColumnConfigToCache = (
   };
   
   try {
-    localStorage.setItem(key, JSON.stringify(entry));
+    projectDataStorage.setItem(key, JSON.stringify(entry));
   } catch (e) {
     console.warn('Failed to save column config to cache:', e);
   }
@@ -109,7 +113,7 @@ export const isColumnConfigCacheExpired = (
   projetoId: string
 ): boolean => {
   const key = getCacheKey('columns', userId, projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return true;
   
@@ -132,7 +136,7 @@ export const getActivitiesFromCache = (
   projetoId: string
 ): ActivitiesCache | null => {
   const key = getCacheKey('activities', projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return null;
   
@@ -158,7 +162,7 @@ export const setActivitiesToCache = (
   };
   
   try {
-    localStorage.setItem(key, JSON.stringify(entry));
+    projectDataStorage.setItem(key, JSON.stringify(entry));
   } catch (e) {
     console.warn('Failed to save activities to cache:', e);
     clearOldCaches();
@@ -167,7 +171,7 @@ export const setActivitiesToCache = (
 
 export const isActivitiesCacheExpired = (projetoId: string): boolean => {
   const key = getCacheKey('activities', projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return true;
   
@@ -222,7 +226,7 @@ export const getDependenciesFromCache = (
   projetoId: string
 ): DependenciaAtividade[] | null => {
   const key = getCacheKey('dependencies', projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return null;
   
@@ -248,7 +252,7 @@ export const setDependenciesToCache = (
   };
   
   try {
-    localStorage.setItem(key, JSON.stringify(entry));
+    projectDataStorage.setItem(key, JSON.stringify(entry));
   } catch (e) {
     console.warn('Failed to save dependencies to cache:', e);
   }
@@ -269,7 +273,7 @@ const DEFAULT_ACTIVITY_TEMPLATE: ActivityTemplate = {
 
 export const getActivityTemplate = (): ActivityTemplate => {
   const key = getCacheKey('activity_template');
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   
   if (!cached) return DEFAULT_ACTIVITY_TEMPLATE;
   
@@ -289,7 +293,7 @@ export const setActivityTemplate = (template: Partial<ActivityTemplate>): void =
   };
   
   try {
-    localStorage.setItem(key, JSON.stringify(entry));
+    projectDataStorage.setItem(key, JSON.stringify(entry));
   } catch (e) {
     console.warn('Failed to save activity template to cache:', e);
   }
@@ -326,7 +330,7 @@ interface PendingOperation {
 
 export const getPendingOperations = (projetoId: string): PendingOperation[] => {
   const key = getCacheKey('pending_ops', projetoId);
-  const cached = localStorage.getItem(key);
+  const cached = projectDataStorage.getItem(key);
   return safeJSONParse<PendingOperation[]>(cached, []);
 };
 
@@ -343,7 +347,7 @@ export const addPendingOperation = (
   
   const key = getCacheKey('pending_ops', projetoId);
   try {
-    localStorage.setItem(key, JSON.stringify(operations));
+    projectDataStorage.setItem(key, JSON.stringify(operations));
   } catch (e) {
     console.warn('Failed to save pending operation:', e);
   }
@@ -355,7 +359,7 @@ export const removePendingOperation = (projetoId: string, operationId: string): 
   
   const key = getCacheKey('pending_ops', projetoId);
   try {
-    localStorage.setItem(key, JSON.stringify(filtered));
+    projectDataStorage.setItem(key, JSON.stringify(filtered));
   } catch (e) {
     console.warn('Failed to remove pending operation:', e);
   }
@@ -381,29 +385,13 @@ export const updateTempIdToReal = (
 // ============================================================================
 
 export const clearProjectCache = (projetoId: string): void => {
-  const keysToRemove: string[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.includes(projetoId)) {
-      keysToRemove.push(key);
-    }
-  }
-  
-  keysToRemove.forEach(key => localStorage.removeItem(key));
+  const keysToRemove = projectDataStorage.getKeysMatching(projetoId);
+  keysToRemove.forEach(key => projectDataStorage.removeItem(key));
 };
 
 export const clearAllCache = (): void => {
-  const keysToRemove: string[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(CACHE_PREFIX)) {
-      keysToRemove.push(key);
-    }
-  }
-  
-  keysToRemove.forEach(key => localStorage.removeItem(key));
+  const keysToRemove = projectDataStorage.getKeysMatching(CACHE_PREFIX);
+  keysToRemove.forEach(key => projectDataStorage.removeItem(key));
 };
 
 export const clearOldCaches = (): void => {
@@ -411,24 +399,23 @@ export const clearOldCaches = (): void => {
   const now = Date.now();
   const maxAge = 7 * 24 * 60 * 60 * 1000;
   
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(CACHE_PREFIX)) {
-      try {
-        const cached = localStorage.getItem(key);
-        if (cached) {
-          const entry = JSON.parse(cached) as CacheEntry<unknown>;
-          if (now - entry.timestamp > maxAge) {
-            keysToRemove.push(key);
-          }
+  const allKeys = projectDataStorage.getKeysMatching(CACHE_PREFIX);
+  
+  for (const key of allKeys) {
+    try {
+      const cached = projectDataStorage.getItem(key);
+      if (cached) {
+        const entry = JSON.parse(cached) as CacheEntry<unknown>;
+        if (now - entry.timestamp > maxAge) {
+          keysToRemove.push(key);
         }
-      } catch {
-        keysToRemove.push(key);
       }
+    } catch {
+      keysToRemove.push(key);
     }
   }
   
-  keysToRemove.forEach(key => localStorage.removeItem(key));
+  keysToRemove.forEach(key => projectDataStorage.removeItem(key));
 };
 
 // ============================================================================

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
+import { projectDataStorage } from '../../../services/storageService';
 
 interface BaselineModalProps {
   open: boolean;
@@ -28,8 +29,8 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
   const [mostrarForm, setMostrarForm] = useState(false);
 
   useEffect(() => {
-    // Carregar baselines salvas do localStorage
-    const savedBaselines = localStorage.getItem(`baselines-${projetoId}`);
+    // Carregar baselines salvas do sessionStorage (isolado por aba)
+    const savedBaselines = projectDataStorage.getItem(`baselines-${projetoId}`);
     if (savedBaselines) {
       setBaselines(JSON.parse(savedBaselines));
     }
@@ -47,7 +48,7 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
       nome: ativ.nome,
       data_inicio: ativ.data_inicio,
       data_fim: ativ.data_fim,
-      duracao: ativ.duracao,
+      duracao_dias: ativ.duracao_dias,
       progresso: ativ.progresso,
     }));
 
@@ -60,15 +61,15 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
       ativo: true,
     };
 
-    // Salvar snapshot no localStorage
-    localStorage.setItem(
+    // Salvar snapshot no sessionStorage (isolado por aba)
+    projectDataStorage.setItem(
       `baseline-snapshot-${novaBaselineObj.id}`,
       JSON.stringify(snapshot)
     );
 
     const novasBaselines = [...baselines, novaBaselineObj];
     setBaselines(novasBaselines);
-    localStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
+    projectDataStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
 
     // Aplicar baseline às atividades atuais
     aplicarBaselineAAtividades(snapshot);
@@ -92,7 +93,7 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
   };
 
   const ativarBaseline = (baseline: Baseline) => {
-    const snapshot = localStorage.getItem(`baseline-snapshot-${baseline.id}`);
+    const snapshot = projectDataStorage.getItem(`baseline-snapshot-${baseline.id}`);
     if (snapshot) {
       aplicarBaselineAAtividades(JSON.parse(snapshot));
 
@@ -102,7 +103,7 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
         ativo: b.id === baseline.id,
       }));
       setBaselines(novasBaselines);
-      localStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
+      projectDataStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
 
       alert(`Linha de base "${baseline.nome}" ativada!`);
       window.location.reload(); // Recarregar para aplicar mudanças
@@ -115,12 +116,12 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
     }
 
     // Remover snapshot
-    localStorage.removeItem(`baseline-snapshot-${baseline.id}`);
+    projectDataStorage.removeItem(`baseline-snapshot-${baseline.id}`);
 
     // Remover baseline
     const novasBaselines = baselines.filter((b) => b.id !== baseline.id);
     setBaselines(novasBaselines);
-    localStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
+    projectDataStorage.setItem(`baselines-${projetoId}`, JSON.stringify(novasBaselines));
   };
 
   const limparTodasBaselines = () => {
@@ -130,12 +131,12 @@ export const BaselineModal: React.FC<BaselineModalProps> = ({ open, onClose, pro
 
     // Remover todos os snapshots
     baselines.forEach((b) => {
-      localStorage.removeItem(`baseline-snapshot-${b.id}`);
+      projectDataStorage.removeItem(`baseline-snapshot-${b.id}`);
     });
 
     // Limpar lista
     setBaselines([]);
-    localStorage.removeItem(`baselines-${projetoId}`);
+    projectDataStorage.removeItem(`baselines-${projetoId}`);
 
     // Remover baseline das atividades
     atividades.forEach((ativ) => {

@@ -71,6 +71,11 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **Cache Segregation**: `cronogramaCacheService` uses project-specific cache keys (`visionplan_cache_activities_${projetoId}`).
         *   **Logging Hook**: `useProjectIsolation` hook provides structured logging for project switches and data loading with contamination detection.
         *   **Architecture Documentation**: `docs/ARCHITECTURE_FLOW.md` contains Mermaid flowcharts showing data flow and isolation points.
+        *   **Storage Service Architecture**: Centralized storage abstraction in `src/services/storageService.ts`:
+            *   **projectDataStorage**: Uses `sessionStorage` for project data cache (isolated per browser tab). Prevents conflicts when user works with multiple projects in different tabs.
+            *   **userPreferencesStorage**: Uses `localStorage` for visual preferences (theme, column widths) that should persist across sessions.
+            *   **Migrated Files**: `cronogramaCacheService.ts`, `BaselineModal.tsx`, `RecursosModal.tsx`, `condicoesProntidaoService.ts` now use `sessionStorage` via `projectDataStorage`.
+            *   **Preserved in localStorage**: Theme settings, column resize preferences, splitter positions, user preferences (persistent across sessions).
     *   **Tutorial Page**: Interactive onboarding at `/tutorial` with step-by-step workflow guidance, tips, and warnings to avoid common mistakes.
 
 ## External Dependencies

@@ -6,12 +6,13 @@ import {
   StatusCondicaoProntidao,
   ResumoProntidao,
 } from '../types/lps';
+import { projectDataStorage } from './storageService';
 
 const STORAGE_KEY = 'visionplan_condicoes_prontidao';
 
 const getLocalCondicoes = (): CondicaoProntidao[] => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = projectDataStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       return parsed.map((c: Record<string, unknown>) => ({
@@ -23,16 +24,16 @@ const getLocalCondicoes = (): CondicaoProntidao[] => {
       }));
     }
   } catch (e) {
-    console.error('Erro ao ler condições do localStorage:', e);
+    console.error('Erro ao ler condições do sessionStorage:', e);
   }
   return [];
 };
 
 const saveLocalCondicoes = (condicoes: CondicaoProntidao[]) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(condicoes));
+    projectDataStorage.setItem(STORAGE_KEY, JSON.stringify(condicoes));
   } catch (e) {
-    console.error('Erro ao salvar condições no localStorage:', e);
+    console.error('Erro ao salvar condições no sessionStorage:', e);
   }
 };
 
