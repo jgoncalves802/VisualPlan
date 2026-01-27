@@ -427,6 +427,219 @@ export const CONSTRUCTION_THEME: GanttTheme = {
   }
 };
 
+// Modern Theme - Inspired by ClickUp, Trello, Notion
+// Soft pastel colors with excellent contrast and readability
+export const MODERN_THEME: GanttTheme = {
+  name: 'Modern',
+  colors: {
+    normalActivity: {
+      fill: '#7C3AED',      // Soft purple (ClickUp primary)
+      fillLight: '#A78BFA',
+      stroke: '#6D28D9',
+      progress: '#5B21B6',
+      text: '#FFFFFF'
+    },
+    criticalActivity: {
+      fill: '#F43F5E',      // Soft rose red
+      fillLight: '#FB7185',
+      stroke: '#E11D48',
+      progress: '#BE123C',
+      text: '#FFFFFF'
+    },
+    nearCriticalActivity: {
+      fill: '#F59E0B',      // Warm amber
+      fillLight: '#FBBF24',
+      stroke: '#D97706',
+      progress: '#B45309',
+      text: '#1F2937'
+    },
+    completedActivity: {
+      fill: '#10B981',      // Soft emerald
+      fillLight: '#34D399',
+      stroke: '#059669',
+      progress: '#047857',
+      text: '#FFFFFF'
+    },
+    summaryProject: {
+      fill: '#6366F1',      // Soft indigo
+      stroke: '#4F46E5',
+      text: '#FFFFFF'
+    },
+    summaryWBS: {
+      fill: '#8B5CF6',      // Violet
+      stroke: '#7C3AED',
+      text: '#FFFFFF'
+    },
+    milestone: {
+      fill: '#EC4899',      // Pink
+      fillCritical: '#F43F5E',
+      stroke: '#DB2777'
+    },
+    baseline: {
+      fill: '#A1A1AA',      // Soft zinc
+      stroke: '#71717A'
+    },
+    dependency: {
+      normal: '#A1A1AA',
+      critical: '#F43F5E',
+      nearCritical: '#F59E0B',
+      hover: '#7C3AED'
+    },
+    grid: {
+      rowEven: '#FFFFFF',
+      rowOdd: '#FAFAFA',
+      border: '#E5E5E5',
+      selected: '#F3E8FF',   // Soft purple tint
+      selectedBorder: '#7C3AED',
+      hover: '#F5F5F5'
+    },
+    header: {
+      background: '#FAFAFA',
+      text: '#374151',
+      border: '#E5E5E5'
+    },
+    timeline: {
+      background: '#FFFFFF',
+      gridLine: '#E5E5E5',
+      sightLine: '#FAFAFA',
+      weekend: '#F9FAFB',
+      holiday: '#FEF2F2',
+      today: '#F0FDF4',      // Soft green tint for today
+      todayLine: '#10B981'
+    },
+    selection: '#7C3AED',
+    handle: '#7C3AED',
+    handleHover: '#10B981'
+  },
+  typography: {
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    taskLabel: {
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    headerLabel: {
+      fontSize: '12px',
+      fontWeight: 600
+    },
+    gridLabel: {
+      fontSize: '13px',
+      fontWeight: 400
+    }
+  },
+  spacing: {
+    barHeight: 22,
+    rowHeight: 36,
+    barRadius: 6,
+    handleSize: 6
+  }
+};
+
+// Clean Theme - Minimalist with subtle colors (Notion-inspired)
+export const CLEAN_THEME: GanttTheme = {
+  name: 'Clean',
+  colors: {
+    normalActivity: {
+      fill: '#3B82F6',      // Calm blue
+      fillLight: '#93C5FD',
+      stroke: '#2563EB',
+      progress: '#1D4ED8',
+      text: '#FFFFFF'
+    },
+    criticalActivity: {
+      fill: '#EF4444',      // Clear red
+      fillLight: '#FCA5A5',
+      stroke: '#DC2626',
+      progress: '#B91C1C',
+      text: '#FFFFFF'
+    },
+    nearCriticalActivity: {
+      fill: '#F97316',      // Bright orange
+      fillLight: '#FDBA74',
+      stroke: '#EA580C',
+      progress: '#C2410C',
+      text: '#FFFFFF'
+    },
+    completedActivity: {
+      fill: '#22C55E',      // Bright green
+      fillLight: '#86EFAC',
+      stroke: '#16A34A',
+      progress: '#15803D',
+      text: '#FFFFFF'
+    },
+    summaryProject: {
+      fill: '#64748B',      // Slate
+      stroke: '#475569',
+      text: '#FFFFFF'
+    },
+    summaryWBS: {
+      fill: '#0EA5E9',      // Sky blue
+      stroke: '#0284C7',
+      text: '#FFFFFF'
+    },
+    milestone: {
+      fill: '#1F2937',
+      fillCritical: '#EF4444',
+      stroke: '#111827'
+    },
+    baseline: {
+      fill: '#CBD5E1',
+      stroke: '#94A3B8'
+    },
+    dependency: {
+      normal: '#94A3B8',
+      critical: '#EF4444',
+      nearCritical: '#F97316',
+      hover: '#3B82F6'
+    },
+    grid: {
+      rowEven: '#FFFFFF',
+      rowOdd: '#F8FAFC',
+      border: '#E2E8F0',
+      selected: '#EFF6FF',
+      selectedBorder: '#3B82F6',
+      hover: '#F1F5F9'
+    },
+    header: {
+      background: '#F8FAFC',
+      text: '#334155',
+      border: '#E2E8F0'
+    },
+    timeline: {
+      background: '#FFFFFF',
+      gridLine: '#E2E8F0',
+      sightLine: '#F8FAFC',
+      weekend: '#F8FAFC',
+      holiday: '#FEF2F2',
+      today: '#FFFBEB',
+      todayLine: '#EF4444'
+    },
+    selection: '#3B82F6',
+    handle: '#3B82F6',
+    handleHover: '#22C55E'
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    taskLabel: {
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    headerLabel: {
+      fontSize: '12px',
+      fontWeight: 500
+    },
+    gridLabel: {
+      fontSize: '13px',
+      fontWeight: 400
+    }
+  },
+  spacing: {
+    barHeight: 20,
+    rowHeight: 34,
+    barRadius: 4,
+    handleSize: 5
+  }
+};
+
 export type ActivityCodeColor = {
   id: string;
   name: string;
@@ -448,6 +661,8 @@ export const DEFAULT_ACTIVITY_CODE_COLORS: ActivityCodeColor[] = [
 ];
 
 export const AVAILABLE_THEMES: GanttTheme[] = [
+  MODERN_THEME,
+  CLEAN_THEME,
   P6_CLASSIC_THEME,
   DARK_THEME,
   CONSTRUCTION_THEME

@@ -14,13 +14,17 @@ interface ThemeSelectorProps {
 
 const THEME_ICONS: Record<GanttThemeName, React.ReactNode> = {
   'Empresa': <Building2 className="w-4 h-4" />,
-  'P6 Classic': <div className="w-4 h-4 rounded-full bg-blue-500" />,
+  'Modern': <div className="w-4 h-4 rounded-full bg-violet-500" />,
+  'Clean': <div className="w-4 h-4 rounded-full bg-blue-400" />,
+  'P6 Classic': <div className="w-4 h-4 rounded-full bg-blue-600" />,
   'Dark': <div className="w-4 h-4 rounded-full bg-gray-800" />,
   'Construction': <div className="w-4 h-4 rounded-full bg-amber-500" />
 };
 
 const THEME_DESCRIPTIONS: Record<GanttThemeName, string> = {
   'Empresa': 'Cores da sua empresa',
+  'Modern': 'Cores suaves estilo ClickUp',
+  'Clean': 'Minimalista estilo Notion',
   'P6 Classic': 'Estilo Primavera P6',
   'Dark': 'Tema escuro',
   'Construction': 'Tema construção'

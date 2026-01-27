@@ -16,7 +16,7 @@ import {
   DEFAULT_ACTIVITY_CODE_COLORS 
 } from '../config/theme';
 
-export type GanttThemeName = 'P6 Classic' | 'Dark' | 'Construction' | 'Empresa';
+export type GanttThemeName = 'Modern' | 'Clean' | 'P6 Classic' | 'Dark' | 'Construction' | 'Empresa';
 
 interface GanttThemeContextValue {
   theme: GanttTheme;
@@ -88,7 +88,7 @@ export function GanttThemeProvider({
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const availableThemes: GanttThemeName[] = useMemo(() => {
-    const themes: GanttThemeName[] = ['P6 Classic', 'Dark', 'Construction'];
+    const themes: GanttThemeName[] = ['Modern', 'Clean', 'P6 Classic', 'Dark', 'Construction'];
     if (companyTheme) {
       themes.unshift('Empresa');
     }
@@ -167,7 +167,7 @@ export function useGanttTheme(): GanttThemeContextValue {
     return {
       theme: P6_CLASSIC_THEME,
       themeName: 'P6 Classic',
-      availableThemes: ['P6 Classic', 'Dark', 'Construction'],
+      availableThemes: ['Modern', 'Clean', 'P6 Classic', 'Dark', 'Construction'],
       setTheme: () => {},
       setThemeByName: () => {},
       setCompanyColors: () => {},
