@@ -191,8 +191,15 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
 
       const itensToCreate: CreateItemDTO[] = [];
       const errors: string[] = [];
+      let skippedRows = 0;
 
-      jsonData.forEach((row, index) => {
+      jsonData.forEach((row) => {
+        const rowValues = Object.values(row).filter(v => v !== null && v !== undefined && String(v).trim() !== '');
+        if (rowValues.length === 0) {
+          skippedRows++;
+          return;
+        }
+
         const item: Partial<CreateItemDTO> = { mapaId };
         const valoresCustom: Record<string, string> = {};
         
@@ -216,8 +223,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
           item.valoresCustom = valoresCustom;
         }
 
-        if (!item.descricao) {
-          errors.push(`Linha ${index + 2}: Descrição obrigatória`);
+        if (!item.descricao || String(item.descricao).trim() === '') {
+          skippedRows++;
           return;
         }
         if (!item.unidade) {
@@ -228,6 +235,10 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
       });
 
       const imported = await createItensBatch(itensToCreate);
+      
+      if (skippedRows > 0) {
+        errors.push(`${skippedRows} linha(s) ignorada(s) (sem descrição ou em branco)`);
+      }
       
       setImportResult({
         success: imported,
