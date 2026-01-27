@@ -35,7 +35,7 @@ import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
 import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDisciplinaModal';
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
-import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina } from '../types/takeoff.types';
+import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
 import { useToast } from '../components/ui/Toast';
 
 type TabType = 'dashboard' | 'mapas' | 'vinculos' | 'medicoes' | 'documentos' | 'config';
@@ -331,6 +331,23 @@ const TakeoffPage: React.FC = () => {
   const [documentos, setDocumentos] = useState<TakeoffDocumento[]>([]);
   const [colunasConfig, setColunasConfig] = useState<TakeoffColunaConfig[]>([]);
   const [loadingTab, setLoadingTab] = useState(false);
+  
+  // Estados para edição de colunas
+  const [editingColuna, setEditingColuna] = useState<(TakeoffColunaConfig & { isNew?: boolean }) | null>(null);
+  const [savingColuna, setSavingColuna] = useState(false);
+  const [deletingColunaId, setDeletingColunaId] = useState<string | null>(null);
+  const [showDeleteColunaConfirm, setShowDeleteColunaConfirm] = useState(false);
+
+  const tiposColuna: { value: TipoColuna; label: string }[] = [
+    { value: 'text', label: 'Texto' },
+    { value: 'number', label: 'Número' },
+    { value: 'decimal', label: 'Decimal' },
+    { value: 'date', label: 'Data' },
+    { value: 'select', label: 'Lista' },
+    { value: 'calculated', label: 'Fórmula' },
+    { value: 'percentage', label: 'Percentual' },
+    { value: 'reference', label: 'Referência' },
+  ];
 
   useEffect(() => {
     if (usuario?.empresaId) {
@@ -465,6 +482,120 @@ const TakeoffPage: React.FC = () => {
       setEditingDocumento(null);
     } else {
       setDocumentos((prev) => [documento, ...prev]);
+    }
+  };
+
+  // Handlers para edição de colunas
+  const handleNewColuna = () => {
+    if (!selectedDisciplinaId) return;
+    setEditingColuna({
+      id: '',
+      disciplinaId: selectedDisciplinaId,
+      nome: '',
+      codigo: '',
+      tipo: 'text',
+      formula: undefined,
+      opcoes: undefined,
+      unidade: undefined,
+      casasDecimais: 2,
+      obrigatoria: false,
+      visivel: true,
+      ordem: colunasConfig.length + 1,
+      largura: 100,
+      isNew: true,
+    });
+  };
+
+  const handleEditColuna = (coluna: TakeoffColunaConfig) => {
+    setEditingColuna({ ...coluna, isNew: false });
+  };
+
+  const handleSaveColuna = async () => {
+    if (!editingColuna) return;
+    
+    // Validação
+    if (!editingColuna.nome.trim()) {
+      alert('O nome da coluna é obrigatório.');
+      return;
+    }
+    if (!editingColuna.codigo.trim()) {
+      alert('O código da coluna é obrigatório.');
+      return;
+    }
+    
+    // Verificar código único na disciplina
+    const codigoDuplicado = colunasConfig.find(
+      c => c.codigo === editingColuna.codigo && c.id !== editingColuna.id
+    );
+    if (codigoDuplicado) {
+      alert(`Já existe uma coluna com o código "${editingColuna.codigo}" nesta disciplina.`);
+      return;
+    }
+    
+    setSavingColuna(true);
+    try {
+      if (editingColuna.isNew) {
+        await takeoffService.createColunaConfig({
+          disciplinaId: editingColuna.disciplinaId,
+          nome: editingColuna.nome,
+          codigo: editingColuna.codigo,
+          tipo: editingColuna.tipo,
+          formula: editingColuna.formula,
+          opcoes: editingColuna.opcoes,
+          unidade: editingColuna.unidade,
+          casasDecimais: editingColuna.casasDecimais,
+          obrigatoria: editingColuna.obrigatoria,
+          visivel: editingColuna.visivel,
+          ordem: editingColuna.ordem,
+          largura: editingColuna.largura,
+        });
+      } else {
+        await takeoffService.updateColunaConfig(editingColuna.id, {
+          nome: editingColuna.nome,
+          codigo: editingColuna.codigo,
+          tipo: editingColuna.tipo,
+          formula: editingColuna.formula,
+          opcoes: editingColuna.opcoes,
+          unidade: editingColuna.unidade,
+          casasDecimais: editingColuna.casasDecimais,
+          obrigatoria: editingColuna.obrigatoria,
+          visivel: editingColuna.visivel,
+          ordem: editingColuna.ordem,
+          largura: editingColuna.largura,
+        });
+      }
+      // Recarregar colunas
+      const data = await takeoffService.getColunasConfig(editingColuna.disciplinaId);
+      setColunasConfig(data);
+      setEditingColuna(null);
+    } catch (error) {
+      console.error('Erro ao salvar coluna:', error);
+      alert('Erro ao salvar coluna. Tente novamente.');
+    } finally {
+      setSavingColuna(false);
+    }
+  };
+
+  const handleDeleteColunaClick = (colunaId: string) => {
+    setDeletingColunaId(colunaId);
+    setShowDeleteColunaConfirm(true);
+  };
+
+  const handleConfirmDeleteColuna = async () => {
+    if (!deletingColunaId || !selectedDisciplinaId) return;
+    
+    setIsDeleting(true);
+    try {
+      await takeoffService.deleteColunaConfig(deletingColunaId);
+      const data = await takeoffService.getColunasConfig(selectedDisciplinaId);
+      setColunasConfig(data);
+    } catch (error) {
+      console.error('Erro ao excluir coluna:', error);
+      alert('Erro ao excluir coluna. Tente novamente.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteColunaConfirm(false);
+      setDeletingColunaId(null);
     }
   };
 
@@ -1042,21 +1173,197 @@ const TakeoffPage: React.FC = () => {
 
               {selectedDisciplinaId && (
                 <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                  <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                    <h3 className="text-lg font-medium theme-text">Colunas Configuradas</h3>
-                    <p className="text-sm theme-text-secondary mt-1">
-                      {colunasConfig.length} colunas para {disciplinas.find(d => d.id === selectedDisciplinaId)?.nome || 'disciplina selecionada'}
-                    </p>
+                  <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
+                    <div>
+                      <h3 className="text-lg font-medium theme-text">Colunas Configuradas</h3>
+                      <p className="text-sm theme-text-secondary mt-1">
+                        {colunasConfig.length} colunas para {disciplinas.find(d => d.id === selectedDisciplinaId)?.nome || 'disciplina selecionada'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleNewColuna}
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Nova Coluna
+                    </button>
                   </div>
+                  
+                  {/* Formulário de Edição de Coluna */}
+                  {editingColuna && (
+                    <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium theme-text">
+                          {editingColuna.isNew ? 'Nova Coluna' : 'Editar Coluna'}
+                        </h4>
+                        <button
+                          onClick={() => setEditingColuna(null)}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          <X className="w-4 h-4 theme-text-secondary" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Nome *</label>
+                          <input
+                            type="text"
+                            value={editingColuna.nome}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, nome: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                            style={{ borderColor: 'var(--color-border)' }}
+                            placeholder="Nome da coluna"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Código *</label>
+                          <input
+                            type="text"
+                            value={editingColuna.codigo}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, codigo: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface font-mono text-sm"
+                            style={{ borderColor: 'var(--color-border)' }}
+                            placeholder="codigo_coluna"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Tipo</label>
+                          <select
+                            value={editingColuna.tipo}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, tipo: e.target.value as TipoColuna })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                            style={{ borderColor: 'var(--color-border)' }}
+                          >
+                            {tiposColuna.map(tipo => (
+                              <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Unidade</label>
+                          <input
+                            type="text"
+                            value={editingColuna.unidade || ''}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, unidade: e.target.value || undefined })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                            style={{ borderColor: 'var(--color-border)' }}
+                            placeholder="kg, m², un..."
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Casas Decimais</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={editingColuna.casasDecimais ?? ''}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, casasDecimais: e.target.value ? parseInt(e.target.value) : 0 })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                            style={{ borderColor: 'var(--color-border)' }}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium theme-text mb-1">Largura (px)</label>
+                          <input
+                            type="number"
+                            min="50"
+                            max="500"
+                            value={editingColuna.largura}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, largura: parseInt(e.target.value) || 100 })}
+                            className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                            style={{ borderColor: 'var(--color-border)' }}
+                          />
+                        </div>
+                        
+                        {editingColuna.tipo === 'select' && (
+                          <div className="md:col-span-2 lg:col-span-3">
+                            <label className="block text-sm font-medium theme-text mb-1">Opções (separadas por vírgula)</label>
+                            <input
+                              type="text"
+                              value={editingColuna.opcoes?.join(', ') || ''}
+                              onChange={(e) => setEditingColuna({ ...editingColuna, opcoes: e.target.value ? e.target.value.split(',').map(o => o.trim()).filter(Boolean) : undefined })}
+                              className="w-full px-3 py-2 border rounded-lg theme-text theme-surface"
+                              style={{ borderColor: 'var(--color-border)' }}
+                              placeholder="Opção 1, Opção 2, Opção 3"
+                            />
+                          </div>
+                        )}
+                        
+                        {editingColuna.tipo === 'calculated' && (
+                          <div className="md:col-span-2 lg:col-span-3">
+                            <label className="block text-sm font-medium theme-text mb-1">Fórmula</label>
+                            <input
+                              type="text"
+                              value={editingColuna.formula || ''}
+                              onChange={(e) => setEditingColuna({ ...editingColuna, formula: e.target.value || undefined })}
+                              className="w-full px-3 py-2 border rounded-lg theme-text theme-surface font-mono text-sm"
+                              style={{ borderColor: 'var(--color-border)' }}
+                              placeholder="=comprimento * largura * altura"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-6 mt-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editingColuna.obrigatoria}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, obrigatoria: e.target.checked })}
+                            className="w-4 h-4 rounded border-gray-300"
+                          />
+                          <span className="text-sm theme-text">Obrigatória</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editingColuna.visivel}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, visivel: e.target.checked })}
+                            className="w-4 h-4 rounded border-gray-300"
+                          />
+                          <span className="text-sm theme-text">Visível</span>
+                        </label>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 mt-4">
+                        <button
+                          onClick={() => setEditingColuna(null)}
+                          className="px-4 py-2 text-sm font-medium theme-text-secondary hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleSaveColuna}
+                          disabled={savingColuna}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {savingColuna ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Salvar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   {loadingTab ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin theme-text-secondary" />
                     </div>
-                  ) : colunasConfig.length === 0 ? (
+                  ) : colunasConfig.length === 0 && !editingColuna ? (
                     <div className="p-6 text-center theme-text-secondary">
                       Nenhuma coluna configurada para esta disciplina
                     </div>
-                  ) : (
+                  ) : colunasConfig.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -1067,16 +1374,17 @@ const TakeoffPage: React.FC = () => {
                             <th className="text-center py-3 px-4 font-medium theme-text-secondary">Obrigatória</th>
                             <th className="text-right py-3 px-4 font-medium theme-text-secondary">Largura</th>
                             <th className="text-right py-3 px-4 font-medium theme-text-secondary">Ordem</th>
+                            <th className="text-center py-3 px-4 font-medium theme-text-secondary">Ações</th>
                           </tr>
                         </thead>
                         <tbody>
                           {colunasConfig.map((col) => (
-                            <tr key={col.id} className="border-b" style={{ borderColor: 'var(--color-border)' }}>
+                            <tr key={col.id} className="border-b group hover:bg-gray-50" style={{ borderColor: 'var(--color-border)' }}>
                               <td className="py-3 px-4 theme-text font-medium">{col.nome}</td>
                               <td className="py-3 px-4 font-mono text-xs theme-text-secondary">{col.codigo}</td>
                               <td className="py-3 px-4 text-center">
                                 <span className="px-2 py-1 text-xs rounded" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
-                                  {col.tipo}
+                                  {tiposColuna.find(t => t.value === col.tipo)?.label || col.tipo}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
@@ -1088,12 +1396,30 @@ const TakeoffPage: React.FC = () => {
                               </td>
                               <td className="py-3 px-4 text-right theme-text-secondary">{col.largura}px</td>
                               <td className="py-3 px-4 text-right theme-text-secondary">{col.ordem}</td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => handleEditColuna(col)}
+                                    className="p-1.5 rounded hover:bg-blue-100 transition-colors"
+                                    title="Editar"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteColunaClick(col.id)}
+                                    className="p-1.5 rounded hover:bg-red-100 transition-colors"
+                                    title="Excluir"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
 
@@ -1174,6 +1500,20 @@ const TakeoffPage: React.FC = () => {
         onConfirm={handleConfirmDeleteDocumento}
         title="Excluir Documento"
         message="Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        isLoading={isDeleting}
+        variant="danger"
+      />
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteColunaConfirm}
+        onClose={() => {
+          setShowDeleteColunaConfirm(false);
+          setDeletingColunaId(null);
+        }}
+        onConfirm={handleConfirmDeleteColuna}
+        title="Excluir Coluna"
+        message="Tem certeza que deseja excluir esta coluna? Esta ação não pode ser desfeita e os dados associados serão removidos."
         confirmLabel="Excluir"
         isLoading={isDeleting}
         variant="danger"
