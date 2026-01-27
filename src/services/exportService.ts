@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import { AtividadeMock, DependenciaAtividade, CaminhoCritico, CabecalhoImpressao } from '../types/cronograma';
+import { VISIONPLAN_TASK_COLUMNS } from '../types/p6Import.types';
 
 // ============================================================================
 // EXPORTAÇÃO PDF
@@ -512,5 +513,189 @@ export const capturarGanttParaPDF = async (elementId: string): Promise<string> =
   });
 
   return canvas.toDataURL('image/png');
+};
+
+// ============================================================================
+// EXPORTAÇÃO TEMPLATE P6
+// ============================================================================
+
+/**
+ * Exporta template Excel para importação P6
+ * Gera uma planilha com as colunas esperadas e instruções de preenchimento
+ */
+export const exportarTemplateP6 = (): void => {
+  const wb = XLSX.utils.book_new();
+
+  // ========================================================================
+  // ABA 1: ATIVIDADES (TASK)
+  // ========================================================================
+  
+  // Colunas principais para importação
+  const mainColumns = VISIONPLAN_TASK_COLUMNS.filter(col => 
+    ['IDENTIFICACAO', 'DATAS_PLANEJADAS', 'DURACAO', 'PROGRESSO', 'STATUS', 'WBS'].includes(col.category)
+  );
+
+  // Linha de cabeçalhos
+  const headers = mainColumns.map(col => col.label);
+  
+  // Linha de descrições
+  const descriptions = mainColumns.map(col => col.description || '');
+  
+  // Linha de tipos de dados
+  const dataTypes = mainColumns.map(col => {
+    switch (col.dataType) {
+      case 'date': return 'Data (DD/MM/AAAA)';
+      case 'number': return 'Número';
+      case 'boolean': return 'Sim/Não';
+      default: return 'Texto';
+    }
+  });
+  
+  // Linha de obrigatoriedade
+  const required = mainColumns.map(col => col.required ? 'Obrigatório' : 'Opcional');
+  
+  // Linha de exemplo
+  const exampleData = mainColumns.map(col => {
+    switch (col.key) {
+      case 'codigo': return 'A1010';
+      case 'nome': return 'Fundação Bloco A';
+      case 'descricao': return 'Execução de fundação do bloco A';
+      case 'data_inicio': return '01/02/2025';
+      case 'data_fim': return '15/02/2025';
+      case 'duracao_dias': return '10';
+      case 'progresso': return '25';
+      case 'status': return 'not_started';
+      case 'wbs_caminho': return 'Projeto > Estrutura > Bloco A';
+      case 'wbs_nome': return 'Bloco A';
+      case 'wbs_codigo': return 'EST.A';
+      default: return '';
+    }
+  });
+
+  // Criar dados da planilha
+  const wsData = [
+    headers,
+    descriptions,
+    dataTypes,
+    required,
+    [], // Linha vazia
+    exampleData,
+  ];
+
+  const wsTask = XLSX.utils.aoa_to_sheet(wsData);
+  
+  // Configurar larguras das colunas
+  wsTask['!cols'] = mainColumns.map(() => ({ wch: 25 }));
+
+  XLSX.utils.book_append_sheet(wb, wsTask, 'TASK');
+
+  // ========================================================================
+  // ABA 2: PREDECESSORAS (TASKPRED)
+  // ========================================================================
+  
+  const predHeaders = ['Atividade Origem', 'Atividade Destino', 'Tipo', 'Lag (dias)'];
+  const predDescriptions = [
+    'Código da atividade predecessora',
+    'Código da atividade sucessora',
+    'FS (Finish-Start), SS (Start-Start), FF (Finish-Finish), SF (Start-Finish)',
+    'Atraso em dias (pode ser negativo)',
+  ];
+  const predExample = ['A1010', 'A1020', 'FS', '0'];
+  
+  const wsPredData = [
+    predHeaders,
+    predDescriptions,
+    [],
+    predExample,
+  ];
+
+  const wsPred = XLSX.utils.aoa_to_sheet(wsPredData);
+  wsPred['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 12 }];
+  
+  XLSX.utils.book_append_sheet(wb, wsPred, 'TASKPRED');
+
+  // ========================================================================
+  // ABA 3: INSTRUÇÕES
+  // ========================================================================
+  
+  const instructions = [
+    ['INSTRUÇÕES DE PREENCHIMENTO - VisionPlan P6 Import'],
+    [],
+    ['VISÃO GERAL'],
+    ['Este template foi gerado pelo VisionPlan para facilitar a importação de dados do Primavera P6.'],
+    ['Preencha as colunas conforme as instruções e importe o arquivo na tela de cronograma.'],
+    [],
+    ['ABAS DO ARQUIVO'],
+    ['TASK - Contém as atividades do cronograma'],
+    ['TASKPRED - Contém as dependências entre atividades (predecessoras)'],
+    [],
+    ['REGRAS DE PREENCHIMENTO'],
+    ['1. As duas primeiras linhas de cada aba são cabeçalhos e descrições - NÃO ALTERE'],
+    ['2. A linha 3 mostra o tipo de dado esperado'],
+    ['3. A linha 4 indica se o campo é obrigatório ou opcional'],
+    ['4. Comece a preencher a partir da linha 6'],
+    [],
+    ['FORMATO DE DATAS'],
+    ['Use o formato DD/MM/AAAA (ex: 15/03/2025)'],
+    ['Ou formato ISO: AAAA-MM-DD (ex: 2025-03-15)'],
+    [],
+    ['TIPOS DE DEPENDÊNCIA'],
+    ['FS - Finish-Start (Término-Início): A atividade B só pode iniciar após A terminar'],
+    ['SS - Start-Start (Início-Início): A atividade B inicia junto com A'],
+    ['FF - Finish-Finish (Término-Término): A atividade B termina junto com A'],
+    ['SF - Start-Finish (Início-Término): A atividade B termina quando A inicia'],
+    [],
+    ['VALORES DE STATUS'],
+    ['not_started - Não iniciado'],
+    ['in_progress - Em andamento'],
+    ['completed - Concluído'],
+    ['on_hold - Suspenso'],
+    ['cancelled - Cancelado'],
+    [],
+    ['WBS (ESTRUTURA DE DECOMPOSIÇÃO DO TRABALHO)'],
+    ['Use o campo "WBS Caminho" para definir a hierarquia: "Projeto > Fase > Subprojeto"'],
+    ['Ou preencha "WBS Nome" e "WBS Código" separadamente'],
+    [],
+    ['DICAS'],
+    ['- Mantenha os códigos das atividades únicos'],
+    ['- Use nomes descritivos para facilitar identificação'],
+    ['- O progresso deve ser um valor entre 0 e 100'],
+    ['- Verifique as datas de início e fim para evitar inconsistências'],
+  ];
+
+  const wsInstructions = XLSX.utils.aoa_to_sheet(instructions);
+  wsInstructions['!cols'] = [{ wch: 100 }];
+  
+  XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instruções');
+
+  // ========================================================================
+  // ABA 4: TODAS AS COLUNAS DISPONÍVEIS
+  // ========================================================================
+  
+  const allColsData = [
+    ['Campo', 'Categoria', 'Tipo de Dado', 'Obrigatório', 'Descrição'],
+    ...VISIONPLAN_TASK_COLUMNS.map(col => [
+      col.label,
+      col.category,
+      col.dataType,
+      col.required ? 'Sim' : 'Não',
+      col.description || '',
+    ])
+  ];
+
+  const wsAllCols = XLSX.utils.aoa_to_sheet(allColsData);
+  wsAllCols['!cols'] = [
+    { wch: 30 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 12 },
+    { wch: 50 },
+  ];
+  
+  XLSX.utils.book_append_sheet(wb, wsAllCols, 'Todas as Colunas');
+
+  // Salvar arquivo
+  const fileName = `template-importacao-p6-${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, fileName);
 };
 

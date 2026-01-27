@@ -342,7 +342,6 @@ export const takeoffService = {
       .from('takeoff_colunas_config')
       .select('*')
       .eq('disciplina_id', disciplinaId)
-      .eq('visivel', true)
       .order('ordem');
 
     if (error) {
@@ -350,6 +349,99 @@ export const takeoffService = {
       return [];
     }
     return (data || []).map(mapColunaFromDB);
+  },
+
+  async createColunaConfig(dto: {
+    disciplinaId: string;
+    nome: string;
+    codigo: string;
+    tipo: string;
+    formula?: string;
+    opcoes?: string[];
+    unidade?: string;
+    casasDecimais: number;
+    obrigatoria: boolean;
+    visivel: boolean;
+    ordem: number;
+    largura: number;
+  }): Promise<TakeoffColunaConfig | null> {
+    const { data, error } = await supabase
+      .from('takeoff_colunas_config')
+      .insert({
+        disciplina_id: dto.disciplinaId,
+        nome: dto.nome,
+        codigo: dto.codigo,
+        tipo: dto.tipo,
+        formula: dto.formula,
+        opcoes: dto.opcoes,
+        unidade: dto.unidade,
+        casas_decimais: dto.casasDecimais,
+        obrigatoria: dto.obrigatoria,
+        visivel: dto.visivel,
+        ordem: dto.ordem,
+        largura: dto.largura,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar coluna:', error);
+      return null;
+    }
+    return mapColunaFromDB(data);
+  },
+
+  async updateColunaConfig(id: string, dto: {
+    nome?: string;
+    codigo?: string;
+    tipo?: string;
+    formula?: string;
+    opcoes?: string[];
+    unidade?: string;
+    casasDecimais?: number;
+    obrigatoria?: boolean;
+    visivel?: boolean;
+    ordem?: number;
+    largura?: number;
+  }): Promise<TakeoffColunaConfig | null> {
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (dto.nome !== undefined) updates.nome = dto.nome;
+    if (dto.codigo !== undefined) updates.codigo = dto.codigo;
+    if (dto.tipo !== undefined) updates.tipo = dto.tipo;
+    if (dto.formula !== undefined) updates.formula = dto.formula;
+    if (dto.opcoes !== undefined) updates.opcoes = dto.opcoes;
+    if (dto.unidade !== undefined) updates.unidade = dto.unidade;
+    if (dto.casasDecimais !== undefined) updates.casas_decimais = dto.casasDecimais;
+    if (dto.obrigatoria !== undefined) updates.obrigatoria = dto.obrigatoria;
+    if (dto.visivel !== undefined) updates.visivel = dto.visivel;
+    if (dto.ordem !== undefined) updates.ordem = dto.ordem;
+    if (dto.largura !== undefined) updates.largura = dto.largura;
+
+    const { data, error } = await supabase
+      .from('takeoff_colunas_config')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar coluna:', error);
+      return null;
+    }
+    return mapColunaFromDB(data);
+  },
+
+  async deleteColunaConfig(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('takeoff_colunas_config')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao excluir coluna:', error);
+      return false;
+    }
+    return true;
   },
 
   async getMapas(projetoId: string, disciplinaId?: string): Promise<TakeoffMapa[]> {

@@ -3,27 +3,189 @@
  * Permite personalizar formatos de data, cores, comportamentos, etc.
  */
 
-import React, { useState } from 'react';
-import { X, Calendar, Eye, Palette, Settings, Keyboard, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Calendar, Eye, Palette, Settings, Keyboard, RotateCcw, Layers, Plus, Trash2, ChevronDown, ChevronRight, Edit2, Save } from 'lucide-react';
 import { useCronogramaStore } from '../../../stores/cronogramaStore';
 import { useKeyboardShortcutsStore, SHORTCUT_CATEGORIES, KeyboardShortcut } from '../../../stores/keyboardShortcutsStore';
 import { FormatoData } from '../../../types/cronograma';
 import { getFormatosDisponiveis, formatarData } from '../../../utils/dateFormatter';
+import { takeoffService } from '../../../services/takeoffService';
+import { useAuthStore } from '../../../stores/authStore';
+import type { TakeoffDisciplina, TakeoffColunaConfig, TipoColuna } from '../../../types/takeoff.types';
 
 interface ConfiguracoesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type AbaAtiva = 'datas' | 'exibicao' | 'cores' | 'comportamento' | 'atalhos';
+type AbaAtiva = 'datas' | 'exibicao' | 'cores' | 'comportamento' | 'atalhos' | 'disciplinas';
+
+interface EditingColuna extends TakeoffColunaConfig {
+  isNew?: boolean;
+}
 
 export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, onClose }) => {
   const { configuracoes, setConfiguracoes } = useCronogramaStore();
   const { toggleShortcut, resetShortcut, resetAllShortcuts, formatShortcut, getShortcutsByCategory } = useKeyboardShortcutsStore();
+  const { usuario } = useAuthStore();
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('datas');
+  
+  // Estado para aba de disciplinas
+  const [disciplinas, setDisciplinas] = useState<TakeoffDisciplina[]>([]);
+  const [disciplinaExpandida, setDisciplinaExpandida] = useState<string | null>(null);
+  const [colunasMap, setColunasMap] = useState<Record<string, TakeoffColunaConfig[]>>({});
+  const [loadingDisciplinas, setLoadingDisciplinas] = useState(false);
+  const [editingColuna, setEditingColuna] = useState<EditingColuna | null>(null);
+  const [savingColuna, setSavingColuna] = useState(false);
 
   const formatosDisponiveis = getFormatosDisponiveis();
   const dataExemplo = new Date(2009, 0, 28, 12, 33); // 28 de janeiro de 2009, 12:33
+
+  // Carregar disciplinas quando aba for selecionada
+  useEffect(() => {
+    if (abaAtiva === 'disciplinas' && usuario?.empresaId && disciplinas.length === 0) {
+      loadDisciplinas();
+    }
+  }, [abaAtiva, usuario?.empresaId]);
+
+  const loadDisciplinas = async () => {
+    if (!usuario?.empresaId) return;
+    setLoadingDisciplinas(true);
+    try {
+      const data = await takeoffService.getDisciplinas(usuario.empresaId);
+      setDisciplinas(data);
+    } catch (error) {
+      console.error('Erro ao carregar disciplinas:', error);
+    } finally {
+      setLoadingDisciplinas(false);
+    }
+  };
+
+  const loadColunas = async (disciplinaId: string) => {
+    try {
+      const colunas = await takeoffService.getColunasConfig(disciplinaId);
+      setColunasMap(prev => ({ ...prev, [disciplinaId]: colunas }));
+    } catch (error) {
+      console.error('Erro ao carregar colunas:', error);
+    }
+  };
+
+  const handleExpandDisciplina = async (disciplinaId: string) => {
+    if (disciplinaExpandida === disciplinaId) {
+      setDisciplinaExpandida(null);
+    } else {
+      setDisciplinaExpandida(disciplinaId);
+      if (!colunasMap[disciplinaId]) {
+        await loadColunas(disciplinaId);
+      }
+    }
+  };
+
+  const handleAddColuna = (disciplinaId: string) => {
+    const colunas = colunasMap[disciplinaId] || [];
+    const newColuna: EditingColuna = {
+      id: `new-${Date.now()}`,
+      disciplinaId,
+      nome: '',
+      codigo: '',
+      tipo: 'text' as TipoColuna,
+      casasDecimais: 0,
+      obrigatoria: false,
+      visivel: true,
+      ordem: colunas.length + 1,
+      largura: 100,
+      isNew: true,
+    };
+    setEditingColuna(newColuna);
+  };
+
+  const handleEditColuna = (coluna: TakeoffColunaConfig) => {
+    setEditingColuna({ ...coluna, isNew: false });
+  };
+
+  const handleSaveColuna = async () => {
+    if (!editingColuna) return;
+    
+    // Validação
+    if (!editingColuna.nome.trim()) {
+      alert('O nome da coluna é obrigatório.');
+      return;
+    }
+    if (!editingColuna.codigo.trim()) {
+      alert('O código da coluna é obrigatório.');
+      return;
+    }
+    
+    // Verificar código único na disciplina
+    const colunasExistentes = colunasMap[editingColuna.disciplinaId] || [];
+    const codigoDuplicado = colunasExistentes.find(
+      c => c.codigo === editingColuna.codigo && c.id !== editingColuna.id
+    );
+    if (codigoDuplicado) {
+      alert(`Já existe uma coluna com o código "${editingColuna.codigo}" nesta disciplina.`);
+      return;
+    }
+    
+    setSavingColuna(true);
+    try {
+      if (editingColuna.isNew) {
+        await takeoffService.createColunaConfig({
+          disciplinaId: editingColuna.disciplinaId,
+          nome: editingColuna.nome,
+          codigo: editingColuna.codigo,
+          tipo: editingColuna.tipo,
+          formula: editingColuna.formula,
+          opcoes: editingColuna.opcoes,
+          unidade: editingColuna.unidade,
+          casasDecimais: editingColuna.casasDecimais,
+          obrigatoria: editingColuna.obrigatoria,
+          visivel: editingColuna.visivel,
+          ordem: editingColuna.ordem,
+          largura: editingColuna.largura,
+        });
+      } else {
+        await takeoffService.updateColunaConfig(editingColuna.id, {
+          nome: editingColuna.nome,
+          codigo: editingColuna.codigo,
+          tipo: editingColuna.tipo,
+          formula: editingColuna.formula,
+          opcoes: editingColuna.opcoes,
+          unidade: editingColuna.unidade,
+          casasDecimais: editingColuna.casasDecimais,
+          obrigatoria: editingColuna.obrigatoria,
+          visivel: editingColuna.visivel,
+          ordem: editingColuna.ordem,
+          largura: editingColuna.largura,
+        });
+      }
+      await loadColunas(editingColuna.disciplinaId);
+      setEditingColuna(null);
+    } catch (error) {
+      console.error('Erro ao salvar coluna:', error);
+    } finally {
+      setSavingColuna(false);
+    }
+  };
+
+  const handleDeleteColuna = async (coluna: TakeoffColunaConfig) => {
+    if (!confirm(`Deseja realmente excluir a coluna "${coluna.nome}"?`)) return;
+    try {
+      await takeoffService.deleteColunaConfig(coluna.id);
+      await loadColunas(coluna.disciplinaId);
+    } catch (error) {
+      console.error('Erro ao excluir coluna:', error);
+    }
+  };
+
+  const tiposColuna: { value: TipoColuna; label: string }[] = [
+    { value: 'text', label: 'Texto' },
+    { value: 'number', label: 'Número Inteiro' },
+    { value: 'decimal', label: 'Número Decimal' },
+    { value: 'select', label: 'Lista de Opções' },
+    { value: 'date', label: 'Data' },
+    { value: 'percentage', label: 'Percentual' },
+    { value: 'calculated', label: 'Calculado (Fórmula)' },
+  ];
 
   if (!isOpen) return null;
 
@@ -150,6 +312,17 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
           >
             <Keyboard className="w-4 h-4" />
             Atalhos
+          </button>
+          <button
+            onClick={() => setAbaAtiva('disciplinas')}
+            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors ${
+              abaAtiva === 'disciplinas'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            Disciplinas
           </button>
         </div>
 
@@ -789,6 +962,306 @@ export const ConfiguracoesModal: React.FC<ConfiguracoesModalProps> = ({ isOpen, 
                   Use clique direito em uma atividade para abrir o menu de contexto.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* ABA: Disciplinas */}
+          {abaAtiva === 'disciplinas' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Configure as colunas disponíveis para cada disciplina de levantamento. 
+                Você pode adicionar, editar ou remover colunas conforme necessário.
+              </p>
+
+              {loadingDisciplinas ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : disciplinas.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Layers className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhuma disciplina encontrada.</p>
+                  <p className="text-sm">As disciplinas serão criadas automaticamente ao acessar o módulo de Levantamento.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {disciplinas.map((disciplina) => (
+                    <div key={disciplina.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => handleExpandDisciplina(disciplina.id)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-4 h-4 rounded"
+                            style={{ backgroundColor: disciplina.cor }}
+                          />
+                          <span className="font-medium text-gray-900">{disciplina.nome}</span>
+                          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                            {disciplina.codigo}
+                          </span>
+                        </div>
+                        {disciplinaExpandida === disciplina.id ? (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+
+                      {disciplinaExpandida === disciplina.id && (
+                        <div className="p-4 bg-white border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-medium text-gray-700">Colunas Configuradas</h4>
+                            <button
+                              onClick={() => handleAddColuna(disciplina.id)}
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              Nova Coluna
+                            </button>
+                          </div>
+
+                          {!colunasMap[disciplina.id] ? (
+                            <div className="flex items-center justify-center py-4">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                            </div>
+                          ) : colunasMap[disciplina.id].length === 0 ? (
+                            <p className="text-sm text-gray-500 text-center py-4">Nenhuma coluna configurada.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {colunasMap[disciplina.id].map((coluna) => (
+                                <div
+                                  key={coluna.id}
+                                  className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-800">{coluna.nome}</span>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-xs text-gray-500">{coluna.codigo}</span>
+                                        <span className="text-xs px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded">
+                                          {tiposColuna.find(t => t.value === coluna.tipo)?.label || coluna.tipo}
+                                        </span>
+                                        {coluna.obrigatoria && (
+                                          <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Obrigatória</span>
+                                        )}
+                                        {!coluna.visivel && (
+                                          <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-600 rounded">Oculta</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleEditColuna(coluna)}
+                                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                      title="Editar"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteColuna(coluna)}
+                                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                      title="Excluir"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Modal de Edição de Coluna */}
+              {editingColuna && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {editingColuna.isNew ? 'Nova Coluna' : 'Editar Coluna'}
+                      </h3>
+                      <button
+                        onClick={() => setEditingColuna(null)}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5 text-gray-500" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                          <input
+                            type="text"
+                            value={editingColuna.nome}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, nome: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex: Diâmetro"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                          <input
+                            type="text"
+                            value={editingColuna.codigo}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, codigo: e.target.value.toLowerCase().replace(/\s/g, '_') })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex: diametro"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                          <select
+                            value={editingColuna.tipo}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, tipo: e.target.value as TipoColuna })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            {tiposColuna.map(tipo => (
+                              <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Largura (px)</label>
+                          <input
+                            type="number"
+                            value={editingColuna.largura}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, largura: Number(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min={50}
+                            max={400}
+                          />
+                        </div>
+                      </div>
+
+                      {(editingColuna.tipo === 'decimal' || editingColuna.tipo === 'percentage') && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Casas Decimais</label>
+                            <input
+                              type="number"
+                              value={editingColuna.casasDecimais}
+                              onChange={(e) => setEditingColuna({ ...editingColuna, casasDecimais: Number(e.target.value) })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              min={0}
+                              max={6}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Unidade</label>
+                            <input
+                              type="text"
+                              value={editingColuna.unidade || ''}
+                              onChange={(e) => setEditingColuna({ ...editingColuna, unidade: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Ex: m, kg, un"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {editingColuna.tipo === 'select' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Opções (uma por linha)
+                          </label>
+                          <textarea
+                            value={(editingColuna.opcoes || []).join('\n')}
+                            onChange={(e) => setEditingColuna({ 
+                              ...editingColuna, 
+                              opcoes: e.target.value.split('\n').filter(o => o.trim()) 
+                            })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={4}
+                            placeholder="Opção 1&#10;Opção 2&#10;Opção 3"
+                          />
+                        </div>
+                      )}
+
+                      {editingColuna.tipo === 'calculated' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Fórmula
+                          </label>
+                          <input
+                            type="text"
+                            value={editingColuna.formula || ''}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, formula: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex: diametro * soldas"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Use os códigos das outras colunas para criar a fórmula.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editingColuna.obrigatoria}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, obrigatoria: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">Obrigatória</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editingColuna.visivel}
+                            onChange={(e) => setEditingColuna({ ...editingColuna, visivel: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">Visível</span>
+                        </label>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Ordem</label>
+                        <input
+                          type="number"
+                          value={editingColuna.ordem}
+                          onChange={(e) => setEditingColuna({ ...editingColuna, ordem: Number(e.target.value) })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          min={1}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => setEditingColuna(null)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={handleSaveColuna}
+                        disabled={savingColuna || !editingColuna.nome || !editingColuna.codigo}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                      >
+                        {savingColuna ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        Salvar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
