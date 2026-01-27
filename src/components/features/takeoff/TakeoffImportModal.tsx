@@ -180,6 +180,9 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
     setStep('importing');
     setIsProcessing(true);
 
+    const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key));
+    const numericFields = ['qtdPrevista', 'qtdTakeoff', 'pesoUnitario', 'custoUnitario'];
+
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: 'array' });
@@ -191,17 +194,27 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
 
       jsonData.forEach((row, index) => {
         const item: Partial<CreateItemDTO> = { mapaId };
+        const valoresCustom: Record<string, string> = {};
         
         mappings.forEach(({ source, target }) => {
           if (target && row[source] !== undefined) {
             const value = row[source];
-            if (['qtdPrevista', 'qtdTakeoff', 'pesoUnitario', 'custoUnitario'].includes(target)) {
-              (item as Record<string, unknown>)[target] = Number(value) || 0;
+            
+            if (defaultKeys.has(target)) {
+              if (numericFields.includes(target)) {
+                (item as Record<string, unknown>)[target] = Number(value) || 0;
+              } else {
+                (item as Record<string, unknown>)[target] = String(value || '');
+              }
             } else {
-              (item as Record<string, unknown>)[target] = String(value || '');
+              valoresCustom[target] = String(value || '');
             }
           }
         });
+
+        if (Object.keys(valoresCustom).length > 0) {
+          item.valoresCustom = valoresCustom;
+        }
 
         if (!item.descricao) {
           errors.push(`Linha ${index + 2}: Descrição obrigatória`);

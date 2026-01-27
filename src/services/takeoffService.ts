@@ -87,6 +87,7 @@ const mapItemFromDB = (row: Record<string, unknown>): TakeoffItem => ({
   percentualExecutado: Number(row.percentual_executado) || 0,
   status: row.status as TakeoffItem['status'],
   observacoes: row.observacoes as string | undefined,
+  valoresCustom: (row.valores_custom as Record<string, string>) || {},
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
@@ -622,6 +623,7 @@ export const takeoffService = {
       peso_unitario: dto.pesoUnitario || 0,
       custo_unitario: dto.custoUnitario || 0,
       observacoes: dto.observacoes,
+      valores_custom: dto.valoresCustom || {},
     }));
 
     const { data, error } = await supabase.from('takeoff_itens').insert(rows).select();
