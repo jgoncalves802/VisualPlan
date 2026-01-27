@@ -28,6 +28,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useTakeoffStore } from '../stores/takeoffStore';
 import { useEpsStore } from '../stores/epsStore';
 import { takeoffService } from '../services/takeoffService';
+import { exportarTemplateTakeoff } from '../services/exportService';
 import TakeoffGrid from '../components/features/takeoff/TakeoffGrid';
 import TakeoffDashboard from '../components/features/takeoff/TakeoffDashboard';
 import TakeoffImportModal from '../components/features/takeoff/TakeoffImportModal';
@@ -283,6 +284,7 @@ const VinculosTab: React.FC<VinculosTabProps> = ({ vinculos, onRefresh }) => {
 
 const TakeoffPage: React.FC = () => {
   const { usuario } = useAuthStore();
+  const toast = useToast();
   const { 
     disciplinas, 
     mapas,
@@ -1180,13 +1182,36 @@ const TakeoffPage: React.FC = () => {
                         {colunasConfig.length} colunas para {disciplinas.find(d => d.id === selectedDisciplinaId)?.nome || 'disciplina selecionada'}
                       </p>
                     </div>
-                    <button
-                      onClick={handleNewColuna}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Nova Coluna
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const disc = disciplinas.find(d => d.id === selectedDisciplinaId);
+                          if (disc && colunasConfig.length > 0) {
+                            exportarTemplateTakeoff(disc.nome, colunasConfig);
+                            toast?.success('Template exportado com sucesso!');
+                          } else {
+                            toast?.warning('Configure ao menos uma coluna antes de exportar.');
+                          }
+                        }}
+                        disabled={colunasConfig.length === 0}
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ 
+                          backgroundColor: 'var(--color-surface-tertiary)', 
+                          border: '1px solid var(--color-border)' 
+                        }}
+                        title="Exportar template Excel para preenchimento"
+                      >
+                        <Download className="w-4 h-4 theme-text" />
+                        <span className="theme-text">Exportar Template</span>
+                      </button>
+                      <button
+                        onClick={handleNewColuna}
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Nova Coluna
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Formulário de Edição de Coluna */}

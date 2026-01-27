@@ -699,3 +699,136 @@ export const exportarTemplateP6 = (): void => {
   XLSX.writeFile(wb, fileName);
 };
 
+// ============================================================================
+// EXPORTAÇÃO TEMPLATE TAKE-OFF (QUANTITATIVOS)
+// ============================================================================
+
+interface TakeoffColunaExport {
+  nome: string;
+  codigo: string;
+  tipo: 'text' | 'number' | 'decimal' | 'select' | 'date' | 'calculated' | 'reference' | 'percentage';
+  unidade?: string;
+  casasDecimais?: number;
+  opcoes?: string[];
+  obrigatoria: boolean;
+}
+
+/**
+ * Exporta template Excel para importação de dados de Take-off baseado nas colunas configuradas
+ */
+export const exportarTemplateTakeoff = (
+  disciplinaNome: string,
+  colunas: TakeoffColunaExport[]
+): void => {
+  const wb = XLSX.utils.book_new();
+
+  // ========================================================================
+  // ABA 1: DADOS (Template para preenchimento)
+  // ========================================================================
+  
+  const headerRow = colunas.filter(c => c.tipo !== 'calculated').map(c => {
+    let header = c.nome;
+    if (c.unidade) header += ` (${c.unidade})`;
+    if (c.obrigatoria) header += ' *';
+    return header;
+  });
+  
+  const dadosSheet: (string | number)[][] = [headerRow];
+  
+  // Adicionar 5 linhas vazias para exemplo
+  for (let i = 0; i < 5; i++) {
+    dadosSheet.push(colunas.filter(c => c.tipo !== 'calculated').map(() => ''));
+  }
+  
+  const wsDados = XLSX.utils.aoa_to_sheet(dadosSheet);
+  
+  // Configurar largura das colunas
+  wsDados['!cols'] = colunas.filter(c => c.tipo !== 'calculated').map(col => {
+    const baseWidth = Math.max(col.nome.length, 12);
+    return { wch: Math.min(baseWidth + 5, 40) };
+  });
+  
+  XLSX.utils.book_append_sheet(wb, wsDados, 'Dados');
+
+  // ========================================================================
+  // ABA 2: LISTAS (para colunas do tipo select - validações)
+  // ========================================================================
+  
+  const selectColunas = colunas.filter(c => c.tipo === 'select' && c.opcoes && c.opcoes.length > 0);
+  
+  if (selectColunas.length > 0) {
+    const maxOpcoes = Math.max(...selectColunas.map(c => c.opcoes?.length || 0));
+    const listasData: string[][] = [selectColunas.map(c => c.nome)];
+    
+    for (let i = 0; i < maxOpcoes; i++) {
+      listasData.push(selectColunas.map(c => c.opcoes?.[i] || ''));
+    }
+    
+    const wsListas = XLSX.utils.aoa_to_sheet(listasData);
+    wsListas['!cols'] = selectColunas.map(c => ({ wch: Math.max(c.nome.length, 20) }));
+    
+    XLSX.utils.book_append_sheet(wb, wsListas, 'Listas');
+  }
+
+  // ========================================================================
+  // ABA 3: INSTRUÇÕES
+  // ========================================================================
+  
+  const tipoDescricao: Record<string, string> = {
+    'text': 'Texto livre',
+    'number': 'Número inteiro (sem casas decimais)',
+    'decimal': 'Número decimal',
+    'select': 'Selecione uma opção da lista na aba "Listas"',
+    'date': 'Data no formato DD/MM/AAAA',
+    'percentage': 'Valor percentual (0 a 100)',
+    'reference': 'Referência a outro item',
+    'calculated': 'Calculado automaticamente (não preencher)',
+  };
+  
+  const instructions: (string | number)[][] = [
+    ['INSTRUÇÕES DE PREENCHIMENTO DO TEMPLATE'],
+    [],
+    [`Disciplina: ${disciplinaNome}`],
+    [`Data de Exportação: ${new Date().toLocaleDateString('pt-BR')}`],
+    [],
+    ['CAMPOS OBRIGATÓRIOS'],
+    ['Campos marcados com * (asterisco) são obrigatórios e devem ser preenchidos.'],
+    [],
+    ['DESCRIÇÃO DOS CAMPOS'],
+    ['Coluna', 'Código', 'Tipo', 'Unidade', 'Obrigatória', 'Descrição'],
+    ...colunas.map(c => [
+      c.nome,
+      c.codigo,
+      tipoDescricao[c.tipo] || c.tipo,
+      c.unidade || '-',
+      c.obrigatoria ? 'Sim' : 'Não',
+      c.tipo === 'select' ? `Opções: ${c.opcoes?.join(', ') || '-'}` : 
+        c.tipo === 'decimal' ? `${c.casasDecimais || 2} casas decimais` : '-',
+    ]),
+    [],
+    ['DICAS DE PREENCHIMENTO'],
+    ['1. Mantenha os cabeçalhos na primeira linha (não modifique)'],
+    ['2. Para campos de seleção, utilize as opções disponíveis na aba "Listas"'],
+    ['3. Valores numéricos devem usar ponto (.) como separador decimal'],
+    ['4. Datas devem estar no formato DD/MM/AAAA'],
+    ['5. Campos calculados serão preenchidos automaticamente após a importação'],
+  ];
+
+  const wsInstructions = XLSX.utils.aoa_to_sheet(instructions);
+  wsInstructions['!cols'] = [
+    { wch: 25 },
+    { wch: 20 },
+    { wch: 35 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 40 },
+  ];
+  
+  XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instruções');
+
+  // Salvar arquivo
+  const nomeArquivo = disciplinaNome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const fileName = `template-takeoff-${nomeArquivo}-${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+};
+
