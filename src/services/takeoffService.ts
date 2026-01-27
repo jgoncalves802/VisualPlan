@@ -678,6 +678,22 @@ export const takeoffService = {
     return true;
   },
 
+  async deleteItensBatch(ids: string[]): Promise<{ success: number; errors: string[] }> {
+    if (ids.length === 0) return { success: 0, errors: [] };
+    
+    const { error, count } = await supabase
+      .from('takeoff_itens')
+      .delete()
+      .in('id', ids);
+    
+    if (error) {
+      console.error('Erro ao excluir itens em lote:', error);
+      return { success: 0, errors: [error.message] };
+    }
+    
+    return { success: count || ids.length, errors: [] };
+  },
+
   async getTotais(filter: TakeoffFilter): Promise<TakeoffTotais> {
     const itens = await this.getItens(filter);
     

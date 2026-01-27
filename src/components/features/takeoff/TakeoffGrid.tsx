@@ -11,6 +11,8 @@ import {
   Loader2,
   Link2,
   Calendar,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import TakeoffItemModal from './TakeoffItemModal';
@@ -34,6 +36,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     loadColunasConfig,
     updateItem,
     deleteItem,
+    deleteItensBatch,
   } = useTakeoffStore();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,6 +44,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<TakeoffItem | null>(null);
@@ -49,15 +53,21 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   const [showVinculoModal, setShowVinculoModal] = useState(false);
   const [selectedItemForVinculo, setSelectedItemForVinculo] = useState<TakeoffItem | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteBatchConfirm, setShowDeleteBatchConfirm] = useState(false);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    setSelectedIds(new Set());
     loadItens({ mapaId });
     if (disciplinaId) {
       loadColunasConfig(disciplinaId);
     }
   }, [mapaId, disciplinaId, loadItens, loadColunasConfig]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [searchTerm]);
 
   const baseColumns = [
     { key: 'area', label: 'Área', width: 80 },
@@ -161,12 +171,55 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     }
   };
 
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === filteredItens.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredItens.map(i => i.id)));
+    }
+  };
+
+  const handleConfirmDeleteBatch = async () => {
+    if (selectedIds.size === 0) return;
+    
+    const validIds = Array.from(selectedIds).filter(id => 
+      itens.some(item => item.id === id)
+    );
+    
+    if (validIds.length === 0) {
+      setSelectedIds(new Set());
+      setShowDeleteBatchConfirm(false);
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      await deleteItensBatch(validIds);
+      setSelectedIds(new Set());
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteBatchConfirm(false);
+    }
+  };
+
   const handleOpenItemModal = (item?: TakeoffItem) => {
     setEditingItem(item || null);
     setShowItemModal(true);
   };
 
-  const handleItemSaved = (item: TakeoffItem) => {
+  const handleItemSaved = (_item: TakeoffItem) => {
     loadItens({ mapaId });
     setShowItemModal(false);
     setEditingItem(null);
@@ -261,22 +314,52 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
           <span className="text-sm theme-text-secondary">
             {filteredItens.length} de {itens.length} itens
           </span>
+          {selectedIds.size > 0 && (
+            <span className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>
+              {selectedIds.size} selecionado(s)
+            </span>
+          )}
         </div>
 
-        <button
-          onClick={() => handleOpenItemModal()}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
-          style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
-        >
-          <Plus className="w-4 h-4" />
-          Novo Item
-        </button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setShowDeleteBatchConfirm(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 text-white"
+              style={{ backgroundColor: '#dc2626' }}
+            >
+              <Trash2 className="w-4 h-4" />
+              Excluir Selecionados ({selectedIds.size})
+            </button>
+          )}
+          <button
+            onClick={() => handleOpenItemModal()}
+            className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
+            style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+          >
+            <Plus className="w-4 h-4" />
+            Novo Item
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10">
             <tr style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+              <th className="w-10 px-2 py-2 text-center text-xs font-medium theme-text-secondary border-b theme-divide">
+                <button
+                  onClick={handleToggleSelectAll}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title={selectedIds.size === filteredItens.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                >
+                  {selectedIds.size === filteredItens.length && filteredItens.length > 0 ? (
+                    <CheckSquare className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                  ) : (
+                    <Square className="w-4 h-4 theme-text-secondary" />
+                  )}
+                </button>
+              </th>
               <th className="w-20 px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide">
                 Ações
               </th>
@@ -300,12 +383,25 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
           <tbody>
             {filteredItens.map((item) => {
               const isEditing = editingId === item.id;
+              const isSelected = selectedIds.has(item.id);
               return (
                 <tr
                   key={item.id}
                   className="border-b theme-divide transition-colors"
-                  style={{ backgroundColor: isEditing ? 'var(--color-surface-secondary)' : undefined }}
+                  style={{ backgroundColor: isSelected ? 'var(--color-surface-secondary)' : isEditing ? 'var(--color-surface-secondary)' : undefined }}
                 >
+                  <td className="px-2 py-2 text-center">
+                    <button
+                      onClick={() => handleToggleSelect(item.id)}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      {isSelected ? (
+                        <CheckSquare className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                      ) : (
+                        <Square className="w-4 h-4 theme-text-secondary" />
+                      )}
+                    </button>
+                  </td>
                   <td className="px-2 py-2">
                     {isEditing ? (
                       <div className="flex items-center gap-1">
@@ -470,6 +566,15 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
         onConfirm={handleConfirmDelete}
         title="Excluir Item"
         message="Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita."
+        isLoading={isDeleting}
+      />
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteBatchConfirm}
+        onClose={() => setShowDeleteBatchConfirm(false)}
+        onConfirm={handleConfirmDeleteBatch}
+        title="Excluir Itens Selecionados"
+        message={`Tem certeza que deseja excluir ${selectedIds.size} item(ns) selecionado(s)? Esta ação não pode ser desfeita.`}
         isLoading={isDeleting}
       />
     </div>

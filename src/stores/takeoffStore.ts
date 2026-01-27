@@ -44,6 +44,7 @@ interface TakeoffState {
   createItensBatch: (itens: CreateItemDTO[]) => Promise<number>;
   updateItem: (id: string, dto: UpdateItemDTO) => Promise<TakeoffItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
+  deleteItensBatch: (ids: string[]) => Promise<{ success: number; errors: string[] }>;
   
   setSelectedDisciplina: (id: string | null) => void;
   setSelectedMapa: (id: string | null) => void;
@@ -238,6 +239,24 @@ export const useTakeoffStore = create<TakeoffState>((set, get) => ({
     } catch (error) {
       set({ error: 'Erro ao excluir item' });
       return false;
+    }
+  },
+
+  deleteItensBatch: async (ids: string[]) => {
+    try {
+      const result = await takeoffService.deleteItensBatch(ids);
+      if (result.success > 0) {
+        set((state) => ({
+          itens: state.itens.filter((i) => !ids.includes(i.id)),
+        }));
+        const { filter } = get();
+        const totais = await takeoffService.getTotais(filter);
+        set({ totais });
+      }
+      return result;
+    } catch (error) {
+      set({ error: 'Erro ao excluir itens' });
+      return { success: 0, errors: ['Erro ao excluir itens'] };
     }
   },
 
