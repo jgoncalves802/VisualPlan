@@ -445,15 +445,19 @@ const TakeoffPage: React.FC = () => {
     if (!selectedMapaId) return;
     
     const mapaAtual = mapas.find(m => m.id === selectedMapaId);
+    console.log('[TakeoffImport] Opening modal for mapa:', selectedMapaId, 'disciplina:', mapaAtual?.disciplinaId);
+    
     if (mapaAtual?.disciplinaId) {
       try {
         const colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId);
+        console.log('[TakeoffImport] Loaded columns:', colunas.length, colunas.map(c => c.nome));
         setImportColunasConfig(colunas);
       } catch (error) {
         console.error('Erro ao carregar colunas para importação:', error);
         setImportColunasConfig([]);
       }
     } else {
+      console.log('[TakeoffImport] No disciplina found for mapa');
       setImportColunasConfig([]);
     }
     setShowImportModal(true);
