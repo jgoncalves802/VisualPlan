@@ -332,6 +332,7 @@ const TakeoffPage: React.FC = () => {
   const [medicoes, setMedicoes] = useState<TakeoffMedicao[]>([]);
   const [documentos, setDocumentos] = useState<TakeoffDocumento[]>([]);
   const [colunasConfig, setColunasConfig] = useState<TakeoffColunaConfig[]>([]);
+  const [importColunasConfig, setImportColunasConfig] = useState<TakeoffColunaConfig[]>([]);
   const [loadingTab, setLoadingTab] = useState(false);
   
   // Estados para edição de colunas
@@ -438,6 +439,24 @@ const TakeoffPage: React.FC = () => {
   const handleMapaSelect = (mapaId: string) => {
     setSelectedMapa(mapaId);
     setActiveTab('mapas');
+  };
+
+  const handleOpenImportModal = async () => {
+    if (!selectedMapaId) return;
+    
+    const mapaAtual = mapas.find(m => m.id === selectedMapaId);
+    if (mapaAtual?.disciplinaId) {
+      try {
+        const colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId);
+        setImportColunasConfig(colunas);
+      } catch (error) {
+        console.error('Erro ao carregar colunas para importação:', error);
+        setImportColunasConfig([]);
+      }
+    } else {
+      setImportColunasConfig([]);
+    }
+    setShowImportModal(true);
   };
 
   const handleDisciplinaSave = (_disciplina: TakeoffDisciplina) => {
@@ -660,7 +679,7 @@ const TakeoffPage: React.FC = () => {
             {selectedMapaId && (
               <>
                 <button
-                  onClick={() => setShowImportModal(true)}
+                  onClick={handleOpenImportModal}
                   className="flex items-center gap-2 px-3 py-2 text-sm theme-text rounded-lg hover:opacity-80 transition-opacity"
                   style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
                 >
@@ -1468,7 +1487,7 @@ const TakeoffPage: React.FC = () => {
         <TakeoffImportModal
           mapaId={selectedMapaId}
           onClose={() => setShowImportModal(false)}
-          colunasConfig={colunasConfig}
+          colunasConfig={importColunasConfig}
         />
       )}
 
