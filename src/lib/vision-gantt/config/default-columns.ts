@@ -114,9 +114,9 @@ const renderProgress = (value: number, task: Task) => {
   );
 };
 
-// Duration renderer with unit badge
+// Duration renderer with unit badge - theme-aware
 const renderDuration = (value: number, task: Task) => {
-  if (!value && value !== 0) return React.createElement('span', { className: 'text-gray-400' }, '-');
+  if (!value && value !== 0) return React.createElement('span', { style: { opacity: 0.5 } }, '-');
   
   const isMilestone = (task as any).isMilestone === true || value === 0;
   
@@ -137,14 +137,14 @@ const renderDuration = (value: number, task: Task) => {
           null,
           React.createElement(
             'span',
-            { className: 'font-semibold text-gray-800' },
+            { style: { fontWeight: 600, color: 'inherit' } },
             value
           ),
           React.createElement(
             'span',
             { 
               className: 'text-xs px-1.5 py-0.5 rounded font-medium',
-              style: { backgroundColor: '#E5E7EB', color: '#4B5563' }
+              style: { backgroundColor: 'rgba(128,128,128,0.15)', color: 'inherit', opacity: 0.8 }
             },
             'd'
           )
@@ -187,9 +187,9 @@ const renderTotalFloat = (value: number, _task: Task) => {
   );
 };
 
-// Date renderer with professional formatting
+// Date renderer with professional formatting - theme-aware
 const renderDate = (value: Date | string) => {
-  if (!value) return React.createElement('span', { className: 'text-gray-400' }, '-');
+  if (!value) return React.createElement('span', { style: { opacity: 0.5 } }, '-');
   
   const date = new Date(value);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -199,7 +199,8 @@ const renderDate = (value: Date | string) => {
     { 
       className: 'text-sm font-medium',
       style: { 
-        color: isWeekend ? '#9CA3AF' : '#374151'
+        color: 'inherit',
+        opacity: isWeekend ? 0.6 : 1
       }
     },
     format(date, 'dd MMM yyyy', { locale: ptBR })
@@ -218,12 +219,13 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
     resizable: false,
     renderer: (value: any, _task: Task) => {
       if (!value) {
-        return React.createElement('span', { className: 'text-gray-400' }, '-');
+        return React.createElement('span', { style: { opacity: 0.5 } }, '-');
       }
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-mono font-semibold text-gray-700',
+          className: 'text-xs font-mono font-semibold',
+          style: { color: 'inherit' },
           title: `Activity ID: ${value}`
         },
         value
@@ -330,11 +332,11 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     renderer: (_value: any, task: Task) => {
       const predecessors = (task as any).predecessors || [];
       if (!predecessors || predecessors.length === 0) {
-        return React.createElement('span', { className: 'text-gray-400' }, '-');
+        return React.createElement('span', { style: { opacity: 0.5 } }, '-');
       }
       const formattedPreds = predecessors.map(formatDependency).filter(Boolean);
       if (formattedPreds.length === 0) {
-        return React.createElement('span', { className: 'text-gray-400' }, '-');
+        return React.createElement('span', { style: { opacity: 0.5 } }, '-');
       }
       const displayText = formattedPreds.length > 2 
         ? `${formattedPreds.slice(0, 2).join(', ')}...` 
@@ -342,7 +344,8 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-mono font-medium text-blue-600',
+          className: 'text-xs font-mono font-medium',
+          style: { color: 'inherit' },
           title: `Predecessors: ${formattedPreds.join(', ')}`
         },
         displayText
@@ -359,11 +362,11 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     renderer: (_value: any, task: Task) => {
       const successors = (task as any).successors || [];
       if (!successors || successors.length === 0) {
-        return React.createElement('span', { className: 'text-gray-400' }, '-');
+        return React.createElement('span', { style: { opacity: 0.5 } }, '-');
       }
       const formattedSuccs = successors.map(formatDependency).filter(Boolean);
       if (formattedSuccs.length === 0) {
-        return React.createElement('span', { className: 'text-gray-400' }, '-');
+        return React.createElement('span', { style: { opacity: 0.5 } }, '-');
       }
       const displayText = formattedSuccs.length > 2 
         ? `${formattedSuccs.slice(0, 2).join(', ')}...` 
@@ -371,7 +374,8 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-mono font-medium text-purple-600',
+          className: 'text-xs font-mono font-medium',
+          style: { color: 'inherit' },
           title: `Successors: ${formattedSuccs.join(', ')}`
         },
         displayText
@@ -397,12 +401,13 @@ export const EXTENDED_COLUMNS: ColumnConfig[] = [
     maxWidth: 200,
     renderer: (value: any, _task: Task) => {
       if (!value) {
-        return React.createElement('span', { className: 'text-gray-400 text-xs' }, 'Default');
+        return React.createElement('span', { className: 'text-xs', style: { opacity: 0.6 } }, 'Default');
       }
       return React.createElement(
         'span',
         { 
-          className: 'text-xs font-medium text-gray-700',
+          className: 'text-xs font-medium',
+          style: { color: 'inherit' },
           title: `Calendar ID: ${value}`
         },
         value

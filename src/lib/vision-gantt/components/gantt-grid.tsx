@@ -370,49 +370,65 @@ export function GanttGrid({
           const isLightTheme = gridColors.rowEven === '#FFFFFF';
           const hoverBg = isLightTheme ? '#E5E7EB' : '#4B5563';
           
+          // Consistent text colors based on theme
+          const normalTextColor = isLightTheme ? '#374151' : '#E5E7EB';
+          const secondaryTextColor = isLightTheme ? '#6B7280' : '#9CA3AF';
+          
           const getRowStyle = () => {
             if (isProject) {
               return {
                 backgroundColor: colors.summaryProject.fill,
                 color: colors.summaryProject.text,
-                borderBottom: `1px solid ${colors.summaryProject.stroke}`
+                borderBottom: `1px solid ${colors.summaryProject.stroke}`,
+                textColor: colors.summaryProject.text,
+                secondaryColor: 'rgba(255,255,255,0.7)'
               };
             }
             if (isWBS) {
               return {
                 backgroundColor: colors.summaryWBS.fill,
                 color: colors.summaryWBS.text,
-                borderBottom: `1px solid ${colors.summaryWBS.stroke}`
+                borderBottom: `1px solid ${colors.summaryWBS.stroke}`,
+                textColor: colors.summaryWBS.text,
+                secondaryColor: 'rgba(255,255,255,0.7)'
               };
             }
             if (isSelected) {
               return {
                 backgroundColor: gridColors.selected,
-                color: isLightTheme ? '#1F2937' : '#E5E7EB',
+                color: normalTextColor,
                 borderBottom: `1px solid ${gridColors.border}`,
-                borderLeft: `2px solid ${gridColors.selectedBorder}`
+                borderLeft: `2px solid ${gridColors.selectedBorder}`,
+                textColor: normalTextColor,
+                secondaryColor: secondaryTextColor
               };
             }
             if (isCritical) {
               return {
                 backgroundColor: colors.timeline.holiday,
-                color: isLightTheme ? '#1F2937' : '#E5E7EB',
+                color: normalTextColor,
                 borderBottom: `1px solid ${colors.criticalActivity.stroke}`,
-                borderLeft: `2px solid ${colors.criticalActivity.fill}`
+                borderLeft: `2px solid ${colors.criticalActivity.fill}`,
+                textColor: normalTextColor,
+                secondaryColor: secondaryTextColor
               };
             }
             // Hover effect - highlight when mouse is over the row
             if (isHovered && !isProject && !isWBS) {
               return {
                 backgroundColor: hoverBg,
-                color: isLightTheme ? '#1F2937' : '#E5E7EB',
-                borderBottom: `1px solid ${gridColors.border}`
+                color: normalTextColor,
+                borderBottom: `1px solid ${gridColors.border}`,
+                textColor: normalTextColor,
+                secondaryColor: secondaryTextColor
               };
             }
             return {
               backgroundColor: isEven ? gridColors.rowEven : gridColors.rowOdd,
-              color: isLightTheme ? '#1F2937' : '#E5E7EB',
-              borderBottom: `1px solid ${gridColors.border}`
+              color: normalTextColor,
+              borderBottom: `1px solid ${gridColors.border}`,
+              textColor: normalTextColor,
+              secondaryColor: secondaryTextColor
             };
           };
 
@@ -620,7 +636,13 @@ export function GanttGrid({
                         onUpdate={onResourceUpdate}
                       />
                     ) : (
-                      <span className="truncate flex-1" style={{ lineHeight: '1.5' }}>
+                      <span 
+                        className="truncate flex-1" 
+                        style={{ 
+                          lineHeight: '1.5',
+                          color: (rowStyle as any).textColor || 'inherit'
+                        }}
+                      >
                         {column?.renderer
                           ? column.renderer((task as any)?.[column.field], task)
                           : (task as any)?.[column.field]?.toString() ?? ''}
