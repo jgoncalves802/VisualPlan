@@ -681,17 +681,24 @@ export const takeoffService = {
   async deleteItensBatch(ids: string[]): Promise<{ success: number; errors: string[] }> {
     if (ids.length === 0) return { success: 0, errors: [] };
     
-    const { error, count } = await supabase
-      .from('takeoff_itens')
-      .delete()
-      .in('id', ids);
+    const errors: string[] = [];
+    let successCount = 0;
     
-    if (error) {
-      console.error('Erro ao excluir itens em lote:', error);
-      return { success: 0, errors: [error.message] };
+    for (const id of ids) {
+      const { error } = await supabase
+        .from('takeoff_itens')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Erro ao excluir item:', id, error);
+        errors.push(`Item ${id}: ${error.message}`);
+      } else {
+        successCount++;
+      }
     }
     
-    return { success: count || ids.length, errors: [] };
+    return { success: successCount, errors };
   },
 
   async getTotais(filter: TakeoffFilter): Promise<TakeoffTotais> {
