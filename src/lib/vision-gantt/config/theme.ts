@@ -456,3 +456,154 @@ export const AVAILABLE_THEMES: GanttTheme[] = [
 export function getThemeByName(name: string): GanttTheme {
   return AVAILABLE_THEMES.find(t => t.name === name) || P6_CLASSIC_THEME;
 }
+
+export interface CompanyColors {
+  primary: string;
+  secondary: string;
+  accent?: string;
+  success: string;
+  warning: string;
+  danger: string;
+  background: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+}
+
+function adjustColor(hex: string, amount: number): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, n));
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = clamp(((num >> 16) & 0xff) + amount);
+  const g = clamp(((num >> 8) & 0xff) + amount);
+  const b = clamp((num & 0xff) + amount);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+function getContrastText(hex: string): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = (num >> 16) & 0xff;
+  const g = (num >> 8) & 0xff;
+  const b = num & 0xff;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1F2937' : '#FFFFFF';
+}
+
+export function createCompanyTheme(colors: CompanyColors): GanttTheme {
+  const primaryLight = adjustColor(colors.primary, 40);
+  const primaryDark = adjustColor(colors.primary, -30);
+  const secondaryDark = adjustColor(colors.secondary, -30);
+  const dangerLight = adjustColor(colors.danger, 40);
+  const dangerDark = adjustColor(colors.danger, -30);
+  const warningLight = adjustColor(colors.warning, 40);
+  const warningDark = adjustColor(colors.warning, -30);
+  const successLight = adjustColor(colors.success, 40);
+  const successDark = adjustColor(colors.success, -30);
+  
+  const isDarkMode = parseInt(colors.background.replace('#', ''), 16) < 0x808080;
+  
+  return {
+    name: 'Empresa',
+    colors: {
+      normalActivity: {
+        fill: colors.primary,
+        fillLight: primaryLight,
+        stroke: primaryDark,
+        progress: adjustColor(colors.primary, -50),
+        text: getContrastText(colors.primary)
+      },
+      criticalActivity: {
+        fill: colors.danger,
+        fillLight: dangerLight,
+        stroke: dangerDark,
+        progress: adjustColor(colors.danger, -50),
+        text: getContrastText(colors.danger)
+      },
+      nearCriticalActivity: {
+        fill: colors.warning,
+        fillLight: warningLight,
+        stroke: warningDark,
+        progress: adjustColor(colors.warning, -50),
+        text: getContrastText(colors.warning)
+      },
+      completedActivity: {
+        fill: colors.success,
+        fillLight: successLight,
+        stroke: successDark,
+        progress: adjustColor(colors.success, -50),
+        text: getContrastText(colors.success)
+      },
+      summaryProject: {
+        fill: colors.secondary,
+        stroke: secondaryDark,
+        text: getContrastText(colors.secondary)
+      },
+      summaryWBS: {
+        fill: colors.accent || colors.warning,
+        stroke: adjustColor(colors.accent || colors.warning, -30),
+        text: getContrastText(colors.accent || colors.warning)
+      },
+      milestone: {
+        fill: colors.text,
+        fillCritical: colors.danger,
+        stroke: adjustColor(colors.text, -20)
+      },
+      baseline: {
+        fill: colors.textSecondary,
+        stroke: adjustColor(colors.textSecondary, -20)
+      },
+      dependency: {
+        normal: colors.textSecondary,
+        critical: colors.danger,
+        nearCritical: colors.warning,
+        hover: colors.primary
+      },
+      grid: {
+        rowEven: colors.surface,
+        rowOdd: isDarkMode ? adjustColor(colors.surface, -10) : adjustColor(colors.surface, -5),
+        border: colors.border,
+        selected: adjustColor(colors.primary, isDarkMode ? -60 : 80),
+        selectedBorder: colors.primary,
+        hover: isDarkMode ? adjustColor(colors.surface, 10) : adjustColor(colors.surface, -10)
+      },
+      header: {
+        background: isDarkMode ? adjustColor(colors.surface, -20) : adjustColor(colors.text, 40),
+        text: isDarkMode ? colors.text : '#FFFFFF',
+        border: colors.border
+      },
+      timeline: {
+        background: colors.surface,
+        gridLine: colors.border,
+        sightLine: isDarkMode ? adjustColor(colors.surface, 10) : adjustColor(colors.surface, -5),
+        weekend: isDarkMode ? adjustColor(colors.surface, -5) : adjustColor(colors.surface, -3),
+        holiday: adjustColor(colors.danger, isDarkMode ? -70 : 80),
+        today: adjustColor(colors.warning, isDarkMode ? -60 : 80),
+        todayLine: colors.danger
+      },
+      selection: colors.primary,
+      handle: colors.primary,
+      handleHover: colors.success
+    },
+    typography: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      taskLabel: {
+        fontSize: '10px',
+        fontWeight: 500
+      },
+      headerLabel: {
+        fontSize: '11px',
+        fontWeight: 600
+      },
+      gridLabel: {
+        fontSize: '12px',
+        fontWeight: 400
+      }
+    },
+    spacing: {
+      barHeight: 18,
+      rowHeight: 32,
+      barRadius: 3,
+      handleSize: 5
+    }
+  };
+}

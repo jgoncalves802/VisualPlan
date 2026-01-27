@@ -136,9 +136,14 @@ export {
   CONSTRUCTION_THEME,
   AVAILABLE_THEMES,
   getThemeByName,
+  createCompanyTheme,
   DEFAULT_ACTIVITY_CODE_COLORS
 } from './config/theme';
-export type { GanttTheme, GanttThemeColors, ActivityCodeColor } from './config/theme';
+export type { GanttTheme, GanttThemeColors, ActivityCodeColor, CompanyColors } from './config/theme';
 
 // Theme Context
 export { GanttThemeProvider, useGanttTheme } from './context/theme-context';
+export type { GanttThemeName } from './context/theme-context';
+
+// Theme Selector Component
+export { GanttThemeSelector } from './components/theme-selector';

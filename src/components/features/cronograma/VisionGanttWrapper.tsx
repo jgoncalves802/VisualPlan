@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
-import { GanttChartV2, useCriticalPath } from '../../../lib/vision-gantt';
+import { GanttChartV2, useCriticalPath, GanttThemeProvider, GanttThemeSelector, SkeletonLoader } from '../../../lib/vision-gantt';
 import type { Task, Dependency, ViewPreset, ColumnConfig } from '../../../lib/vision-gantt/types';
+import type { CompanyColors } from '../../../lib/vision-gantt/config/theme';
 import { 
   createGanttDataSync, 
   ganttTaskToAtividade,
@@ -26,6 +27,7 @@ import {
   setColumnConfigToCache,
   isColumnConfigCacheExpired,
 } from '../../../services/cronogramaCacheService';
+import { useTemaStore } from '../../../stores/temaStore';
 
 interface VisionGanttWrapperProps {
   atividades: AtividadeMock[];
@@ -80,6 +82,33 @@ export function VisionGanttWrapper({
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [columnConfigOpen, setColumnConfigOpen] = useState(false);
   const [resourceModalTask, setResourceModalTask] = useState<Task | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  
+  const { tema } = useTemaStore();
+  
+  useEffect(() => {
+    if (atividades.length > 0) {
+      const timer = setTimeout(() => setIsInitializing(false), 150);
+      return () => clearTimeout(timer);
+    } else {
+      const fallbackTimer = setTimeout(() => setIsInitializing(false), 1500);
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [atividades.length]);
+  
+  const companyColors: CompanyColors = useMemo(() => ({
+    primary: tema.primary,
+    secondary: tema.secondary,
+    accent: tema.accent,
+    success: tema.success,
+    warning: tema.warning,
+    danger: tema.danger,
+    background: tema.background,
+    surface: tema.surface,
+    text: tema.text,
+    textSecondary: tema.textSecondary,
+    border: tema.border
+  }), [tema]);
   
   // Helper to reconstruct columns from saved config
   const reconstructColumnsFromConfig = useCallback((savedConfig: { visible_columns: string[]; column_order: string[] }) => {
@@ -682,8 +711,9 @@ export function VisionGanttWrapper({
   const violationCount = criticalPath.violations.length;
 
   return (
+    <GanttThemeProvider companyColors={companyColors}>
     <div className={`vision-gantt-wrapper ${className}`}>
-      <div className="flex items-center justify-between mb-4 px-4 py-3 bg-white rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between mb-4 px-4 py-3 bg-white rounded-lg border border-gray-200 transition-colors duration-300">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-500" />
@@ -789,6 +819,8 @@ export function VisionGanttWrapper({
             loading={p6Data.loading}
           />
           
+          <GanttThemeSelector />
+          
           <button
             onClick={() => setColumnConfigOpen(true)}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -810,6 +842,11 @@ export function VisionGanttWrapper({
 
       <div className="flex">
         <div className={`flex-1 ${showDetailPanel ? 'mr-80' : ''} transition-all duration-300`}>
+          {isInitializing && atividades.length === 0 ? (
+            <div className="border rounded-lg overflow-hidden" style={{ height }}>
+              <SkeletonLoader rows={Math.floor(height / 50)} columns={5} rowHeight={50} showHeader={true} />
+            </div>
+          ) : (
           <GanttChartV2
         tasks={localTasks}
         dependencies={baseGanttData.dependencies}
@@ -844,6 +881,7 @@ export function VisionGanttWrapper({
             enableRowDragDrop={enableRowDragDrop}
             showInsertButtons={showInsertButtons}
           />
+          )}
         </div>
         
         {showDetailPanel && (
@@ -929,6 +967,7 @@ export function VisionGanttWrapper({
         }
       `}</style>
     </div>
+    </GanttThemeProvider>
   );
 }
 
