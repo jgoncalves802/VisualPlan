@@ -1187,8 +1187,13 @@ const TakeoffPage: React.FC = () => {
                         onClick={() => {
                           const disc = disciplinas.find(d => d.id === selectedDisciplinaId);
                           if (disc && colunasConfig.length > 0) {
-                            exportarTemplateTakeoff(disc.nome, colunasConfig);
-                            toast?.success('Template exportado com sucesso!');
+                            try {
+                              exportarTemplateTakeoff(disc.nome, colunasConfig);
+                              toast?.success('Template exportado com sucesso!');
+                            } catch (error) {
+                              console.error('Erro ao exportar template:', error);
+                              toast?.error('Erro ao exportar template. Tente novamente.');
+                            }
                           } else {
                             toast?.warning('Configure ao menos uma coluna antes de exportar.');
                           }
