@@ -78,18 +78,18 @@ export function GanttThemeSelector({ className = '', compact = false }: ThemeSel
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 z-50 min-w-[200px] rounded-lg shadow-lg border overflow-hidden"
+          className="absolute top-full left-0 mt-1 z-50 min-w-[220px] rounded-lg shadow-xl border overflow-hidden"
           style={{
-            backgroundColor: theme.colors.grid.rowEven,
-            borderColor: theme.colors.grid.border
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB'
           }}
         >
           <div 
             className="px-3 py-2 text-xs font-semibold uppercase tracking-wider border-b"
             style={{ 
-              color: theme.colors.header.text === '#FFFFFF' ? theme.colors.grid.selectedBorder : theme.colors.header.background,
-              borderColor: theme.colors.grid.border,
-              backgroundColor: theme.colors.grid.rowOdd
+              color: '#6B7280',
+              borderColor: '#E5E7EB',
+              backgroundColor: '#F9FAFB'
             }}
           >
             Tema do Cronograma
@@ -102,34 +102,23 @@ export function GanttThemeSelector({ className = '', compact = false }: ThemeSel
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 text-left
                 transition-colors duration-150
+                hover:bg-gray-50
               `}
               style={{
-                backgroundColor: themeName === name ? theme.colors.grid.selected : 'transparent',
-                color: theme.colors.header.text === '#FFFFFF' ? theme.colors.grid.selectedBorder : theme.colors.header.background
-              }}
-              onMouseEnter={(e) => {
-                if (themeName !== name) {
-                  e.currentTarget.style.backgroundColor = theme.colors.grid.hover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = themeName === name ? theme.colors.grid.selected : 'transparent';
+                backgroundColor: themeName === name ? '#EFF6FF' : 'transparent'
               }}
             >
               <div className="flex-shrink-0">
                 {THEME_ICONS[name]}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{name}</div>
-                <div 
-                  className="text-xs truncate"
-                  style={{ color: theme.colors.dependency.normal }}
-                >
+                <div className="text-sm font-medium text-gray-900">{name}</div>
+                <div className="text-xs truncate text-gray-500">
                   {THEME_DESCRIPTIONS[name]}
                 </div>
               </div>
               {themeName === name && (
-                <Check className="w-4 h-4 flex-shrink-0" style={{ color: theme.colors.completedActivity.fill }} />
+                <Check className="w-4 h-4 flex-shrink-0 text-blue-600" />
               )}
             </button>
           ))}
