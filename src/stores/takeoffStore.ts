@@ -44,7 +44,7 @@ interface TakeoffState {
   createItensBatch: (itens: CreateItemDTO[]) => Promise<number>;
   updateItem: (id: string, dto: UpdateItemDTO) => Promise<TakeoffItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
-  deleteItensBatch: (ids: string[]) => Promise<{ success: number; errors: string[] }>;
+  deleteItensBatch: (ids: string[], onProgress?: (current: number) => void) => Promise<{ success: number; errors: string[] }>;
   
   setSelectedDisciplina: (id: string | null) => void;
   setSelectedMapa: (id: string | null) => void;
@@ -242,9 +242,9 @@ export const useTakeoffStore = create<TakeoffState>((set, get) => ({
     }
   },
 
-  deleteItensBatch: async (ids: string[]) => {
+  deleteItensBatch: async (ids: string[], onProgress?: (current: number) => void) => {
     try {
-      const result = await takeoffService.deleteItensBatch(ids);
+      const result = await takeoffService.deleteItensBatch(ids, onProgress);
       if (result.success > 0) {
         set((state) => ({
           itens: state.itens.filter((i) => !ids.includes(i.id)),

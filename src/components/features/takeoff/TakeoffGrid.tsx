@@ -56,6 +56,8 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   const [showDeleteBatchConfirm, setShowDeleteBatchConfirm] = useState(false);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletionProgress, setDeletionProgress] = useState<{ current: number; total: number } | null>(null);
+  const [deletionResult, setDeletionResult] = useState<{ success: number; errors: number } | null>(null);
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -205,12 +207,23 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     }
     
     setIsDeleting(true);
+    setShowDeleteBatchConfirm(false);
+    setDeletionProgress({ current: 0, total: validIds.length });
+    setDeletionResult(null);
+    
     try {
-      await deleteItensBatch(validIds);
+      const result = await deleteItensBatch(validIds, (current) => {
+        setDeletionProgress({ current, total: validIds.length });
+      });
+      setDeletionResult({ success: result.success, errors: result.errors.length });
       setSelectedIds(new Set());
+      
+      setTimeout(() => {
+        setDeletionResult(null);
+      }, 3000);
     } finally {
       setIsDeleting(false);
-      setShowDeleteBatchConfirm(false);
+      setDeletionProgress(null);
     }
   };
 
@@ -322,7 +335,30 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
         </div>
 
         <div className="flex items-center gap-2">
-          {selectedIds.size > 0 && (
+          {deletionProgress && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg theme-bg-secondary">
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+              <span className="theme-text">
+                Excluindo {deletionProgress.current} de {deletionProgress.total}...
+              </span>
+            </div>
+          )}
+          {deletionResult && !deletionProgress && (
+            <div 
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg"
+              style={{ 
+                backgroundColor: deletionResult.errors > 0 ? '#fef3c7' : '#d1fae5',
+                color: deletionResult.errors > 0 ? '#92400e' : '#065f46'
+              }}
+            >
+              {deletionResult.errors > 0 ? (
+                <span>{deletionResult.success} excluído(s), {deletionResult.errors} erro(s)</span>
+              ) : (
+                <span>{deletionResult.success} item(ns) excluído(s) com sucesso</span>
+              )}
+            </div>
+          )}
+          {selectedIds.size > 0 && !isDeleting && (
             <button
               onClick={() => setShowDeleteBatchConfirm(true)}
               className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 text-white"

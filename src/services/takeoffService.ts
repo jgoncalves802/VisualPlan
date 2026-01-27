@@ -678,13 +678,14 @@ export const takeoffService = {
     return true;
   },
 
-  async deleteItensBatch(ids: string[]): Promise<{ success: number; errors: string[] }> {
+  async deleteItensBatch(ids: string[], onProgress?: (current: number) => void): Promise<{ success: number; errors: string[] }> {
     if (ids.length === 0) return { success: 0, errors: [] };
     
     const errors: string[] = [];
     let successCount = 0;
     
-    for (const id of ids) {
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
       const { error } = await supabase
         .from('takeoff_itens')
         .delete()
@@ -695,6 +696,10 @@ export const takeoffService = {
         errors.push(`Item ${id}: ${error.message}`);
       } else {
         successCount++;
+      }
+      
+      if (onProgress) {
+        onProgress(i + 1);
       }
     }
     
