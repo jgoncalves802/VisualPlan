@@ -65,6 +65,13 @@ VisionPlan is a single-page application (SPA) with a modern frontend stack and a
         *   **Import Wizard**: 4-step modal (Upload → Preview → Import → Results) with project info display, WBS hierarchy preview, and hours-per-day configuration.
         *   **Project Creation**: Auto-creates project and schedule eps_node when importing without existing project selection.
         *   **Service Layer**: `p6XmlImportService.ts` with parseXmlFile, importToDatabase, getProjectInfo, and getWbsHierarchy methods.
+    *   **Data Isolation Architecture**: Complete data isolation between projects to prevent cross-contamination:
+        *   **CronogramaStore Project Tracking**: `projetoAtualId` field tracks currently loaded project. `carregarAtividades()` clears previous state before loading new project data.
+        *   **DataIntegrityService**: Validates data integrity with `validateProject()`, detects cross-project activities/dependencies, auto-fixes issues with `autoFixIssues()`.
+        *   **Cache Segregation**: `cronogramaCacheService` uses project-specific cache keys (`visionplan_cache_activities_${projetoId}`).
+        *   **Logging Hook**: `useProjectIsolation` hook provides structured logging for project switches and data loading with contamination detection.
+        *   **Architecture Documentation**: `docs/ARCHITECTURE_FLOW.md` contains Mermaid flowcharts showing data flow and isolation points.
+    *   **Tutorial Page**: Interactive onboarding at `/tutorial` with step-by-step workflow guidance, tips, and warnings to avoid common mistakes.
 
 ## External Dependencies
 *   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.

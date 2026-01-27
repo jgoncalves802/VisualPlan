@@ -1,0 +1,44 @@
+🤖 Prompt Estruturado para Planejamento
+Contexto: Você é um Engenheiro de Planejamento Sênior e Arquiteto de Software. Preciso de um plano de execução detalhado para o desenvolvimento de um ERP de Gestão de Obras baseado no fluxo de dados abaixo.
+
+Arquitetura Atual:
+
+Frontend: React com Stores de estado (Zustand/Redux).
+
+Backend/DB: Supabase (Realtime).
+
+Módulos Críticos: Planejamento (WBS/Gantt), LPS (Last Planner System), Execução (Take-off/Quantitativos) e Qualidade.
+
+Sua Missão: Elabore um cronograma de implementação dividido em 4 fases, priorizando a resolução de gargalos de dados.
+
+Requisitos do Plano:
+
+Fase 1 (Fundação de Dados): Resolva o isolamento do projetoId. Proponha uma estratégia onde a URL determine o estado das Stores para evitar vazamento de cache entre projetos.
+
+Fase 2 (Core de Engenharia): Detalhe a integração técnica entre o Take-off (quantitativos) e o Cronograma. Como o progresso físico medido deve atualizar a barra de progresso do Gantt automaticamente?
+
+Fase 3 (Ciclo LPS): Planeje o fluxo de restrições. Quando um Check-in falha, como o sistema deve disparar a criação de uma Ação 5W2H e vincular a uma Análise de Ishikawa?
+
+Fase 4 (Dashboards e Admin): Agregação de dados para o Dashboard Executivo baseada em KPIs de produtividade (PPC - Percentual de Planos Concluídos).
+
+Entregáveis por Fase:
+
+Objetivo principal.
+
+Entidades do Banco de Dados envolvidas.
+
+Principais riscos técnicos e como mitigá-los.
+
+Formato de Saída: Use tabelas para os marcos e tópicos para os detalhes técnicos.
+
+O que este comando resolve (e por que funciona)
+Este prompt força a IA a não ser genérica. Ele ataca os problemas que identificamos anteriormente:
+
+Segregação de Cache: Ele coloca a resolução do projetoId na Fase 1, tratando a falha crítica de segurança/dados antes das funcionalidades visuais.
+
+Interdependência: Ele pede a lógica de como o Take-off alimenta o Cronograma, que é o "coração" técnico do seu sistema.
+
+Lógica de Negócio (LPS): Ele amarra a falha no canteiro (Check-in) com a ferramenta de qualidade (Ishikawa), garantindo que o fluxo não tenha pontas soltas.
+
+Dica de Implementação
+Se estiver usando o ChatGPT, Claude ou o próprio Gemini para rodar esse comando, você pode anexar o código do seu diagrama Mermaid original. Isso ajudará a IA a visualizar as conexões enquanto escreve o texto.

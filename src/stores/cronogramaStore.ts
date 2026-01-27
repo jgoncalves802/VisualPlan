@@ -32,6 +32,7 @@ import {
   getActivityTemplate,
   batchUpdateManager,
 } from '../services/cronogramaCacheService';
+import { dataIntegrityService } from '../services/dataIntegrityService';
 
 /**
  * Generates Primavera P6-style activity codes (A1010, A1020, etc.)
@@ -472,6 +473,7 @@ export const useCronogramaStore = create<CronogramaState>()(
       // ========================================================================
       // ESTADO INICIAL
       // ========================================================================
+      projetoAtualId: null as string | null, // Track current project for isolation
       atividades: [],
       dependencias: [],
       caminhoCritico: null,
@@ -494,10 +496,43 @@ export const useCronogramaStore = create<CronogramaState>()(
        * Carrega atividades de um projeto
        * Usa estratégia cache-first: carrega do cache instantaneamente,
        * depois sincroniza com Supabase em background se cache expirado
+       * 
+       * CRITICAL: Clears previous state when switching projects to prevent data contamination
+       * Uses request token pattern to prevent stale data from overwriting newer data
        */
       carregarAtividades: async (projetoId: string) => {
         console.log('[CronogramaStore] carregarAtividades called with projetoId:', projetoId);
-        set({ isLoading: true, erro: null });
+        
+        // Request identifier for logging
+        const requestId = `${projetoId.substring(0, 8)}_${Date.now()}`;
+        
+        // Get current state to check if we're switching projects
+        const currentState = useCronogramaStore.getState();
+        const isProjectSwitch = currentState.projetoAtualId !== null && currentState.projetoAtualId !== projetoId;
+        
+        if (isProjectSwitch) {
+          console.log('[CronogramaStore] Project switch detected:', {
+            from: currentState.projetoAtualId,
+            to: projetoId
+          });
+        }
+        
+        // CRITICAL: Clear previous project data before loading new project
+        // This prevents data contamination between projects
+        set({ 
+          projetoAtualId: projetoId,
+          atividades: [], // Clear previous activities immediately
+          dependencias: [], // Clear dependencies
+          caminhoCritico: null, // Reset critical path
+          isLoading: true, 
+          erro: null 
+        });
+
+        // Helper to check if this request is still valid (no newer project selected)
+        const isRequestStale = () => {
+          const latestState = useCronogramaStore.getState();
+          return latestState.projetoAtualId !== projetoId;
+        };
 
         // Helper function to process activities
         const processAtividades = (atividades: AtividadeMock[], wbsNodes: EpsNode[]) => {
@@ -517,25 +552,56 @@ export const useCronogramaStore = create<CronogramaState>()(
           let usedCache = false;
           
           if (cachedData && cachedData.activities.length > 0) {
+            // Check if request is still valid before updating state
+            if (isRequestStale()) {
+              console.log('[CronogramaStore] Stale cache request dropped:', requestId);
+              return;
+            }
+            
             // Load WBS nodes (usually fast, cached by browser)
             const wbsNodes = await epsService.getProjectWbsTree(projetoId);
+            
+            // Re-check after async operation
+            if (isRequestStale()) {
+              console.log('[CronogramaStore] Stale cache request dropped after WBS load:', requestId);
+              return;
+            }
+            
             const todasAtividades = processAtividades(cachedData.activities, wbsNodes);
             
             const atividadesComHoras = cachedData.activities.filter((a) => a.unidade_tempo === UnidadeTempo.HORAS);
             const usarHoras = atividadesComHoras.length > cachedData.activities.length / 2;
             
+            // Validate and auto-fix cached data before setting state
+            const cacheIntegrityReport = dataIntegrityService.validateProject(
+              projetoId,
+              todasAtividades,
+              [] // No dependencies loaded from cache yet
+            );
+            
+            let finalCachedActivities = todasAtividades;
+            if (!cacheIntegrityReport.isValid) {
+              console.log('[CronogramaStore] Cache data has integrity issues, auto-fixing...');
+              const { activities } = dataIntegrityService.autoFixIssues(
+                projetoId,
+                todasAtividades,
+                []
+              );
+              finalCachedActivities = activities;
+            }
+            
             if (usarHoras) {
               set({ 
-                atividades: todasAtividades, 
+                atividades: finalCachedActivities, 
                 isLoading: false,
                 escala: EscalaTempo.HORA,
                 unidadeTempoPadrao: UnidadeTempo.HORAS,
               });
             } else {
-              set({ atividades: todasAtividades, isLoading: false });
+              set({ atividades: finalCachedActivities, isLoading: false });
             }
             usedCache = true;
-            console.log('[CronogramaStore] Loaded from cache (instant)');
+            console.log('[CronogramaStore] Loaded from cache (instant):', requestId);
           }
 
           // Step 2: If cache is expired or empty, fetch from Supabase
@@ -545,18 +611,37 @@ export const useCronogramaStore = create<CronogramaState>()(
             // If we didn't use cache, this is a blocking load
             // If we used cache, this runs in background
             const fetchPromise = (async () => {
+              // Check if request is still valid
+              if (isRequestStale()) {
+                console.log('[CronogramaStore] Stale Supabase request dropped before fetch:', requestId);
+                return;
+              }
+              
               // Ensure all activities have codes before fetching
               await cronogramaService.ensureActivityCodes(projetoId);
+              
+              // Check again after async operation
+              if (isRequestStale()) {
+                console.log('[CronogramaStore] Stale Supabase request dropped after code check:', requestId);
+                return;
+              }
               
               const [atividades, wbsNodes] = await Promise.all([
                 cronogramaService.getAtividades(projetoId),
                 epsService.getProjectWbsTree(projetoId),
               ]);
               
+              // CRITICAL: Check if request is still valid before updating state
+              if (isRequestStale()) {
+                console.log('[CronogramaStore] Stale Supabase response dropped:', requestId);
+                return;
+              }
+              
               console.log('[CronogramaStore] Loaded from Supabase:', { 
                 atividades: atividades.length, 
                 wbsNodes: wbsNodes.length,
-                projetoId 
+                projetoId,
+                requestId
               });
               
               // Update cache
@@ -577,7 +662,35 @@ export const useCronogramaStore = create<CronogramaState>()(
               } else {
                 set({ atividades: todasAtividades, isLoading: false });
               }
-              console.log('[CronogramaStore] Synced from Supabase');
+              console.log('[CronogramaStore] Synced from Supabase:', requestId);
+              
+              // Final stale check before validation
+              if (isRequestStale()) {
+                console.log('[CronogramaStore] Stale request - skipping validation:', requestId);
+                return;
+              }
+              
+              // Validate data integrity after loading
+              const finalState = useCronogramaStore.getState();
+              const integrityReport = dataIntegrityService.validateProject(
+                projetoId,
+                finalState.atividades,
+                finalState.dependencias
+              );
+              dataIntegrityService.logReport(integrityReport);
+              
+              // Auto-fix any issues found
+              if (!integrityReport.isValid) {
+                const { activities, dependencies, result } = dataIntegrityService.autoFixIssues(
+                  projetoId,
+                  finalState.atividades,
+                  finalState.dependencias
+                );
+                if (result.fixed) {
+                  console.log('[CronogramaStore] Auto-fixed data integrity issues:', result);
+                  set({ atividades: activities, dependencias: dependencies });
+                }
+              }
             })();
             
             // If we used cache, let this run in background
@@ -1047,9 +1160,11 @@ export const useCronogramaStore = create<CronogramaState>()(
 
       /**
        * Reseta o estado do store
+       * Clears all project-specific data including projetoAtualId
        */
       reset: () => {
         set({
+          projetoAtualId: null, // Clear current project tracking
           atividades: [],
           dependencias: [],
           caminhoCritico: null,

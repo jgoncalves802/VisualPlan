@@ -1,0 +1,110 @@
+flowchart TB
+    subgraph Auth["🔐 Autenticação"]
+        Login["/login"]
+    end
+
+    subgraph Dashboard["📊 Dashboards"]
+        DashExec["/dashboard<br/>Dashboard Executivo"]
+        DashBasic["/dashboard-basico<br/>Dashboard Básico"]
+        Indicadores["/indicadores<br/>Indicadores"]
+    end
+
+    subgraph Planejamento["📅 Planejamento"]
+        WBS["/wbs<br/>Estrutura WBS"]
+        Cronograma["/cronograma/:projetoId<br/>Cronograma Gantt"]
+        Recursos["/recursos<br/>Gestão Recursos"]
+        Portfolio["/portfolio<br/>Portfólio Projetos"]
+    end
+
+    subgraph LPS["🔄 Last Planner System"]
+        LPSPage["/lps<br/>LPS Dashboard"]
+        ProgSemanal["/programacao-semanal<br/>Programação Semanal"]
+        CheckIn["/checkin-checkout<br/>Check-in/Check-out"]
+        Restricoes["/restricoes<br/>Gestão Restrições"]
+    end
+
+    subgraph Execucao["🔧 Execução"]
+        Takeoff["/takeoff<br/>Take-off/Quantitativos"]
+        Medicoes["/medicoes<br/>Medições"]
+        Kanban["/kanban<br/>Quadro Kanban"]
+        Acoes["/acoes<br/>Ações 5W2H"]
+    end
+
+    subgraph Qualidade["✅ Qualidade"]
+        Auditorias["/auditorias<br/>Auditorias"]
+        Mudancas["/mudancas<br/>Gestão Mudanças"]
+        Ishikawa["/analise-ishikawa<br/>Análise Ishikawa"]
+        Reunioes["/reunioes<br/>Reuniões"]
+    end
+
+    subgraph Admin["⚙️ Administração"]
+        AdminPanel["/admin<br/>Painel Admin"]
+        Usuarios["/admin/usuarios"]
+        Empresas["/admin/empresas"]
+        Temas["/admin/temas"]
+        EPS["/admin/eps"]
+        Perfis["/admin/perfis"]
+    end
+
+    subgraph DataStores["💾 Stores de Estado"]
+        ProjetoStore["useProjetoStore<br/>🔴 CRÍTICO: Projeto Global"]
+        CronogramaStore["useCronogramaStore<br/>Cache + Estado"]
+        TakeoffStore["useTakeoffStore"]
+        AuthStore["useAuthStore"]
+    end
+
+    subgraph DataFlow["📡 Fluxo de Dados"]
+        direction LR
+        Supabase[(Supabase DB)]
+        LocalCache[(LocalStorage<br/>Cache)]
+    end
+
+    %% Autenticação
+    Login --> |"usuário autenticado"| DashExec
+
+    %% Fluxo Dashboard
+    DashExec --> Cronograma
+    DashExec --> LPSPage
+    DashExec --> Portfolio
+
+    %% Fluxo Planejamento
+    WBS --> |"Seleciona EPS Node"| Cronograma
+    Cronograma --> |"Cria Atividade"| Recursos
+    Cronograma --> |"Vincula"| Takeoff
+
+    %% Fluxo LPS
+    LPSPage --> ProgSemanal
+    ProgSemanal --> CheckIn
+    CheckIn --> |"Registra Restrição"| Restricoes
+    Restricoes --> |"Cria Ação"| Acoes
+    Restricoes --> |"Análise Causa Raiz"| Ishikawa
+
+    %% Fluxo Execução
+    Takeoff --> |"Registra Progresso"| Medicoes
+    Takeoff --> |"Vincula Atividade"| Cronograma
+
+    %% PONTOS DE FALHA - ISOLAMENTO DE DADOS
+    ProjetoStore -.->|"⚠️ Projeto Global"| Cronograma
+    ProjetoStore -.->|"⚠️ Projeto Global"| Takeoff
+    ProjetoStore -.->|"⚠️ Projeto Global"| LPSPage
+    ProjetoStore -.->|"⚠️ Projeto Global"| Restricoes
+    ProjetoStore -.->|"⚠️ Projeto Global"| Acoes
+    
+    CronogramaStore -->|"Cache por ProjetoId?"| LocalCache
+    LocalCache -.->|"🔴 POTENCIAL BUG:<br/>Cache não segregado"| Cronograma
+
+    %% Conexão com DB
+    Supabase --> CronogramaStore
+    Supabase --> TakeoffStore
+    Supabase --> ProjetoStore
+
+    %% Estilos
+    classDef critical fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    classDef warning fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef success fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    
+    class ProjetoStore,LocalCache critical
+    class CronogramaStore warning
+    class Supabase success
+
+Identifique as possiveis falhas e melhorias no fluxo.

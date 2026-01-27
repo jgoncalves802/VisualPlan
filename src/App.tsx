@@ -33,6 +33,8 @@ import TakeoffPage from './pages/TakeoffPage';
 import MedicoesPage from './pages/MedicoesPage';
 import ProgramacaoSemanalPage from './pages/ProgramacaoSemanalPage';
 import CheckInCheckOutPage from './pages/CheckInCheckOutPage';
+import TutorialPage from './pages/TutorialPage';
+import { ConfiguracoesPage } from './pages/ConfiguracoesPage';
 import './styles/global.css';
 
 const ProtectedAppLayout: React.FC = () => {
@@ -110,6 +112,8 @@ function App() {
                 <p className="theme-text-secondary">Módulo em desenvolvimento...</p>
               </div>
             } />
+            <Route path="/tutorial" element={<TutorialPage />} />
+            <Route path="/configuracoes" element={<ConfiguracoesPage />} />
           </Route>
 
           <Route element={<ProtectedAdminLayout />}>

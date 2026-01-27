@@ -380,6 +380,9 @@ export interface ConfiguracoesProjeto {
  * Estado do Cronograma Store
  */
 export interface CronogramaState {
+  // Current Project Tracking (for data isolation)
+  projetoAtualId: string | null; // Track current loaded project to prevent data contamination
+
   // Dados
   atividades: AtividadeMock[];
   dependencias: DependenciaAtividade[];
