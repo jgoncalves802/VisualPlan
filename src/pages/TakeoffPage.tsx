@@ -1468,6 +1468,7 @@ const TakeoffPage: React.FC = () => {
         <TakeoffImportModal
           mapaId={selectedMapaId}
           onClose={() => setShowImportModal(false)}
+          colunasConfig={colunasConfig}
         />
       )}
 

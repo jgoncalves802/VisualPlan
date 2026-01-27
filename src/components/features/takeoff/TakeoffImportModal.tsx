@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   X,
   Upload,
@@ -7,23 +7,29 @@ import {
   AlertTriangle,
   Loader2,
   ArrowRight,
-  ChevronDown,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
-import type { CreateItemDTO } from '../../../types/takeoff.types';
+import type { CreateItemDTO, TakeoffColunaConfig } from '../../../types/takeoff.types';
 
 interface TakeoffImportModalProps {
   mapaId: string;
   onClose: () => void;
+  colunasConfig?: TakeoffColunaConfig[];
 }
 
 interface ColumnMapping {
   source: string;
-  target: keyof CreateItemDTO | '';
+  target: string;
 }
 
-const TARGET_COLUMNS: { key: keyof CreateItemDTO; label: string }[] = [
+interface TargetColumn {
+  key: string;
+  label: string;
+  isCustom?: boolean;
+}
+
+const DEFAULT_COLUMNS: TargetColumn[] = [
   { key: 'area', label: 'Área' },
   { key: 'edificacao', label: 'Edificação' },
   { key: 'tag', label: 'TAG' },
@@ -40,15 +46,27 @@ const TARGET_COLUMNS: { key: keyof CreateItemDTO; label: string }[] = [
   { key: 'observacoes', label: 'Observações' },
 ];
 
-const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose }) => {
+const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose, colunasConfig = [] }) => {
   const { createItensBatch } = useTakeoffStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const targetColumns = useMemo<TargetColumn[]>(() => {
+    const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key.toLowerCase()));
+    const customColumns: TargetColumn[] = colunasConfig
+      .filter(c => !defaultKeys.has(c.codigo.toLowerCase()))
+      .map(c => ({
+        key: c.codigo,
+        label: c.nome,
+        isCustom: true,
+      }));
+    return [...DEFAULT_COLUMNS, ...customColumns];
+  }, [colunasConfig]);
 
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [sheets, setSheets] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
-  const [sourceColumns, setSourceColumns] = useState<string[]>([]);
+  const [, setSourceColumns] = useState<string[]>([]);
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
   const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
@@ -122,7 +140,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
     }
   };
 
-  const updateMapping = (sourceCol: string, targetKey: keyof CreateItemDTO | '') => {
+  const updateMapping = (sourceCol: string, targetKey: string) => {
     setMappings((prev) =>
       prev.map((m) => (m.source === sourceCol ? { ...m, target: targetKey } : m))
     );
@@ -276,12 +294,14 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
                       <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       <select
                         value={target}
-                        onChange={(e) => updateMapping(source, e.target.value as keyof CreateItemDTO | '')}
+                        onChange={(e) => updateMapping(source, e.target.value)}
                         className="flex-1 px-3 py-1.5 text-sm border rounded-lg"
                       >
                         <option value="">-- Ignorar --</option>
-                        {TARGET_COLUMNS.map((col) => (
-                          <option key={col.key} value={col.key}>{col.label}</option>
+                        {targetColumns.map((col) => (
+                          <option key={col.key} value={col.key}>
+                            {col.label}{col.isCustom ? ' (personalizada)' : ''}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -304,7 +324,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
                     <tr>
                       {mappings.filter(m => m.target).map(({ target }) => (
                         <th key={target} className="px-3 py-2 text-left font-medium text-gray-600">
-                          {TARGET_COLUMNS.find(c => c.key === target)?.label}
+                          {targetColumns.find(c => c.key === target)?.label || target}
                         </th>
                       ))}
                     </tr>
