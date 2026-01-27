@@ -367,12 +367,10 @@ export function GanttGrid({
           const isProject = isGroup && level === 0;
           const isWBS = isGroup && level > 0;
           const isHovered = hoveredRowIndex === rowIndex;
-          const isLightTheme = gridColors.rowEven === '#FFFFFF';
-          const hoverBg = isLightTheme ? '#E5E7EB' : '#4B5563';
-          
-          // Consistent text colors based on theme
-          const normalTextColor = isLightTheme ? '#374151' : '#E5E7EB';
-          const secondaryTextColor = isLightTheme ? '#6B7280' : '#9CA3AF';
+          // Use theme grid text colors directly
+          const normalTextColor = gridColors.text;
+          const secondaryTextColor = gridColors.textSecondary;
+          const hoverBg = gridColors.hover;
           
           const getRowStyle = () => {
             if (isProject) {

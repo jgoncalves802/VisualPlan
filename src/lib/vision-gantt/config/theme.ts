@@ -66,6 +66,8 @@ export interface GanttThemeColors {
     selected: string;
     selectedBorder: string;
     hover: string;
+    text: string;
+    textSecondary: string;
   };
   header: {
     background: string;
@@ -174,7 +176,9 @@ export const P6_CLASSIC_THEME: GanttTheme = {
       border: '#E5E7EB',
       selected: '#EFF6FF',
       selectedBorder: '#3B82F6',
-      hover: '#F3F4F6'
+      hover: '#F3F4F6',
+      text: '#1F2937',
+      textSecondary: '#6B7280'
     },
     header: {
       background: '#4B5563',
@@ -279,7 +283,9 @@ export const DARK_THEME: GanttTheme = {
       border: '#374151',
       selected: '#1E3A5F',
       selectedBorder: '#3B82F6',
-      hover: '#374151'
+      hover: '#374151',
+      text: '#F3F4F6',
+      textSecondary: '#9CA3AF'
     },
     header: {
       background: '#111827',
@@ -384,7 +390,9 @@ export const CONSTRUCTION_THEME: GanttTheme = {
       border: '#FCD34D',
       selected: '#FEF08A',
       selectedBorder: '#F59E0B',
-      hover: '#FEF9C3'
+      hover: '#FEF9C3',
+      text: '#1C1917',
+      textSecondary: '#78716C'
     },
     header: {
       background: '#78350F',
@@ -491,7 +499,9 @@ export const MODERN_THEME: GanttTheme = {
       border: '#E5E5E5',
       selected: '#F3E8FF',   // Soft purple tint
       selectedBorder: '#7C3AED',
-      hover: '#F5F5F5'
+      hover: '#F5F5F5',
+      text: '#1F2937',
+      textSecondary: '#6B7280'
     },
     header: {
       background: '#FAFAFA',
@@ -597,7 +607,9 @@ export const CLEAN_THEME: GanttTheme = {
       border: '#E2E8F0',
       selected: '#EFF6FF',
       selectedBorder: '#3B82F6',
-      hover: '#F1F5F9'
+      hover: '#F1F5F9',
+      text: '#1E293B',
+      textSecondary: '#64748B'
     },
     header: {
       background: '#F8FAFC',
@@ -779,7 +791,9 @@ export function createCompanyTheme(colors: CompanyColors): GanttTheme {
         border: colors.border,
         selected: adjustColor(colors.primary, isDarkMode ? -60 : 80),
         selectedBorder: colors.primary,
-        hover: isDarkMode ? adjustColor(colors.surface, 10) : adjustColor(colors.surface, -10)
+        hover: isDarkMode ? adjustColor(colors.surface, 10) : adjustColor(colors.surface, -10),
+        text: colors.text,
+        textSecondary: colors.textSecondary
       },
       header: {
         background: isDarkMode ? adjustColor(colors.surface, -20) : adjustColor(colors.text, 40),
