@@ -21,7 +21,6 @@ import {
   Layers,
   Unlink,
   Save,
-  List,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,7 +37,7 @@ import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDiscip
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
 import { CriteriosMedicaoImportModal, CriteriosMedicaoListPanel } from '../components/features/criteriosMedicao';
-import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
+import type { TakeoffVinculo, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
 import { PerfilAcesso } from '../types';
 import { useToast } from '../components/ui/Toast';
 
@@ -311,7 +310,6 @@ const TakeoffPage: React.FC = () => {
   const [showDisciplinaModal, setShowDisciplinaModal] = useState(false);
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [showCriteriosMedicaoModal, setShowCriteriosMedicaoModal] = useState(false);
-  const [showCriteriosMedicaoList, setShowCriteriosMedicaoList] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingDisciplina, setEditingDisciplina] = useState<TakeoffDisciplina | null>(null);
   const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
@@ -334,7 +332,6 @@ const TakeoffPage: React.FC = () => {
   }, []);
 
   const [vinculos, setVinculos] = useState<TakeoffVinculo[]>([]);
-  const [medicoes, setMedicoes] = useState<TakeoffMedicao[]>([]);
   const [documentos, setDocumentos] = useState<TakeoffDocumento[]>([]);
   const [colunasConfig, setColunasConfig] = useState<TakeoffColunaConfig[]>([]);
   const [importColunasConfig, setImportColunasConfig] = useState<TakeoffColunaConfig[]>([]);
@@ -385,17 +382,6 @@ const TakeoffPage: React.FC = () => {
         } catch (error) {
           console.error('Erro ao carregar vínculos:', error);
           setVinculos([]);
-        } finally {
-          setLoadingTab(false);
-        }
-      } else if (activeTab === 'medicoes') {
-        setLoadingTab(true);
-        try {
-          const data = await takeoffService.getAllMedicoes();
-          setMedicoes(data);
-        } catch (error) {
-          console.error('Erro ao carregar medições:', error);
-          setMedicoes([]);
         } finally {
           setLoadingTab(false);
         }
@@ -1055,89 +1041,43 @@ const TakeoffPage: React.FC = () => {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin theme-text-secondary" />
               </div>
-            ) : medicoes.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
-                <h3 className="text-lg font-medium theme-text mb-2">Medições por Período</h3>
-                <p className="text-sm theme-text-secondary mb-4">
-                  Registre quantidades executadas por período para acompanhar o avanço físico
-                </p>
-                {selectedProjetoId && (
-                  <button
-                    onClick={() => setShowCriteriosMedicaoModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
-                    style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Importar Critérios de Medição
-                  </button>
-                )}
-              </div>
             ) : (
-              <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="space-y-4">
+                {/* Header com botão de importação */}
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium theme-text">Medições por Período</h3>
-                    <p className="text-sm theme-text-secondary mt-1">{medicoes.length} medições registradas</p>
+                    <h3 className="text-lg font-medium theme-text">Critérios de Medição</h3>
+                    <p className="text-sm theme-text-secondary mt-1">
+                      Gerencie os critérios de medição e etapas para cálculo de avanço físico
+                    </p>
                   </div>
                   {selectedProjetoId && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setShowCriteriosMedicaoList(!showCriteriosMedicaoList)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
-                        style={{ backgroundColor: showCriteriosMedicaoList ? 'var(--color-primary)' : 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)', color: showCriteriosMedicaoList ? 'white' : undefined }}
-                      >
-                        <List className="w-4 h-4" />
-                        {showCriteriosMedicaoList ? 'Ocultar Critérios' : 'Ver Critérios'}
-                      </button>
-                      <button
-                        onClick={() => setShowCriteriosMedicaoModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
-                        style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
-                      >
-                        <Upload className="w-4 h-4" />
-                        Importar Critérios
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setShowCriteriosMedicaoModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Importar Critérios
+                    </button>
                   )}
                 </div>
 
-                {showCriteriosMedicaoList && selectedProjetoId && usuario?.empresaId && (
-                  <div className="mb-6">
-                    <CriteriosMedicaoListPanel
-                      empresaId={usuario.empresaId}
-                      projetoId={selectedProjetoId}
-                      onClose={() => setShowCriteriosMedicaoList(false)}
-                    />
+                {/* Lista de Critérios */}
+                {selectedProjetoId && usuario?.empresaId ? (
+                  <CriteriosMedicaoListPanel
+                    empresaId={usuario.empresaId}
+                    projetoId={selectedProjetoId}
+                  />
+                ) : (
+                  <div className="text-center py-12 theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+                    <Calendar className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
+                    <h3 className="text-lg font-medium theme-text mb-2">Selecione um Projeto</h3>
+                    <p className="text-sm theme-text-secondary">
+                      Escolha um projeto para visualizar e gerenciar os critérios de medição
+                    </p>
                   </div>
                 )}
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-secondary)' }}>
-                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Item</th>
-                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Período</th>
-                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Qtd. Período</th>
-                        <th className="text-right py-3 px-4 font-medium theme-text-secondary">Qtd. Acumulada</th>
-                        <th className="text-left py-3 px-4 font-medium theme-text-secondary">Observações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {medicoes.map((m) => (
-                        <tr key={m.id} className="border-b hover:bg-opacity-50" style={{ borderColor: 'var(--color-border)' }}>
-                          <td className="py-3 px-4 theme-text">{m.item?.descricao || m.itemId}</td>
-                          <td className="py-3 px-4 theme-text-secondary">
-                            {format(new Date(m.periodoInicio), 'dd/MM/yy', { locale: ptBR })} - {format(new Date(m.periodoFim), 'dd/MM/yy', { locale: ptBR })}
-                          </td>
-                          <td className="py-3 px-4 text-right theme-text">{m.qtdPeriodo.toLocaleString('pt-BR')}</td>
-                          <td className="py-3 px-4 text-right theme-text font-medium">{m.qtdAcumulada?.toLocaleString('pt-BR') || '-'}</td>
-                          <td className="py-3 px-4 theme-text-secondary text-xs max-w-[200px] truncate">{m.observacoes || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             )}
           </div>

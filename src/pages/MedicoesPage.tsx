@@ -10,13 +10,15 @@ import {
   RefreshCw,
   Download,
   User,
-  ArrowRight
+  ArrowRight,
+  Package
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDateOnly } from '../utils/dateHelpers';
 import { useAuthStore } from '../stores/authStore';
 import { useEpsStore } from '../stores/epsStore';
 import { medicoesService } from '../services/medicoesService';
+import { takeoffService } from '../services/takeoffService';
 import { useToast } from '../components/ui/Toast';
 import type { 
   MedicoesConfig, 
@@ -25,9 +27,10 @@ import type {
   StatusPeriodo,
   StatusAvanco
 } from '../types/medicoes.types';
+import type { TakeoffMedicao } from '../types/takeoff.types';
 import type { EpsNode } from '../services/epsService';
 
-type TabType = 'periodos' | 'avancos' | 'aprovacoes' | 'relatorios' | 'configuracoes';
+type TabType = 'periodos' | 'avancos' | 'aprovacoes' | 'takeoff' | 'relatorios' | 'configuracoes';
 
 const statusPeriodoLabels: Record<StatusPeriodo, string> = {
   aberto: 'Aberto',
@@ -74,6 +77,8 @@ const MedicoesPage: React.FC = () => {
   const [periodos, setPeriodos] = useState<MedicoesPeriodo[]>([]);
   const [selectedPeriodo, setSelectedPeriodo] = useState<MedicoesPeriodo | null>(null);
   const [avancos, setAvancos] = useState<MedicoesAvanco[]>([]);
+  const [takeoffMedicoes, setTakeoffMedicoes] = useState<TakeoffMedicao[]>([]);
+  const [loadingTakeoff, setLoadingTakeoff] = useState(false);
 
   const [configForm, setConfigForm] = useState({
     diaInicio: 1,
@@ -135,6 +140,19 @@ const MedicoesPage: React.FC = () => {
     }
   }, []);
 
+  const loadTakeoffMedicoes = useCallback(async () => {
+    setLoadingTakeoff(true);
+    try {
+      const data = await takeoffService.getAllMedicoes();
+      setTakeoffMedicoes(data);
+    } catch (err) {
+      console.error('Erro ao carregar medições do take-off:', err);
+      setTakeoffMedicoes([]);
+    } finally {
+      setLoadingTakeoff(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedPeriodo) {
       loadAvancos(selectedPeriodo.id);
@@ -142,6 +160,12 @@ const MedicoesPage: React.FC = () => {
       setAvancos([]);
     }
   }, [selectedPeriodo, loadAvancos]);
+
+  useEffect(() => {
+    if (activeTab === 'takeoff') {
+      loadTakeoffMedicoes();
+    }
+  }, [activeTab, loadTakeoffMedicoes]);
 
   const handleSaveConfig = async () => {
     if (!projetoSelecionado || !usuario?.empresaId) return;
@@ -209,6 +233,7 @@ const MedicoesPage: React.FC = () => {
     { id: 'periodos' as TabType, label: 'Períodos', icon: Calendar },
     { id: 'avancos' as TabType, label: 'Avanços', icon: FileText },
     { id: 'aprovacoes' as TabType, label: 'Aprovações', icon: CheckCircle },
+    { id: 'takeoff' as TabType, label: 'Take-off', icon: Package },
     { id: 'relatorios' as TabType, label: 'Relatórios', icon: Download },
     { id: 'configuracoes' as TabType, label: 'Configurações', icon: Settings },
   ];
@@ -632,6 +657,70 @@ const MedicoesPage: React.FC = () => {
                   Selecione um avanço para gerenciar suas aprovações
                 </p>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'takeoff' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold theme-text flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Medições por Período (Take-off)
+                  </h2>
+                  <p className="text-sm theme-text-secondary mt-1">
+                    Quantidades executadas por período para acompanhar o avanço físico dos itens do take-off
+                  </p>
+                </div>
+                <button
+                  onClick={loadTakeoffMedicoes}
+                  disabled={loadingTakeoff}
+                  className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loadingTakeoff ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {loadingTakeoff ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                </div>
+              ) : takeoffMedicoes.length === 0 ? (
+                <div className="text-center py-12 border border-gray-200 rounded-lg">
+                  <Package className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium theme-text mb-2">Nenhuma Medição Registrada</h3>
+                  <p className="text-sm theme-text-secondary">
+                    As medições de itens do take-off aparecerão aqui quando forem registradas
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Item</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Período</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-600">Qtd. Período</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-600">Qtd. Acumulada</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Observações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {takeoffMedicoes.map((m) => (
+                        <tr key={m.id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4 theme-text">{m.item?.descricao || m.itemId}</td>
+                          <td className="py-3 px-4 text-gray-600">
+                            {format(new Date(m.periodoInicio), 'dd/MM/yy')} - {format(new Date(m.periodoFim), 'dd/MM/yy')}
+                          </td>
+                          <td className="py-3 px-4 text-right theme-text">{m.qtdPeriodo.toLocaleString('pt-BR')}</td>
+                          <td className="py-3 px-4 text-right theme-text font-medium">{m.qtdAcumulada?.toLocaleString('pt-BR') || '-'}</td>
+                          <td className="py-3 px-4 text-gray-500 text-xs max-w-[200px] truncate">{m.observacoes || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
