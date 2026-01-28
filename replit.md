@@ -1,85 +1,53 @@
 # VisionPlan - Replit Configuration
 
 ## Overview
-VisionPlan is a professional construction project management platform built with React, TypeScript, and Vite. It offers integrated planning and management tools, including 4D capabilities and the Last Planner System (LPS) methodology. The platform aims to revolutionize construction project management through advanced planning, real-time monitoring, and collaborative features, providing a comprehensive solution for managing complex construction projects.
+VisionPlan is a professional construction project management platform built with React, TypeScript, and Vite. It aims to revolutionize construction project management through advanced planning, real-time monitoring, and collaborative features, providing a comprehensive solution for managing complex construction projects. Key capabilities include integrated planning and management tools, 4D visualization, and support for the Last Planner System (LPS) methodology.
 
 ## User Preferences
 The user prefers an iterative development approach. Major changes should be discussed and approved before implementation. The user values clear, concise communication and detailed explanations for complex features.
 
 ## System Architecture
-VisionPlan is a single-page application (SPA) with a modern frontend stack and a serverless backend.
+VisionPlan is a single-page application (SPA) leveraging a modern frontend stack and a serverless backend.
 
-*   **Frontend Framework**: React 18.2 with TypeScript 5.2, Vite 5.0, Tailwind CSS 3.3, Zustand 4.4, React Router v6.
-*   **Backend**: Supabase (Auth, Database, Storage, Real-time).
-*   **UI/UX Decisions**: Theme customization, responsive design, component-based architecture.
-*   **Technical Implementations**:
-    *   **4D Capabilities**: Integration with 3D visualization tools (React Three Fiber) and VisionGantt.
-    *   **VisionGantt Library**: Custom enterprise Gantt library with CalendarStore, resource management, Critical Path Method (CPM), constraint validation, and a P6-style column system.
-    *   **Resource Management**: Full resource allocation with histogram visualization, conflict detection, multi-rate pricing, and resource curves.
-    *   **Baseline Tracking**: Project baselines with variance analysis.
-    *   **Real-time Updates**: Via WebSockets through Supabase.
-    *   **Multi-tenancy**: Implemented via a company system (`empresas` table) with Row Level Security (RLS).
-    *   **User Management**: Comprehensive user, profile, and permission management, including Governance Layers and Access Profiles.
-    *   **Organizational Structures**: Enterprise Project Structure (EPS) and Organizational Breakdown Structure (OBS).
-    *   **Admin Panel**: Centralized dashboard for managing users, companies, themes, access profiles, and organizational structures.
-    *   **Event-Sourced Controller Architecture**: Unidirectional data flow for Gantt chart state management.
-    *   **P6 Enterprise Columns System**: Over 80 professional columns with TypeScript types and EVM calculations.
-    *   **Ishikawa Analysis (Kaizen)**: Interactive fishbone diagram with 6M categories, hierarchical filters, Pareto chart, trend analysis, and KPI cards.
-    *   **Reuniões Matrix**: Calendar-based meeting management with auto-generated agendas based on restrictions, KPIs, and 5W2H actions.
-    *   **Portfolio Prioritization**: Multi-criteria scoring matrix with bubble chart visualization, radar chart comparison, and weighted ranking.
-    *   **WBS Integration to Schedule**: WBS nodes are inherited as read-only summary tasks in the schedule; activities can be assigned to WBS nodes.
-    *   **Database Schema**: `atividades_cronograma` (main schedule), `dependencias_atividades` (dependencies), `cronograma_column_configs` (user preferences).
-    *   **Performance & UX**: Caching strategies, optimistic UI updates, batch update manager, skeleton loaders, scroll preservation, inline editing, and robust error handling.
-    *   **Take-off / Quantity Surveying Module**: Manages construction quantities and physical progress tracking, including Excel import with dynamic column mapping, schedule integration, and a dedicated dashboard. Features include:
-        *   **Custom Column Configuration**: Per-discipline column configuration stored in `takeoff_colunas_config` table with support for text, number, decimal, select, date, calculated, reference, and percentage types.
-        *   **Excel Template Export**: Generates standardized Excel templates with 3 sheets (Dados for headers, Listas for dropdown options, Instruções for documentation).
-        *   **Dynamic Import Mapping**: TakeoffImportModal combines 14 default columns with custom configured columns, deduplicating by case-insensitive codigo comparison.
-        *   **Custom Values Persistence**: Custom column values stored in `valores_custom` jsonb column on `takeoff_itens` table, enabling flexible data capture beyond default fields.
-    *   **Service Layer Architecture**: Dedicated Supabase services for various modules (Take-off, 5W2H actions, Change Management, Meetings, Audit, Ishikawa Restrictions, LPS Restrictions, Bidirectional Sync between Restrictions and 5W2H, Dashboard, Portfolio, Calendars, Indicators, Measurements, Curva S, User Preferences).
-    *   **Medições Module**: Complete measurement period management for construction billing, including configurable periods, contractual terms integration, progress tracking from schedule and take-off, 3-level approval workflow, and restrictions integration.
-    *   **Indicadores Module**: Comprehensive indicator tables for EVM, LPS, Quality, and S-Curve analysis, including user preferences persistence, periodic EVM snapshots, weekly LPS indicators, quality indicators, project baselines, and S-Curve data with multi-baseline support.
-    *   **Global Project Filtering Architecture**: All modules use `useProjetoStore` for consistent project selection, with a `ProjetoSelector` component for switching projects. Services accept optional `projetoId` for filtering, and new records auto-fill `projeto_id`.
-    *   **Check-in / Check-out Module**: Implements the Last Planner System (LPS) weekly work plan and daily tracking, including weekly program planning, activity tracking with daily targets and restrictions, daily check-in/check-out with root cause analysis (6M+S categories), PPC calculation, TV mode, and PDF export.
-    *   **Acceptance Workflow**: Full workflow for weekly programming acceptance between planning and production departments (PLANEJADA → AGUARDANDO_ACEITE → ACEITA → EM_EXECUCAO → CONCLUIDA), with permission-based editing control. Planning sector can edit in PLANEJADA/AGUARDANDO_ACEITE status; production gives acceptance; editing is blocked after acceptance.
-    *   **Rejection with Readiness Conditions**: When production rejects a weekly program, they must select which Readiness Condition (Condição de Prontidão) was not met. The 8 conditions are: Project/Information, Materials, Labor, Equipment/Tools, Space/Work Area, Predecessor Tasks, External Conditions, and Safety. Each condition maps to an Ishikawa 6M category (TipoRestricaoDetalhado). Upon rejection, the existing RestricaoModal opens with pre-filled fields (tipo_detalhado, descricao, projeto_id, observacoes) allowing the user to review and complete the restriction details before saving. The restriction is then linked to the rejection via origem='REJEICAO_PROGRAMACAO'.
-    *   **Interference Tracking**: During check-in/check-out, users can register work site interferences (by company type: CONTRATADA/CONTRATANTE/FISCALIZACAO) with full audit trail. Interferences can be converted to Ishikawa restrictions for follow-up in the Kaizen module.
-    *   **Database Tables**: `aceites_programacao` (acceptance history with user, sector, type, and observations), `interferencias_obra` (interference records with empresa_id scope and RLS policies), `restricoes_ishikawa` (restrictions with origem field for tracking source like REJEICAO_PROGRAMACAO).
-    *   **Global Modal System**: Centralized modal management via `ModalContext` and `ModalProvider` in `src/contexts/ModalContext.tsx`. The `RestricaoModal` is rendered once globally via `GlobalModals` component in App.tsx and can be opened from anywhere using the `useRestricaoModal()` hook with `initialData`, `onSave`, and `onClose` callbacks. This ensures consistent modal behavior across all modules and avoids duplicating modal code.
-    *   **Primavera P6 Import System**: Comprehensive import functionality for P6 Excel exports with:
-        *   **Multi-step Import Wizard**: Upload → Project Selection/Creation → Sheet Selection → Column Mapping → Preview → Import → Results.
-        *   **Project Creation/Selection**: When importing without a selected project, users can choose an existing project or create a new one. Detects `project__proj_name` column for schedule name suggestion.
-        *   **WBS Integration to EPS**: WBS nodes from P6 are inserted into `eps_nodes` table (not `atividades_cronograma`), preserving original P6 WBS codes (e.g., "M450_2.4.1.2") without renumbering. Activities are linked to WBS via `wbs_id` foreign key. Intermediate WBS levels are auto-created maintaining prefix consistency.
-        *   **EpsSelector Buttons**: Optional "Criar Novo Cronograma" and "Importar P6" buttons in the schedule page EPS selector for quick access to import functionality.
-        *   **110+ Mappable Fields**: Organized in 16 categories (Identification, Dates Planned/Actual/Baseline/CPM, Duration, Float, Progress, Costs, Detailed Costs, EVM, Resources, Status, WBS, Dependencies, Other).
-        *   **Intelligent Auto-Mapping**: Uses exact match lookup (`DEFAULT_COLUMN_MAPPINGS`) and pattern-based matching (`P6_COLUMN_PATTERNS` with regex) to automatically suggest column mappings. The `autoMapP6Column()` function first checks for exact P6 column name matches, then applies 60+ regex patterns covering common P6 column naming conventions.
-        *   **SearchableColumnSelect Component**: Dropdown with real-time search, category grouping, field descriptions, and click-outside-to-close behavior.
-        *   **Dynamic Data Transformation**: `transformTask` processes fields by type (date/number/boolean/string) using derived type lists from `VISIONPLAN_TASK_COLUMNS`, automatically converts P6 hours to VisionPlan days.
-        *   **Prevents Duplicate Mappings**: `generateAutoMappings()` ensures each VisionPlan field is mapped only once.
-        *   **User Review Step**: Auto-mapped fields are pre-selected but user can review and adjust before importing.
-        *   **Schedule Deletion**: Delete entire schedules from EpsSelector with confirmation modal, recursive WBS deletion, and activity cleanup.
-        *   **Multi-Activity Deletion**: Checkbox selection in TaskList for batch activity deletion with confirmation modal and partial failure reporting.
-    *   **P6 XML Import System**: Native XML import for Primavera P6 exports with:
-        *   **XML Parser**: DOMParser-based extraction of Project, WBS, Activity, and Calendar elements.
-        *   **WBS Hierarchy via ObjectId**: Builds WBS tree using ObjectId/ParentObjectId relationships, sorted by depth and sequence number.
-        *   **Activity Linking**: Activities linked to WBS nodes via WBSObjectId, with order preserved.
-        *   **Import Wizard**: 4-step modal (Upload → Preview → Import → Results) with project info display, WBS hierarchy preview, and hours-per-day configuration.
-        *   **Project Creation**: Auto-creates project and schedule eps_node when importing without existing project selection.
-        *   **Service Layer**: `p6XmlImportService.ts` with parseXmlFile, importToDatabase, getProjectInfo, and getWbsHierarchy methods.
-    *   **Data Isolation Architecture**: Complete data isolation between projects to prevent cross-contamination:
-        *   **CronogramaStore Project Tracking**: `projetoAtualId` field tracks currently loaded project. `carregarAtividades()` clears previous state before loading new project data.
-        *   **DataIntegrityService**: Validates data integrity with `validateProject()`, detects cross-project activities/dependencies, auto-fixes issues with `autoFixIssues()`.
-        *   **Cache Segregation**: `cronogramaCacheService` uses project-specific cache keys (`visionplan_cache_activities_${projetoId}`).
-        *   **Logging Hook**: `useProjectIsolation` hook provides structured logging for project switches and data loading with contamination detection.
-        *   **Architecture Documentation**: `docs/ARCHITECTURE_FLOW.md` contains Mermaid flowcharts showing data flow and isolation points.
-        *   **Storage Service Architecture**: Centralized storage abstraction in `src/services/storageService.ts`:
-            *   **projectDataStorage**: Uses `sessionStorage` for project data cache (isolated per browser tab). Prevents conflicts when user works with multiple projects in different tabs.
-            *   **userPreferencesStorage**: Uses `localStorage` for visual preferences (theme, column widths) that should persist across sessions.
-            *   **Migrated Files**: `cronogramaCacheService.ts`, `BaselineModal.tsx`, `RecursosModal.tsx`, `condicoesProntidaoService.ts` now use `sessionStorage` via `projectDataStorage`.
-            *   **Preserved in localStorage**: Theme settings, column resize preferences, splitter positions, user preferences (persistent across sessions).
-    *   **Tutorial Page**: Interactive onboarding at `/tutorial` with step-by-step workflow guidance, tips, and warnings to avoid common mistakes.
+**UI/UX Decisions:**
+*   **Design System:** Standardized professional design with reusable layout components, design tokens for spacing, typography, and shadows, a suavized color palette supporting light/dark modes, and consistent CSS utility classes.
+*   **Responsiveness:** Fully responsive design for various devices.
+*   **Theming:** Customizable themes.
+
+**Technical Implementations:**
+*   **Frontend:** React 18.2, TypeScript 5.2, Vite 5.0, Tailwind CSS 3.3, Zustand 4.4, React Router v6.
+*   **Backend:** Supabase for authentication, database, storage, and real-time functionalities.
+*   **4D Capabilities:** Integration with 3D visualization tools (React Three Fiber) and VisionGantt.
+*   **VisionGantt Library:** Custom enterprise Gantt chart with features like CalendarStore, resource management, Critical Path Method (CPM), constraint validation, and a P6-style column system.
+*   **Resource Management:** Comprehensive resource allocation, histogram visualization, conflict detection, and multi-rate pricing.
+*   **Baseline Tracking:** Project baselines with variance analysis.
+*   **Multi-tenancy:** Implemented via a company system with Row Level Security (RLS).
+*   **User Management:** Detailed user, profile, and permission management, including Governance Layers and Access Profiles.
+*   **Organizational Structures:** Enterprise Project Structure (EPS) and Organizational Breakdown Structure (OBS).
+*   **Admin Panel:** Centralized dashboard for system administration.
+*   **Event-Sourced Architecture:** Unidirectional data flow for Gantt chart state management.
+*   **P6 Enterprise Columns System:** Over 80 professional columns with TypeScript types and EVM calculations.
+*   **Ishikawa Analysis (Kaizen):** Interactive fishbone diagrams, Pareto charts, and trend analysis.
+*   **Reuniões Matrix:** Calendar-based meeting management with auto-generated agendas.
+*   **Portfolio Prioritization:** Multi-criteria scoring matrix with bubble and radar chart visualizations.
+*   **WBS Integration:** WBS nodes integrated into schedules as read-only summary tasks.
+*   **Performance & UX:** Caching, optimistic UI, batch updates, skeleton loaders, scroll preservation, and robust error handling.
+*   **Take-off / Quantity Surveying Module:** Manages construction quantities, physical progress tracking, dynamic Excel import with custom column configuration, and integration with schedules.
+*   **Medições Module:** Manages construction billing periods, contractual terms, progress tracking, and a 3-level approval workflow.
+*   **Indicadores Module:** Comprehensive tables for EVM, LPS, Quality, and S-Curve analysis with user preferences and periodic snapshots.
+*   **Global Project Filtering:** Consistent project selection across all modules using `useProjetoStore`.
+*   **Check-in / Check-out Module (LPS):** Implements Last Planner System weekly work plan, daily activity tracking, root cause analysis (6M+S), PPC calculation, and TV mode. Includes an acceptance workflow for weekly programming between planning and production departments with permission-based control and rejection with readiness conditions.
+*   **Interference Tracking:** Records work site interferences during check-in/check-out with audit trails and conversion to Ishikawa restrictions.
+*   **Global Modal System:** Centralized modal management using `ModalContext` for consistent behavior.
+*   **Primavera P6 Import Systems (Excel & XML):**
+    *   **Excel Import:** Multi-step wizard with project selection/creation, sheet selection, comprehensive column mapping (110+ fields), intelligent auto-mapping, dynamic data transformation, and user review. Supports WBS integration into EPS nodes.
+    *   **XML Import:** Native XML parsing for Project, WBS, Activity, and Calendar elements, building WBS hierarchy, and linking activities.
+*   **Data Isolation Architecture:** Ensures complete data segregation between projects through `CronogramaStore` project tracking, `DataIntegrityService`, project-specific cache keys, and a `useProjectIsolation` logging hook.
+*   **Storage Service Architecture:** Centralized abstraction for `sessionStorage` (project-specific data) and `localStorage` (user preferences).
+*   **Tutorial Page:** Interactive onboarding guide.
 
 ## External Dependencies
-*   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, Row Level Security (RLS), and file storage.
+*   **Supabase**: PostgreSQL database, authentication, authorization, real-time subscriptions, RLS, and file storage.
 *   **Recharts**: For dynamic and interactive charts.
 *   **React Three Fiber**: For 3D visualization.
 *   **VisionGantt**: Custom Gantt chart library.

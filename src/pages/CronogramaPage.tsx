@@ -586,27 +586,31 @@ export const CronogramaPage: React.FC = () => {
 
   if (!projetoId) {
     return (
-      <div className="flex flex-col h-full w-full bg-gray-50">
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 theme-surface border-b theme-divide px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {masterView === 'list' 
-                  ? 'Selecione um projeto da estrutura EPS para abrir o cronograma'
-                  : 'Visão consolidada de todos os projetos no tempo'
-                }
-              </p>
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-6 h-6 theme-text-secondary" />
+              <div>
+                <h1 className="text-xl font-semibold theme-text">Cronograma</h1>
+                <p className="text-sm theme-text-secondary">
+                  {masterView === 'list' 
+                    ? 'Selecione um projeto da estrutura EPS para abrir o cronograma'
+                    : 'Visão consolidada de todos os projetos no tempo'
+                  }
+                </p>
+              </div>
             </div>
             
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
               <button
                 onClick={() => setMasterView('list')}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   masterView === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'theme-text'
+                    : 'theme-text-secondary hover:theme-text'
                 }`}
+                style={{ backgroundColor: masterView === 'list' ? 'var(--color-surface)' : 'transparent', boxShadow: masterView === 'list' ? 'var(--shadow-sm)' : 'none' }}
               >
                 <List className="w-4 h-4" />
                 Lista
@@ -615,9 +619,10 @@ export const CronogramaPage: React.FC = () => {
                 onClick={() => setMasterView('timeline')}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   masterView === 'timeline'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'theme-text'
+                    : 'theme-text-secondary hover:theme-text'
                 }`}
+                style={{ backgroundColor: masterView === 'timeline' ? 'var(--color-surface)' : 'transparent', boxShadow: masterView === 'timeline' ? 'var(--shadow-sm)' : 'none' }}
               >
                 <BarChart3 className="w-4 h-4" />
                 Timeline Master
@@ -626,7 +631,7 @@ export const CronogramaPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto" style={{ backgroundColor: 'var(--color-background)' }}>
           {masterView === 'list' ? (
             <EpsSelector 
               onSelectProject={handleSelectProject}
@@ -676,33 +681,36 @@ export const CronogramaPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-full w-full bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 theme-surface border-b theme-divide px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={handleBackToSelection}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 rounded-lg transition-colors hover:opacity-80"
+              style={{ backgroundColor: 'var(--color-surface-secondary)' }}
               title="Voltar para seleção de projetos"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 theme-text-secondary" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cronograma</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedProjetoNome || 'Gerencie o cronograma do projeto com VisionGantt'}
-              </p>
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-6 h-6 theme-text-secondary" />
+              <div>
+                <h1 className="text-xl font-semibold theme-text">Cronograma</h1>
+                <p className="text-sm theme-text-secondary">
+                  {selectedProjetoNome || 'Gerencie o cronograma do projeto com VisionGantt'}
+                </p>
+              </div>
             </div>
           </div>
           
-          {/* Resource Panel Toggle Button */}
           <button
             onClick={() => setShowResourcePanel(!showResourcePanel)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              showResourcePanel 
-                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:opacity-80"
+            style={{ 
+              backgroundColor: showResourcePanel ? 'var(--color-primary-100)' : 'var(--color-surface-secondary)',
+              color: showResourcePanel ? 'var(--color-primary)' : 'var(--color-text-secondary)'
+            }}
             title={showResourcePanel ? 'Ocultar painel de recursos' : 'Mostrar painel de recursos'}
           >
             {showResourcePanel ? (
@@ -716,11 +724,11 @@ export const CronogramaPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="theme-surface border-b theme-divide px-6 py-4">
         <CronogramaStats stats={estatisticas} />
       </div>
 
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="theme-surface border-b theme-divide px-6 py-3">
         <CronogramaToolbar
           onNovaAtividade={handleNovaAtividade}
           onNovaDependencia={handleNovaDependencia}
@@ -734,7 +742,7 @@ export const CronogramaPage: React.FC = () => {
       </div>
 
       {showFilters && (
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="border-b theme-divide px-6 py-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <CronogramaFilters />
         </div>
       )}
