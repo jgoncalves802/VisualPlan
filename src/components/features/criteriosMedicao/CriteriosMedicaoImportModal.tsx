@@ -239,8 +239,14 @@ const CriteriosMedicaoImportModal: React.FC<CriteriosMedicaoImportModalProps> = 
       for (const mapping of mappings) {
         if (mapping.target && row[mapping.source] !== undefined) {
           const value = row[mapping.source];
-          if (mapping.target === 'etapa' || mapping.target === 'percentual') {
+          if (mapping.target === 'etapa') {
             mapped[mapping.target] = Number(value) || 0;
+          } else if (mapping.target === 'percentual') {
+            let numValue = Number(value) || 0;
+            if (numValue > 0 && numValue < 1) {
+              numValue = numValue * 100;
+            }
+            mapped[mapping.target] = numValue;
           } else {
             mapped[mapping.target as keyof PreviewRow] = String(value || '') as never;
           }
