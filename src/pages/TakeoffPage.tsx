@@ -350,7 +350,8 @@ const TakeoffPage: React.FC = () => {
   // Verificação de permissão para exclusão de mapas
   const canDeleteMapa = usuario?.perfilAcesso === PerfilAcesso.ADMIN || 
                         usuario?.perfilAcesso === PerfilAcesso.DIRETOR ||
-                        usuario?.perfilAcesso === PerfilAcesso.GERENTE_PROJETO;
+                        usuario?.perfilAcesso === PerfilAcesso.GERENTE_PROJETO ||
+                        usuario?.perfilAcesso === PerfilAcesso.ENGENHEIRO_PLANEJAMENTO;
 
   const tiposColuna: { value: TipoColuna; label: string }[] = [
     { value: 'text', label: 'Texto' },
