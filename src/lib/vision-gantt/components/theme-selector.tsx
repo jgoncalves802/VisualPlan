@@ -14,6 +14,7 @@ interface ThemeSelectorProps {
 
 const THEME_ICONS: Record<GanttThemeName, React.ReactNode> = {
   'Empresa': <Building2 className="w-4 h-4" />,
+  'Professional': <div className="w-4 h-4 rounded-full bg-gray-400" />,
   'Modern': <div className="w-4 h-4 rounded-full bg-violet-500" />,
   'Clean': <div className="w-4 h-4 rounded-full bg-blue-400" />,
   'P6 Classic': <div className="w-4 h-4 rounded-full bg-blue-600" />,
@@ -23,6 +24,7 @@ const THEME_ICONS: Record<GanttThemeName, React.ReactNode> = {
 
 const THEME_DESCRIPTIONS: Record<GanttThemeName, string> = {
   'Empresa': 'Cores da sua empresa',
+  'Professional': 'Visual limpo e empresarial',
   'Modern': 'Cores suaves estilo ClickUp',
   'Clean': 'Minimalista estilo Notion',
   'P6 Classic': 'Estilo Primavera P6',
