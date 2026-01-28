@@ -1487,9 +1487,10 @@ const TakeoffPage: React.FC = () => {
         )}
       </div>
 
-      {showImportModal && selectedMapaId && (
+      {showImportModal && selectedMapaId && selectedDisciplinaId && (
         <TakeoffImportModal
           mapaId={selectedMapaId}
+          disciplinaId={selectedDisciplinaId}
           onClose={() => setShowImportModal(false)}
           colunasConfig={importColunasConfig}
         />
