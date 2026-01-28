@@ -226,7 +226,16 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
   const handleCreateNewColumn = async () => {
     if (!newColumnModal || !newColumnName.trim()) return;
     
-    const codigo = newColumnName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    let codigo = newColumnName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    
+    if (!codigo) {
+      codigo = `custom_${Date.now()}`;
+    }
+    
+    const existingKeys = new Set(targetColumns.map(c => c.key.toLowerCase()));
+    if (existingKeys.has(codigo.toLowerCase())) {
+      codigo = `${codigo}_${Date.now()}`;
+    }
     
     if (onCreateColumn) {
       try {
@@ -300,11 +309,16 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         });
         
         const hasEmptyDescription = !mapped.descricao || String(mapped.descricao).trim() === '';
-        const isEmptyRow = Object.entries(mapped)
+        const hasAnyValue = Object.entries(mapped)
           .filter(([k]) => !k.startsWith('_'))
-          .every(([, v]) => v === '' || v === 0 || v === null || v === undefined);
+          .some(([, v]) => {
+            if (typeof v === 'number') return v !== 0;
+            if (typeof v === 'string') return v.trim() !== '';
+            return v !== null && v !== undefined;
+          });
+        const isEmptyRow = !hasAnyValue;
         
-        mapped._hasIssues = hasEmptyDescription || isEmptyRow;
+        mapped._hasIssues = hasEmptyDescription;
         mapped._selected = !isEmptyRow;
         
         return mapped;
@@ -329,6 +343,17 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         
         const hasEmptyDescription = !updated.descricao || String(updated.descricao).trim() === '';
         updated._hasIssues = hasEmptyDescription;
+        
+        const hasAnyValue = Object.entries(updated)
+          .filter(([k]) => !k.startsWith('_'))
+          .some(([, v]) => {
+            if (typeof v === 'number') return v !== 0;
+            if (typeof v === 'string') return v.trim() !== '';
+            return v !== null && v !== undefined;
+          });
+        if (!hasAnyValue) {
+          updated._selected = false;
+        }
         
         return updated;
       }
