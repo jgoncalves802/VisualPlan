@@ -1073,9 +1073,21 @@ const TakeoffPage: React.FC = () => {
               </div>
             ) : (
               <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <div className="p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                  <h3 className="text-lg font-medium theme-text">Medições por Período</h3>
-                  <p className="text-sm theme-text-secondary mt-1">{medicoes.length} medições registradas</p>
+                <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
+                  <div>
+                    <h3 className="text-lg font-medium theme-text">Medições por Período</h3>
+                    <p className="text-sm theme-text-secondary mt-1">{medicoes.length} medições registradas</p>
+                  </div>
+                  {selectedProjetoId && (
+                    <button
+                      onClick={() => setShowCriteriosMedicaoModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                      style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Importar Critérios de Medição
+                    </button>
+                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
