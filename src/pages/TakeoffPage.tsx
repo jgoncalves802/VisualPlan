@@ -21,6 +21,7 @@ import {
   Layers,
   Unlink,
   Save,
+  List,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -36,7 +37,7 @@ import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
 import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDisciplinaModal';
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
-import { CriteriosMedicaoImportModal } from '../components/features/criteriosMedicao';
+import { CriteriosMedicaoImportModal, CriteriosMedicaoListPanel } from '../components/features/criteriosMedicao';
 import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
 import { PerfilAcesso } from '../types';
 import { useToast } from '../components/ui/Toast';
@@ -310,6 +311,7 @@ const TakeoffPage: React.FC = () => {
   const [showDisciplinaModal, setShowDisciplinaModal] = useState(false);
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [showCriteriosMedicaoModal, setShowCriteriosMedicaoModal] = useState(false);
+  const [showCriteriosMedicaoList, setShowCriteriosMedicaoList] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingDisciplina, setEditingDisciplina] = useState<TakeoffDisciplina | null>(null);
   const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
@@ -1079,16 +1081,37 @@ const TakeoffPage: React.FC = () => {
                     <p className="text-sm theme-text-secondary mt-1">{medicoes.length} medições registradas</p>
                   </div>
                   {selectedProjetoId && (
-                    <button
-                      onClick={() => setShowCriteriosMedicaoModal(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
-                      style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
-                    >
-                      <Upload className="w-4 h-4" />
-                      Importar Critérios de Medição
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowCriteriosMedicaoList(!showCriteriosMedicaoList)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: showCriteriosMedicaoList ? 'var(--color-primary)' : 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)', color: showCriteriosMedicaoList ? 'white' : undefined }}
+                      >
+                        <List className="w-4 h-4" />
+                        {showCriteriosMedicaoList ? 'Ocultar Critérios' : 'Ver Critérios'}
+                      </button>
+                      <button
+                        onClick={() => setShowCriteriosMedicaoModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Importar Critérios
+                      </button>
+                    </div>
                   )}
                 </div>
+
+                {showCriteriosMedicaoList && selectedProjetoId && usuario?.empresaId && (
+                  <div className="mb-6">
+                    <CriteriosMedicaoListPanel
+                      empresaId={usuario.empresaId}
+                      projetoId={selectedProjetoId}
+                      onClose={() => setShowCriteriosMedicaoList(false)}
+                    />
+                  </div>
+                )}
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
