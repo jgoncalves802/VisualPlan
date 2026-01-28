@@ -521,6 +521,60 @@ export const takeoffService = {
     return true;
   },
 
+  async deleteMapaCascade(id: string): Promise<{ success: boolean; deletedItems: number; error?: string }> {
+    try {
+      const { data: vinculos } = await supabase
+        .from('takeoff_vinculos')
+        .select('id')
+        .eq('mapa_id', id);
+      
+      if (vinculos && vinculos.length > 0) {
+        const vinculoIds = vinculos.map(v => v.id);
+        await supabase.from('takeoff_vinculos').delete().in('id', vinculoIds);
+      }
+
+      const { data: itens } = await supabase
+        .from('takeoff_itens')
+        .select('id')
+        .eq('mapa_id', id);
+      
+      let deletedItems = 0;
+      
+      if (itens && itens.length > 0) {
+        const itemIds = itens.map(i => i.id);
+        
+        await supabase.from('takeoff_medicoes').delete().in('item_id', itemIds);
+        
+        const { error: itensError } = await supabase
+          .from('takeoff_itens')
+          .delete()
+          .in('id', itemIds);
+        
+        if (itensError) {
+          console.error('Erro ao excluir itens:', itensError);
+          return { success: false, deletedItems: 0, error: 'Erro ao excluir itens do mapa' };
+        }
+        
+        deletedItems = itens.length;
+      }
+      
+      const { error: mapaError } = await supabase
+        .from('takeoff_mapas')
+        .delete()
+        .eq('id', id);
+      
+      if (mapaError) {
+        console.error('Erro ao excluir mapa:', mapaError);
+        return { success: false, deletedItems, error: 'Erro ao excluir o mapa' };
+      }
+      
+      return { success: true, deletedItems };
+    } catch (error) {
+      console.error('Erro ao excluir mapa em cascata:', error);
+      return { success: false, deletedItems: 0, error: 'Erro inesperado ao excluir mapa' };
+    }
+  },
+
   async getItens(filter: TakeoffFilter): Promise<TakeoffItem[]> {
     let mapaIds: string[] | undefined;
 

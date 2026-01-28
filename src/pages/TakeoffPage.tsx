@@ -37,6 +37,7 @@ import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDiscip
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
 import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
+import { PerfilAcesso } from '../types';
 import { useToast } from '../components/ui/Toast';
 
 type TabType = 'dashboard' | 'mapas' | 'vinculos' | 'medicoes' | 'documentos' | 'config';
@@ -340,6 +341,16 @@ const TakeoffPage: React.FC = () => {
   const [savingColuna, setSavingColuna] = useState(false);
   const [deletingColunaId, setDeletingColunaId] = useState<string | null>(null);
   const [showDeleteColunaConfirm, setShowDeleteColunaConfirm] = useState(false);
+  
+  // Estados para exclusão de mapa em cascata
+  const [deletingMapaId, setDeletingMapaId] = useState<string | null>(null);
+  const [showDeleteMapaConfirm, setShowDeleteMapaConfirm] = useState(false);
+  const [isDeletingMapa, setIsDeletingMapa] = useState(false);
+  
+  // Verificação de permissão para exclusão de mapas
+  const canDeleteMapa = usuario?.perfilAcesso === PerfilAcesso.ADMIN || 
+                        usuario?.perfilAcesso === PerfilAcesso.DIRETOR ||
+                        usuario?.perfilAcesso === PerfilAcesso.GERENTE_PROJETO;
 
   const tiposColuna: { value: TipoColuna; label: string }[] = [
     { value: 'text', label: 'Texto' },
@@ -498,6 +509,38 @@ const TakeoffPage: React.FC = () => {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
       setDeletingDisciplinaId(null);
+    }
+  };
+
+  const handleDeleteMapaClick = (mapaId: string) => {
+    setDeletingMapaId(mapaId);
+    setShowDeleteMapaConfirm(true);
+  };
+
+  const handleConfirmDeleteMapa = async () => {
+    if (!deletingMapaId) return;
+    
+    setIsDeletingMapa(true);
+    try {
+      const result = await takeoffService.deleteMapaCascade(deletingMapaId);
+      if (result.success) {
+        toast.success(`Mapa excluído com sucesso! ${result.deletedItems} itens removidos.`);
+        if (selectedMapaId === deletingMapaId) {
+          setSelectedMapa('');
+        }
+        if (selectedProjetoId) {
+          loadMapas(selectedProjetoId, selectedDisciplinaId || undefined);
+        }
+      } else {
+        toast.error(result.error || 'Erro ao excluir mapa');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir mapa:', error);
+      toast.error('Erro inesperado ao excluir mapa');
+    } finally {
+      setIsDeletingMapa(false);
+      setShowDeleteMapaConfirm(false);
+      setDeletingMapaId(null);
     }
   };
 
@@ -892,10 +935,10 @@ const TakeoffPage: React.FC = () => {
               ) : (
                 <div className="divide-y theme-divide">
                   {filteredMapas.map((mapa) => (
-                    <button
+                    <div
                       key={mapa.id}
                       onClick={() => handleMapaSelect(mapa.id)}
-                      className={`w-full p-3 text-left transition-colors ${
+                      className={`w-full p-3 text-left transition-colors cursor-pointer group ${
                         selectedMapaId === mapa.id ? 'border-l-2' : ''
                       }`}
                       style={{ 
@@ -925,9 +968,23 @@ const TakeoffPage: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 theme-text-secondary flex-shrink-0" />
+                        <div className="flex items-center gap-1">
+                          {canDeleteMapa && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMapaClick(mapa.id);
+                              }}
+                              className="p-1.5 rounded hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100"
+                              title="Excluir mapa e todos os itens"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </button>
+                          )}
+                          <ChevronRight className="w-4 h-4 theme-text-secondary flex-shrink-0" />
+                        </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -1571,6 +1628,20 @@ const TakeoffPage: React.FC = () => {
         message="Tem certeza que deseja excluir esta coluna? Esta ação não pode ser desfeita e os dados associados serão removidos."
         confirmLabel="Excluir"
         isLoading={isDeleting}
+        variant="danger"
+      />
+
+      <TakeoffConfirmDialog
+        isOpen={showDeleteMapaConfirm}
+        onClose={() => {
+          setShowDeleteMapaConfirm(false);
+          setDeletingMapaId(null);
+        }}
+        onConfirm={handleConfirmDeleteMapa}
+        title="Excluir Mapa de Controle"
+        message="ATENÇÃO: Esta ação irá excluir permanentemente o mapa e TODOS os itens, medições e vínculos associados. Esta ação não pode ser desfeita. Deseja continuar?"
+        confirmLabel="Excluir Tudo"
+        isLoading={isDeletingMapa}
         variant="danger"
       />
     </div>
