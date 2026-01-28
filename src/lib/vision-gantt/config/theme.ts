@@ -544,6 +544,115 @@ export const MODERN_THEME: GanttTheme = {
   }
 };
 
+// Professional Theme - Clean, enterprise-grade design matching TakeoffPage
+// Light gray headers, subtle colors, professional appearance
+export const PROFESSIONAL_THEME: GanttTheme = {
+  name: 'Professional',
+  colors: {
+    normalActivity: {
+      fill: '#3B82F6',      // Professional blue
+      fillLight: '#93C5FD',
+      stroke: '#2563EB',
+      progress: '#1D4ED8',
+      text: '#FFFFFF'
+    },
+    criticalActivity: {
+      fill: '#DC2626',      // Clear red (less saturated)
+      fillLight: '#FCA5A5',
+      stroke: '#B91C1C',
+      progress: '#991B1B',
+      text: '#FFFFFF'
+    },
+    nearCriticalActivity: {
+      fill: '#EA580C',      // Soft orange
+      fillLight: '#FDBA74',
+      stroke: '#C2410C',
+      progress: '#9A3412',
+      text: '#FFFFFF'
+    },
+    completedActivity: {
+      fill: '#059669',      // Professional green
+      fillLight: '#86EFAC',
+      stroke: '#047857',
+      progress: '#065F46',
+      text: '#FFFFFF'
+    },
+    summaryProject: {
+      fill: '#4B5563',      // Neutral gray
+      stroke: '#374151',
+      text: '#FFFFFF'
+    },
+    summaryWBS: {
+      fill: '#6366F1',      // Soft indigo
+      stroke: '#4F46E5',
+      text: '#FFFFFF'
+    },
+    milestone: {
+      fill: '#1F2937',
+      fillCritical: '#DC2626',
+      stroke: '#111827'
+    },
+    baseline: {
+      fill: '#D1D5DB',
+      stroke: '#9CA3AF'
+    },
+    dependency: {
+      normal: '#9CA3AF',
+      critical: '#DC2626',
+      nearCritical: '#EA580C',
+      hover: '#3B82F6'
+    },
+    grid: {
+      rowEven: '#FFFFFF',
+      rowOdd: '#F9FAFB',
+      border: '#E5E7EB',
+      selected: '#EFF6FF',
+      selectedBorder: '#3B82F6',
+      hover: '#F3F4F6',
+      text: '#111827',
+      textSecondary: '#6B7280'
+    },
+    header: {
+      background: '#F9FAFB',   // Light gray like TakeoffPage
+      text: '#374151',          // Dark gray text
+      border: '#E5E7EB'
+    },
+    timeline: {
+      background: '#FFFFFF',
+      gridLine: '#E5E7EB',
+      sightLine: '#F9FAFB',
+      weekend: '#F3F4F6',
+      holiday: '#FEF2F2',
+      today: '#FEF3C7',
+      todayLine: '#DC2626'
+    },
+    selection: '#3B82F6',
+    handle: '#3B82F6',
+    handleHover: '#059669'
+  },
+  typography: {
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    taskLabel: {
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    headerLabel: {
+      fontSize: '12px',
+      fontWeight: 600
+    },
+    gridLabel: {
+      fontSize: '13px',
+      fontWeight: 400
+    }
+  },
+  spacing: {
+    barHeight: 20,
+    rowHeight: 34,
+    barRadius: 4,
+    handleSize: 5
+  }
+};
+
 // Clean Theme - Minimalist with subtle colors (Notion-inspired)
 export const CLEAN_THEME: GanttTheme = {
   name: 'Clean',
@@ -673,6 +782,7 @@ export const DEFAULT_ACTIVITY_CODE_COLORS: ActivityCodeColor[] = [
 ];
 
 export const AVAILABLE_THEMES: GanttTheme[] = [
+  PROFESSIONAL_THEME,
   MODERN_THEME,
   CLEAN_THEME,
   P6_CLASSIC_THEME,
@@ -681,7 +791,7 @@ export const AVAILABLE_THEMES: GanttTheme[] = [
 ];
 
 export function getThemeByName(name: string): GanttTheme {
-  return AVAILABLE_THEMES.find(t => t.name === name) || P6_CLASSIC_THEME;
+  return AVAILABLE_THEMES.find(t => t.name === name) || PROFESSIONAL_THEME;
 }
 
 export interface CompanyColors {
