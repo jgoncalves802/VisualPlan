@@ -36,6 +36,7 @@ import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
 import TakeoffDisciplinaModal from '../components/features/takeoff/TakeoffDisciplinaModal';
 import TakeoffDocumentoModal from '../components/features/takeoff/TakeoffDocumentoModal';
 import TakeoffConfirmDialog from '../components/features/takeoff/TakeoffConfirmDialog';
+import { CriteriosMedicaoImportModal } from '../components/features/criteriosMedicao';
 import type { TakeoffVinculo, TakeoffMedicao, TakeoffDocumento, TakeoffColunaConfig, TakeoffDisciplina, TipoColuna } from '../types/takeoff.types';
 import { PerfilAcesso } from '../types';
 import { useToast } from '../components/ui/Toast';
@@ -308,6 +309,7 @@ const TakeoffPage: React.FC = () => {
   const [showMapaModal, setShowMapaModal] = useState(false);
   const [showDisciplinaModal, setShowDisciplinaModal] = useState(false);
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
+  const [showCriteriosMedicaoModal, setShowCriteriosMedicaoModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingDisciplina, setEditingDisciplina] = useState<TakeoffDisciplina | null>(null);
   const [deletingDisciplinaId, setDeletingDisciplinaId] = useState<string | null>(null);
@@ -1055,9 +1057,19 @@ const TakeoffPage: React.FC = () => {
               <div className="text-center py-12">
                 <Calendar className="w-16 h-16 mx-auto mb-4 theme-text-secondary opacity-30" />
                 <h3 className="text-lg font-medium theme-text mb-2">Medições por Período</h3>
-                <p className="text-sm theme-text-secondary">
+                <p className="text-sm theme-text-secondary mb-4">
                   Registre quantidades executadas por período para acompanhar o avanço físico
                 </p>
+                {selectedProjetoId && (
+                  <button
+                    onClick={() => setShowCriteriosMedicaoModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+                  >
+                    <Upload className="w-4 h-4" />
+                    Importar Critérios de Medição
+                  </button>
+                )}
               </div>
             ) : (
               <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
@@ -1645,6 +1657,18 @@ const TakeoffPage: React.FC = () => {
         isLoading={isDeletingMapa}
         variant="danger"
       />
+
+      {showCriteriosMedicaoModal && selectedProjetoId && (
+        <CriteriosMedicaoImportModal
+          isOpen={showCriteriosMedicaoModal}
+          onClose={() => setShowCriteriosMedicaoModal(false)}
+          onImportComplete={() => {
+            setShowCriteriosMedicaoModal(false);
+          }}
+          projetoId={selectedProjetoId}
+          empresaId={usuario.empresaId}
+        />
+      )}
     </div>
   );
 };
