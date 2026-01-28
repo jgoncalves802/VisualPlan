@@ -606,25 +606,30 @@ export const takeoffService = {
   async createItensBatch(itens: CreateItemDTO[]): Promise<number> {
     if (itens.length === 0) return 0;
 
-    const rows = itens.map((dto) => ({
-      mapa_id: dto.mapaId,
-      documento_id: dto.documentoId,
-      item_pq: dto.itemPq,
-      area: dto.area,
-      edificacao: dto.edificacao,
-      tag: dto.tag,
-      linha: dto.linha,
-      descricao: dto.descricao,
-      tipo_material: dto.tipoMaterial,
-      dimensao: dto.dimensao,
-      unidade: dto.unidade,
-      qtd_prevista: dto.qtdPrevista || 0,
-      qtd_takeoff: dto.qtdTakeoff || 0,
-      peso_unitario: dto.pesoUnitario || 0,
-      custo_unitario: dto.custoUnitario || 0,
-      observacoes: dto.observacoes,
-      valores_custom: dto.valoresCustom || {},
-    }));
+    const rows = itens.map((dto) => {
+      const row: Record<string, unknown> = {
+        mapa_id: dto.mapaId,
+        documento_id: dto.documentoId,
+        item_pq: dto.itemPq,
+        area: dto.area,
+        edificacao: dto.edificacao,
+        tag: dto.tag,
+        linha: dto.linha,
+        descricao: dto.descricao,
+        tipo_material: dto.tipoMaterial,
+        dimensao: dto.dimensao,
+        unidade: dto.unidade,
+        qtd_prevista: dto.qtdPrevista || 0,
+        qtd_takeoff: dto.qtdTakeoff || 0,
+        peso_unitario: dto.pesoUnitario || 0,
+        custo_unitario: dto.custoUnitario || 0,
+        observacoes: dto.observacoes,
+      };
+      if (dto.valoresCustom && Object.keys(dto.valoresCustom).length > 0) {
+        row.valores_custom = dto.valoresCustom;
+      }
+      return row;
+    });
 
     const { data, error } = await supabase.from('takeoff_itens').insert(rows).select();
 
