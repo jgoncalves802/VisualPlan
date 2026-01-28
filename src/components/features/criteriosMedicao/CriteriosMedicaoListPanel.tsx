@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { CriterioMedicao, CriterioMedicaoEtapa } from '../../../types/criteriosMedicao.types';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
 
 interface CriteriosMedicaoListPanelProps {
   empresaId: string;
   projetoId?: string;
   onClose?: () => void;
+}
+
+interface DeleteConfirmState {
+  isOpen: boolean;
+  type: 'criterio' | 'etapa' | 'batch';
+  id?: string;
+  title: string;
+  message: string;
 }
 
 const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
@@ -23,6 +32,14 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
   const [editForm, setEditForm] = useState<Partial<CriterioMedicao>>({});
   const [editEtapaForm, setEditEtapaForm] = useState<Partial<CriterioMedicaoEtapa>>({});
   const [saving, setSaving] = useState(false);
+  const [selectedCriterios, setSelectedCriterios] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({
+    isOpen: false,
+    type: 'criterio',
+    title: '',
+    message: '',
+  });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadCriterios();
@@ -43,6 +60,17 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
         etapas[criterio.id] = criterioEtapas;
       }
       setEtapasMap(etapas);
+      
+      const validIds = new Set(data.map(c => c.id));
+      setSelectedCriterios(prev => {
+        const newSelected = new Set<string>();
+        prev.forEach(id => {
+          if (validIds.has(id)) {
+            newSelected.add(id);
+          }
+        });
+        return newSelected;
+      });
     } catch (error) {
       console.error('Erro ao carregar critérios:', error);
     } finally {
@@ -87,15 +115,64 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
     }
   };
 
-  const deleteCriterio = async (criterioId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este critério e todas as suas etapas?')) {
-      return;
-    }
+  const openDeleteCriterioConfirm = (criterioId: string) => {
+    const criterio = criterios.find(c => c.id === criterioId);
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'criterio',
+      id: criterioId,
+      title: 'Excluir Critério',
+      message: `Tem certeza que deseja excluir o critério "${criterio?.codigo}" e todas as suas etapas?`,
+    });
+  };
+
+  const openDeleteBatchConfirm = () => {
+    if (selectedCriterios.size === 0) return;
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'batch',
+      title: 'Excluir Critérios Selecionados',
+      message: `Tem certeza que deseja excluir ${selectedCriterios.size} critério(s) selecionado(s) e todas as suas etapas?`,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
     try {
-      await criteriosMedicaoService.deleteCriterio(criterioId);
+      if (deleteConfirm.type === 'criterio' && deleteConfirm.id) {
+        await criteriosMedicaoService.deleteCriterio(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'etapa' && deleteConfirm.id) {
+        await criteriosMedicaoService.deleteEtapa(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'batch') {
+        for (const criterioId of selectedCriterios) {
+          await criteriosMedicaoService.deleteCriterio(criterioId);
+        }
+        setSelectedCriterios(new Set());
+      }
       await loadCriterios();
     } catch (error) {
-      console.error('Erro ao excluir critério:', error);
+      console.error('Erro ao excluir:', error);
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm({ isOpen: false, type: 'criterio', title: '', message: '' });
+    }
+  };
+
+  const toggleSelectCriterio = (criterioId: string) => {
+    const newSelected = new Set(selectedCriterios);
+    if (newSelected.has(criterioId)) {
+      newSelected.delete(criterioId);
+    } else {
+      newSelected.add(criterioId);
+    }
+    setSelectedCriterios(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCriterios.size === criterios.length) {
+      setSelectedCriterios(new Set());
+    } else {
+      setSelectedCriterios(new Set(criterios.map(c => c.id)));
     }
   };
 
@@ -127,16 +204,14 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
     }
   };
 
-  const deleteEtapa = async (etapaId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta etapa?')) {
-      return;
-    }
-    try {
-      await criteriosMedicaoService.deleteEtapa(etapaId);
-      await loadCriterios();
-    } catch (error) {
-      console.error('Erro ao excluir etapa:', error);
-    }
+  const openDeleteEtapaConfirm = (etapaId: string, etapaDescritivo: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'etapa',
+      id: etapaId,
+      title: 'Excluir Etapa',
+      message: `Tem certeza que deseja excluir a etapa "${etapaDescritivo}"?`,
+    });
   };
 
   if (loading) {
@@ -150,19 +225,44 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
   return (
     <div className="theme-surface rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
       <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--color-border)' }}>
-        <div>
-          <h3 className="text-lg font-medium theme-text">Critérios de Medição</h3>
-          <p className="text-sm theme-text-secondary mt-1">{criterios.length} critérios cadastrados</p>
+        <div className="flex items-center gap-3">
+          {criterios.length > 0 && (
+            <input
+              type="checkbox"
+              checked={selectedCriterios.size === criterios.length && criterios.length > 0}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              title="Selecionar todos"
+            />
+          )}
+          <div>
+            <h3 className="text-lg font-medium theme-text">Critérios de Medição</h3>
+            <p className="text-sm theme-text-secondary mt-1">
+              {criterios.length} critérios cadastrados
+              {selectedCriterios.size > 0 && ` (${selectedCriterios.size} selecionados)`}
+            </p>
+          </div>
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-            style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
-          >
-            <X className="w-4 h-4 theme-text" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedCriterios.size > 0 && (
+            <button
+              onClick={openDeleteBatchConfirm}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Excluir ({selectedCriterios.size})
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
+            >
+              <X className="w-4 h-4 theme-text" />
+            </button>
+          )}
+        </div>
       </div>
 
       {criterios.length === 0 ? (
@@ -183,6 +283,13 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
                   className="p-4 flex items-center gap-3 hover:bg-opacity-50 cursor-pointer"
                   style={{ backgroundColor: isExpanded ? 'var(--color-surface-secondary)' : 'transparent' }}
                 >
+                  <input
+                    type="checkbox"
+                    checked={selectedCriterios.has(criterio.id)}
+                    onChange={(e) => { e.stopPropagation(); toggleSelectCriterio(criterio.id); }}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    onClick={(e) => e.stopPropagation()}
+                  />
                   <button
                     onClick={() => toggleExpand(criterio.id)}
                     className="p-1 rounded hover:opacity-80"
@@ -242,7 +349,7 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteCriterio(criterio.id); }}
+                          onClick={(e) => { e.stopPropagation(); openDeleteCriterioConfirm(criterio.id); }}
                           className="p-1 rounded text-red-500 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -333,7 +440,7 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
                                         <Edit2 className="w-3 h-3" />
                                       </button>
                                       <button
-                                        onClick={() => deleteEtapa(etapa.id)}
+                                        onClick={() => openDeleteEtapaConfirm(etapa.id, etapa.descritivo || `Etapa ${etapa.numeroEtapa}`)}
                                         className="p-1 rounded text-red-500 hover:bg-red-50"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -354,6 +461,18 @@ const CriteriosMedicaoListPanel: React.FC<CriteriosMedicaoListPanelProps> = ({
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, type: 'criterio', title: '', message: '' })}
+        onConfirm={handleDeleteConfirm}
+        title={deleteConfirm.title}
+        message={deleteConfirm.message}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 };
