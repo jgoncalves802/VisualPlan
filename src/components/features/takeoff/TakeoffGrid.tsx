@@ -517,27 +517,49 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
           </tbody>
           <tfoot className="sticky bottom-0 border-t-2 theme-divide font-medium" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
             <tr>
-              <td className="px-2 py-2 text-xs theme-text">TOTAL</td>
-              <td colSpan={6} className="px-2 py-2 text-xs theme-text">
-                {totais.totalItens} itens
-              </td>
+              {/* Checkbox column */}
+              <td className="px-2 py-2 text-xs theme-text font-bold">TOTAL</td>
+              {/* Ações column */}
+              <td className="px-2 py-2 text-xs theme-text">{totais.totalItens} itens</td>
+              {/* Área */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Edificação */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* TAG */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Descrição */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Tipo Material */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Dimensão */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Unidade */}
+              <td className="px-2 py-2 text-xs theme-text"></td>
+              {/* Qtd Prevista */}
               <td className="px-2 py-2 text-xs theme-text text-right">
                 {totais.qtdPrevistaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </td>
+              {/* Qtd Take-off */}
               <td className="px-2 py-2 text-xs theme-text text-right">
                 {totais.qtdTakeoffTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </td>
+              {/* Qtd Executada */}
               <td className="px-2 py-2 text-xs theme-text text-right">
                 {totais.qtdExecutadaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </td>
+              {/* Peso Unitário */}
               <td className="px-2 py-2 text-xs theme-text text-right">-</td>
+              {/* Peso Total */}
               <td className="px-2 py-2 text-xs theme-text text-right">
                 {totais.pesoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </td>
+              {/* Custo Unitário */}
               <td className="px-2 py-2 text-xs theme-text text-right">-</td>
+              {/* Custo Total */}
               <td className="px-2 py-2 text-xs theme-text text-right">
                 R$ {totais.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </td>
+              {/* % Executado */}
               <td className="px-2 py-2 text-xs theme-text">
                 <div className="flex items-center gap-1">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
