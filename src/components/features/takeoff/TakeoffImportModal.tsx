@@ -213,9 +213,13 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
       const errors: string[] = [];
       let skippedRows = 0;
 
-      jsonData.forEach((row) => {
+      console.log('[TakeoffImport] Mappings:', mappings);
+      console.log('[TakeoffImport] Total rows in Excel:', jsonData.length);
+      
+      jsonData.forEach((row, index) => {
         const rowValues = Object.values(row).filter(v => v !== null && v !== undefined && String(v).trim() !== '');
         if (rowValues.length === 0) {
+          console.log(`[TakeoffImport] Row ${index}: SKIPPED (empty row)`);
           skippedRows++;
           return;
         }
@@ -244,6 +248,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
         }
 
         if (!item.descricao || String(item.descricao).trim() === '') {
+          console.log(`[TakeoffImport] Row ${index}: SKIPPED (no descricao). Row keys:`, Object.keys(row), 'Item:', item);
           skippedRows++;
           return;
         }
@@ -253,6 +258,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
 
         itensToCreate.push(item as CreateItemDTO);
       });
+      
+      console.log('[TakeoffImport] Items to create:', itensToCreate.length);
 
       const imported = await createItensBatch(itensToCreate);
       
