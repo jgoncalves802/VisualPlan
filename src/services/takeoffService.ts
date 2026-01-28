@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { parseDateOnly } from '../utils/dateHelpers';
+import type { PostgrestError } from '@supabase/supabase-js';
 import type {
   TakeoffDisciplina,
   TakeoffColunaConfig,
@@ -128,6 +129,34 @@ const mapDocumentoFromDB = (row: Record<string, unknown>): TakeoffDocumento => (
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
+
+const isTableNotFoundError = (error: PostgrestError | null): boolean => {
+  if (!error) return false;
+  return error.code === 'PGRST205' || error.message?.includes('Could not find');
+};
+
+const safeDeleteFromTable = async (
+  table: string,
+  column: string,
+  values: string | string[]
+): Promise<{ success: boolean; ignored: boolean; error?: PostgrestError }> => {
+  const query = Array.isArray(values)
+    ? supabase.from(table).delete().in(column, values)
+    : supabase.from(table).delete().eq(column, values);
+  
+  const { error } = await query;
+  
+  if (!error) {
+    return { success: true, ignored: false };
+  }
+  
+  if (isTableNotFoundError(error)) {
+    return { success: true, ignored: true };
+  }
+  
+  console.warn(`Erro ao excluir de ${table}:`, error.message);
+  return { success: false, ignored: false, error };
+};
 
 export const DISCIPLINA_TEMPLATES: DisciplinaTemplate[] = [
   {
@@ -543,9 +572,15 @@ export const takeoffService = {
       if (itens && itens.length > 0) {
         const itemIds = itens.map(i => i.id);
         
-        await supabase.from('takeoff_medicoes').delete().in('item_id', itemIds);
+        const medicoesResult = await safeDeleteFromTable('takeoff_medicoes', 'item_id', itemIds);
+        if (!medicoesResult.success) {
+          return { success: false, deletedItems: 0, error: 'Erro ao excluir medições do mapa' };
+        }
         
-        await supabase.from('item_criterio_medicao').delete().in('item_id', itemIds);
+        const criteriosResult = await safeDeleteFromTable('item_criterio_medicao', 'item_id', itemIds);
+        if (!criteriosResult.success) {
+          return { success: false, deletedItems: 0, error: 'Erro ao excluir vínculos de critérios' };
+        }
         
         const { error: itensError } = await supabase
           .from('takeoff_itens')
@@ -733,8 +768,11 @@ export const takeoffService = {
   },
 
   async deleteItem(id: string): Promise<boolean> {
-    await supabase.from('takeoff_medicoes').delete().eq('item_id', id);
-    await supabase.from('item_criterio_medicao').delete().eq('item_id', id);
+    const medicoesResult = await safeDeleteFromTable('takeoff_medicoes', 'item_id', id);
+    if (!medicoesResult.success) return false;
+    
+    const criteriosResult = await safeDeleteFromTable('item_criterio_medicao', 'item_id', id);
+    if (!criteriosResult.success) return false;
     
     const { error } = await supabase.from('takeoff_itens').delete().eq('id', id);
     if (error) {
@@ -747,8 +785,15 @@ export const takeoffService = {
   async deleteItensBatch(ids: string[], onProgress?: (current: number) => void): Promise<{ success: number; errors: string[] }> {
     if (ids.length === 0) return { success: 0, errors: [] };
     
-    await supabase.from('takeoff_medicoes').delete().in('item_id', ids);
-    await supabase.from('item_criterio_medicao').delete().in('item_id', ids);
+    const medicoesResult = await safeDeleteFromTable('takeoff_medicoes', 'item_id', ids);
+    if (!medicoesResult.success) {
+      return { success: 0, errors: ['Erro ao excluir medições dos itens'] };
+    }
+    
+    const criteriosResult = await safeDeleteFromTable('item_criterio_medicao', 'item_id', ids);
+    if (!criteriosResult.success) {
+      return { success: 0, errors: ['Erro ao excluir vínculos de critérios'] };
+    }
     
     const errors: string[] = [];
     let successCount = 0;
