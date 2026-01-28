@@ -625,13 +625,26 @@ export const takeoffService = {
       observacoes: dto.observacoes,
     }));
 
-    const { data, error } = await supabase.from('takeoff_itens').insert(rows).select();
+    const BATCH_SIZE = 100;
+    let totalInserted = 0;
+    
+    console.log(`[TakeoffService] Starting batch insert of ${rows.length} items in chunks of ${BATCH_SIZE}`);
 
-    if (error) {
-      console.error('Erro ao criar itens em lote:', error);
-      return 0;
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE);
+      console.log(`[TakeoffService] Inserting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(rows.length / BATCH_SIZE)} (${batch.length} items)`);
+      
+      const { data, error } = await supabase.from('takeoff_itens').insert(batch).select();
+
+      if (error) {
+        console.error(`[TakeoffService] Error in batch ${Math.floor(i / BATCH_SIZE) + 1}:`, error);
+        continue;
+      }
+      totalInserted += data?.length || 0;
     }
-    return data?.length || 0;
+    
+    console.log(`[TakeoffService] Batch insert complete. Total inserted: ${totalInserted}`);
+    return totalInserted;
   },
 
   async updateItem(id: string, dto: UpdateItemDTO): Promise<TakeoffItem | null> {
