@@ -545,6 +545,8 @@ export const takeoffService = {
         
         await supabase.from('takeoff_medicoes').delete().in('item_id', itemIds);
         
+        await supabase.from('item_criterio_medicao').delete().in('item_id', itemIds);
+        
         const { error: itensError } = await supabase
           .from('takeoff_itens')
           .delete()
@@ -731,6 +733,9 @@ export const takeoffService = {
   },
 
   async deleteItem(id: string): Promise<boolean> {
+    await supabase.from('takeoff_medicoes').delete().eq('item_id', id);
+    await supabase.from('item_criterio_medicao').delete().eq('item_id', id);
+    
     const { error } = await supabase.from('takeoff_itens').delete().eq('id', id);
     if (error) {
       console.error('Erro ao excluir item:', error);
@@ -741,6 +746,9 @@ export const takeoffService = {
 
   async deleteItensBatch(ids: string[], onProgress?: (current: number) => void): Promise<{ success: number; errors: string[] }> {
     if (ids.length === 0) return { success: 0, errors: [] };
+    
+    await supabase.from('takeoff_medicoes').delete().in('item_id', ids);
+    await supabase.from('item_criterio_medicao').delete().in('item_id', ids);
     
     const errors: string[] = [];
     let successCount = 0;
