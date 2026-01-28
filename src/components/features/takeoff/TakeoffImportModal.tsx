@@ -111,16 +111,26 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
         if (normalized.includes('área') || normalized.includes('area')) target = 'area';
         else if (normalized.includes('edificação') || normalized.includes('edificacao')) target = 'edificacao';
         else if (normalized.includes('tag')) target = 'tag';
-        else if (normalized.includes('linha')) target = 'linha';
-        else if (normalized.includes('descrição') || normalized.includes('descricao')) target = 'descricao';
+        else if (normalized.includes('linha') && !normalized.includes('disciplina')) target = 'linha';
+        else if (
+          normalized.includes('descrição') || 
+          normalized.includes('descricao') || 
+          normalized.includes('desc') ||
+          normalized === 'nome' ||
+          normalized === 'item' ||
+          normalized === 'servico' ||
+          normalized === 'serviço' ||
+          normalized === 'atividade' ||
+          normalized === 'material'
+        ) target = 'descricao';
         else if (normalized.includes('tipo') && normalized.includes('material')) target = 'tipoMaterial';
-        else if (normalized.includes('dimensão') || normalized.includes('dimensao')) target = 'dimensao';
-        else if (normalized.includes('unid')) target = 'unidade';
-        else if (normalized.includes('prev')) target = 'qtdPrevista';
-        else if (normalized.includes('take') || normalized.includes('quant')) target = 'qtdTakeoff';
+        else if (normalized.includes('dimensão') || normalized.includes('dimensao') || normalized.includes('especificacao') || normalized.includes('especificação')) target = 'dimensao';
+        else if (normalized.includes('unid') || normalized === 'un' || normalized === 'und') target = 'unidade';
+        else if (normalized.includes('prev') || normalized.includes('orçada') || normalized.includes('orcada')) target = 'qtdPrevista';
+        else if (normalized.includes('take') || normalized.includes('quant') || normalized === 'qtd' || normalized === 'quantidade') target = 'qtdTakeoff';
         else if (normalized.includes('peso') && normalized.includes('unit')) target = 'pesoUnitario';
-        else if (normalized.includes('custo') || normalized.includes('preço') || normalized.includes('preco')) target = 'custoUnitario';
-        else if (normalized.includes('pq') || normalized.includes('item')) target = 'itemPq';
+        else if (normalized.includes('custo') || normalized.includes('preço') || normalized.includes('preco') || normalized.includes('valor')) target = 'custoUnitario';
+        else if (normalized.includes('pq') || (normalized.includes('item') && normalized.includes('pq'))) target = 'itemPq';
         else if (normalized.includes('obs')) target = 'observacoes';
         
         return { source: header, target };
@@ -146,8 +156,18 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
     );
   };
 
+  const isDescricaoMapped = useMemo(() => {
+    return mappings.some(m => m.target === 'descricao');
+  }, [mappings]);
+
   const handlePreview = async () => {
     if (!file) return;
+    
+    if (!isDescricaoMapped) {
+      alert('Por favor, mapeie uma coluna para o campo "Descrição". Este campo é obrigatório para a importação.');
+      return;
+    }
+    
     setIsProcessing(true);
 
     try {
@@ -307,6 +327,15 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
                 </select>
               </div>
 
+              {!isDescricaoMapped && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">
+                    <strong>Campo obrigatório:</strong> Mapeie uma coluna para "Descrição" para continuar.
+                  </span>
+                </div>
+              )}
+
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Mapeamento de Colunas</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -422,7 +451,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ mapaId, onClose
             {step === 'mapping' && (
               <button
                 onClick={handlePreview}
-                disabled={isProcessing || !mappings.some(m => m.target)}
+                disabled={isProcessing || !isDescricaoMapped}
                 className="px-4 py-2 text-sm rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2 theme-text"
                 style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
               >
