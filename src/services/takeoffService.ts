@@ -132,7 +132,13 @@ const mapDocumentoFromDB = (row: Record<string, unknown>): TakeoffDocumento => (
 
 const isTableNotFoundError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
-  return error.code === 'PGRST205' || error.message?.includes('Could not find');
+  return (
+    error.code === 'PGRST205' || 
+    error.code === 'PGRST204' ||
+    error.message?.includes('Could not find') ||
+    error.message?.includes('Bad Request') ||
+    error.message === 'Bad Request'
+  );
 };
 
 const safeDeleteFromTable = async (
