@@ -137,6 +137,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
   });
 
   useEffect(() => {
+    console.log('[TakeoffImport] colunasConfig changed:', colunasConfig.length, colunasConfig.map(c => c.nome));
     const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key.toLowerCase()));
     const customColumns: TargetColumn[] = colunasConfig
       .filter(c => !defaultKeys.has(c.codigo.toLowerCase()))
@@ -145,6 +146,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         label: c.nome,
         isCustom: true,
       }));
+    console.log('[TakeoffImport] Custom columns after filter:', customColumns.length, customColumns.map(c => c.label));
     setTargetColumns([...DEFAULT_COLUMNS, ...customColumns]);
   }, [colunasConfig]);
 
