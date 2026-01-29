@@ -64,28 +64,35 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
         const itemIds = itens.map((i) => i.id);
         const supabase = (await import('../../../services/supabase')).supabase;
         
-        const [vinculosResult, etapasItemResult] = await Promise.all([
-          supabase.from('item_criterio_medicao').select('item_id, criterio_id').in('item_id', itemIds),
-          supabase.from('takeoff_item_etapas').select('*').in('item_id', itemIds),
-        ]);
-
-        if (vinculosResult.error) {
-          console.error('Erro ao carregar vínculos:', vinculosResult.error);
-        }
+        let vinculos: { item_id: string; criterio_id: string }[] = [];
+        let etapasItem: { id: string; item_id: string; etapa_id: string; concluido: boolean }[] = [];
         
-        if (etapasItemResult.error) {
-          const errorMsg = etapasItemResult.error.message || 'Erro ao carregar etapas';
-          if (errorMsg.includes('does not exist') || etapasItemResult.error.code === '42P01') {
-            setEtapasError('Tabela de etapas não encontrada. Execute a migration SQL.');
+        if (itemIds.length > 0) {
+          const [vinculosResult, etapasItemResult] = await Promise.all([
+            supabase.from('item_criterio_medicao').select('item_id, criterio_id').in('item_id', itemIds),
+            supabase.from('takeoff_item_etapas').select('*').in('item_id', itemIds),
+          ]);
+
+          if (vinculosResult.error) {
+            console.error('Erro ao carregar vínculos:', vinculosResult.error);
           } else {
-            console.error('Erro ao carregar etapas dos itens:', etapasItemResult.error);
+            vinculos = vinculosResult.data || [];
+          }
+          
+          if (etapasItemResult.error) {
+            const errorMsg = etapasItemResult.error.message || 'Erro ao carregar etapas';
+            if (errorMsg.includes('does not exist') || etapasItemResult.error.code === '42P01') {
+              setEtapasError('Tabela de etapas não encontrada. Execute a migration SQL.');
+            } else {
+              console.error('Erro ao carregar etapas dos itens:', etapasItemResult.error);
+            }
+          } else {
+            setEtapasError(null);
+            etapasItem = etapasItemResult.data || [];
           }
         } else {
           setEtapasError(null);
         }
-        
-        const vinculos = vinculosResult.data || [];
-        const etapasItem = etapasItemResult.error ? [] : (etapasItemResult.data || []);
 
         const vinculoMap = new Map<string, string>();
         const criterioIds = new Set<string>();
