@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Plus,
   Trash2,
@@ -14,6 +14,8 @@ import {
   CheckSquare,
   Square,
   FileCheck2,
+  Settings,
+  Check,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import TakeoffItemModal from './TakeoffItemModal';
@@ -40,6 +42,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     updateItem,
     deleteItem,
     deleteItensBatch,
+    colunasConfig,
   } = useTakeoffStore();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,6 +66,18 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   const [deletionProgress, setDeletionProgress] = useState<{ current: number; total: number } | null>(null);
   const [deletionResult, setDeletionResult] = useState<{ success: number; errors: number } | null>(null);
   const [showCmsModal, setShowCmsModal] = useState(false);
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem(`takeoff-visible-columns-${mapaId}`);
+    if (saved) {
+      try {
+        return new Set(JSON.parse(saved));
+      } catch {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -76,49 +91,129 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     setSelectedIds(new Set());
   }, [searchTerm]);
 
-  const baseColumns = [
-    { key: 'area', label: 'Área', width: 80 },
-    { key: 'edificacao', label: 'Edificação', width: 120 },
-    { key: 'tag', label: 'TAG', width: 100 },
-    { key: 'descricao', label: 'Descrição', width: 200 },
-    { key: 'tipoMaterial', label: 'Tipo Material', width: 120 },
-    { key: 'dimensao', label: 'Dimensão', width: 80 },
-    { key: 'unidade', label: 'Und.', width: 60 },
-    { key: 'qtdPrevista', label: 'Qtd Prev.', width: 90, type: 'number' },
-    { key: 'qtdTakeoff', label: 'Qtd Take-off', width: 100, type: 'number' },
-    { key: 'qtdExecutada', label: 'Qtd Exec.', width: 90, type: 'number' },
-    { key: 'pesoUnitario', label: 'Peso Unit.', width: 90, type: 'number' },
-    { key: 'pesoTotal', label: 'Peso Total', width: 90, type: 'number', calculated: true },
-    { key: 'custoUnitario', label: 'Custo Unit.', width: 100, type: 'number' },
-    { key: 'custoTotal', label: 'Custo Total', width: 100, type: 'number', calculated: true },
-    { key: 'percentualExecutado', label: '% Exec.', width: 80, type: 'percentage', calculated: true },
-  ];
+  const baseColumns = useMemo(() => [
+    { key: 'area', label: 'Área', width: 80, isCustom: false },
+    { key: 'edificacao', label: 'Edificação', width: 120, isCustom: false },
+    { key: 'tag', label: 'TAG', width: 100, isCustom: false },
+    { key: 'descricao', label: 'Descrição', width: 200, isCustom: false },
+    { key: 'tipoMaterial', label: 'Tipo Material', width: 120, isCustom: false },
+    { key: 'dimensao', label: 'Dimensão', width: 80, isCustom: false },
+    { key: 'unidade', label: 'Und.', width: 60, isCustom: false },
+    { key: 'qtdPrevista', label: 'Qtd Prev.', width: 90, type: 'number', isCustom: false },
+    { key: 'qtdTakeoff', label: 'Qtd Take-off', width: 100, type: 'number', isCustom: false },
+    { key: 'qtdExecutada', label: 'Qtd Exec.', width: 90, type: 'number', isCustom: false },
+    { key: 'pesoUnitario', label: 'Peso Unit.', width: 90, type: 'number', isCustom: false },
+    { key: 'pesoTotal', label: 'Peso Total', width: 90, type: 'number', calculated: true, isCustom: false },
+    { key: 'custoUnitario', label: 'Custo Unit.', width: 100, type: 'number', isCustom: false },
+    { key: 'custoTotal', label: 'Custo Total', width: 100, type: 'number', calculated: true, isCustom: false },
+    { key: 'percentualExecutado', label: '% Exec.', width: 80, type: 'percentage', calculated: true, isCustom: false },
+  ], []);
+
+  const customColumns = useMemo(() => {
+    const baseKeys = new Set(baseColumns.map(c => c.key.toLowerCase()));
+    return colunasConfig
+      .filter(c => !baseKeys.has(c.codigo.toLowerCase()))
+      .map(c => ({
+        key: c.codigo,
+        label: c.nome,
+        width: c.largura || 100,
+        type: c.tipo === 'number' || c.tipo === 'decimal' ? 'number' : undefined,
+        isCustom: true,
+      }));
+  }, [colunasConfig, baseColumns]);
+
+  const allColumns = useMemo(() => [...baseColumns, ...customColumns], [baseColumns, customColumns]);
+
+  const defaultVisibleKeys = useMemo(() => new Set(baseColumns.slice(0, 8).map(c => c.key)), [baseColumns]);
+
+  const displayColumns = useMemo(() => {
+    if (visibleColumns.size === 0) {
+      return allColumns.filter(c => defaultVisibleKeys.has(c.key) || c.isCustom);
+    }
+    return allColumns.filter(c => visibleColumns.has(c.key));
+  }, [allColumns, visibleColumns, defaultVisibleKeys]);
+
+  const toggleColumnVisibility = useCallback((key: string) => {
+    setVisibleColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      localStorage.setItem(`takeoff-visible-columns-${mapaId}`, JSON.stringify([...next]));
+      return next;
+    });
+  }, [mapaId]);
+
+  const selectAllColumns = useCallback(() => {
+    const all = new Set(allColumns.map(c => c.key));
+    setVisibleColumns(all);
+    localStorage.setItem(`takeoff-visible-columns-${mapaId}`, JSON.stringify([...all]));
+  }, [allColumns, mapaId]);
+
+  const resetColumnsToDefault = useCallback(() => {
+    setVisibleColumns(new Set());
+    localStorage.removeItem(`takeoff-visible-columns-${mapaId}`);
+  }, [mapaId]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(`takeoff-visible-columns-${mapaId}`);
+    if (saved) {
+      try {
+        setVisibleColumns(new Set(JSON.parse(saved)));
+      } catch {
+        setVisibleColumns(new Set());
+      }
+    } else {
+      setVisibleColumns(new Set());
+    }
+  }, [mapaId]);
 
   const filteredItens = useMemo(() => {
     let result = [...itens];
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (item) =>
+      result = result.filter((item) => {
+        if (
           item.descricao?.toLowerCase().includes(term) ||
           item.tag?.toLowerCase().includes(term) ||
           item.area?.toLowerCase().includes(term) ||
           item.edificacao?.toLowerCase().includes(term)
-      );
+        ) {
+          return true;
+        }
+        if (item.valoresCustom) {
+          for (const val of Object.values(item.valoresCustom)) {
+            if (val && String(val).toLowerCase().includes(term)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
     }
 
     if (sortField) {
       result.sort((a, b) => {
-        const aVal = a[sortField as keyof TakeoffItem] ?? '';
-        const bVal = b[sortField as keyof TakeoffItem] ?? '';
+        let aVal: unknown;
+        let bVal: unknown;
+        const customCol = customColumns.find(c => c.key === sortField);
+        if (customCol) {
+          aVal = a.valoresCustom?.[sortField] ?? '';
+          bVal = b.valoresCustom?.[sortField] ?? '';
+        } else {
+          aVal = a[sortField as keyof TakeoffItem] ?? '';
+          bVal = b[sortField as keyof TakeoffItem] ?? '';
+        }
         const comparison = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         return sortDirection === 'asc' ? comparison : -comparison;
       });
     }
 
     return result;
-  }, [itens, searchTerm, sortField, sortDirection]);
+  }, [itens, searchTerm, sortField, sortDirection, customColumns]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -274,8 +369,14 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     setSelectedItemForVinculo(null);
   };
 
-  const renderCell = (item: TakeoffItem, col: typeof baseColumns[0], isEditing: boolean) => {
-    const value = item[col.key as keyof TakeoffItem];
+  const renderCell = (item: TakeoffItem, col: typeof displayColumns[0], isEditing: boolean) => {
+    let value: unknown;
+    
+    if (col.isCustom) {
+      value = item.valoresCustom?.[col.key] ?? '';
+    } else {
+      value = item[col.key as keyof TakeoffItem];
+    }
 
     if (isEditing && !col.calculated) {
       return (
@@ -291,9 +392,10 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     }
 
     if (col.type === 'number') {
+      const numVal = typeof value === 'number' ? value : parseFloat(String(value));
       return (
         <span className="text-right block">
-          {typeof value === 'number' ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+          {!isNaN(numVal) ? numVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
         </span>
       );
     }
@@ -393,6 +495,68 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
               </button>
             </>
           )}
+          <div className="relative">
+            <button
+              onClick={() => setShowColumnSelector(!showColumnSelector)}
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
+              style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+              title="Configurar colunas visíveis"
+            >
+              <Settings className="w-4 h-4" />
+              Colunas
+            </button>
+            {showColumnSelector && (
+              <div 
+                className="absolute right-0 top-full mt-2 w-72 max-h-96 overflow-y-auto z-50 rounded-lg shadow-lg border"
+                style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+              >
+                <div className="sticky top-0 p-2 border-b theme-divide flex justify-between items-center" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                  <span className="text-sm font-medium theme-text">Colunas Visíveis</span>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={selectAllColumns}
+                      className="px-2 py-1 text-xs rounded hover:opacity-80"
+                      style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
+                    >
+                      Todas
+                    </button>
+                    <button
+                      onClick={resetColumnsToDefault}
+                      className="px-2 py-1 text-xs rounded hover:opacity-80 theme-text"
+                      style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
+                    >
+                      Padrão
+                    </button>
+                  </div>
+                </div>
+                <div className="p-2 space-y-1">
+                  {allColumns.map((col) => {
+                    const isVisible = visibleColumns.size === 0 
+                      ? defaultVisibleKeys.has(col.key) || col.isCustom 
+                      : visibleColumns.has(col.key);
+                    return (
+                      <label
+                        key={col.key}
+                        className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${col.isCustom ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                      >
+                        <div 
+                          className="w-4 h-4 rounded border flex items-center justify-center"
+                          style={{ borderColor: 'var(--color-border)', backgroundColor: isVisible ? 'var(--color-primary)' : 'transparent' }}
+                          onClick={() => toggleColumnVisibility(col.key)}
+                        >
+                          {isVisible && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <span className="text-sm theme-text flex-1">{col.label}</span>
+                        {col.isCustom && (
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>Custom</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => handleOpenItemModal()}
             className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
@@ -424,10 +588,10 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
               <th className="w-20 px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide">
                 Ações
               </th>
-              {baseColumns.map((col) => (
+              {displayColumns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-2 py-2 text-left text-xs font-medium theme-text-secondary border-b theme-divide cursor-pointer"
+                  className={`px-2 py-2 text-left text-xs font-medium border-b theme-divide cursor-pointer ${col.isCustom ? 'bg-blue-50 dark:bg-blue-900/20 theme-text-primary' : 'theme-text-secondary'}`}
                   style={{ width: col.width, minWidth: col.width }}
                   onClick={() => handleSort(col.key)}
                 >
@@ -519,10 +683,10 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
                       </div>
                     )}
                   </td>
-                  {baseColumns.map((col) => (
+                  {displayColumns.map((col) => (
                     <td
                       key={col.key}
-                      className="px-2 py-2 text-xs theme-text"
+                      className={`px-2 py-2 text-xs theme-text ${col.isCustom ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
                       style={{ width: col.width }}
                     >
                       {renderCell(item, col, isEditing)}
@@ -534,7 +698,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
 
             {filteredItens.length === 0 && (
               <tr>
-                <td colSpan={baseColumns.length + 1} className="px-4 py-12 text-center theme-text-secondary">
+                <td colSpan={displayColumns.length + 2} className="px-4 py-12 text-center theme-text-secondary">
                   Nenhum item encontrado. Clique em "Novo Item" para adicionar.
                 </td>
               </tr>
@@ -542,60 +706,37 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
           </tbody>
           <tfoot className="sticky bottom-0 border-t-2 theme-divide font-medium" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
             <tr>
-              {/* Checkbox column */}
               <td className="px-2 py-2 text-xs theme-text font-bold">TOTAL</td>
-              {/* Ações column */}
               <td className="px-2 py-2 text-xs theme-text">{totais.totalItens} itens</td>
-              {/* Área */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Edificação */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* TAG */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Descrição */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Tipo Material */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Dimensão */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Unidade */}
-              <td className="px-2 py-2 text-xs theme-text"></td>
-              {/* Qtd Prevista */}
-              <td className="px-2 py-2 text-xs theme-text text-right">
-                {totais.qtdPrevistaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </td>
-              {/* Qtd Take-off */}
-              <td className="px-2 py-2 text-xs theme-text text-right">
-                {totais.qtdTakeoffTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </td>
-              {/* Qtd Executada */}
-              <td className="px-2 py-2 text-xs theme-text text-right">
-                {totais.qtdExecutadaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </td>
-              {/* Peso Unitário */}
-              <td className="px-2 py-2 text-xs theme-text text-right">-</td>
-              {/* Peso Total */}
-              <td className="px-2 py-2 text-xs theme-text text-right">
-                {totais.pesoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </td>
-              {/* Custo Unitário */}
-              <td className="px-2 py-2 text-xs theme-text text-right">-</td>
-              {/* Custo Total */}
-              <td className="px-2 py-2 text-xs theme-text text-right">
-                R$ {totais.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </td>
-              {/* % Executado */}
-              <td className="px-2 py-2 text-xs theme-text">
-                <div className="flex items-center gap-1">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gray-500 rounded-full"
-                      style={{ width: `${Math.min(totais.percentualMedio, 100)}%` }}
-                    />
-                  </div>
-                  <span className="w-10 text-right">{totais.percentualMedio.toFixed(0)}%</span>
-                </div>
-              </td>
+              {displayColumns.map((col) => {
+                const footerTotals: Record<string, React.ReactNode> = {
+                  qtdPrevista: totais.qtdPrevistaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                  qtdTakeoff: totais.qtdTakeoffTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                  qtdExecutada: totais.qtdExecutadaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                  pesoTotal: totais.pesoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                  custoTotal: `R$ ${totais.custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                  percentualExecutado: (
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gray-500 rounded-full"
+                          style={{ width: `${Math.min(totais.percentualMedio, 100)}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right">{totais.percentualMedio.toFixed(0)}%</span>
+                    </div>
+                  ),
+                };
+                const content = footerTotals[col.key];
+                return (
+                  <td 
+                    key={col.key}
+                    className={`px-2 py-2 text-xs theme-text ${col.type === 'number' ? 'text-right' : ''} ${col.isCustom ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                  >
+                    {content ?? (col.type === 'number' ? '-' : '')}
+                  </td>
+                );
+              })}
             </tr>
           </tfoot>
         </table>

@@ -745,7 +745,36 @@ export const takeoffService = {
       console.error('Erro ao buscar itens:', error);
       return [];
     }
-    return (data || []).map(mapItemFromDB);
+
+    const items = (data || []).map(mapItemFromDB);
+
+    if (items.length > 0) {
+      const itemIds = items.map(i => i.id);
+      const { data: valoresData, error: valoresError } = await supabase
+        .from('takeoff_valores_custom')
+        .select('item_id, coluna_codigo, valor')
+        .in('item_id', itemIds);
+
+      if (!valoresError && valoresData) {
+        const valoresMap = new Map<string, Record<string, string>>();
+        for (const v of valoresData) {
+          if (v.coluna_codigo && v.valor) {
+            if (!valoresMap.has(v.item_id)) {
+              valoresMap.set(v.item_id, {});
+            }
+            valoresMap.get(v.item_id)![v.coluna_codigo] = v.valor;
+          }
+        }
+        for (const item of items) {
+          const customValues = valoresMap.get(item.id);
+          if (customValues) {
+            item.valoresCustom = { ...item.valoresCustom, ...customValues };
+          }
+        }
+      }
+    }
+
+    return items;
   },
 
   async createItem(dto: CreateItemDTO): Promise<TakeoffItem | null> {
@@ -821,6 +850,36 @@ export const takeoffService = {
         data.forEach((item, idx) => {
           insertedItems.push({ id: item.id, index: i + idx });
         });
+      }
+    }
+
+    const valoresCustomToInsert: { item_id: string; coluna_codigo: string; valor: string; coluna_config_id: null }[] = [];
+    for (const inserted of insertedItems) {
+      const dto = itens[inserted.index];
+      if (dto.valoresCustom && Object.keys(dto.valoresCustom).length > 0) {
+        for (const [codigo, valor] of Object.entries(dto.valoresCustom)) {
+          if (valor !== undefined && valor !== null && valor !== '') {
+            valoresCustomToInsert.push({
+              item_id: inserted.id,
+              coluna_codigo: codigo,
+              valor: String(valor),
+              coluna_config_id: null,
+            });
+          }
+        }
+      }
+    }
+
+    if (valoresCustomToInsert.length > 0) {
+      console.log(`[TakeoffService] Inserting ${valoresCustomToInsert.length} custom values`);
+      for (let i = 0; i < valoresCustomToInsert.length; i += BATCH_SIZE) {
+        const batch = valoresCustomToInsert.slice(i, i + BATCH_SIZE);
+        const { error: valoresError } = await supabase
+          .from('takeoff_valores_custom')
+          .insert(batch);
+        if (valoresError) {
+          console.error('Erro ao inserir valores custom:', valoresError);
+        }
       }
     }
     

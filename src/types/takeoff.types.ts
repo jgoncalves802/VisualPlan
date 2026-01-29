@@ -89,13 +89,15 @@ export interface TakeoffItem {
   createdAt: Date;
   updatedAt: Date;
   valoresCustom?: Record<string, string>;
+  valores_custom?: TakeoffValorCustom[];
   documento?: TakeoffDocumento;
 }
 
 export interface TakeoffValorCustom {
   id: string;
   itemId: string;
-  colunaConfigId: string;
+  colunaConfigId?: string;
+  coluna_codigo?: string;
   valor: string;
 }
 
