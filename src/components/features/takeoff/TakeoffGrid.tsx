@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
+import { takeoffService } from '../../../services/takeoffService';
 import TakeoffItemModal from './TakeoffItemModal';
 import TakeoffMedicaoModal from './TakeoffMedicaoModal';
 import TakeoffVinculoModal from './TakeoffVinculoModal';
@@ -83,14 +84,29 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     console.log('[TakeoffGrid] Loading data for mapaId:', mapaId, 'disciplinaId:', disciplinaId);
     setSelectedIds(new Set());
     loadItens({ mapaId });
-    if (disciplinaId) {
-      loadColunasConfig(disciplinaId, mapaId);
-    }
-  }, [mapaId, disciplinaId, loadItens, loadColunasConfig]);
+    loadColunasConfigByMapa(mapaId);
+  }, [mapaId, loadItens]);
   
   useEffect(() => {
     console.log('[TakeoffGrid] colunasConfig loaded:', colunasConfig?.length, 'columns', colunasConfig);
   }, [colunasConfig]);
+  
+  const loadColunasConfigByMapa = async (mapId: string) => {
+    try {
+      const colunas = await takeoffService.getColunasConfigByMapa(mapId);
+      console.log('[TakeoffGrid] Loaded colunas for mapa:', mapId, colunas);
+      if (colunas.length > 0) {
+        useTakeoffStore.setState({ colunasConfig: colunas });
+      } else if (disciplinaId) {
+        loadColunasConfig(disciplinaId, mapId);
+      }
+    } catch (err) {
+      console.error('[TakeoffGrid] Error loading colunas by mapa:', err);
+      if (disciplinaId) {
+        loadColunasConfig(disciplinaId, mapId);
+      }
+    }
+  };
 
   useEffect(() => {
     setSelectedIds(new Set());
