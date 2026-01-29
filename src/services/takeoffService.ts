@@ -911,7 +911,7 @@ export const takeoffService = {
       }
     }
 
-    const valoresCustomToInsert: { item_id: string; coluna_codigo: string; valor: string; coluna_config_id: null }[] = [];
+    const valoresCustomToInsert: { item_id: string; coluna_codigo: string; valor: string; coluna_config_id: string }[] = [];
     for (const inserted of insertedItems) {
       const dto = itens[inserted.index];
       if (dto.valoresCustom && Object.keys(dto.valoresCustom).length > 0) {
@@ -921,7 +921,7 @@ export const takeoffService = {
               item_id: inserted.id,
               coluna_codigo: codigo,
               valor: String(valor),
-              coluna_config_id: null,
+              coluna_config_id: codigo,
             });
           }
         }
@@ -937,7 +937,6 @@ export const takeoffService = {
         const insertBatch = batch.map(v => ({
           item_id: v.item_id,
           coluna_codigo: v.coluna_codigo,
-          coluna_config_id: v.coluna_config_id,
           valor: v.valor,
         }));
         
@@ -948,23 +947,6 @@ export const takeoffService = {
         
         if (valoresError) {
           console.error('Erro ao inserir valores custom:', valoresError, 'Batch:', insertBatch.slice(0, 2));
-          
-          if (valoresError.message?.includes('coluna_codigo') || valoresError.code === '42703') {
-            console.warn('Tentando inserir sem coluna_codigo');
-            const fallbackBatch = batch.map(v => ({
-              item_id: v.item_id,
-              coluna_config_id: v.coluna_codigo,
-              valor: v.valor,
-            }));
-            const { error: fallbackError } = await supabase
-              .from('takeoff_valores_custom')
-              .insert(fallbackBatch);
-            if (fallbackError) {
-              console.error('Erro ao inserir valores custom (fallback):', fallbackError);
-            } else {
-              console.log('[TakeoffService] Fallback insert succeeded');
-            }
-          }
         } else {
           console.log(`[TakeoffService] Successfully inserted ${data?.length || 0} custom values`);
         }
