@@ -394,6 +394,7 @@ export const takeoffService = {
   },
 
   async getColunasConfig(disciplinaId: string, mapaId?: string): Promise<TakeoffColunaConfig[]> {
+    console.log('[TakeoffService] getColunasConfig called:', { disciplinaId, mapaId });
     try {
       let query = supabase
         .from('takeoff_colunas_config')
@@ -405,6 +406,7 @@ export const takeoffService = {
       }
 
       const { data, error } = await query.order('ordem');
+      console.log('[TakeoffService] getColunasConfig result:', { count: data?.length, error, first: data?.[0] });
 
       if (error) {
         if (error.code === '42703' && error.message?.includes('mapa_id')) {

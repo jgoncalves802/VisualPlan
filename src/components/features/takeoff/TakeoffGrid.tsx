@@ -119,6 +119,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
         width: c.largura || 100,
         type: c.tipo === 'number' || c.tipo === 'decimal' ? 'number' : undefined,
         isCustom: true,
+        calculated: false,
       }));
   }, [colunasConfig, baseColumns]);
 
@@ -379,10 +380,12 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     }
 
     if (isEditing && !col.calculated) {
+      const editValue = editData[col.key as keyof TakeoffItem];
+      const displayValue = editValue !== undefined ? String(editValue) : (value !== undefined ? String(value) : '');
       return (
         <input
           type={col.type === 'number' || col.type === 'percentage' ? 'number' : 'text'}
-          value={editData[col.key as keyof TakeoffItem] ?? value ?? ''}
+          value={displayValue}
           onChange={(e) => setEditData({ ...editData, [col.key]: e.target.value })}
           className="w-full px-2 py-1 text-xs border rounded theme-text"
           style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
