@@ -19,6 +19,7 @@ import TakeoffItemModal from './TakeoffItemModal';
 import TakeoffMedicaoModal from './TakeoffMedicaoModal';
 import TakeoffVinculoModal from './TakeoffVinculoModal';
 import TakeoffConfirmDialog from './TakeoffConfirmDialog';
+import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { TakeoffItem, UpdateItemDTO, TakeoffMedicao, TakeoffVinculo } from '../../../types/takeoff.types';
 
 interface TakeoffGridProps {
@@ -48,6 +49,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
 
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<TakeoffItem | null>(null);
+  const [editingItemCriterioId, setEditingItemCriterioId] = useState<string | null>(null);
   const [showMedicaoModal, setShowMedicaoModal] = useState(false);
   const [selectedItemForMedicao, setSelectedItemForMedicao] = useState<TakeoffItem | null>(null);
   const [showVinculoModal, setShowVinculoModal] = useState(false);
@@ -227,7 +229,17 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     }
   };
 
-  const handleOpenItemModal = (item?: TakeoffItem) => {
+  const handleOpenItemModal = async (item?: TakeoffItem) => {
+    let criterioId: string | null = null;
+    if (item) {
+      try {
+        const itemCriterio = await criteriosMedicaoService.getItemCriterio(item.id);
+        criterioId = itemCriterio?.criterioId || null;
+      } catch (err) {
+        console.error('Erro ao carregar critério do item:', err);
+      }
+    }
+    setEditingItemCriterioId(criterioId);
     setEditingItem(item || null);
     setShowItemModal(true);
   };
@@ -582,10 +594,13 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
           onClose={() => {
             setShowItemModal(false);
             setEditingItem(null);
+            setEditingItemCriterioId(null);
           }}
           mapaId={mapaId}
           disciplinaId={disciplinaId}
+          projetoId={projetoId}
           item={editingItem}
+          currentCriterioId={editingItemCriterioId}
           onSave={handleItemSaved}
         />
       )}

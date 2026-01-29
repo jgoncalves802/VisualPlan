@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { takeoffService } from '../../../services/takeoffService';
+import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { TakeoffItem, CreateItemDTO, UpdateItemDTO, TakeoffColunaConfig, StatusItem } from '../../../types/takeoff.types';
+import type { CriterioMedicao } from '../../../types/criteriosMedicao.types';
 
 const UNIDADES_COMUNS = ['m', 'm²', 'm³', 'un', 'kg', 'ton', 'pç', 'cj', 'vb', 'ml'];
 const STATUS_OPTIONS = [
@@ -18,6 +20,8 @@ interface TakeoffItemModalProps {
   item?: TakeoffItem | null;
   mapaId: string;
   disciplinaId?: string | null;
+  projetoId?: string | null;
+  currentCriterioId?: string | null;
 }
 
 const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
@@ -27,6 +31,8 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
   item,
   mapaId,
   disciplinaId,
+  projetoId,
+  currentCriterioId,
 }) => {
   const [formData, setFormData] = useState({
     descricao: '',
@@ -45,9 +51,12 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
     status: 'pendente' as StatusItem,
     observacoes: '',
     valoresCustom: {} as Record<string, string>,
+    criterioMedicaoId: '',
   });
   const [colunasCustom, setColunasCustom] = useState<TakeoffColunaConfig[]>([]);
+  const [criterios, setCriterios] = useState<CriterioMedicao[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCriterios, setIsLoadingCriterios] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEditing = !!item;
@@ -63,6 +72,24 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
       loadColunasCustom();
     }
   }, [disciplinaId, isOpen]);
+
+  useEffect(() => {
+    const loadCriterios = async () => {
+      if (!projetoId) return;
+      setIsLoadingCriterios(true);
+      try {
+        const lista = await criteriosMedicaoService.getCriterios({ projetoId, status: 'ativo' });
+        setCriterios(lista);
+      } catch (err) {
+        console.error('Erro ao carregar critérios:', err);
+      } finally {
+        setIsLoadingCriterios(false);
+      }
+    };
+    if (isOpen && projetoId) {
+      loadCriterios();
+    }
+  }, [projetoId, isOpen]);
 
   useEffect(() => {
     if (item) {
@@ -83,6 +110,7 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
         status: item.status,
         observacoes: item.observacoes || '',
         valoresCustom: item.valoresCustom || {},
+        criterioMedicaoId: currentCriterioId || '',
       });
     } else {
       setFormData({
@@ -102,10 +130,11 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
         status: 'pendente',
         observacoes: '',
         valoresCustom: {},
+        criterioMedicaoId: '',
       });
     }
     setError(null);
-  }, [item, isOpen]);
+  }, [item, isOpen, currentCriterioId]);
 
   if (!isOpen) return null;
 
@@ -115,6 +144,11 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
 
     if (!formData.descricao.trim()) {
       setError('Descrição é obrigatória');
+      return;
+    }
+
+    if (!formData.criterioMedicaoId) {
+      setError('Critério de Medição é obrigatório');
       return;
     }
 
@@ -164,6 +198,20 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
       }
 
       if (result) {
+        try {
+          await criteriosMedicaoService.vincularItemCriterio(result.id, formData.criterioMedicaoId);
+        } catch (vincErr) {
+          console.error('Erro ao vincular critério:', vincErr);
+          if (!isEditing) {
+            try {
+              await takeoffService.deleteItem(result.id);
+            } catch (delErr) {
+              console.error('Erro ao reverter item:', delErr);
+            }
+          }
+          setError('Erro ao vincular o critério de medição. Tente novamente.');
+          return;
+        }
         onSave(result);
         onClose();
       } else {
@@ -236,6 +284,36 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
                 className="w-full px-3 py-2 text-sm border rounded-lg theme-text"
                 style={{ backgroundColor: 'var(--color-surface-secondary)', borderColor: 'var(--color-border)' }}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium theme-text-secondary mb-1">
+                Critério de Medição *
+              </label>
+              <select
+                value={formData.criterioMedicaoId}
+                onChange={(e) => setFormData({ ...formData, criterioMedicaoId: e.target.value })}
+                className="w-full px-3 py-2 text-sm border rounded-lg theme-text"
+                style={{ 
+                  backgroundColor: 'var(--color-surface-secondary)', 
+                  borderColor: !formData.criterioMedicaoId ? '#EF4444' : 'var(--color-border)' 
+                }}
+                disabled={isLoadingCriterios}
+              >
+                <option value="">
+                  {isLoadingCriterios ? 'Carregando...' : 'Selecione um critério'}
+                </option>
+                {criterios.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.codigo} - {c.descritivo}
+                  </option>
+                ))}
+              </select>
+              {criterios.length === 0 && !isLoadingCriterios && (
+                <p className="text-xs mt-1" style={{ color: '#EF4444' }}>
+                  Nenhum critério cadastrado. Cadastre um critério antes de adicionar itens.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-4">
@@ -493,9 +571,10 @@ const TakeoffItemModal: React.FC<TakeoffItemModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isLoadingCriterios || criterios.length === 0}
               className="px-4 py-2 text-sm font-medium rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
               style={{ backgroundColor: '#374151' }}
+              title={criterios.length === 0 ? 'Cadastre um critério de medição primeiro' : undefined}
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isEditing ? 'Salvar' : 'Criar Item'}
