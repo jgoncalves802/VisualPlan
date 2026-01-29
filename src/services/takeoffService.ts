@@ -575,43 +575,71 @@ export const takeoffService = {
     return true;
   },
 
-  async deleteMapaCascade(id: string): Promise<{ success: boolean; deletedItems: number; error?: string }> {
+  async deleteMapaCascade(
+    id: string,
+    onProgress?: (step: string, current: number, total: number) => void
+  ): Promise<{ success: boolean; deletedItems: number; error?: string }> {
     try {
+      onProgress?.('Carregando dados...', 0, 100);
+      
       const { data: vinculos } = await supabase
         .from('takeoff_vinculos')
         .select('id')
         .eq('mapa_id', id);
       
-      if (vinculos && vinculos.length > 0) {
-        const vinculoIds = vinculos.map(v => v.id);
-        const vinculoChunks = chunkArray(vinculoIds, BATCH_SIZE);
-        for (const chunk of vinculoChunks) {
-          await supabase.from('takeoff_vinculos').delete().in('id', chunk);
-        }
-      }
-
       const { data: itens } = await supabase
         .from('takeoff_itens')
         .select('id')
         .eq('mapa_id', id);
       
+      const vinculoIds = vinculos?.map(v => v.id) || [];
+      const itemIds = itens?.map(i => i.id) || [];
+      
+      const vinculoChunks = chunkArray(vinculoIds, BATCH_SIZE);
+      const itemChunks = chunkArray(itemIds, BATCH_SIZE);
+      
+      const hasVinculos = vinculoChunks.length > 0;
+      const hasItens = itemIds.length > 0;
+      
+      let totalOperations = 2;
+      if (hasVinculos) totalOperations += vinculoChunks.length;
+      if (hasItens) totalOperations += 2 + itemChunks.length;
+      
+      let completedOperations = 1;
+      
+      const calcProgress = () => Math.round((completedOperations / totalOperations) * 100);
+      
+      if (hasVinculos) {
+        for (const chunk of vinculoChunks) {
+          onProgress?.('Excluindo vínculos...', calcProgress(), 100);
+          const { error: vinculoError } = await supabase.from('takeoff_vinculos').delete().in('id', chunk);
+          if (vinculoError) {
+            console.error('Erro ao excluir vínculos:', vinculoError);
+            return { success: false, deletedItems: 0, error: 'Erro ao excluir vínculos do mapa' };
+          }
+          completedOperations++;
+        }
+      }
+      
       let deletedItems = 0;
       
-      if (itens && itens.length > 0) {
-        const itemIds = itens.map(i => i.id);
-        
+      if (hasItens) {
+        onProgress?.('Excluindo medições...', calcProgress(), 100);
         const medicoesResult = await safeDeleteFromTable('takeoff_medicoes', 'item_id', itemIds);
         if (!medicoesResult.success) {
           return { success: false, deletedItems: 0, error: 'Erro ao excluir medições do mapa' };
         }
+        completedOperations++;
         
+        onProgress?.('Excluindo critérios...', calcProgress(), 100);
         const criteriosResult = await safeDeleteFromTable('item_criterio_medicao', 'item_id', itemIds);
         if (!criteriosResult.success) {
           return { success: false, deletedItems: 0, error: 'Erro ao excluir vínculos de critérios' };
         }
+        completedOperations++;
         
-        const itemChunks = chunkArray(itemIds, BATCH_SIZE);
         for (const chunk of itemChunks) {
+          onProgress?.('Excluindo itens...', calcProgress(), 100);
           const { error: itensError } = await supabase
             .from('takeoff_itens')
             .delete()
@@ -621,11 +649,13 @@ export const takeoffService = {
             console.error('Erro ao excluir itens:', itensError);
             return { success: false, deletedItems: 0, error: 'Erro ao excluir itens do mapa' };
           }
+          completedOperations++;
         }
         
-        deletedItems = itens.length;
+        deletedItems = itens?.length || 0;
       }
       
+      onProgress?.('Finalizando...', calcProgress(), 100);
       const { error: mapaError } = await supabase
         .from('takeoff_mapas')
         .delete()
@@ -635,7 +665,9 @@ export const takeoffService = {
         console.error('Erro ao excluir mapa:', mapaError);
         return { success: false, deletedItems, error: 'Erro ao excluir o mapa' };
       }
+      completedOperations++;
       
+      onProgress?.('Concluído!', 100, 100);
       return { success: true, deletedItems };
     } catch (error) {
       console.error('Erro ao excluir mapa em cascata:', error);

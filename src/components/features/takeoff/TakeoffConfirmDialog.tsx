@@ -11,6 +11,11 @@ interface TakeoffConfirmDialogProps {
   cancelLabel?: string;
   isLoading?: boolean;
   variant?: 'danger' | 'warning' | 'neutral';
+  progress?: {
+    step: string;
+    current: number;
+    total: number;
+  };
 }
 
 const TakeoffConfirmDialog: React.FC<TakeoffConfirmDialogProps> = ({
@@ -23,11 +28,12 @@ const TakeoffConfirmDialog: React.FC<TakeoffConfirmDialogProps> = ({
   cancelLabel = 'Cancelar',
   isLoading = false,
   variant = 'danger',
+  progress,
 }) => {
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isLoading) {
       onClose();
     }
   };
@@ -59,28 +65,49 @@ const TakeoffConfirmDialog: React.FC<TakeoffConfirmDialogProps> = ({
             </div>
             <h3 className="text-lg font-semibold theme-text">{title}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
-            style={{ backgroundColor: 'var(--color-surface-secondary)' }}
-          >
-            <X className="w-4 h-4 theme-text-secondary" />
-          </button>
+          {!isLoading && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+            >
+              <X className="w-4 h-4 theme-text-secondary" />
+            </button>
+          )}
         </div>
 
         <div className="p-4">
           <p className="text-sm theme-text-secondary">{message}</p>
+          
+          {isLoading && progress && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="theme-text-secondary">{progress.step}</span>
+                <span className="theme-text-secondary font-medium">{progress.current}%</span>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                <div 
+                  className="h-full rounded-full transition-all duration-300 ease-out"
+                  style={{ 
+                    width: `${progress.current}%`,
+                    backgroundColor: variant === 'danger' ? '#DC2626' : variant === 'warning' ? '#D97706' : '#3B82F6'
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 p-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium rounded-lg theme-text hover:opacity-80 transition-opacity"
-            style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
-          >
-            {cancelLabel}
-          </button>
+          {!isLoading && (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium rounded-lg theme-text hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
+            >
+              {cancelLabel}
+            </button>
+          )}
           <button
             onClick={onConfirm}
             disabled={isLoading}

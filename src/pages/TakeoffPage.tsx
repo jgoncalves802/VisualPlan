@@ -347,6 +347,7 @@ const TakeoffPage: React.FC = () => {
   const [deletingMapaId, setDeletingMapaId] = useState<string | null>(null);
   const [showDeleteMapaConfirm, setShowDeleteMapaConfirm] = useState(false);
   const [isDeletingMapa, setIsDeletingMapa] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState({ step: '', current: 0, total: 100 });
   
   // Verificação de permissão para exclusão de mapas
   const canDeleteMapa = usuario?.perfilAcesso === PerfilAcesso.ADMIN || 
@@ -512,8 +513,11 @@ const TakeoffPage: React.FC = () => {
     if (!deletingMapaId) return;
     
     setIsDeletingMapa(true);
+    setDeleteProgress({ step: 'Iniciando...', current: 0, total: 100 });
     try {
-      const result = await takeoffService.deleteMapaCascade(deletingMapaId);
+      const result = await takeoffService.deleteMapaCascade(deletingMapaId, (step, current, total) => {
+        setDeleteProgress({ step, current, total });
+      });
       if (result.success) {
         toast.success(`Mapa excluído com sucesso! ${result.deletedItems} itens removidos.`);
         if (selectedMapaId === deletingMapaId) {
@@ -532,6 +536,7 @@ const TakeoffPage: React.FC = () => {
       setIsDeletingMapa(false);
       setShowDeleteMapaConfirm(false);
       setDeletingMapaId(null);
+      setDeleteProgress({ step: '', current: 0, total: 100 });
     }
   };
 
@@ -1622,8 +1627,10 @@ const TakeoffPage: React.FC = () => {
       <TakeoffConfirmDialog
         isOpen={showDeleteMapaConfirm}
         onClose={() => {
-          setShowDeleteMapaConfirm(false);
-          setDeletingMapaId(null);
+          if (!isDeletingMapa) {
+            setShowDeleteMapaConfirm(false);
+            setDeletingMapaId(null);
+          }
         }}
         onConfirm={handleConfirmDeleteMapa}
         title="Excluir Mapa de Controle"
@@ -1631,6 +1638,7 @@ const TakeoffPage: React.FC = () => {
         confirmLabel="Excluir Tudo"
         isLoading={isDeletingMapa}
         variant="danger"
+        progress={isDeletingMapa ? deleteProgress : undefined}
       />
 
       {showCriteriosMedicaoModal && selectedProjetoId && (
