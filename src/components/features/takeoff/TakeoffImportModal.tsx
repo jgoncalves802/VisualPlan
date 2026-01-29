@@ -628,13 +628,17 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
                             <option key={col.key} value={col.key}>{col.label}</option>
                           ))}
                         </optgroup>
-                        {targetColumns.filter(c => c.isCustom).length > 0 && (
-                          <optgroup label="Colunas Personalizadas">
-                            {targetColumns.filter(c => c.isCustom).map((col) => (
-                              <option key={col.key} value={col.key}>{col.label}</option>
-                            ))}
-                          </optgroup>
-                        )}
+                        {(() => {
+                          const customCols = targetColumns.filter(c => c.isCustom);
+                          if (customCols.length === 0) return null;
+                          return (
+                            <optgroup label="Colunas Personalizadas">
+                              {customCols.map((col) => (
+                                <option key={col.key} value={col.key}>{col.label}</option>
+                              ))}
+                            </optgroup>
+                          );
+                        })()}
                       </select>
                       {!target && (
                         <button

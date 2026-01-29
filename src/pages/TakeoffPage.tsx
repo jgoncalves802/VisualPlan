@@ -1613,6 +1613,7 @@ const TakeoffPage: React.FC = () => {
 
       {showImportModal && selectedMapaId && (
         <TakeoffImportModal
+          key={`import-${selectedMapaId}-${importColunasConfig.length}-${importColunasConfig.map(c => c.codigo).join(',')}`}
           mapaId={selectedMapaId}
           disciplinaId={selectedDisciplinaId || mapas.find(m => m.id === selectedMapaId)?.disciplinaId || ''}
           projetoId={selectedProjetoId || ''}
