@@ -13,12 +13,14 @@ import {
   Calendar,
   CheckSquare,
   Square,
+  FileCheck2,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import TakeoffItemModal from './TakeoffItemModal';
 import TakeoffMedicaoModal from './TakeoffMedicaoModal';
 import TakeoffVinculoModal from './TakeoffVinculoModal';
 import TakeoffConfirmDialog from './TakeoffConfirmDialog';
+import TakeoffVincularCmsModal from './TakeoffVincularCmsModal';
 import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { TakeoffItem, UpdateItemDTO, TakeoffMedicao, TakeoffVinculo } from '../../../types/takeoff.types';
 
@@ -60,6 +62,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletionProgress, setDeletionProgress] = useState<{ current: number; total: number } | null>(null);
   const [deletionResult, setDeletionResult] = useState<{ success: number; errors: number } | null>(null);
+  const [showCmsModal, setShowCmsModal] = useState(false);
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -371,14 +374,24 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
             </div>
           )}
           {selectedIds.size > 0 && !isDeleting && (
-            <button
-              onClick={() => setShowDeleteBatchConfirm(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 text-white"
-              style={{ backgroundColor: '#dc2626' }}
-            >
-              <Trash2 className="w-4 h-4" />
-              Excluir Selecionados ({selectedIds.size})
-            </button>
+            <>
+              <button
+                onClick={() => setShowCmsModal(true)}
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 theme-text"
+                style={{ backgroundColor: 'var(--color-surface-tertiary)', border: '1px solid var(--color-border)' }}
+              >
+                <FileCheck2 className="w-4 h-4" />
+                Vincular CMS ({selectedIds.size})
+              </button>
+              <button
+                onClick={() => setShowDeleteBatchConfirm(true)}
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:opacity-90 text-white"
+                style={{ backgroundColor: '#dc2626' }}
+              >
+                <Trash2 className="w-4 h-4" />
+                Excluir Selecionados ({selectedIds.size})
+              </button>
+            </>
           )}
           <button
             onClick={() => handleOpenItemModal()}
@@ -650,6 +663,19 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
         message={`Tem certeza que deseja excluir ${selectedIds.size} item(ns) selecionado(s)? Esta ação não pode ser desfeita.`}
         isLoading={isDeleting}
       />
+
+      {showCmsModal && projetoId && (
+        <TakeoffVincularCmsModal
+          isOpen={showCmsModal}
+          onClose={() => setShowCmsModal(false)}
+          onSuccess={() => {
+            loadItens({ mapaId });
+            setSelectedIds(new Set());
+          }}
+          projetoId={projetoId}
+          itemIds={Array.from(selectedIds)}
+        />
+      )}
     </div>
   );
 };

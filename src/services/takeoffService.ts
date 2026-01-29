@@ -758,7 +758,12 @@ export const takeoffService = {
   },
 
   async createItensBatch(itens: CreateItemDTO[]): Promise<number> {
-    if (itens.length === 0) return 0;
+    const result = await this.createItensBatchWithIds(itens);
+    return result.length;
+  },
+
+  async createItensBatchWithIds(itens: CreateItemDTO[]): Promise<{ id: string; index: number }[]> {
+    if (itens.length === 0) return [];
 
     const rows = itens.map((dto) => ({
       mapa_id: dto.mapaId,
@@ -780,20 +785,24 @@ export const takeoffService = {
     }));
 
     const BATCH_SIZE = 100;
-    let totalInserted = 0;
+    const insertedItems: { id: string; index: number }[] = [];
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
-      const { data, error } = await supabase.from('takeoff_itens').insert(batch).select();
+      const { data, error } = await supabase.from('takeoff_itens').insert(batch).select('id');
 
       if (error) {
         console.error('Erro ao inserir lote:', error);
         continue;
       }
-      totalInserted += data?.length || 0;
+      if (data) {
+        data.forEach((item, idx) => {
+          insertedItems.push({ id: item.id, index: i + idx });
+        });
+      }
     }
     
-    return totalInserted;
+    return insertedItems;
   },
 
   async updateItem(id: string, dto: UpdateItemDTO): Promise<TakeoffItem | null> {

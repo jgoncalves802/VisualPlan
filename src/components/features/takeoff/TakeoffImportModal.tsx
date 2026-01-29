@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   X,
   Upload,
@@ -15,11 +15,15 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
+import { takeoffService } from '../../../services/takeoffService';
+import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { CreateItemDTO, TakeoffColunaConfig } from '../../../types/takeoff.types';
+import type { CriterioMedicao } from '../../../types/criteriosMedicao.types';
 
 interface TakeoffImportModalProps {
   mapaId: string;
   disciplinaId: string;
+  projetoId: string;
   onClose: () => void;
   colunasConfig?: TakeoffColunaConfig[];
   onCreateColumn?: (codigo: string, nome: string, tipo: string) => Promise<void>;
@@ -61,6 +65,7 @@ const DEFAULT_COLUMNS: TargetColumn[] = [
   { key: 'custoUnitario', label: 'Custo Unitário', isNumeric: true },
   { key: 'itemPq', label: 'Item PQ' },
   { key: 'observacoes', label: 'Observações' },
+  { key: 'criterioMedicao', label: 'Critério de Medição (CMS)' },
 ];
 
 const NUMERIC_FIELD_PATTERNS: Record<string, RegExp[]> = {
@@ -102,6 +107,7 @@ const autoMapColumn = (header: string): string => {
   
   if (normalized.includes('pq') || (normalized.includes('item') && normalized.includes('pq'))) return 'itemPq';
   if (normalized.includes('obs')) return 'observacoes';
+  if (normalized.includes('cms') || normalized.includes('critério') || normalized.includes('criterio') || normalized.includes('medição') || normalized.includes('medicao')) return 'criterioMedicao';
   
   return '';
 };
@@ -109,12 +115,14 @@ const autoMapColumn = (header: string): string => {
 const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({ 
   mapaId, 
   disciplinaId,
+  projetoId,
   onClose, 
   colunasConfig = [],
   onCreateColumn,
 }) => {
-  const { createItensBatch, loadColunasConfig } = useTakeoffStore();
+  const { loadColunasConfig, loadItens } = useTakeoffStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [criterioMap, setCriterioMap] = useState<Map<string, string>>(new Map());
 
   const [targetColumns, setTargetColumns] = useState<TargetColumn[]>(() => {
     const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key.toLowerCase()));
@@ -144,6 +152,24 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
   const [newColumnName, setNewColumnName] = useState('');
   
   const ROWS_PER_PAGE = 20;
+
+  useEffect(() => {
+    const loadCriterios = async () => {
+      if (!projetoId) return;
+      try {
+        const lista = await criteriosMedicaoService.getCriterios({ projetoId, status: 'ativo' });
+        const map = new Map<string, string>();
+        for (const c of lista) {
+          map.set(c.codigo.toLowerCase(), c.id);
+          map.set(c.descritivo.toLowerCase(), c.id);
+        }
+        setCriterioMap(map);
+      } catch (err) {
+        console.error('Erro ao carregar critérios:', err);
+      }
+    };
+    loadCriterios();
+  }, [projetoId]);
 
   const filteredData = useMemo(() => {
     if (showOnlyIssues) {
@@ -385,6 +411,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
     setIsProcessing(true);
 
     const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key));
+    const excludeFromItem = new Set(['criterioMedicao']);
 
     try {
       let rowsToImport = allPreviewData;
@@ -397,12 +424,21 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
       
       rowsToImport = rowsToImport.filter(r => r.descricao && String(r.descricao).trim() !== '');
 
+      const criterioCodesPerRow: (string | null)[] = [];
       const itensToCreate: CreateItemDTO[] = rowsToImport.map(row => {
         const item: Partial<CreateItemDTO> = { mapaId };
         const valoresCustom: Record<string, string> = {};
+        let criterioCode: string | null = null;
         
         Object.entries(row).forEach(([key, value]) => {
           if (key.startsWith('_')) return;
+          
+          if (key === 'criterioMedicao') {
+            criterioCode = value ? String(value).trim() : null;
+            return;
+          }
+          
+          if (excludeFromItem.has(key)) return;
           
           if (defaultKeys.has(key)) {
             (item as Record<string, unknown>)[key] = value;
@@ -410,6 +446,8 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
             valoresCustom[key] = String(value);
           }
         });
+        
+        criterioCodesPerRow.push(criterioCode);
         
         if (Object.keys(valoresCustom).length > 0) {
           item.valoresCustom = valoresCustom;
@@ -422,16 +460,47 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         return item as CreateItemDTO;
       });
 
-      const imported = await createItensBatch(itensToCreate);
+      const insertedItems = await takeoffService.createItensBatchWithIds(itensToCreate);
+      
+      let vinculadosCount = 0;
+      let semCriterioCount = 0;
+      
+      for (const inserted of insertedItems) {
+        const criterioCode = criterioCodesPerRow[inserted.index];
+        if (criterioCode) {
+          const criterioId = criterioMap.get(criterioCode.toLowerCase());
+          if (criterioId) {
+            try {
+              await criteriosMedicaoService.vincularItemCriterio(inserted.id, criterioId);
+              vinculadosCount++;
+            } catch (err) {
+              console.error('Erro ao vincular critério:', err);
+            }
+          } else {
+            semCriterioCount++;
+          }
+        } else {
+          semCriterioCount++;
+        }
+      }
+
+      await loadItens({ mapaId });
+      
       const skipped = allPreviewData.length - rowsToImport.length;
       
       const errors: string[] = [];
       if (skipped > 0) {
         errors.push(`${skipped} linha(s) não importada(s)`);
       }
+      if (semCriterioCount > 0) {
+        errors.push(`${semCriterioCount} item(ns) sem critério vinculado (vincule manualmente)`);
+      }
+      if (vinculadosCount > 0) {
+        errors.push(`${vinculadosCount} item(ns) vinculado(s) ao critério automaticamente`);
+      }
       
       setImportResult({
-        success: imported,
+        success: insertedItems.length,
         errors,
       });
     } catch (error) {
