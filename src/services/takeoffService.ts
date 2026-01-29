@@ -800,31 +800,40 @@ export const takeoffService = {
 
     if (items.length > 0) {
       const itemIds = items.map(i => i.id);
+      const BATCH_SIZE = 50;
       
       try {
-        const { data: valoresData, error: valoresError } = await supabase
-          .from('takeoff_valores_custom')
-          .select('*')
-          .in('item_id', itemIds);
+        const valoresMap = new Map<string, Record<string, string>>();
+        
+        for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+          const batchIds = itemIds.slice(i, i + BATCH_SIZE);
+          const { data: valoresData, error: valoresError } = await supabase
+            .from('takeoff_valores_custom')
+            .select('item_id, coluna_codigo, valor')
+            .in('item_id', batchIds);
 
-        if (valoresError) {
-          console.error('Erro ao buscar valores custom:', valoresError);
-        } else if (valoresData && valoresData.length > 0) {
-          const valoresMap = new Map<string, Record<string, string>>();
-          for (const v of valoresData) {
-            const key = v.coluna_codigo || v.coluna_config_id;
-            if (key && v.valor) {
-              if (!valoresMap.has(v.item_id)) {
-                valoresMap.set(v.item_id, {});
+          if (valoresError) {
+            console.error('Erro ao buscar valores custom:', valoresError);
+            continue;
+          }
+          
+          if (valoresData) {
+            for (const v of valoresData) {
+              const key = v.coluna_codigo;
+              if (key && v.valor) {
+                if (!valoresMap.has(v.item_id)) {
+                  valoresMap.set(v.item_id, {});
+                }
+                valoresMap.get(v.item_id)![key] = v.valor;
               }
-              valoresMap.get(v.item_id)![key] = v.valor;
             }
           }
-          for (const item of items) {
-            const customValues = valoresMap.get(item.id);
-            if (customValues) {
-              item.valoresCustom = { ...item.valoresCustom, ...customValues };
-            }
+        }
+        
+        for (const item of items) {
+          const customValues = valoresMap.get(item.id);
+          if (customValues) {
+            item.valoresCustom = { ...item.valoresCustom, ...customValues };
           }
         }
       } catch (err) {
