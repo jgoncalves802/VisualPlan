@@ -30,6 +30,7 @@ import { useEpsStore } from '../stores/epsStore';
 import { takeoffService } from '../services/takeoffService';
 import { exportarTemplateTakeoff } from '../services/exportService';
 import TakeoffGrid from '../components/features/takeoff/TakeoffGrid';
+import TakeoffHierarchyGrid from '../components/features/takeoff/TakeoffHierarchyGrid';
 import TakeoffDashboard from '../components/features/takeoff/TakeoffDashboard';
 import TakeoffImportModal from '../components/features/takeoff/TakeoffImportModal';
 import TakeoffMapaModal from '../components/features/takeoff/TakeoffMapaModal';
@@ -319,6 +320,7 @@ const TakeoffPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'hierarchy'>('grid');
   const addMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -986,9 +988,44 @@ const TakeoffPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden flex flex-col">
               {selectedMapaId ? (
-                <TakeoffGrid mapaId={selectedMapaId} disciplinaId={selectedDisciplinaId} projetoId={selectedProjetoId} />
+                <>
+                  <div className="flex items-center justify-end gap-2 p-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                    <span className="text-xs theme-text-secondary mr-2">Visualização:</span>
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1.5 text-xs rounded-l-lg transition-colors ${
+                        viewMode === 'grid'
+                          ? 'bg-primary text-white'
+                          : 'theme-text hover:opacity-80'
+                      }`}
+                      style={viewMode !== 'grid' ? { backgroundColor: 'var(--color-surface-secondary)' } : {}}
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5 inline mr-1" />
+                      Tabela
+                    </button>
+                    <button
+                      onClick={() => setViewMode('hierarchy')}
+                      className={`px-3 py-1.5 text-xs rounded-r-lg transition-colors ${
+                        viewMode === 'hierarchy'
+                          ? 'bg-primary text-white'
+                          : 'theme-text hover:opacity-80'
+                      }`}
+                      style={viewMode !== 'hierarchy' ? { backgroundColor: 'var(--color-surface-secondary)' } : {}}
+                    >
+                      <Layers className="w-3.5 h-3.5 inline mr-1" />
+                      Etapas
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    {viewMode === 'grid' ? (
+                      <TakeoffGrid mapaId={selectedMapaId} disciplinaId={selectedDisciplinaId} projetoId={selectedProjetoId} />
+                    ) : (
+                      <TakeoffHierarchyGrid mapaId={selectedMapaId} />
+                    )}
+                  </div>
+                </>
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">

@@ -191,3 +191,43 @@ export interface CriterioMedicaoFilter {
   status?: StatusCriterioMedicao;
   busca?: string;
 }
+
+export interface TakeoffItemEtapa {
+  id: string;
+  itemId: string;
+  etapaId: string;
+  concluido: boolean;
+  dataConclusao?: Date;
+  concluidoPor?: string;
+  observacoes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  etapa?: CriterioMedicaoEtapa;
+}
+
+export interface CreateItemEtapaDTO {
+  itemId: string;
+  etapaId: string;
+  concluido?: boolean;
+  observacoes?: string;
+}
+
+export interface UpdateItemEtapaDTO {
+  concluido?: boolean;
+  observacoes?: string;
+}
+
+export interface ItemComEtapas {
+  item: {
+    id: string;
+    descricao: string;
+    tag?: string;
+    area?: string;
+    unidade: string;
+    qtdPrevista: number;
+    percentualExecutado: number;
+  };
+  criterio?: CriterioMedicao;
+  etapas: TakeoffItemEtapa[];
+  percentualConcluido: number;
+}
