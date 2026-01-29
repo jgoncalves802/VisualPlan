@@ -136,6 +136,18 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
     return [...DEFAULT_COLUMNS, ...customColumns];
   });
 
+  useEffect(() => {
+    const defaultKeys = new Set(DEFAULT_COLUMNS.map(c => c.key.toLowerCase()));
+    const customColumns: TargetColumn[] = colunasConfig
+      .filter(c => !defaultKeys.has(c.codigo.toLowerCase()))
+      .map(c => ({
+        key: c.codigo,
+        label: c.nome,
+        isCustom: true,
+      }));
+    setTargetColumns([...DEFAULT_COLUMNS, ...customColumns]);
+  }, [colunasConfig]);
+
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'decision' | 'importing'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [sheets, setSheets] = useState<string[]>([]);
