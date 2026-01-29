@@ -141,27 +141,46 @@ const isTableNotFoundError = (error: PostgrestError | null): boolean => {
   );
 };
 
+const chunkArray = <T>(array: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+};
+
+const BATCH_SIZE = 20;
+
 const safeDeleteFromTable = async (
   table: string,
   column: string,
   values: string | string[]
 ): Promise<{ success: boolean; ignored: boolean; error?: PostgrestError }> => {
-  const query = Array.isArray(values)
-    ? supabase.from(table).delete().in(column, values)
-    : supabase.from(table).delete().eq(column, values);
+  const valuesArray = Array.isArray(values) ? values : [values];
   
-  const { error } = await query;
-  
-  if (!error) {
-    return { success: true, ignored: false };
-  }
-  
-  if (isTableNotFoundError(error)) {
+  if (valuesArray.length === 0) {
     return { success: true, ignored: true };
   }
   
-  console.warn(`Erro ao excluir de ${table}:`, error.message);
-  return { success: false, ignored: false, error };
+  const chunks = chunkArray(valuesArray, BATCH_SIZE);
+  
+  for (const chunk of chunks) {
+    const query = chunk.length === 1
+      ? supabase.from(table).delete().eq(column, chunk[0])
+      : supabase.from(table).delete().in(column, chunk);
+    
+    const { error } = await query;
+    
+    if (error) {
+      if (isTableNotFoundError(error)) {
+        return { success: true, ignored: true };
+      }
+      console.warn(`Erro ao excluir de ${table}:`, error.message);
+      return { success: false, ignored: false, error };
+    }
+  }
+  
+  return { success: true, ignored: false };
 };
 
 export const DISCIPLINA_TEMPLATES: DisciplinaTemplate[] = [
@@ -565,7 +584,10 @@ export const takeoffService = {
       
       if (vinculos && vinculos.length > 0) {
         const vinculoIds = vinculos.map(v => v.id);
-        await supabase.from('takeoff_vinculos').delete().in('id', vinculoIds);
+        const vinculoChunks = chunkArray(vinculoIds, BATCH_SIZE);
+        for (const chunk of vinculoChunks) {
+          await supabase.from('takeoff_vinculos').delete().in('id', chunk);
+        }
       }
 
       const { data: itens } = await supabase
@@ -588,14 +610,17 @@ export const takeoffService = {
           return { success: false, deletedItems: 0, error: 'Erro ao excluir vínculos de critérios' };
         }
         
-        const { error: itensError } = await supabase
-          .from('takeoff_itens')
-          .delete()
-          .in('id', itemIds);
-        
-        if (itensError) {
-          console.error('Erro ao excluir itens:', itensError);
-          return { success: false, deletedItems: 0, error: 'Erro ao excluir itens do mapa' };
+        const itemChunks = chunkArray(itemIds, BATCH_SIZE);
+        for (const chunk of itemChunks) {
+          const { error: itensError } = await supabase
+            .from('takeoff_itens')
+            .delete()
+            .in('id', chunk);
+          
+          if (itensError) {
+            console.error('Erro ao excluir itens:', itensError);
+            return { success: false, deletedItems: 0, error: 'Erro ao excluir itens do mapa' };
+          }
         }
         
         deletedItems = itens.length;
