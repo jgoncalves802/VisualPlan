@@ -39,6 +39,7 @@ const mapDisciplinaFromDB = (row: Record<string, unknown>): TakeoffDisciplina =>
 const mapColunaFromDB = (row: Record<string, unknown>): TakeoffColunaConfig => ({
   id: row.id as string,
   disciplinaId: row.disciplina_id as string,
+  mapaId: row.mapa_id as string | undefined,
   nome: row.nome as string,
   codigo: row.codigo as string,
   tipo: row.tipo as TakeoffColunaConfig['tipo'],
@@ -392,12 +393,17 @@ export const takeoffService = {
     }
   },
 
-  async getColunasConfig(disciplinaId: string): Promise<TakeoffColunaConfig[]> {
-    const { data, error } = await supabase
+  async getColunasConfig(disciplinaId: string, mapaId?: string): Promise<TakeoffColunaConfig[]> {
+    let query = supabase
       .from('takeoff_colunas_config')
       .select('*')
-      .eq('disciplina_id', disciplinaId)
-      .order('ordem');
+      .eq('disciplina_id', disciplinaId);
+
+    if (mapaId) {
+      query = query.or(`mapa_id.eq.${mapaId},mapa_id.is.null`);
+    }
+
+    const { data, error } = await query.order('ordem');
 
     if (error) {
       console.error('Erro ao buscar colunas:', error);
@@ -406,8 +412,23 @@ export const takeoffService = {
     return (data || []).map(mapColunaFromDB);
   },
 
+  async getColunasConfigByMapa(mapaId: string): Promise<TakeoffColunaConfig[]> {
+    const { data, error } = await supabase
+      .from('takeoff_colunas_config')
+      .select('*')
+      .eq('mapa_id', mapaId)
+      .order('ordem');
+
+    if (error) {
+      console.error('Erro ao buscar colunas do mapa:', error);
+      return [];
+    }
+    return (data || []).map(mapColunaFromDB);
+  },
+
   async createColunaConfig(dto: {
     disciplinaId: string;
+    mapaId?: string;
     nome: string;
     codigo: string;
     tipo: string;
@@ -424,6 +445,7 @@ export const takeoffService = {
       .from('takeoff_colunas_config')
       .insert({
         disciplina_id: dto.disciplinaId,
+        mapa_id: dto.mapaId || null,
         nome: dto.nome,
         codigo: dto.codigo,
         tipo: dto.tipo,

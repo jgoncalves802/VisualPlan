@@ -19,6 +19,7 @@ export interface TakeoffDisciplina {
 export interface TakeoffColunaConfig {
   id: string;
   disciplinaId: string;
+  mapaId?: string;
   nome: string;
   codigo: string;
   tipo: TipoColuna;
