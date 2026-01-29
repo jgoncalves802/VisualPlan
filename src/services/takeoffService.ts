@@ -911,7 +911,7 @@ export const takeoffService = {
       }
     }
 
-    const valoresCustomToInsert: { item_id: string; coluna_codigo: string; valor: string; coluna_config_id: string }[] = [];
+    const valoresCustomToInsert: { item_id: string; coluna_codigo: string; valor: string }[] = [];
     for (const inserted of insertedItems) {
       const dto = itens[inserted.index];
       if (dto.valoresCustom && Object.keys(dto.valoresCustom).length > 0) {
@@ -921,7 +921,6 @@ export const takeoffService = {
               item_id: inserted.id,
               coluna_codigo: codigo,
               valor: String(valor),
-              coluna_config_id: codigo,
             });
           }
         }
