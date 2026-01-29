@@ -17,6 +17,7 @@ import * as XLSX from 'xlsx';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import { takeoffService } from '../../../services/takeoffService';
 import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
+import { takeoffItemEtapasService } from '../../../services/takeoffItemEtapasService';
 import type { CreateItemDTO, TakeoffColunaConfig } from '../../../types/takeoff.types';
 
 interface TakeoffImportModalProps {
@@ -489,6 +490,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
       
       let vinculadosCount = 0;
       let semCriterioCount = 0;
+      const itensParaEtapas: Array<{ itemId: string; criterioId: string }> = [];
       
       for (const inserted of insertedItems) {
         const criterioCode = criterioCodesPerRow[inserted.index];
@@ -497,6 +499,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
           if (criterioId) {
             try {
               await criteriosMedicaoService.vincularItemCriterio(inserted.id, criterioId);
+              itensParaEtapas.push({ itemId: inserted.id, criterioId });
               vinculadosCount++;
             } catch (err) {
               console.error('Erro ao vincular critério:', err);
@@ -507,6 +510,11 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         } else {
           semCriterioCount++;
         }
+      }
+
+      if (itensParaEtapas.length > 0) {
+        const etapasCount = await takeoffItemEtapasService.initializeEtapasForItemsBatch(itensParaEtapas);
+        console.log(`[Import] Inicializadas ${etapasCount} etapas para ${itensParaEtapas.length} itens`);
       }
 
       await loadItens({ mapaId });

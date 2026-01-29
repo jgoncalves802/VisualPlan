@@ -303,6 +303,95 @@ export const takeoffItemEtapasService = {
     return true;
   },
 
+  async initializeEtapasForItem(itemId: string, criterioId: string): Promise<number> {
+    const { data: etapasCriterio, error: etapasError } = await supabase
+      .from('criterios_medicao_etapas')
+      .select('id')
+      .eq('criterio_id', criterioId)
+      .order('ordem', { ascending: true });
+
+    if (etapasError || !etapasCriterio || etapasCriterio.length === 0) {
+      console.error('Erro ao buscar etapas do critério:', etapasError);
+      return 0;
+    }
+
+    const etapasToInsert = etapasCriterio.map((etapa) => ({
+      item_id: itemId,
+      etapa_id: etapa.id,
+      concluido: false,
+    }));
+
+    const { error: insertError } = await supabase
+      .from('takeoff_item_etapas')
+      .upsert(etapasToInsert, { onConflict: 'item_id,etapa_id' });
+
+    if (insertError) {
+      console.error('Erro ao inicializar etapas do item:', insertError);
+      return 0;
+    }
+
+    return etapasCriterio.length;
+  },
+
+  async initializeEtapasForItemsBatch(
+    items: Array<{ itemId: string; criterioId: string }>
+  ): Promise<number> {
+    if (items.length === 0) return 0;
+
+    const criterioIds = [...new Set(items.map((i) => i.criterioId))];
+
+    const { data: allEtapas, error: etapasError } = await supabase
+      .from('criterios_medicao_etapas')
+      .select('id, criterio_id')
+      .in('criterio_id', criterioIds);
+
+    if (etapasError || !allEtapas) {
+      console.error('Erro ao buscar etapas dos critérios:', etapasError);
+      return 0;
+    }
+
+    const etapasPorCriterio = new Map<string, string[]>();
+    for (const etapa of allEtapas) {
+      const existing = etapasPorCriterio.get(etapa.criterio_id) || [];
+      existing.push(etapa.id);
+      etapasPorCriterio.set(etapa.criterio_id, existing);
+    }
+
+    const etapasToInsert: Array<{ item_id: string; etapa_id: string; concluido: boolean }> = [];
+
+    for (const item of items) {
+      const etapaIds = etapasPorCriterio.get(item.criterioId) || [];
+      for (const etapaId of etapaIds) {
+        etapasToInsert.push({
+          item_id: item.itemId,
+          etapa_id: etapaId,
+          concluido: false,
+        });
+      }
+    }
+
+    if (etapasToInsert.length === 0) return 0;
+
+    const batchSize = 500;
+    let totalInserted = 0;
+
+    for (let i = 0; i < etapasToInsert.length; i += batchSize) {
+      const batch = etapasToInsert.slice(i, i + batchSize);
+      const { error: insertError } = await supabase
+        .from('takeoff_item_etapas')
+        .upsert(batch, { onConflict: 'item_id,etapa_id' });
+
+      if (insertError) {
+        console.error('Erro ao inserir etapas em lote:', insertError);
+      } else {
+        totalInserted += batch.length;
+      }
+    }
+
+    console.log(`[takeoffItemEtapasService] Inicializadas ${totalInserted} etapas para ${items.length} itens`);
+    return totalInserted;
+  },
+
   async getEtapasDisponiveisPorMapa(mapaId: string): Promise<Map<number, string>> {
     const { data: itens } = await supabase
       .from('takeoff_itens')

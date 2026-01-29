@@ -68,27 +68,33 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
         let etapasItem: { id: string; item_id: string; etapa_id: string; concluido: boolean }[] = [];
         
         if (itemIds.length > 0) {
-          const [vinculosResult, etapasItemResult] = await Promise.all([
-            supabase.from('item_criterio_medicao').select('item_id, criterio_id').in('item_id', itemIds),
-            supabase.from('takeoff_item_etapas').select('*').in('item_id', itemIds),
-          ]);
-
-          if (vinculosResult.error) {
-            console.error('Erro ao carregar vínculos:', vinculosResult.error);
-          } else {
-            vinculos = vinculosResult.data || [];
-          }
+          const BATCH_SIZE = 50;
           
-          if (etapasItemResult.error) {
-            const errorMsg = etapasItemResult.error.message || 'Erro ao carregar etapas';
-            if (errorMsg.includes('does not exist') || etapasItemResult.error.code === '42P01') {
-              setEtapasError('Tabela de etapas não encontrada. Execute a migration SQL.');
+          for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+            const batchIds = itemIds.slice(i, i + BATCH_SIZE);
+            
+            const [vinculosResult, etapasItemResult] = await Promise.all([
+              supabase.from('item_criterio_medicao').select('item_id, criterio_id').in('item_id', batchIds),
+              supabase.from('takeoff_item_etapas').select('*').in('item_id', batchIds),
+            ]);
+
+            if (vinculosResult.error) {
+              console.error('Erro ao carregar vínculos:', vinculosResult.error);
             } else {
-              console.error('Erro ao carregar etapas dos itens:', etapasItemResult.error);
+              vinculos = vinculos.concat(vinculosResult.data || []);
             }
-          } else {
-            setEtapasError(null);
-            etapasItem = etapasItemResult.data || [];
+            
+            if (etapasItemResult.error) {
+              const errorMsg = etapasItemResult.error.message || 'Erro ao carregar etapas';
+              if (errorMsg.includes('does not exist') || etapasItemResult.error.code === '42P01') {
+                setEtapasError('Tabela de etapas não encontrada. Execute a migration SQL.');
+              } else {
+                console.error('Erro ao carregar etapas dos itens:', etapasItemResult.error);
+              }
+            } else {
+              setEtapasError(null);
+              etapasItem = etapasItem.concat(etapasItemResult.data || []);
+            }
           }
         } else {
           setEtapasError(null);
