@@ -80,12 +80,17 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
   });
 
   useEffect(() => {
+    console.log('[TakeoffGrid] Loading data for mapaId:', mapaId, 'disciplinaId:', disciplinaId);
     setSelectedIds(new Set());
     loadItens({ mapaId });
     if (disciplinaId) {
       loadColunasConfig(disciplinaId, mapaId);
     }
   }, [mapaId, disciplinaId, loadItens, loadColunasConfig]);
+  
+  useEffect(() => {
+    console.log('[TakeoffGrid] colunasConfig loaded:', colunasConfig?.length, 'columns', colunasConfig);
+  }, [colunasConfig]);
 
   useEffect(() => {
     setSelectedIds(new Set());
