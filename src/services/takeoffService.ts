@@ -394,36 +394,64 @@ export const takeoffService = {
   },
 
   async getColunasConfig(disciplinaId: string, mapaId?: string): Promise<TakeoffColunaConfig[]> {
-    let query = supabase
-      .from('takeoff_colunas_config')
-      .select('*')
-      .eq('disciplina_id', disciplinaId);
+    try {
+      let query = supabase
+        .from('takeoff_colunas_config')
+        .select('*')
+        .eq('disciplina_id', disciplinaId);
 
-    if (mapaId) {
-      query = query.or(`mapa_id.eq.${mapaId},mapa_id.is.null`);
-    }
+      if (mapaId) {
+        query = query.or(`mapa_id.eq.${mapaId},mapa_id.is.null`);
+      }
 
-    const { data, error } = await query.order('ordem');
+      const { data, error } = await query.order('ordem');
 
-    if (error) {
-      console.error('Erro ao buscar colunas:', error);
+      if (error) {
+        if (error.code === '42703' && error.message?.includes('mapa_id')) {
+          console.warn('Column mapa_id not found, falling back to simple query');
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('takeoff_colunas_config')
+            .select('*')
+            .eq('disciplina_id', disciplinaId)
+            .order('ordem');
+          
+          if (fallbackError) {
+            console.error('Erro ao buscar colunas (fallback):', fallbackError);
+            return [];
+          }
+          return (fallbackData || []).map(mapColunaFromDB);
+        }
+        console.error('Erro ao buscar colunas:', error);
+        return [];
+      }
+      return (data || []).map(mapColunaFromDB);
+    } catch (err) {
+      console.error('Erro inesperado ao buscar colunas:', err);
       return [];
     }
-    return (data || []).map(mapColunaFromDB);
   },
 
   async getColunasConfigByMapa(mapaId: string): Promise<TakeoffColunaConfig[]> {
-    const { data, error } = await supabase
-      .from('takeoff_colunas_config')
-      .select('*')
-      .eq('mapa_id', mapaId)
-      .order('ordem');
+    try {
+      const { data, error } = await supabase
+        .from('takeoff_colunas_config')
+        .select('*')
+        .eq('mapa_id', mapaId)
+        .order('ordem');
 
-    if (error) {
-      console.error('Erro ao buscar colunas do mapa:', error);
+      if (error) {
+        if (error.code === '42703' && error.message?.includes('mapa_id')) {
+          console.warn('Column mapa_id not found in database, returning empty array');
+          return [];
+        }
+        console.error('Erro ao buscar colunas do mapa:', error);
+        return [];
+      }
+      return (data || []).map(mapColunaFromDB);
+    } catch (err) {
+      console.error('Erro inesperado ao buscar colunas do mapa:', err);
       return [];
     }
-    return (data || []).map(mapColunaFromDB);
   },
 
   async createColunaConfig(dto: {
@@ -441,9 +469,8 @@ export const takeoffService = {
     ordem: number;
     largura: number;
   }): Promise<TakeoffColunaConfig | null> {
-    const { data, error } = await supabase
-      .from('takeoff_colunas_config')
-      .insert({
+    try {
+      const insertData: Record<string, unknown> = {
         disciplina_id: dto.disciplinaId,
         mapa_id: dto.mapaId || null,
         nome: dto.nome,
@@ -457,15 +484,38 @@ export const takeoffService = {
         visivel: dto.visivel,
         ordem: dto.ordem,
         largura: dto.largura,
-      })
-      .select()
-      .single();
+      };
 
-    if (error) {
-      console.error('Erro ao criar coluna:', error);
+      const { data, error } = await supabase
+        .from('takeoff_colunas_config')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '42703' && error.message?.includes('mapa_id')) {
+          console.warn('Column mapa_id not found, retrying without it');
+          delete insertData.mapa_id;
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('takeoff_colunas_config')
+            .insert(insertData)
+            .select()
+            .single();
+          
+          if (fallbackError) {
+            console.error('Erro ao criar coluna (fallback):', fallbackError);
+            return null;
+          }
+          return mapColunaFromDB(fallbackData);
+        }
+        console.error('Erro ao criar coluna:', error);
+        return null;
+      }
+      return mapColunaFromDB(data);
+    } catch (err) {
+      console.error('Erro inesperado ao criar coluna:', err);
       return null;
     }
-    return mapColunaFromDB(data);
   },
 
   async updateColunaConfig(id: string, dto: {
@@ -750,27 +800,61 @@ export const takeoffService = {
 
     if (items.length > 0) {
       const itemIds = items.map(i => i.id);
-      const { data: valoresData, error: valoresError } = await supabase
-        .from('takeoff_valores_custom')
-        .select('item_id, coluna_codigo, valor')
-        .in('item_id', itemIds);
+      
+      try {
+        const { data: valoresData, error: valoresError } = await supabase
+          .from('takeoff_valores_custom')
+          .select('item_id, coluna_codigo, coluna_config_id, valor')
+          .in('item_id', itemIds);
 
-      if (!valoresError && valoresData) {
-        const valoresMap = new Map<string, Record<string, string>>();
-        for (const v of valoresData) {
-          if (v.coluna_codigo && v.valor) {
-            if (!valoresMap.has(v.item_id)) {
-              valoresMap.set(v.item_id, {});
+        if (valoresError) {
+          if (valoresError.code === '42703' && valoresError.message?.includes('coluna_codigo')) {
+            console.warn('Column coluna_codigo not found, trying fallback query');
+            const { data: fallbackData } = await supabase
+              .from('takeoff_valores_custom')
+              .select('item_id, coluna_config_id, valor')
+              .in('item_id', itemIds);
+            
+            if (fallbackData) {
+              const valoresMap = new Map<string, Record<string, string>>();
+              for (const v of fallbackData) {
+                if (v.coluna_config_id && v.valor) {
+                  if (!valoresMap.has(v.item_id)) {
+                    valoresMap.set(v.item_id, {});
+                  }
+                  valoresMap.get(v.item_id)![v.coluna_config_id] = v.valor;
+                }
+              }
+              for (const item of items) {
+                const customValues = valoresMap.get(item.id);
+                if (customValues) {
+                  item.valoresCustom = { ...item.valoresCustom, ...customValues };
+                }
+              }
             }
-            valoresMap.get(v.item_id)![v.coluna_codigo] = v.valor;
+          } else {
+            console.error('Erro ao buscar valores custom:', valoresError);
+          }
+        } else if (valoresData) {
+          const valoresMap = new Map<string, Record<string, string>>();
+          for (const v of valoresData) {
+            const key = v.coluna_codigo || v.coluna_config_id;
+            if (key && v.valor) {
+              if (!valoresMap.has(v.item_id)) {
+                valoresMap.set(v.item_id, {});
+              }
+              valoresMap.get(v.item_id)![key] = v.valor;
+            }
+          }
+          for (const item of items) {
+            const customValues = valoresMap.get(item.id);
+            if (customValues) {
+              item.valoresCustom = { ...item.valoresCustom, ...customValues };
+            }
           }
         }
-        for (const item of items) {
-          const customValues = valoresMap.get(item.id);
-          if (customValues) {
-            item.valoresCustom = { ...item.valoresCustom, ...customValues };
-          }
-        }
+      } catch (err) {
+        console.error('Erro inesperado ao buscar valores custom:', err);
       }
     }
 
@@ -872,13 +956,47 @@ export const takeoffService = {
 
     if (valoresCustomToInsert.length > 0) {
       console.log(`[TakeoffService] Inserting ${valoresCustomToInsert.length} custom values`);
+      let useColumaCodigo = true;
+      
       for (let i = 0; i < valoresCustomToInsert.length; i += BATCH_SIZE) {
         const batch = valoresCustomToInsert.slice(i, i + BATCH_SIZE);
-        const { error: valoresError } = await supabase
-          .from('takeoff_valores_custom')
-          .insert(batch);
-        if (valoresError) {
-          console.error('Erro ao inserir valores custom:', valoresError);
+        
+        if (useColumaCodigo) {
+          const { error: valoresError } = await supabase
+            .from('takeoff_valores_custom')
+            .insert(batch);
+          
+          if (valoresError) {
+            if (valoresError.code === '42703' && valoresError.message?.includes('coluna_codigo')) {
+              console.warn('Column coluna_codigo not found, will use coluna_config_id only');
+              useColumaCodigo = false;
+              const fallbackBatch = batch.map(v => ({
+                item_id: v.item_id,
+                coluna_config_id: v.coluna_config_id,
+                valor: v.valor,
+              }));
+              const { error: fallbackError } = await supabase
+                .from('takeoff_valores_custom')
+                .insert(fallbackBatch);
+              if (fallbackError) {
+                console.error('Erro ao inserir valores custom (fallback):', fallbackError);
+              }
+            } else {
+              console.error('Erro ao inserir valores custom:', valoresError);
+            }
+          }
+        } else {
+          const fallbackBatch = batch.map(v => ({
+            item_id: v.item_id,
+            coluna_config_id: v.coluna_config_id,
+            valor: v.valor,
+          }));
+          const { error: valoresError } = await supabase
+            .from('takeoff_valores_custom')
+            .insert(fallbackBatch);
+          if (valoresError) {
+            console.error('Erro ao inserir valores custom:', valoresError);
+          }
         }
       }
     }
