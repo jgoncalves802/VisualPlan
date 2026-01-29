@@ -452,19 +452,56 @@ const TakeoffPage: React.FC = () => {
     const mapaAtual = mapas.find(m => m.id === selectedMapaId);
     console.log('[TakeoffImport] Opening modal for mapa:', selectedMapaId, 'disciplina:', mapaAtual?.disciplinaId);
     
+    let colunas: TakeoffColunaConfig[] = [];
+    
     if (mapaAtual?.disciplinaId) {
       try {
-        const colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId);
-        console.log('[TakeoffImport] Loaded columns:', colunas.length, colunas.map(c => c.nome));
-        setImportColunasConfig(colunas);
+        colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId);
+        console.log('[TakeoffImport] Loaded discipline columns:', colunas.length, colunas.map(c => c.nome));
       } catch (error) {
         console.error('Erro ao carregar colunas para importação:', error);
-        setImportColunasConfig([]);
       }
-    } else {
-      console.log('[TakeoffImport] No disciplina found for mapa');
-      setImportColunasConfig([]);
     }
+    
+    try {
+      const itensDoMapa = await takeoffService.getItens({ mapaId: selectedMapaId });
+      const colunasExistentes = new Set(colunas.map(c => c.codigo.toLowerCase()));
+      const colunasCustom = new Set<string>();
+      
+      for (const item of itensDoMapa) {
+        if (item.valoresCustom) {
+          Object.keys(item.valoresCustom).forEach(key => {
+            if (!colunasExistentes.has(key.toLowerCase())) {
+              colunasCustom.add(key);
+            }
+          });
+        }
+      }
+      
+      const colunasDoMapa: TakeoffColunaConfig[] = Array.from(colunasCustom).map(key => ({
+        id: `custom-${key}`,
+        disciplinaId: mapaAtual?.disciplinaId || '',
+        codigo: key,
+        nome: key,
+        tipo: 'text' as const,
+        obrigatorio: false,
+        obrigatoria: false,
+        ordem: 999,
+        criadoEm: new Date().toISOString(),
+        casasDecimais: 2,
+        visivel: true,
+        largura: 100,
+      }));
+      
+      if (colunasDoMapa.length > 0) {
+        console.log('[TakeoffImport] Found custom columns in existing items:', colunasDoMapa.map(c => c.nome));
+        colunas = [...colunas, ...colunasDoMapa];
+      }
+    } catch (error) {
+      console.error('Erro ao carregar itens do mapa:', error);
+    }
+    
+    setImportColunasConfig(colunas);
     setShowImportModal(true);
   };
 
