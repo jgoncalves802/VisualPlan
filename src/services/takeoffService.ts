@@ -804,38 +804,12 @@ export const takeoffService = {
       try {
         const { data: valoresData, error: valoresError } = await supabase
           .from('takeoff_valores_custom')
-          .select('item_id, coluna_codigo, coluna_config_id, valor')
+          .select('*')
           .in('item_id', itemIds);
 
         if (valoresError) {
-          if (valoresError.code === '42703' && valoresError.message?.includes('coluna_codigo')) {
-            console.warn('Column coluna_codigo not found, trying fallback query');
-            const { data: fallbackData } = await supabase
-              .from('takeoff_valores_custom')
-              .select('item_id, coluna_config_id, valor')
-              .in('item_id', itemIds);
-            
-            if (fallbackData) {
-              const valoresMap = new Map<string, Record<string, string>>();
-              for (const v of fallbackData) {
-                if (v.coluna_config_id && v.valor) {
-                  if (!valoresMap.has(v.item_id)) {
-                    valoresMap.set(v.item_id, {});
-                  }
-                  valoresMap.get(v.item_id)![v.coluna_config_id] = v.valor;
-                }
-              }
-              for (const item of items) {
-                const customValues = valoresMap.get(item.id);
-                if (customValues) {
-                  item.valoresCustom = { ...item.valoresCustom, ...customValues };
-                }
-              }
-            }
-          } else {
-            console.error('Erro ao buscar valores custom:', valoresError);
-          }
-        } else if (valoresData) {
+          console.error('Erro ao buscar valores custom:', valoresError);
+        } else if (valoresData && valoresData.length > 0) {
           const valoresMap = new Map<string, Record<string, string>>();
           for (const v of valoresData) {
             const key = v.coluna_codigo || v.coluna_config_id;
@@ -955,48 +929,44 @@ export const takeoffService = {
     }
 
     if (valoresCustomToInsert.length > 0) {
-      console.log(`[TakeoffService] Inserting ${valoresCustomToInsert.length} custom values`);
-      let useColumaCodigo = true;
+      console.log(`[TakeoffService] Inserting ${valoresCustomToInsert.length} custom values:`, valoresCustomToInsert.slice(0, 3));
       
       for (let i = 0; i < valoresCustomToInsert.length; i += BATCH_SIZE) {
         const batch = valoresCustomToInsert.slice(i, i + BATCH_SIZE);
         
-        if (useColumaCodigo) {
-          const { error: valoresError } = await supabase
-            .from('takeoff_valores_custom')
-            .insert(batch);
+        const insertBatch = batch.map(v => ({
+          item_id: v.item_id,
+          coluna_codigo: v.coluna_codigo,
+          coluna_config_id: v.coluna_config_id,
+          valor: v.valor,
+        }));
+        
+        const { data, error: valoresError } = await supabase
+          .from('takeoff_valores_custom')
+          .insert(insertBatch)
+          .select();
+        
+        if (valoresError) {
+          console.error('Erro ao inserir valores custom:', valoresError, 'Batch:', insertBatch.slice(0, 2));
           
-          if (valoresError) {
-            if (valoresError.code === '42703' && valoresError.message?.includes('coluna_codigo')) {
-              console.warn('Column coluna_codigo not found, will use coluna_config_id only');
-              useColumaCodigo = false;
-              const fallbackBatch = batch.map(v => ({
-                item_id: v.item_id,
-                coluna_config_id: v.coluna_config_id,
-                valor: v.valor,
-              }));
-              const { error: fallbackError } = await supabase
-                .from('takeoff_valores_custom')
-                .insert(fallbackBatch);
-              if (fallbackError) {
-                console.error('Erro ao inserir valores custom (fallback):', fallbackError);
-              }
+          if (valoresError.message?.includes('coluna_codigo') || valoresError.code === '42703') {
+            console.warn('Tentando inserir sem coluna_codigo');
+            const fallbackBatch = batch.map(v => ({
+              item_id: v.item_id,
+              coluna_config_id: v.coluna_codigo,
+              valor: v.valor,
+            }));
+            const { error: fallbackError } = await supabase
+              .from('takeoff_valores_custom')
+              .insert(fallbackBatch);
+            if (fallbackError) {
+              console.error('Erro ao inserir valores custom (fallback):', fallbackError);
             } else {
-              console.error('Erro ao inserir valores custom:', valoresError);
+              console.log('[TakeoffService] Fallback insert succeeded');
             }
           }
         } else {
-          const fallbackBatch = batch.map(v => ({
-            item_id: v.item_id,
-            coluna_config_id: v.coluna_config_id,
-            valor: v.valor,
-          }));
-          const { error: valoresError } = await supabase
-            .from('takeoff_valores_custom')
-            .insert(fallbackBatch);
-          if (valoresError) {
-            console.error('Erro ao inserir valores custom:', valoresError);
-          }
+          console.log(`[TakeoffService] Successfully inserted ${data?.length || 0} custom values`);
         }
       }
     }

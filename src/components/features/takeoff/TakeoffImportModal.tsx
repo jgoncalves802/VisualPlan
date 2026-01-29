@@ -475,6 +475,7 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
         
         if (Object.keys(valoresCustom).length > 0) {
           item.valoresCustom = valoresCustom;
+          console.log('[Import] Item with custom values:', { descricao: item.descricao, valoresCustom });
         }
         
         if (!item.unidade) {
