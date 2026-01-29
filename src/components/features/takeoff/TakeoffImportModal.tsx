@@ -18,7 +18,6 @@ import { useTakeoffStore } from '../../../stores/takeoffStore';
 import { takeoffService } from '../../../services/takeoffService';
 import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { CreateItemDTO, TakeoffColunaConfig } from '../../../types/takeoff.types';
-import type { CriterioMedicao } from '../../../types/criteriosMedicao.types';
 
 interface TakeoffImportModalProps {
   mapaId: string;
@@ -26,7 +25,6 @@ interface TakeoffImportModalProps {
   projetoId: string;
   onClose: () => void;
   colunasConfig?: TakeoffColunaConfig[];
-  onCreateColumn?: (codigo: string, nome: string, tipo: string) => Promise<void>;
 }
 
 interface ColumnMapping {
@@ -118,7 +116,6 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
   projetoId,
   onClose, 
   colunasConfig = [],
-  onCreateColumn,
 }) => {
   const { loadColunasConfig, loadItens } = useTakeoffStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -277,13 +274,26 @@ const TakeoffImportModal: React.FC<TakeoffImportModalProps> = ({
       codigo = `${codigo}_${Date.now()}`;
     }
     
-    if (onCreateColumn) {
-      try {
-        await onCreateColumn(codigo, newColumnName.trim(), 'text');
-        await loadColunasConfig(disciplinaId);
-      } catch (error) {
-        console.error('Erro ao criar coluna:', error);
+    try {
+      const coluna = await takeoffService.createColunaConfig({
+        disciplinaId,
+        mapaId,
+        nome: newColumnName.trim(),
+        codigo,
+        tipo: 'text',
+        casasDecimais: 0,
+        obrigatoria: false,
+        visivel: true,
+        ordem: targetColumns.length,
+        largura: 100,
+      });
+      
+      if (coluna) {
+        console.log('[TakeoffImport] Created new column for mapa:', mapaId, coluna);
+        await loadColunasConfig(disciplinaId, mapaId);
       }
+    } catch (error) {
+      console.error('Erro ao criar coluna:', error);
     }
     
     const newColumn: TargetColumn = {

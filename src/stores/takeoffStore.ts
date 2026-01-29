@@ -32,7 +32,7 @@ interface TakeoffState {
   
   loadDisciplinas: (empresaId: string) => Promise<void>;
   initializeDisciplinas: (empresaId: string) => Promise<void>;
-  loadColunasConfig: (disciplinaId: string) => Promise<void>;
+  loadColunasConfig: (disciplinaId: string, mapaId?: string) => Promise<void>;
   loadMapas: (projetoId: string, disciplinaId?: string) => Promise<void>;
   loadItens: (filter: TakeoffFilter) => Promise<void>;
   
@@ -101,9 +101,9 @@ export const useTakeoffStore = create<TakeoffState>((set, get) => ({
     }
   },
 
-  loadColunasConfig: async (disciplinaId: string) => {
+  loadColunasConfig: async (disciplinaId: string, mapaId?: string) => {
     try {
-      const colunasConfig = await takeoffService.getColunasConfig(disciplinaId);
+      const colunasConfig = await takeoffService.getColunasConfig(disciplinaId, mapaId);
       set({ colunasConfig });
     } catch (error) {
       console.error('Erro ao carregar colunas:', error);

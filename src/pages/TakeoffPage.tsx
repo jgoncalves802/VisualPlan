@@ -456,8 +456,8 @@ const TakeoffPage: React.FC = () => {
     
     if (mapaAtual?.disciplinaId) {
       try {
-        colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId);
-        console.log('[TakeoffImport] Loaded discipline columns:', colunas.length, colunas.map(c => c.nome));
+        colunas = await takeoffService.getColunasConfig(mapaAtual.disciplinaId, selectedMapaId);
+        console.log('[TakeoffImport] Loaded columns (discipline + mapa):', colunas.length, colunas.map(c => c.nome));
       } catch (error) {
         console.error('Erro ao carregar colunas para importação:', error);
       }

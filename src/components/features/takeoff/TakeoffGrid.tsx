@@ -68,7 +68,7 @@ const TakeoffGrid: React.FC<TakeoffGridProps> = ({ mapaId, disciplinaId, projeto
     setSelectedIds(new Set());
     loadItens({ mapaId });
     if (disciplinaId) {
-      loadColunasConfig(disciplinaId);
+      loadColunasConfig(disciplinaId, mapaId);
     }
   }, [mapaId, disciplinaId, loadItens, loadColunasConfig]);
 
