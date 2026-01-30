@@ -65,7 +65,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
         const supabase = (await import('../../../services/supabase')).supabase;
         
         let vinculos: { item_id: string; criterio_id: string }[] = [];
-        let etapasItem: { id: string; item_id: string; etapa_id: string; concluido: boolean }[] = [];
+        let etapasItem: { id: string; item_id: string; etapa_id: string; concluido: boolean; data_conclusao?: string; updated_at?: string }[] = [];
         
         if (itemIds.length > 0) {
           const BATCH_SIZE = 50;
@@ -107,12 +107,17 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
           criterioIds.add(v.criterio_id);
         }
 
-        const etapasItemMap = new Map<string, Map<string, { concluido: boolean; id: string }>>();
+        const etapasItemMap = new Map<string, Map<string, { concluido: boolean; id: string; dataConclusao?: Date; updatedAt?: Date }>>();
         for (const e of etapasItem) {
           if (!etapasItemMap.has(e.item_id)) {
             etapasItemMap.set(e.item_id, new Map());
           }
-          etapasItemMap.get(e.item_id)!.set(e.etapa_id, { concluido: e.concluido, id: e.id });
+          etapasItemMap.get(e.item_id)!.set(e.etapa_id, { 
+            concluido: e.concluido, 
+            id: e.id,
+            dataConclusao: e.data_conclusao ? new Date(e.data_conclusao) : undefined,
+            updatedAt: e.updated_at ? new Date(e.updated_at) : undefined,
+          });
         }
 
         let criteriosMap = new Map<string, CriterioMedicao>();
@@ -162,8 +167,9 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
               itemId: item.id,
               etapaId: etapa.id,
               concluido: status?.concluido || false,
+              dataConclusao: status?.dataConclusao,
               createdAt: new Date(),
-              updatedAt: new Date(),
+              updatedAt: status?.updatedAt || new Date(),
               etapa,
             };
           });
@@ -480,6 +486,12 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
               <th className="p-2 text-left font-medium theme-text" style={{ width: 100 }}>
                 % Concluído
               </th>
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 90 }}>
+                Data
+              </th>
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 60 }}>
+                Ação
+              </th>
             </tr>
             {showFilters && (
               <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -514,13 +526,15 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                   />
                 </th>
                 <th className="p-1"></th>
+                <th className="p-1"></th>
+                <th className="p-1"></th>
               </tr>
             )}
           </thead>
           <tbody>
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 4} className="p-8 text-center theme-text-secondary">
+                <td colSpan={columns.length + 6} className="p-8 text-center theme-text-secondary">
                   Nenhum item encontrado
                 </td>
               </tr>
@@ -598,6 +612,20 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                         </span>
                       </div>
                     </td>
+                    <td className="p-2 text-center theme-text-secondary text-xs" onClick={() => toggleExpand(itemState.item.id)}>
+                      {(() => {
+                        const etapasConcluidas = itemState.etapas.filter(e => e.concluido && e.dataConclusao);
+                        if (etapasConcluidas.length === 0) return '-';
+                        const datas = etapasConcluidas.map(e => e.dataConclusao!.getTime());
+                        const minDate = new Date(Math.min(...datas));
+                        const maxDate = new Date(Math.max(...datas));
+                        if (minDate.getTime() === maxDate.getTime()) {
+                          return minDate.toLocaleDateString('pt-BR');
+                        }
+                        return `${minDate.toLocaleDateString('pt-BR')} - ${maxDate.toLocaleDateString('pt-BR')}`;
+                      })()}
+                    </td>
+                    <td className="p-2"></td>
                   </tr>
                   {itemState.isExpanded && itemState.etapas.length > 0 && (
                     <>
@@ -640,7 +668,13 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                             <td className="p-2 text-right theme-text-secondary text-xs">
                               {etapaState.etapa?.percentual}%
                             </td>
-                            <td className="p-2"></td>
+                            <td className="p-2 text-center theme-text-secondary text-xs">
+                              {etapaState.dataConclusao 
+                                ? etapaState.dataConclusao.toLocaleDateString('pt-BR')
+                                : etapaState.updatedAt && etapaState.concluido
+                                  ? etapaState.updatedAt.toLocaleDateString('pt-BR')
+                                  : '-'}
+                            </td>
                             <td className="p-2">
                               <button
                                 onClick={() => handleToggleEtapa(itemState.item.id, etapaState.etapaId)}

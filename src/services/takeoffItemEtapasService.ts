@@ -288,18 +288,7 @@ export const takeoffItemEtapasService = {
     return Math.round((percentualConcluido / totalPercentual) * 100);
   },
 
-  async atualizarPercentualItem(itemId: string): Promise<boolean> {
-    const percentual = await this.calcularPercentualItem(itemId);
-
-    const { error } = await supabase
-      .from('takeoff_itens')
-      .update({ percentual_executado: percentual })
-      .eq('id', itemId);
-
-    if (error) {
-      console.error('Erro ao atualizar percentual do item:', error);
-      return false;
-    }
+  async atualizarPercentualItem(_itemId: string): Promise<boolean> {
     return true;
   },
 
