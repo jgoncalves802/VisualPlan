@@ -8,6 +8,8 @@ import {
   CheckSquare,
   Square,
   Loader2,
+  Eye,
+  X,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import { takeoffItemEtapasService } from '../../../services/takeoffItemEtapasService';
@@ -20,12 +22,29 @@ interface TakeoffHierarchyGridProps {
   onBatchUpdate?: () => void;
 }
 
+interface EtapaExtendida extends TakeoffItemEtapa {
+  etapa: CriterioMedicaoEtapa;
+  dataInicio?: Date;
+  dataTermino?: Date;
+  dataAvanco?: Date;
+  dataAprovacao?: Date;
+  usuarioAvanco?: { id: string; nome: string };
+  usuarioAprovacao?: { id: string; nome: string };
+}
+
 interface ItemComEtapasState {
   item: TakeoffItem;
   criterio?: CriterioMedicao;
-  etapas: (TakeoffItemEtapa & { etapa: CriterioMedicaoEtapa })[];
+  etapas: EtapaExtendida[];
   percentualConcluido: number;
   isExpanded: boolean;
+}
+
+interface ApprovalModalData {
+  etapas: EtapaExtendida[];
+  selectedEtapaId?: string;
+  item: TakeoffItem;
+  criterio?: CriterioMedicao;
 }
 
 interface ColumnFilter {
@@ -47,6 +66,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [etapasError, setEtapasError] = useState<string | null>(null);
+  const [approvalModal, setApprovalModal] = useState<ApprovalModalData | null>(null);
 
   useEffect(() => {
     loadItens({ mapaId });
@@ -65,7 +85,20 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
         const supabase = (await import('../../../services/supabase')).supabase;
         
         let vinculos: { item_id: string; criterio_id: string }[] = [];
-        let etapasItem: { id: string; item_id: string; etapa_id: string; concluido: boolean; data_conclusao?: string; updated_at?: string }[] = [];
+        let etapasItem: { 
+          id: string; 
+          item_id: string; 
+          etapa_id: string; 
+          concluido: boolean; 
+          data_conclusao?: string; 
+          updated_at?: string;
+          data_inicio?: string;
+          data_termino?: string;
+          data_avanco?: string;
+          data_aprovacao?: string;
+          usuario_avanco_id?: string;
+          usuario_aprovacao_id?: string;
+        }[] = [];
         
         if (itemIds.length > 0) {
           const BATCH_SIZE = 50;
@@ -107,7 +140,18 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
           criterioIds.add(v.criterio_id);
         }
 
-        const etapasItemMap = new Map<string, Map<string, { concluido: boolean; id: string; dataConclusao?: Date; updatedAt?: Date }>>();
+        const etapasItemMap = new Map<string, Map<string, { 
+          concluido: boolean; 
+          id: string; 
+          dataConclusao?: Date; 
+          updatedAt?: Date;
+          dataInicio?: Date;
+          dataTermino?: Date;
+          dataAvanco?: Date;
+          dataAprovacao?: Date;
+          usuarioAvancoId?: string;
+          usuarioAprovacaoId?: string;
+        }>>();
         for (const e of etapasItem) {
           if (!etapasItemMap.has(e.item_id)) {
             etapasItemMap.set(e.item_id, new Map());
@@ -117,12 +161,36 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
             id: e.id,
             dataConclusao: e.data_conclusao ? new Date(e.data_conclusao) : undefined,
             updatedAt: e.updated_at ? new Date(e.updated_at) : undefined,
+            dataInicio: e.data_inicio ? new Date(e.data_inicio) : undefined,
+            dataTermino: e.data_termino ? new Date(e.data_termino) : undefined,
+            dataAvanco: e.data_avanco ? new Date(e.data_avanco) : undefined,
+            dataAprovacao: e.data_aprovacao ? new Date(e.data_aprovacao) : undefined,
+            usuarioAvancoId: e.usuario_avanco_id,
+            usuarioAprovacaoId: e.usuario_aprovacao_id,
           });
         }
 
         let criteriosMap = new Map<string, CriterioMedicao>();
         let etapasCriterioMap = new Map<string, CriterioMedicaoEtapa[]>();
         
+        const allUserIds = new Set<string>();
+        for (const e of etapasItem) {
+          if (e.usuario_avanco_id) allUserIds.add(e.usuario_avanco_id);
+          if (e.usuario_aprovacao_id) allUserIds.add(e.usuario_aprovacao_id);
+        }
+
+        let usersMap = new Map<string, string>();
+        if (allUserIds.size > 0) {
+          const { data: usersData } = await supabase
+            .from('usuarios')
+            .select('id, nome')
+            .in('id', Array.from(allUserIds));
+          
+          for (const u of usersData || []) {
+            usersMap.set(u.id, u.nome);
+          }
+        }
+
         if (criterioIds.size > 0) {
           const criterioIdArray = Array.from(criterioIds);
           const [criteriosResult, etapasCriterioResult] = await Promise.all([
@@ -170,6 +238,12 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
               dataConclusao: status?.dataConclusao,
               createdAt: new Date(),
               updatedAt: status?.updatedAt || new Date(),
+              dataInicio: status?.dataInicio,
+              dataTermino: status?.dataTermino,
+              dataAvanco: status?.dataAvanco,
+              dataAprovacao: status?.dataAprovacao,
+              usuarioAvanco: status?.usuarioAvancoId ? { id: status.usuarioAvancoId, nome: usersMap.get(status.usuarioAvancoId) || 'Usuário' } : undefined,
+              usuarioAprovacao: status?.usuarioAprovacaoId ? { id: status.usuarioAprovacaoId, nome: usersMap.get(status.usuarioAprovacaoId) || 'Usuário' } : undefined,
               etapa,
             };
           });
@@ -486,8 +560,17 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
               <th className="p-2 text-left font-medium theme-text" style={{ width: 100 }}>
                 % Concluído
               </th>
-              <th className="p-2 text-center font-medium theme-text" style={{ width: 90 }}>
-                Data
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 85 }}>
+                Início
+              </th>
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 85 }}>
+                Término
+              </th>
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 85 }}>
+                Avanço
+              </th>
+              <th className="p-2 text-center font-medium theme-text" style={{ width: 85 }}>
+                Aprovação
               </th>
               <th className="p-2 text-center font-medium theme-text" style={{ width: 60 }}>
                 Ação
@@ -528,13 +611,16 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                 <th className="p-1"></th>
                 <th className="p-1"></th>
                 <th className="p-1"></th>
+                <th className="p-1"></th>
+                <th className="p-1"></th>
+                <th className="p-1"></th>
               </tr>
             )}
           </thead>
           <tbody>
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 6} className="p-8 text-center theme-text-secondary">
+                <td colSpan={columns.length + 9} className="p-8 text-center theme-text-secondary">
                   Nenhum item encontrado
                 </td>
               </tr>
@@ -614,18 +700,50 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                     </td>
                     <td className="p-2 text-center theme-text-secondary text-xs" onClick={() => toggleExpand(itemState.item.id)}>
                       {(() => {
-                        const etapasConcluidas = itemState.etapas.filter(e => e.concluido && e.dataConclusao);
-                        if (etapasConcluidas.length === 0) return '-';
-                        const datas = etapasConcluidas.map(e => e.dataConclusao!.getTime());
-                        const minDate = new Date(Math.min(...datas));
-                        const maxDate = new Date(Math.max(...datas));
-                        if (minDate.getTime() === maxDate.getTime()) {
-                          return minDate.toLocaleDateString('pt-BR');
-                        }
-                        return `${minDate.toLocaleDateString('pt-BR')} - ${maxDate.toLocaleDateString('pt-BR')}`;
+                        const datas = itemState.etapas.filter(e => e.dataInicio).map(e => e.dataInicio!.getTime());
+                        if (datas.length === 0) return '-';
+                        return new Date(Math.min(...datas)).toLocaleDateString('pt-BR');
                       })()}
                     </td>
-                    <td className="p-2"></td>
+                    <td className="p-2 text-center theme-text-secondary text-xs" onClick={() => toggleExpand(itemState.item.id)}>
+                      {(() => {
+                        const datas = itemState.etapas.filter(e => e.dataTermino).map(e => e.dataTermino!.getTime());
+                        if (datas.length === 0) return '-';
+                        return new Date(Math.max(...datas)).toLocaleDateString('pt-BR');
+                      })()}
+                    </td>
+                    <td className="p-2 text-center theme-text-secondary text-xs" onClick={() => toggleExpand(itemState.item.id)}>
+                      {(() => {
+                        const datas = itemState.etapas.filter(e => e.dataAvanco).map(e => e.dataAvanco!.getTime());
+                        if (datas.length === 0) return '-';
+                        return new Date(Math.max(...datas)).toLocaleDateString('pt-BR');
+                      })()}
+                    </td>
+                    <td className="p-2 text-center theme-text-secondary text-xs" onClick={() => toggleExpand(itemState.item.id)}>
+                      {(() => {
+                        const datas = itemState.etapas.filter(e => e.dataAprovacao).map(e => e.dataAprovacao!.getTime());
+                        if (datas.length === 0) return '-';
+                        return new Date(Math.max(...datas)).toLocaleDateString('pt-BR');
+                      })()}
+                    </td>
+                    <td className="p-2 text-center">
+                      {itemState.etapas.length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setApprovalModal({
+                              etapas: itemState.etapas,
+                              item: itemState.item,
+                              criterio: itemState.criterio,
+                            });
+                          }}
+                          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          title="Ver fluxo de aprovação"
+                        >
+                          <Eye className="w-4 h-4 theme-text-secondary" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                   {itemState.isExpanded && itemState.etapas.length > 0 && (
                     <>
@@ -669,34 +787,53 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                               {etapaState.etapa?.percentual}%
                             </td>
                             <td className="p-2 text-center theme-text-secondary text-xs">
-                              {etapaState.dataConclusao 
-                                ? etapaState.dataConclusao.toLocaleDateString('pt-BR')
-                                : etapaState.updatedAt && etapaState.concluido
-                                  ? etapaState.updatedAt.toLocaleDateString('pt-BR')
-                                  : '-'}
+                              {etapaState.dataInicio?.toLocaleDateString('pt-BR') || '-'}
+                            </td>
+                            <td className="p-2 text-center theme-text-secondary text-xs">
+                              {etapaState.dataTermino?.toLocaleDateString('pt-BR') || '-'}
+                            </td>
+                            <td className="p-2 text-center theme-text-secondary text-xs">
+                              {etapaState.dataAvanco?.toLocaleDateString('pt-BR') || '-'}
+                            </td>
+                            <td className="p-2 text-center theme-text-secondary text-xs">
+                              {etapaState.dataAprovacao?.toLocaleDateString('pt-BR') || '-'}
                             </td>
                             <td className="p-2">
-                              <button
-                                onClick={() => handleToggleEtapa(itemState.item.id, etapaState.etapaId)}
-                                disabled={isUpdating}
-                                className={`flex items-center gap-1 px-3 py-1 text-xs rounded-full transition-colors ${
-                                  etapaState.concluido
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                              >
-                                {etapaState.concluido ? (
-                                  <>
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Concluída
-                                  </>
-                                ) : (
-                                  <>
-                                    <Circle className="w-3 h-3" />
-                                    Pendente
-                                  </>
-                                )}
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleToggleEtapa(itemState.item.id, etapaState.etapaId)}
+                                  disabled={isUpdating}
+                                  className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                                    etapaState.concluido
+                                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {etapaState.concluido ? (
+                                    <>
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      Concluída
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Circle className="w-3 h-3" />
+                                      Pendente
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => setApprovalModal({
+                                    etapas: itemState.etapas,
+                                    selectedEtapaId: etapaState.etapaId,
+                                    item: itemState.item,
+                                    criterio: itemState.criterio,
+                                  })}
+                                  className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                  title="Ver fluxo de aprovação"
+                                >
+                                  <Eye className="w-3 h-3 theme-text-secondary" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -709,6 +846,117 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
           </tbody>
         </table>
       </div>
+
+      {approvalModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setApprovalModal(null)}
+        >
+          <div 
+            className="rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-auto"
+            style={{ backgroundColor: 'var(--color-surface)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+              <h3 className="text-lg font-semibold theme-text">
+                Fluxo de Aprovação
+              </h3>
+              <button
+                onClick={() => setApprovalModal(null)}
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-5 h-5 theme-text" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                <p className="text-xs theme-text-secondary mb-1">Item</p>
+                <p className="font-medium theme-text">{approvalModal.item.tag}</p>
+                <p className="text-sm theme-text-secondary">{approvalModal.item.descricao}</p>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium theme-text">Histórico de Aprovação por Etapa</h4>
+                
+                {approvalModal.etapas.map((etapa) => (
+                  <div 
+                    key={etapa.etapaId} 
+                    className={`p-3 rounded-lg border ${
+                      approvalModal.selectedEtapaId === etapa.etapaId 
+                        ? 'border-blue-500' 
+                        : ''
+                    }`}
+                    style={{ 
+                      backgroundColor: 'var(--color-surface-secondary)',
+                      borderColor: approvalModal.selectedEtapaId !== etapa.etapaId ? 'var(--color-border)' : undefined,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-xs px-2 py-0.5 rounded mr-2" style={{ backgroundColor: 'var(--color-border)' }}>
+                          Etapa {etapa.etapa?.numeroEtapa}
+                        </span>
+                        <span className="text-sm font-medium theme-text">{etapa.etapa?.descritivo}</span>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        etapa.concluido 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {etapa.concluido ? 'Concluída' : 'Pendente'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-surface)' }}>
+                        <p className="theme-text-secondary">Início (Produção)</p>
+                        <p className={`font-medium ${etapa.dataInicio ? 'text-blue-600' : 'theme-text-secondary'}`}>
+                          {etapa.dataInicio?.toLocaleDateString('pt-BR') || '-'}
+                        </p>
+                      </div>
+                      <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-surface)' }}>
+                        <p className="theme-text-secondary">Término (Produção)</p>
+                        <p className={`font-medium ${etapa.dataTermino ? 'text-blue-600' : 'theme-text-secondary'}`}>
+                          {etapa.dataTermino?.toLocaleDateString('pt-BR') || '-'}
+                        </p>
+                      </div>
+                      <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-surface)' }}>
+                        <p className="theme-text-secondary">Avanço (Planejamento)</p>
+                        <p className={`font-medium ${etapa.dataAvanco ? 'text-green-600' : 'theme-text-secondary'}`}>
+                          {etapa.dataAvanco?.toLocaleDateString('pt-BR') || '-'}
+                        </p>
+                        {etapa.usuarioAvanco && (
+                          <p className="theme-text-secondary text-[10px]">Por: {etapa.usuarioAvanco.nome}</p>
+                        )}
+                      </div>
+                      <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-surface)' }}>
+                        <p className="theme-text-secondary">Aprovação (Fiscalização)</p>
+                        <p className={`font-medium ${etapa.dataAprovacao ? 'text-green-600' : 'theme-text-secondary'}`}>
+                          {etapa.dataAprovacao?.toLocaleDateString('pt-BR') || '-'}
+                        </p>
+                        {etapa.usuarioAprovacao && (
+                          <p className="theme-text-secondary text-[10px]">Por: {etapa.usuarioAprovacao.nome}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end p-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <button
+                onClick={() => setApprovalModal(null)}
+                className="px-4 py-2 text-sm rounded-lg theme-text hover:opacity-80 transition-colors"
+                style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

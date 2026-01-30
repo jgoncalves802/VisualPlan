@@ -200,6 +200,12 @@ export interface TakeoffItemEtapa {
   dataConclusao?: Date;
   concluidoPor?: string;
   observacoes?: string;
+  dataInicio?: Date;
+  dataTermino?: Date;
+  dataAvanco?: Date;
+  dataAprovacao?: Date;
+  usuarioAvancoId?: string;
+  usuarioAprovacaoId?: string;
   createdAt: Date;
   updatedAt: Date;
   etapa?: CriterioMedicaoEtapa;
