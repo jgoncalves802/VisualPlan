@@ -519,12 +519,20 @@ export const takeoffItemEtapasService = {
     userProfile: PerfilAcesso,
     percentualFisico?: number
   ): Promise<{ success: boolean; error?: string }> {
+    console.log('[takeoffItemEtapasService] executeWorkflowAction called:', { etapaId, action, usuarioId, userProfile, percentualFisico });
 
-    const { data: etapaData } = await supabase
+    const { data: etapaData, error: fetchError } = await supabase
       .from('takeoff_item_etapas')
       .select('workflow_status')
       .eq('id', etapaId)
       .single();
+    
+    if (fetchError) {
+      console.error('[takeoffItemEtapasService] Error fetching etapa:', fetchError);
+      return { success: false, error: `Erro ao buscar etapa: ${fetchError.message}` };
+    }
+    
+    console.log('[takeoffItemEtapasService] Current etapa data:', etapaData);
     
     const currentStatus = (etapaData?.workflow_status as WorkflowStatus) || 'pendente';
     
@@ -621,15 +629,19 @@ export const takeoffItemEtapasService = {
       updates.observacoes = observacao;
     }
     
+    console.log('[takeoffItemEtapasService] Updating etapa with:', updates);
+    
     const { error } = await supabase
       .from('takeoff_item_etapas')
       .update(updates)
       .eq('id', etapaId);
     
     if (error) {
-      console.error('Erro ao executar ação de workflow:', error);
+      console.error('[takeoffItemEtapasService] Error updating etapa:', error);
       return { success: false, error: error.message };
     }
+    
+    console.log('[takeoffItemEtapasService] Update successful');
     
     const newStatus = updates.workflow_status as WorkflowStatus;
     await supabase

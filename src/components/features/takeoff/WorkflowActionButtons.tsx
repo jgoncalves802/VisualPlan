@@ -150,11 +150,15 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
   const validActions = useMemo(() => {
     const baseActions = takeoffItemEtapasService.getValidWorkflowActions(status);
     
-    return baseActions.filter(action => {
+    const filteredActions = baseActions.filter(action => {
       const check = workflowPermissionsService.canExecuteAction(action, userProfile);
       return check.allowed;
     });
-  }, [status, userProfile]);
+    
+    console.log('[WorkflowActionButtons] status:', status, 'etapaId:', etapaId, 'userProfile:', userProfile, 'baseActions:', baseActions, 'validActions:', filteredActions);
+    
+    return filteredActions;
+  }, [status, userProfile, etapaId]);
 
   const checkPermissionAndShowConfirm = (action: WorkflowAction) => {
     const check = workflowPermissionsService.validateWorkflowTransition(status, action, userProfile);
@@ -167,6 +171,8 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
   };
 
   const handleAction = async (action: WorkflowAction) => {
+    console.log('[WorkflowActionButtons] handleAction called:', action, 'etapaId:', etapaId, 'itemId:', itemId, 'criterioEtapaId:', criterioEtapaId);
+    
     const config = actionConfigs[action];
     if (config.requiresObservation && !observacao.trim()) {
       setError('O motivo é obrigatório');
@@ -180,6 +186,7 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
       let targetEtapaId = etapaId;
 
       if (!targetEtapaId && itemId && criterioEtapaId) {
+        console.log('[WorkflowActionButtons] Creating etapa record for itemId:', itemId, 'criterioEtapaId:', criterioEtapaId);
         const created = await takeoffItemEtapasService.createOrUpdateEtapa({
           itemId,
           etapaId: criterioEtapaId,
@@ -187,6 +194,7 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
         });
         if (created?.id) {
           targetEtapaId = created.id;
+          console.log('[WorkflowActionButtons] Created etapa record:', targetEtapaId);
         } else {
           throw new Error('Não foi possível criar o registro de etapa');
         }
@@ -196,6 +204,7 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
         throw new Error('ID da etapa não encontrado');
       }
 
+      console.log('[WorkflowActionButtons] Executing workflow action:', action, 'on etapaId:', targetEtapaId);
       const result = await takeoffItemEtapasService.executeWorkflowAction(
         targetEtapaId,
         action,
@@ -203,6 +212,8 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
         observacao || undefined,
         userProfile
       );
+      
+      console.log('[WorkflowActionButtons] Workflow action result:', result);
 
       if (result.success) {
         setShowConfirm(null);
@@ -212,6 +223,7 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
         setError(result.error || 'Erro ao executar ação');
       }
     } catch (err) {
+      console.error('[WorkflowActionButtons] Error:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setIsLoading(false);
