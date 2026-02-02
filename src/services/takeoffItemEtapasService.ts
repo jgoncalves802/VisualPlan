@@ -631,17 +631,24 @@ export const takeoffItemEtapasService = {
     
     console.log('[takeoffItemEtapasService] Updating etapa with:', updates);
     
-    const { error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('takeoff_item_etapas')
       .update(updates)
-      .eq('id', etapaId);
+      .eq('id', etapaId)
+      .select()
+      .single();
     
     if (error) {
       console.error('[takeoffItemEtapasService] Error updating etapa:', error);
       return { success: false, error: error.message };
     }
     
-    console.log('[takeoffItemEtapasService] Update successful');
+    if (!updatedData) {
+      console.error('[takeoffItemEtapasService] No record found to update with id:', etapaId);
+      return { success: false, error: 'Registro não encontrado para atualização' };
+    }
+    
+    console.log('[takeoffItemEtapasService] Update successful, updated data:', updatedData);
     
     const newStatus = updates.workflow_status as WorkflowStatus;
     await supabase

@@ -233,6 +233,10 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
   if (status === 'aprovado') {
     return <WorkflowStatusBadge status={status} />;
   }
+  
+  if (validActions.length === 0) {
+    console.warn('[WorkflowActionButtons] No valid actions for status:', status, 'userProfile:', userProfile);
+  }
 
   return (
     <>
