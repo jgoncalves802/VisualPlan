@@ -218,6 +218,7 @@ export interface TakeoffItemEtapa {
   fiscalizadorId?: string;
   dataFiscalizacao?: Date;
   motivoRejeicao?: string;
+  percentualFisico?: number;
   createdAt: Date;
   updatedAt: Date;
   etapa?: CriterioMedicaoEtapa;

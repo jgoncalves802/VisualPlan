@@ -33,6 +33,7 @@ const mapItemEtapaFromDB = (row: Record<string, unknown>): TakeoffItemEtapa => (
   fiscalizadorId: row.fiscalizador_id as string | undefined,
   dataFiscalizacao: row.data_fiscalizacao ? new Date(row.data_fiscalizacao as string) : undefined,
   motivoRejeicao: row.motivo_rejeicao as string | undefined,
+  percentualFisico: row.percentual_fisico ? Number(row.percentual_fisico) : undefined,
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
@@ -412,25 +413,67 @@ export const takeoffItemEtapasService = {
       return { initialized: 0, skipped: 0 };
     }
 
-    const { data: existingEtapas } = await supabase
+    if (vinculos.length === 0) {
+      return { initialized: 0, skipped: 0 };
+    }
+
+    const criterioIds = [...new Set(vinculos.map(v => v.criterio_id))];
+    const { data: allCriterioEtapas } = await supabase
+      .from('criterios_medicao_etapas')
+      .select('id, criterio_id')
+      .in('criterio_id', criterioIds);
+    
+    const etapasPorCriterio = new Map<string, string[]>();
+    for (const etapa of allCriterioEtapas || []) {
+      const existing = etapasPorCriterio.get(etapa.criterio_id) || [];
+      existing.push(etapa.id);
+      etapasPorCriterio.set(etapa.criterio_id, existing);
+    }
+
+    const { data: existingItemEtapas } = await supabase
       .from('takeoff_item_etapas')
-      .select('item_id');
+      .select('item_id, etapa_id');
     
-    const itemsComEtapas = new Set((existingEtapas || []).map(e => e.item_id));
+    const existingPairs = new Set(
+      (existingItemEtapas || []).map(e => `${e.item_id}|${e.etapa_id}`)
+    );
     
-    const itemsParaInicializar = vinculos
-      .filter(v => !itemsComEtapas.has(v.item_id))
-      .map(v => ({ itemId: v.item_id, criterioId: v.criterio_id }));
+    const etapasToInsert: Array<{ item_id: string; etapa_id: string; concluido: boolean }> = [];
     
-    if (itemsParaInicializar.length === 0) {
-      console.log('[takeoffItemEtapasService] Backfill: Todos os itens já têm etapas inicializadas');
-      return { initialized: 0, skipped: vinculos.length };
+    for (const vinculo of vinculos) {
+      const etapaIds = etapasPorCriterio.get(vinculo.criterio_id) || [];
+      for (const etapaId of etapaIds) {
+        const pair = `${vinculo.item_id}|${etapaId}`;
+        if (!existingPairs.has(pair)) {
+          etapasToInsert.push({
+            item_id: vinculo.item_id,
+            etapa_id: etapaId,
+            concluido: false,
+          });
+        }
+      }
     }
     
-    const initialized = await this.initializeEtapasForItemsBatch(itemsParaInicializar);
-    console.log(`[takeoffItemEtapasService] Backfill: ${initialized} etapas inicializadas, ${vinculos.length - itemsParaInicializar.length} itens já tinham etapas`);
+    if (etapasToInsert.length === 0) {
+      return { initialized: 0, skipped: vinculos.length };
+    }
+
+    const batchSize = 500;
+    let totalInserted = 0;
     
-    return { initialized, skipped: vinculos.length - itemsParaInicializar.length };
+    for (let i = 0; i < etapasToInsert.length; i += batchSize) {
+      const batch = etapasToInsert.slice(i, i + batchSize);
+      const { error: insertError } = await supabase
+        .from('takeoff_item_etapas')
+        .upsert(batch, { onConflict: 'item_id,etapa_id' });
+      
+      if (!insertError) {
+        totalInserted += batch.length;
+      }
+    }
+    
+    console.log(`[takeoffItemEtapasService] Backfill: ${totalInserted} etapas inicializadas`);
+    return { initialized: totalInserted, skipped: vinculos.length };
   },
 
   async getEtapasDisponiveisPorMapa(mapaId: string): Promise<Map<number, string>> {
@@ -473,7 +516,8 @@ export const takeoffItemEtapasService = {
     action: 'programar' | 'aceitar_programacao' | 'iniciar_producao' | 'terminar_producao' | 'registrar_avanco' | 'aprovar_fiscalizacao' | 'rejeitar',
     usuarioId: string,
     observacao: string | undefined,
-    userProfile: PerfilAcesso
+    userProfile: PerfilAcesso,
+    percentualFisico?: number
   ): Promise<{ success: boolean; error?: string }> {
 
     const { data: etapaData } = await supabase
@@ -546,6 +590,7 @@ export const takeoffItemEtapasService = {
           validador_id: usuarioId,
           data_validacao: now,
           workflow_status: 'avancado',
+          percentual_fisico: percentualFisico ?? 100,
         };
         break;
         
@@ -596,7 +641,7 @@ export const takeoffItemEtapasService = {
         status_novo: newStatus,
         usuario_id: usuarioId,
         observacoes: observacao || null,
-        percentual_fisico: action === 'registrar_avanco' ? 100 : null,
+        percentual_fisico: action === 'registrar_avanco' ? (percentualFisico ?? 100) : null,
       });
     
     return { success: true };
