@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -15,7 +15,9 @@ import { useTakeoffStore } from '../../../stores/takeoffStore';
 import { takeoffItemEtapasService } from '../../../services/takeoffItemEtapasService';
 import { criteriosMedicaoService } from '../../../services/criteriosMedicaoService';
 import type { TakeoffItem } from '../../../types/takeoff.types';
-import type { TakeoffItemEtapa, CriterioMedicaoEtapa, CriterioMedicao } from '../../../types/criteriosMedicao.types';
+import type { TakeoffItemEtapa, CriterioMedicaoEtapa, CriterioMedicao, WorkflowStatus } from '../../../types/criteriosMedicao.types';
+import { WorkflowActionButtons, WorkflowStatusBadge } from './WorkflowActionButtons';
+import { useAuthStore } from '../../../stores/authStore';
 
 interface TakeoffHierarchyGridProps {
   mapaId: string;
@@ -30,6 +32,7 @@ interface EtapaExtendida extends TakeoffItemEtapa {
   dataAprovacao?: Date;
   usuarioAvanco?: { id: string; nome: string };
   usuarioAprovacao?: { id: string; nome: string };
+  workflowStatus: WorkflowStatus;
 }
 
 interface ItemComEtapasState {
@@ -57,6 +60,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
   onBatchUpdate,
 }) => {
   const { itens, isLoadingItens, loadItens } = useTakeoffStore();
+  const { usuario } = useAuthStore();
 
   const [itemsComEtapas, setItemsComEtapas] = useState<ItemComEtapasState[]>([]);
   const [isLoadingEtapas, setIsLoadingEtapas] = useState(false);
@@ -98,6 +102,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
           data_aprovacao?: string;
           usuario_avanco_id?: string;
           usuario_aprovacao_id?: string;
+          workflow_status?: string;
         }[] = [];
         
         if (itemIds.length > 0) {
@@ -151,6 +156,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
           dataAprovacao?: Date;
           usuarioAvancoId?: string;
           usuarioAprovacaoId?: string;
+          workflowStatus?: WorkflowStatus;
         }>>();
         for (const e of etapasItem) {
           if (!etapasItemMap.has(e.item_id)) {
@@ -167,6 +173,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
             dataAprovacao: e.data_aprovacao ? new Date(e.data_aprovacao) : undefined,
             usuarioAvancoId: e.usuario_avanco_id,
             usuarioAprovacaoId: e.usuario_aprovacao_id,
+            workflowStatus: (e.workflow_status || 'pendente') as WorkflowStatus,
           });
         }
 
@@ -244,6 +251,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
               dataAprovacao: status?.dataAprovacao,
               usuarioAvanco: status?.usuarioAvancoId ? { id: status.usuarioAvancoId, nome: usersMap.get(status.usuarioAvancoId) || 'Usuário' } : undefined,
               usuarioAprovacao: status?.usuarioAprovacaoId ? { id: status.usuarioAprovacaoId, nome: usersMap.get(status.usuarioAprovacaoId) || 'Usuário' } : undefined,
+              workflowStatus: (status?.workflowStatus || 'pendente') as WorkflowStatus,
               etapa,
             };
           });
@@ -369,36 +377,6 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
       setSelectedEtapaIds(allEtapaKeys);
     }
   };
-
-  const handleToggleEtapa = useCallback(async (itemId: string, etapaId: string) => {
-    setIsUpdating(true);
-    try {
-      await takeoffItemEtapasService.toggleEtapa(itemId, etapaId);
-      await takeoffItemEtapasService.atualizarPercentualItem(itemId);
-
-      setItemsComEtapas((prev) =>
-        prev.map((itemState) => {
-          if (itemState.item.id !== itemId) return itemState;
-
-          const updatedEtapas = itemState.etapas.map((e) =>
-            e.etapaId === etapaId ? { ...e, concluido: !e.concluido } : e
-          );
-
-          const totalPercentual = updatedEtapas.reduce((sum, e) => sum + (e.etapa?.percentual || 0), 0);
-          const percentualDone = updatedEtapas
-            .filter((e) => e.concluido)
-            .reduce((sum, e) => sum + (e.etapa?.percentual || 0), 0);
-          const percentualConcluido = totalPercentual > 0 ? Math.round((percentualDone / totalPercentual) * 100) : 0;
-
-          return { ...itemState, etapas: updatedEtapas, percentualConcluido };
-        })
-      );
-    } catch (error) {
-      console.error('Erro ao toggle etapa:', error);
-    } finally {
-      setIsUpdating(false);
-    }
-  }, []);
 
   const handleMarcarEtapaSelecionadas = async (concluido: boolean) => {
     if (selectedEtapaIds.size === 0) return;
@@ -800,27 +778,19 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                             </td>
                             <td className="p-2">
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => handleToggleEtapa(itemState.item.id, etapaState.etapaId)}
-                                  disabled={isUpdating}
-                                  className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
-                                    etapaState.concluido
-                                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                  }`}
-                                >
-                                  {etapaState.concluido ? (
-                                    <>
-                                      <CheckCircle2 className="w-3 h-3" />
-                                      Concluída
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Circle className="w-3 h-3" />
-                                      Pendente
-                                    </>
-                                  )}
-                                </button>
+                                {usuario?.id ? (
+                                  <WorkflowActionButtons
+                                    etapaId={etapaState.id || ''}
+                                    itemId={itemState.item.id}
+                                    criterioEtapaId={etapaState.etapaId}
+                                    status={etapaState.workflowStatus}
+                                    usuarioId={usuario.id}
+                                    onActionComplete={() => loadItens({ mapaId })}
+                                    compact={true}
+                                  />
+                                ) : (
+                                  <WorkflowStatusBadge status={etapaState.workflowStatus} />
+                                )}
                                 <button
                                   onClick={() => setApprovalModal({
                                     etapas: itemState.etapas,
