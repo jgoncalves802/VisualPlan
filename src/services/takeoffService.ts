@@ -70,6 +70,8 @@ const mapItemFromDB = (row: Record<string, unknown>): TakeoffItem => ({
   id: row.id as string,
   mapaId: row.mapa_id as string,
   documentoId: row.documento_id as string | undefined,
+  activeCode: row.active_code as string | undefined,
+  tipoRecurso: (row.tipo_recurso as TakeoffItem['tipoRecurso']) || 'material',
   itemPq: row.item_pq as string | undefined,
   area: row.area as string | undefined,
   edificacao: row.edificacao as string | undefined,
@@ -852,6 +854,8 @@ export const takeoffService = {
       .insert({
         mapa_id: dto.mapaId,
         documento_id: dto.documentoId,
+        active_code: dto.activeCode,
+        tipo_recurso: dto.tipoRecurso || 'material',
         item_pq: dto.itemPq,
         area: dto.area,
         edificacao: dto.edificacao,
@@ -888,6 +892,8 @@ export const takeoffService = {
     const rows = itens.map((dto) => ({
       mapa_id: dto.mapaId,
       documento_id: dto.documentoId,
+      active_code: dto.activeCode,
+      tipo_recurso: dto.tipoRecurso || 'material',
       item_pq: dto.itemPq,
       area: dto.area,
       edificacao: dto.edificacao,
@@ -969,6 +975,8 @@ export const takeoffService = {
   async updateItem(id: string, dto: UpdateItemDTO): Promise<TakeoffItem | null> {
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (dto.documentoId !== undefined) updates.documento_id = dto.documentoId;
+    if (dto.activeCode !== undefined) updates.active_code = dto.activeCode;
+    if (dto.tipoRecurso !== undefined) updates.tipo_recurso = dto.tipoRecurso;
     if (dto.itemPq !== undefined) updates.item_pq = dto.itemPq;
     if (dto.area !== undefined) updates.area = dto.area;
     if (dto.edificacao !== undefined) updates.edificacao = dto.edificacao;

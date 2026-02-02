@@ -192,6 +192,8 @@ export interface CriterioMedicaoFilter {
   busca?: string;
 }
 
+export type WorkflowStatus = 'pendente' | 'programado' | 'em_producao' | 'producao_concluida' | 'avancado' | 'aprovado' | 'rejeitado';
+
 export interface TakeoffItemEtapa {
   id: string;
   itemId: string;
@@ -204,11 +206,25 @@ export interface TakeoffItemEtapa {
   dataTermino?: Date;
   dataAvanco?: Date;
   dataAprovacao?: Date;
+  usuarioInicioId?: string;
+  usuarioTerminoId?: string;
   usuarioAvancoId?: string;
   usuarioAprovacaoId?: string;
+  workflowStatus: WorkflowStatus;
+  proponenteId?: string;
+  dataProposta?: Date;
+  validadorId?: string;
+  dataValidacao?: Date;
+  fiscalizadorId?: string;
+  dataFiscalizacao?: Date;
+  motivoRejeicao?: string;
   createdAt: Date;
   updatedAt: Date;
   etapa?: CriterioMedicaoEtapa;
+  usuarioInicio?: { id: string; nome: string };
+  usuarioTermino?: { id: string; nome: string };
+  usuarioAvanco?: { id: string; nome: string };
+  usuarioAprovacao?: { id: string; nome: string };
 }
 
 export interface CreateItemEtapaDTO {
@@ -218,9 +234,25 @@ export interface CreateItemEtapaDTO {
   observacoes?: string;
 }
 
+export type WorkflowAction = 
+  | 'programar'
+  | 'aceitar_programacao'
+  | 'iniciar_producao'
+  | 'terminar_producao'
+  | 'registrar_avanco'
+  | 'aprovar_fiscalizacao'
+  | 'rejeitar';
+
 export interface UpdateItemEtapaDTO {
   concluido?: boolean;
   observacoes?: string;
+  workflowAction?: WorkflowAction;
+  usuarioId?: string;
+  dataInicio?: Date;
+  dataTermino?: Date;
+  dataAvanco?: Date;
+  dataAprovacao?: Date;
+  motivoRejeicao?: string;
 }
 
 export interface ItemComEtapas {

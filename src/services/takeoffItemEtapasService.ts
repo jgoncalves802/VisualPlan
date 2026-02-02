@@ -5,6 +5,8 @@ import type {
   CriterioMedicaoEtapa,
 } from '../types/criteriosMedicao.types';
 
+import type { WorkflowStatus, WorkflowAction } from '../types/criteriosMedicao.types';
+
 const mapItemEtapaFromDB = (row: Record<string, unknown>): TakeoffItemEtapa => ({
   id: row.id as string,
   itemId: row.item_id as string,
@@ -13,6 +15,22 @@ const mapItemEtapaFromDB = (row: Record<string, unknown>): TakeoffItemEtapa => (
   dataConclusao: row.data_conclusao ? new Date(row.data_conclusao as string) : undefined,
   concluidoPor: row.concluido_por as string | undefined,
   observacoes: row.observacoes as string | undefined,
+  dataInicio: row.data_inicio ? new Date(row.data_inicio as string) : undefined,
+  dataTermino: row.data_termino ? new Date(row.data_termino as string) : undefined,
+  dataAvanco: row.data_avanco ? new Date(row.data_avanco as string) : undefined,
+  dataAprovacao: row.data_aprovacao ? new Date(row.data_aprovacao as string) : undefined,
+  usuarioInicioId: row.usuario_inicio_id as string | undefined,
+  usuarioTerminoId: row.usuario_termino_id as string | undefined,
+  usuarioAvancoId: row.usuario_avanco_id as string | undefined,
+  usuarioAprovacaoId: row.usuario_aprovacao_id as string | undefined,
+  workflowStatus: (row.workflow_status as WorkflowStatus) || 'pendente',
+  proponenteId: row.proponente_id as string | undefined,
+  dataProposta: row.data_proposta ? new Date(row.data_proposta as string) : undefined,
+  validadorId: row.validador_id as string | undefined,
+  dataValidacao: row.data_validacao ? new Date(row.data_validacao as string) : undefined,
+  fiscalizadorId: row.fiscalizador_id as string | undefined,
+  dataFiscalizacao: row.data_fiscalizacao ? new Date(row.data_fiscalizacao as string) : undefined,
+  motivoRejeicao: row.motivo_rejeicao as string | undefined,
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
 });
@@ -110,6 +128,7 @@ export const takeoffItemEtapasService = {
         itemId,
         etapaId: etapa.id,
         concluido: false,
+        workflowStatus: 'pendente' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
         etapa,
@@ -414,5 +433,199 @@ export const takeoffItemEtapasService = {
     }
 
     return result;
+  },
+
+  async executeWorkflowAction(
+    etapaId: string,
+    action: 'programar' | 'aceitar_programacao' | 'iniciar_producao' | 'terminar_producao' | 'registrar_avanco' | 'aprovar_fiscalizacao' | 'rejeitar',
+    usuarioId: string,
+    observacao?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const now = new Date().toISOString();
+    
+    let updates: Record<string, unknown> = { updated_at: now };
+    
+    switch (action) {
+      case 'programar':
+        updates = {
+          ...updates,
+          workflow_status: 'programado',
+          proponente_id: usuarioId,
+          data_proposta: now,
+        };
+        break;
+
+      case 'aceitar_programacao':
+        updates = {
+          ...updates,
+          workflow_status: 'programado',
+          validador_id: usuarioId,
+          data_validacao: now,
+        };
+        break;
+        
+      case 'iniciar_producao':
+        updates = {
+          ...updates,
+          data_inicio: now,
+          usuario_inicio_id: usuarioId,
+          workflow_status: 'em_producao',
+        };
+        break;
+        
+      case 'terminar_producao':
+        updates = {
+          ...updates,
+          data_termino: now,
+          usuario_termino_id: usuarioId,
+          workflow_status: 'producao_concluida',
+        };
+        break;
+        
+      case 'registrar_avanco':
+        updates = {
+          ...updates,
+          data_avanco: now,
+          usuario_avanco_id: usuarioId,
+          validador_id: usuarioId,
+          data_validacao: now,
+          workflow_status: 'avancado',
+        };
+        break;
+        
+      case 'aprovar_fiscalizacao':
+        updates = {
+          ...updates,
+          data_aprovacao: now,
+          usuario_aprovacao_id: usuarioId,
+          fiscalizador_id: usuarioId,
+          data_fiscalizacao: now,
+          workflow_status: 'aprovado',
+          concluido: true,
+          data_conclusao: now,
+          concluido_por: usuarioId,
+        };
+        break;
+        
+      case 'rejeitar':
+        updates = {
+          ...updates,
+          workflow_status: 'rejeitado',
+          motivo_rejeicao: observacao,
+        };
+        break;
+    }
+    
+    if (observacao && action !== 'rejeitar') {
+      updates.observacoes = observacao;
+    }
+    
+    const { error } = await supabase
+      .from('takeoff_item_etapas')
+      .update(updates)
+      .eq('id', etapaId);
+    
+    if (error) {
+      console.error('Erro ao executar ação de workflow:', error);
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true };
+  },
+
+  async getWorkflowHistory(etapaId: string): Promise<{
+    dataProposta?: Date;
+    proponente?: string;
+    dataValidacao?: Date;
+    validador?: string;
+    dataInicio?: Date;
+    usuarioInicio?: string;
+    dataTermino?: Date;
+    usuarioTermino?: string;
+    dataAvanco?: Date;
+    usuarioAvanco?: string;
+    dataAprovacao?: Date;
+    usuarioAprovacao?: string;
+    fiscalizador?: string;
+    dataFiscalizacao?: Date;
+    status: WorkflowStatus;
+    motivoRejeicao?: string;
+  } | null> {
+    const { data, error } = await supabase
+      .from('takeoff_item_etapas')
+      .select(`
+        proponente_id, data_proposta,
+        validador_id, data_validacao,
+        fiscalizador_id, data_fiscalizacao,
+        data_inicio, usuario_inicio_id,
+        data_termino, usuario_termino_id,
+        data_avanco, usuario_avanco_id,
+        data_aprovacao, usuario_aprovacao_id,
+        workflow_status, motivo_rejeicao
+      `)
+      .eq('id', etapaId)
+      .single();
+    
+    if (error || !data) return null;
+    
+    const userIds = [
+      data.proponente_id,
+      data.validador_id,
+      data.fiscalizador_id,
+      data.usuario_inicio_id,
+      data.usuario_termino_id,
+      data.usuario_avanco_id,
+      data.usuario_aprovacao_id,
+    ].filter(Boolean);
+    
+    let usersMap: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: users } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .in('id', userIds);
+      
+      usersMap = (users || []).reduce((acc, u) => {
+        acc[u.id] = u.nome;
+        return acc;
+      }, {} as Record<string, string>);
+    }
+    
+    return {
+      dataProposta: data.data_proposta ? new Date(data.data_proposta) : undefined,
+      proponente: usersMap[data.proponente_id] || undefined,
+      dataValidacao: data.data_validacao ? new Date(data.data_validacao) : undefined,
+      validador: usersMap[data.validador_id] || undefined,
+      dataInicio: data.data_inicio ? new Date(data.data_inicio) : undefined,
+      usuarioInicio: usersMap[data.usuario_inicio_id] || undefined,
+      dataTermino: data.data_termino ? new Date(data.data_termino) : undefined,
+      usuarioTermino: usersMap[data.usuario_termino_id] || undefined,
+      dataAvanco: data.data_avanco ? new Date(data.data_avanco) : undefined,
+      usuarioAvanco: usersMap[data.usuario_avanco_id] || undefined,
+      dataAprovacao: data.data_aprovacao ? new Date(data.data_aprovacao) : undefined,
+      usuarioAprovacao: usersMap[data.usuario_aprovacao_id] || undefined,
+      fiscalizador: usersMap[data.fiscalizador_id] || undefined,
+      dataFiscalizacao: data.data_fiscalizacao ? new Date(data.data_fiscalizacao) : undefined,
+      status: (data.workflow_status as WorkflowStatus) || 'pendente',
+      motivoRejeicao: data.motivo_rejeicao || undefined,
+    };
+  },
+
+  getValidWorkflowActions(status: WorkflowStatus): WorkflowAction[] {
+    const validTransitions: Record<WorkflowStatus, WorkflowAction[]> = {
+      pendente: ['programar'],
+      programado: ['aceitar_programacao', 'iniciar_producao', 'rejeitar'],
+      em_producao: ['terminar_producao', 'rejeitar'],
+      producao_concluida: ['registrar_avanco', 'rejeitar'],
+      avancado: ['aprovar_fiscalizacao', 'rejeitar'],
+      aprovado: [],
+      rejeitado: ['programar'],
+    };
+    return validTransitions[status] || [];
+  },
+
+  isValidTransition(currentStatus: WorkflowStatus, action: WorkflowAction): boolean {
+    const validActions = this.getValidWorkflowActions(currentStatus);
+    return validActions.includes(action);
   },
 };

@@ -63,10 +63,14 @@ export interface TakeoffMapa {
   itensCount?: number;
 }
 
+export type TipoRecurso = 'labor' | 'non_labor' | 'material' | 'weighted';
+
 export interface TakeoffItem {
   id: string;
   mapaId: string;
   documentoId?: string;
+  activeCode?: string;
+  tipoRecurso: TipoRecurso;
   itemPq?: string;
   area?: string;
   edificacao?: string;
@@ -174,6 +178,8 @@ export interface UpdateMapaDTO {
 export interface CreateItemDTO {
   mapaId: string;
   documentoId?: string;
+  activeCode?: string;
+  tipoRecurso?: TipoRecurso;
   itemPq?: string;
   area?: string;
   edificacao?: string;
@@ -193,6 +199,8 @@ export interface CreateItemDTO {
 
 export interface UpdateItemDTO {
   documentoId?: string;
+  activeCode?: string;
+  tipoRecurso?: TipoRecurso;
   itemPq?: string;
   area?: string;
   edificacao?: string;

@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { LayoutShell } from './LayoutShell';
 import { useTemaStore } from '../../stores/temaStore';
+import { PrefetchIndicator } from '../ui/PrefetchIndicator';
 import { 
   LayoutDashboard, 
   KanbanSquare, 
@@ -84,15 +85,18 @@ export const AppLayout: React.FC = () => {
   const menuItems = menuGroups.flatMap(g => g.items);
 
   return (
-    <LayoutShell
-      menuItems={menuItems}
-      menuGroups={menuGroups}
-      title="VisionPlan"
-      logoLetter="V"
-      logoColor={tema.primary}
-      noPadding={true}
-    >
-      <Outlet />
-    </LayoutShell>
+    <>
+      <LayoutShell
+        menuItems={menuItems}
+        menuGroups={menuGroups}
+        title="VisionPlan"
+        logoLetter="V"
+        logoColor={tema.primary}
+        noPadding={true}
+      >
+        <Outlet />
+      </LayoutShell>
+      <PrefetchIndicator />
+    </>
   );
 };

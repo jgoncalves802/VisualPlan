@@ -5,6 +5,7 @@ import { useTemaStore } from '../stores/temaStore';
 import { CamadaGovernanca, PerfilAcesso } from '../types';
 import { Building2, Mail, Lock, LogIn } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import { prefetchUserData } from '../services/prefetchService';
 
 const isDevelopment = import.meta.env.DEV;
 
@@ -32,6 +33,7 @@ const LoginPage: React.FC = () => {
       updatedAt: new Date(),
     };
     login(devUsuario, 'dev-token');
+    prefetchUserData(devUsuario.empresaId, devUsuario.id);
     navigate('/dashboard');
   };
 
@@ -102,6 +104,7 @@ const LoginPage: React.FC = () => {
       };
 
       login(usuario, authData.session?.access_token || '');
+      prefetchUserData(usuario.empresaId, usuario.id);
       navigate('/dashboard');
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.');
