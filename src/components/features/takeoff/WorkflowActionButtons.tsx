@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Play,
   Square,
@@ -8,9 +8,12 @@ import {
   Loader2,
   CalendarCheck,
   ThumbsUp,
+  AlertCircle,
 } from 'lucide-react';
 import type { WorkflowStatus, WorkflowAction } from '../../../types/criteriosMedicao.types';
 import { takeoffItemEtapasService } from '../../../services/takeoffItemEtapasService';
+import { workflowPermissionsService } from '../../../services/workflowPermissionsService';
+import { PerfilAcesso } from '../../../types';
 
 interface WorkflowActionButtonsProps {
   etapaId: string;
@@ -19,6 +22,7 @@ interface WorkflowActionButtonsProps {
   status: WorkflowStatus;
   onActionComplete: () => void;
   usuarioId: string;
+  userProfile: PerfilAcesso;
   compact?: boolean;
 }
 
@@ -134,14 +138,33 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
   status,
   onActionComplete,
   usuarioId,
+  userProfile,
   compact = false,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState<WorkflowAction | null>(null);
   const [observacao, setObservacao] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
-  const validActions = takeoffItemEtapasService.getValidWorkflowActions(status);
+  const validActions = useMemo(() => {
+    const baseActions = takeoffItemEtapasService.getValidWorkflowActions(status);
+    
+    return baseActions.filter(action => {
+      const check = workflowPermissionsService.canExecuteAction(action, userProfile);
+      return check.allowed;
+    });
+  }, [status, userProfile]);
+
+  const checkPermissionAndShowConfirm = (action: WorkflowAction) => {
+    const check = workflowPermissionsService.validateWorkflowTransition(status, action, userProfile);
+    if (!check.allowed) {
+      setPermissionError(check.reason || 'Sem permissão para esta ação');
+      return;
+    }
+    setPermissionError(null);
+    setShowConfirm(action);
+  };
 
   const handleAction = async (action: WorkflowAction) => {
     const config = actionConfigs[action];
@@ -177,7 +200,8 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
         targetEtapaId,
         action,
         usuarioId,
-        observacao || undefined
+        observacao || undefined,
+        userProfile
       );
 
       if (result.success) {
@@ -200,36 +224,44 @@ export const WorkflowActionButtons: React.FC<WorkflowActionButtonsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-1 flex-wrap">
-        <WorkflowStatusBadge status={status} />
-        {validActions.filter(a => a !== 'rejeitar').map((action) => {
-          const config = actionConfigs[action];
-          return (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
+          <WorkflowStatusBadge status={status} />
+          {validActions.filter(a => a !== 'rejeitar').map((action) => {
+            const config = actionConfigs[action];
+            return (
+              <button
+                key={action}
+                onClick={() => checkPermissionAndShowConfirm(action)}
+                disabled={isLoading}
+                className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors ${config.color} ${config.bgColor} ${config.hoverBg}`}
+                title={config.label}
+              >
+                {compact ? config.icon : (
+                  <>
+                    {config.icon}
+                    {config.label}
+                  </>
+                )}
+              </button>
+            );
+          })}
+          {validActions.includes('rejeitar') && (
             <button
-              key={action}
-              onClick={() => setShowConfirm(action)}
+              onClick={() => checkPermissionAndShowConfirm('rejeitar')}
               disabled={isLoading}
-              className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors ${config.color} ${config.bgColor} ${config.hoverBg}`}
-              title={config.label}
+              className="flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors text-red-700 bg-red-100 hover:bg-red-200"
+              title="Rejeitar"
             >
-              {compact ? config.icon : (
-                <>
-                  {config.icon}
-                  {config.label}
-                </>
-              )}
+              <XCircle className="w-3 h-3" />
             </button>
-          );
-        })}
-        {validActions.includes('rejeitar') && (
-          <button
-            onClick={() => setShowConfirm('rejeitar')}
-            disabled={isLoading}
-            className="flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors text-red-700 bg-red-100 hover:bg-red-200"
-            title="Rejeitar"
-          >
-            <XCircle className="w-3 h-3" />
-          </button>
+          )}
+        </div>
+        {permissionError && (
+          <div className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            <AlertCircle className="w-3 h-3" />
+            {permissionError}
+          </div>
         )}
       </div>
 

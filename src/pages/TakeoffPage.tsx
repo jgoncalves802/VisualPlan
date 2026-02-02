@@ -21,6 +21,7 @@ import {
   Layers,
   Unlink,
   Save,
+  Database,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +30,7 @@ import { useTakeoffStore } from '../stores/takeoffStore';
 import { useEpsStore } from '../stores/epsStore';
 import { takeoffService } from '../services/takeoffService';
 import { exportarTemplateTakeoff } from '../services/exportService';
+import { takeoffResourceService } from '../services/takeoffResourceService';
 import TakeoffGrid from '../components/features/takeoff/TakeoffGrid';
 import TakeoffHierarchyGrid from '../components/features/takeoff/TakeoffHierarchyGrid';
 import TakeoffDashboard from '../components/features/takeoff/TakeoffDashboard';
@@ -321,6 +323,7 @@ const TakeoffPage: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'hierarchy'>('grid');
+  const [isSyncingResources, setIsSyncingResources] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -510,6 +513,41 @@ const TakeoffPage: React.FC = () => {
       loadDisciplinas(usuario.empresaId);
     }
     setEditingDisciplina(null);
+  };
+
+  const handleSyncToResources = async () => {
+    if (!selectedMapaId || !usuario?.empresaId) return;
+
+    setIsSyncingResources(true);
+    try {
+      const itens = await takeoffService.getItens({ mapaId: selectedMapaId });
+      const materiaisItems = itens.filter(i => i.tipoRecurso === 'material');
+      
+      if (materiaisItems.length === 0) {
+        toast.info('Nenhum item de material encontrado para sincronizar');
+        return;
+      }
+
+      const materialTypeId = await takeoffResourceService.getMaterialResourceType(usuario.empresaId);
+      
+      const result = await takeoffResourceService.syncTakeoffItemsToResources(
+        materiaisItems,
+        usuario.empresaId,
+        materialTypeId || undefined
+      );
+
+      if (result.errors.length > 0) {
+        console.warn('[TakeoffSync] Sync completed with errors:', result.errors);
+        toast.warning(`Sincronização parcial: ${result.created} criados, ${result.updated} atualizados, ${result.errors.length} erros`);
+      } else {
+        toast.success(`Recursos sincronizados: ${result.created} criados, ${result.updated} atualizados`);
+      }
+    } catch (error) {
+      console.error('[TakeoffSync] Error syncing to resources:', error);
+      toast.error('Erro ao sincronizar recursos');
+    } finally {
+      setIsSyncingResources(false);
+    }
   };
 
   const handleEditDisciplina = (disciplina: TakeoffDisciplina) => {
@@ -774,6 +812,16 @@ const TakeoffPage: React.FC = () => {
                 >
                   <Download className="w-4 h-4" />
                   Exportar
+                </button>
+                <button
+                  onClick={handleSyncToResources}
+                  disabled={isSyncingResources}
+                  className="flex items-center gap-2 px-3 py-2 text-sm theme-text rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)' }}
+                  title="Sincronizar materiais do Take-off para Recursos"
+                >
+                  {isSyncingResources ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                  Sync Recursos
                 </button>
               </>
             )}

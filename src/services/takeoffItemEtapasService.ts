@@ -6,6 +6,8 @@ import type {
 } from '../types/criteriosMedicao.types';
 
 import type { WorkflowStatus, WorkflowAction } from '../types/criteriosMedicao.types';
+import { workflowPermissionsService } from './workflowPermissionsService';
+import { PerfilAcesso } from '../types';
 
 const mapItemEtapaFromDB = (row: Record<string, unknown>): TakeoffItemEtapa => ({
   id: row.id as string,
@@ -439,8 +441,31 @@ export const takeoffItemEtapasService = {
     etapaId: string,
     action: 'programar' | 'aceitar_programacao' | 'iniciar_producao' | 'terminar_producao' | 'registrar_avanco' | 'aprovar_fiscalizacao' | 'rejeitar',
     usuarioId: string,
-    observacao?: string
+    observacao: string | undefined,
+    userProfile: PerfilAcesso
   ): Promise<{ success: boolean; error?: string }> {
+
+    const { data: etapaData } = await supabase
+      .from('takeoff_item_etapas')
+      .select('workflow_status')
+      .eq('id', etapaId)
+      .single();
+    
+    const currentStatus = (etapaData?.workflow_status as WorkflowStatus) || 'pendente';
+    
+    const permissionCheck = workflowPermissionsService.validateWorkflowTransition(
+      currentStatus,
+      action,
+      userProfile
+    );
+    
+    if (!permissionCheck.allowed) {
+      return {
+        success: false,
+        error: permissionCheck.reason || 'Sem permissão para esta ação',
+      };
+    }
+
     const now = new Date().toISOString();
     
     let updates: Record<string, unknown> = { updated_at: now };

@@ -391,6 +391,190 @@ class CurvaSService {
     }
     return data;
   }
+
+  async getTakeoffProgressForCurvaS(projetoId: string): Promise<{
+    totalItems: number;
+    totalPeso: number;
+    pesoExecutado: number;
+    percentualGeral: number;
+    byStatus: Record<string, { count: number; peso: number }>;
+    timeline: Array<{ data: string; percentual: number; pesoAcumulado: number }>;
+  }> {
+    try {
+      const { data: vinculos, error: vinculosError } = await supabase
+        .from('takeoff_vinculos')
+        .select(`
+          id,
+          peso,
+          takeoff_itens (
+            id,
+            peso_total,
+            qtd_executada,
+            qtd_prevista,
+            percentual_executado,
+            status
+          )
+        `)
+        .eq('projeto_id', projetoId);
+
+      if (vinculosError) {
+        console.warn('[CurvaSService] Error fetching takeoff vinculos:', vinculosError);
+        return {
+          totalItems: 0,
+          totalPeso: 0,
+          pesoExecutado: 0,
+          percentualGeral: 0,
+          byStatus: {},
+          timeline: [],
+        };
+      }
+
+      if (!vinculos || vinculos.length === 0) {
+        return {
+          totalItems: 0,
+          totalPeso: 0,
+          pesoExecutado: 0,
+          percentualGeral: 0,
+          byStatus: {},
+          timeline: [],
+        };
+      }
+
+      const validVinculos = vinculos.filter((v: any) => v.takeoff_itens);
+      const totalItems = validVinculos.length;
+      
+      const totalPeso = validVinculos.reduce((sum: number, v: any) => {
+        return sum + (v.peso || v.takeoff_itens?.peso_total || 0);
+      }, 0);
+      
+      const pesoExecutado = validVinculos.reduce((sum: number, v: any) => {
+        const pesoVinculo = v.peso || v.takeoff_itens?.peso_total || 0;
+        const percentual = v.takeoff_itens?.percentual_executado || 0;
+        return sum + (pesoVinculo * percentual / 100);
+      }, 0);
+      
+      const percentualGeral = totalPeso > 0 ? (pesoExecutado / totalPeso) * 100 : 0;
+
+      const byStatus: Record<string, { count: number; peso: number }> = {};
+      validVinculos.forEach((v: any) => {
+        const status = v.takeoff_itens?.status || 'pendente';
+        if (!byStatus[status]) {
+          byStatus[status] = { count: 0, peso: 0 };
+        }
+        byStatus[status].count++;
+        byStatus[status].peso += v.peso || v.takeoff_itens?.peso_total || 0;
+      });
+
+      const itemIds = validVinculos.map((v: any) => v.takeoff_itens?.id).filter(Boolean);
+      
+      let timeline: Array<{ data: string; percentual: number; pesoAcumulado: number }> = [];
+      
+      const itemPesoMap = new Map<string, number>();
+      validVinculos.forEach((v: any) => {
+        if (v.takeoff_itens?.id) {
+          itemPesoMap.set(v.takeoff_itens.id, v.peso || v.takeoff_itens.peso_total || 0);
+        }
+      });
+      
+      if (itemIds.length > 0) {
+        const { data: historyData } = await supabase
+          .from('takeoff_item_workflow_history')
+          .select('item_id, data_execucao, percentual_fisico')
+          .in('item_id', itemIds)
+          .in('acao', ['registrar_avanco', 'aprovar_fiscalizacao', 'terminar_producao'])
+          .order('data_execucao', { ascending: true });
+
+        const itemCurrentPercent = new Map<string, number>();
+        validVinculos.forEach((v: any) => {
+          if (v.takeoff_itens?.id) {
+            const pct = Math.max(0, Math.min(100, v.takeoff_itens.percentual_executado || 0));
+            itemCurrentPercent.set(v.takeoff_itens.id, pct);
+          }
+        });
+
+        if (historyData && historyData.length > 0) {
+          const itemLatestPerDate = new Map<string, Map<string, number>>();
+          const itemsWithHistory = new Set<string>();
+          
+          historyData.forEach((h: any) => {
+            const date = new Date(h.data_execucao).toISOString().split('T')[0];
+            const itemId = h.item_id;
+            const percentual = Math.max(0, Math.min(100, h.percentual_fisico || 0));
+            
+            itemsWithHistory.add(itemId);
+            
+            if (!itemLatestPerDate.has(date)) {
+              itemLatestPerDate.set(date, new Map());
+            }
+            itemLatestPerDate.get(date)!.set(itemId, percentual);
+          });
+
+          const sortedDates = Array.from(itemLatestPerDate.keys()).sort();
+          const itemCumulativePercent = new Map<string, number>();
+          
+          itemCurrentPercent.forEach((pct, itemId) => {
+            if (!itemsWithHistory.has(itemId) && pct > 0) {
+              itemCumulativePercent.set(itemId, pct);
+            }
+          });
+          
+          timeline = sortedDates.map(date => {
+            const itemsOnDate = itemLatestPerDate.get(date)!;
+            itemsOnDate.forEach((pct, itemId) => {
+              itemCumulativePercent.set(itemId, pct);
+            });
+            
+            let totalPesoExecutado = 0;
+            itemCumulativePercent.forEach((pct, itemId) => {
+              const peso = itemPesoMap.get(itemId) || 0;
+              totalPesoExecutado += peso * pct / 100;
+            });
+            
+            itemCurrentPercent.forEach((pct, itemId) => {
+              if (!itemCumulativePercent.has(itemId) && pct > 0) {
+                const peso = itemPesoMap.get(itemId) || 0;
+                totalPesoExecutado += peso * pct / 100;
+              }
+            });
+            
+            return {
+              data: date,
+              percentual: totalPeso > 0 ? Math.min(100, (totalPesoExecutado / totalPeso) * 100) : 0,
+              pesoAcumulado: Math.min(totalPeso, totalPesoExecutado),
+            };
+          });
+        } else {
+          const today = new Date().toISOString().split('T')[0];
+          if (pesoExecutado > 0) {
+            timeline = [{
+              data: today,
+              percentual: Math.min(100, percentualGeral),
+              pesoAcumulado: Math.min(totalPeso, pesoExecutado),
+            }];
+          }
+        }
+      }
+
+      return {
+        totalItems,
+        totalPeso,
+        pesoExecutado,
+        percentualGeral,
+        byStatus,
+        timeline,
+      };
+    } catch (err) {
+      console.error('[CurvaSService] Error in getTakeoffProgressForCurvaS:', err);
+      return {
+        totalItems: 0,
+        totalPeso: 0,
+        pesoExecutado: 0,
+        percentualGeral: 0,
+        byStatus: {},
+        timeline: [],
+      };
+    }
+  }
 }
 
 export const curvaSService = new CurvaSService();

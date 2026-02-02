@@ -10,6 +10,7 @@ import {
   Loader2,
   Eye,
   X,
+  History,
 } from 'lucide-react';
 import { useTakeoffStore } from '../../../stores/takeoffStore';
 import { takeoffItemEtapasService } from '../../../services/takeoffItemEtapasService';
@@ -17,6 +18,7 @@ import { criteriosMedicaoService } from '../../../services/criteriosMedicaoServi
 import type { TakeoffItem } from '../../../types/takeoff.types';
 import type { TakeoffItemEtapa, CriterioMedicaoEtapa, CriterioMedicao, WorkflowStatus } from '../../../types/criteriosMedicao.types';
 import { WorkflowActionButtons, WorkflowStatusBadge } from './WorkflowActionButtons';
+import { WorkflowHistoryTimeline } from './WorkflowHistoryTimeline';
 import { useAuthStore } from '../../../stores/authStore';
 
 interface TakeoffHierarchyGridProps {
@@ -71,6 +73,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [etapasError, setEtapasError] = useState<string | null>(null);
   const [approvalModal, setApprovalModal] = useState<ApprovalModalData | null>(null);
+  const [historyEtapaId, setHistoryEtapaId] = useState<string | null>(null);
 
   useEffect(() => {
     loadItens({ mapaId });
@@ -803,6 +806,15 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                                 >
                                   <Eye className="w-3 h-3 theme-text-secondary" />
                                 </button>
+                                {etapaState.id && (
+                                  <button
+                                    onClick={() => setHistoryEtapaId(etapaState.id)}
+                                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                    title="Ver histórico de ações"
+                                  >
+                                    <History className="w-3 h-3 theme-text-secondary" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -924,6 +936,24 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {historyEtapaId && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setHistoryEtapaId(null)}
+        >
+          <div 
+            className="rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-auto"
+            style={{ backgroundColor: 'var(--color-surface)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <WorkflowHistoryTimeline 
+              etapaId={historyEtapaId} 
+              onClose={() => setHistoryEtapaId(null)} 
+            />
           </div>
         </div>
       )}

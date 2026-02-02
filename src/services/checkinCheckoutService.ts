@@ -24,6 +24,7 @@ import {
 import { getWeek, getYear, startOfWeek, endOfWeek, format, addDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { takeoffService } from './takeoffService';
+import { progressSyncService } from './progressSyncService';
 
 export const checkinCheckoutService = {
   async getProgramacoesSemana(empresaId: string, projetoId?: string): Promise<ProgramacaoSemanal[]> {
@@ -297,6 +298,26 @@ export const checkinCheckoutService = {
         .from('programacao_atividades')
         .update({ [diaKey]: input.realizado })
         .eq('id', input.programacao_atividade_id);
+
+      if (input.concluido) {
+        const atividade = await this.getAtividadeById(input.programacao_atividade_id);
+        if (atividade?.atividade_cronograma_id) {
+          try {
+            const syncResult = await progressSyncService.syncCheckInToTakeoff({
+              programacaoAtividadeId: input.programacao_atividade_id,
+              atividadeId: atividade.atividade_cronograma_id,
+              data: input.data,
+              percentualRealizado: input.realizado,
+              concluido: input.concluido,
+            });
+            if (syncResult.errors.length > 0) {
+              console.warn('[CheckinCheckout] Sync errors:', syncResult.errors);
+            }
+          } catch (syncError) {
+            console.error('[CheckinCheckout] Error syncing progress:', syncError);
+          }
+        }
+      }
 
       return true;
     } catch (e) {
