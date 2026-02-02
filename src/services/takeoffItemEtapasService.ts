@@ -402,6 +402,37 @@ export const takeoffItemEtapasService = {
     return totalInserted;
   },
 
+  async backfillMissingEtapas(): Promise<{ initialized: number; skipped: number }> {
+    const { data: vinculos, error: vinculosError } = await supabase
+      .from('item_criterio_medicao')
+      .select('item_id, criterio_id');
+    
+    if (vinculosError || !vinculos) {
+      console.error('Erro ao buscar vínculos para backfill:', vinculosError);
+      return { initialized: 0, skipped: 0 };
+    }
+
+    const { data: existingEtapas } = await supabase
+      .from('takeoff_item_etapas')
+      .select('item_id');
+    
+    const itemsComEtapas = new Set((existingEtapas || []).map(e => e.item_id));
+    
+    const itemsParaInicializar = vinculos
+      .filter(v => !itemsComEtapas.has(v.item_id))
+      .map(v => ({ itemId: v.item_id, criterioId: v.criterio_id }));
+    
+    if (itemsParaInicializar.length === 0) {
+      console.log('[takeoffItemEtapasService] Backfill: Todos os itens já têm etapas inicializadas');
+      return { initialized: 0, skipped: vinculos.length };
+    }
+    
+    const initialized = await this.initializeEtapasForItemsBatch(itemsParaInicializar);
+    console.log(`[takeoffItemEtapasService] Backfill: ${initialized} etapas inicializadas, ${vinculos.length - itemsParaInicializar.length} itens já tinham etapas`);
+    
+    return { initialized, skipped: vinculos.length - itemsParaInicializar.length };
+  },
+
   async getEtapasDisponiveisPorMapa(mapaId: string): Promise<Map<number, string>> {
     const { data: itens } = await supabase
       .from('takeoff_itens')

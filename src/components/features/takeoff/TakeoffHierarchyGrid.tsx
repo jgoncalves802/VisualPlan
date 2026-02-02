@@ -88,6 +88,8 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
 
       setIsLoadingEtapas(true);
       try {
+        await takeoffItemEtapasService.backfillMissingEtapas();
+        
         const itemIds = itens.map((i) => i.id);
         const supabase = (await import('../../../services/supabase')).supabase;
         
