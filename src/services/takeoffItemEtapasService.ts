@@ -555,6 +555,19 @@ export const takeoffItemEtapasService = {
       return { success: false, error: error.message };
     }
     
+    const newStatus = updates.workflow_status as WorkflowStatus;
+    await supabase
+      .from('takeoff_item_workflow_history')
+      .insert({
+        item_etapa_id: etapaId,
+        acao: action,
+        status_anterior: currentStatus,
+        status_novo: newStatus,
+        usuario_id: usuarioId,
+        observacoes: observacao || null,
+        percentual_fisico: action === 'registrar_avanco' ? 100 : null,
+      });
+    
     return { success: true };
   },
 

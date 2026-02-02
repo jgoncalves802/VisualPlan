@@ -781,13 +781,14 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                             </td>
                             <td className="p-2">
                               <div className="flex items-center gap-1">
-                                {usuario?.id ? (
+                                {usuario?.id && usuario?.perfilAcesso ? (
                                   <WorkflowActionButtons
                                     etapaId={etapaState.id || ''}
                                     itemId={itemState.item.id}
                                     criterioEtapaId={etapaState.etapaId}
                                     status={etapaState.workflowStatus}
                                     usuarioId={usuario.id}
+                                    userProfile={usuario.perfilAcesso}
                                     onActionComplete={() => loadItens({ mapaId })}
                                     compact={true}
                                   />
@@ -881,13 +882,7 @@ const TakeoffHierarchyGrid: React.FC<TakeoffHierarchyGridProps> = ({
                         </span>
                         <span className="text-sm font-medium theme-text">{etapa.etapa?.descritivo}</span>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        etapa.concluido 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {etapa.concluido ? 'Concluída' : 'Pendente'}
-                      </span>
+                      <WorkflowStatusBadge status={etapa.workflowStatus} />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs">

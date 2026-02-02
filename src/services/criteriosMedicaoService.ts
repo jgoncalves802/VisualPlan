@@ -308,6 +308,10 @@ export const criteriosMedicaoService = {
       .single();
 
     if (error) throw error;
+    
+    const { takeoffItemEtapasService } = await import('./takeoffItemEtapasService');
+    await takeoffItemEtapasService.initializeEtapasForItem(itemId, criterioId);
+    
     return mapItemCriterioFromDB(data);
   },
 
